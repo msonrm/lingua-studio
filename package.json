@@ -1,0 +1,31 @@
+{
+  "name": "lingua-studio",
+  "version": "1.0.0",
+  "description": "**「意味から文を組み立てる」体験を提供する、自然言語のためのIDE**",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:45963/git/msonrm/lingua-studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "blockly": "^12.3.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.9",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}

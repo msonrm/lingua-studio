@@ -8,28 +8,29 @@ import {
   AdverbNode,
 } from '../types/schema';
 import { findVerb } from '../data/dictionary';
+import { TIME_CHIP_DATA } from '../blocks/definitions';
 
 // ============================================
 // BlocklyワークスペースからAST生成
 // ============================================
 export function generateAST(workspace: Blockly.Workspace): SentenceNode | null {
-  const sentenceBlocks = workspace.getBlocksByType('sentence', false);
+  const timeFrameBlocks = workspace.getBlocksByType('time_frame', false);
 
-  if (sentenceBlocks.length === 0) {
+  if (timeFrameBlocks.length === 0) {
     return null;
   }
 
-  const sentenceBlock = sentenceBlocks[0];
-  return parseSentenceBlock(sentenceBlock);
+  const timeFrameBlock = timeFrameBlocks[0];
+  return parseTimeFrameBlock(timeFrameBlock);
 }
 
-function parseSentenceBlock(block: Blockly.Block): SentenceNode | null {
-  // 時制を取得
-  const tenseBlock = block.getInputTargetBlock('TENSE');
-  const tense = tenseBlock?.getFieldValue('TENSE') || 'present';
+function parseTimeFrameBlock(block: Blockly.Block): SentenceNode | null {
+  // TimeChipを取得してTense/Aspectを決定
+  const timeChipBlock = block.getInputTargetBlock('TIME_CHIP');
+  const { tense, aspect } = parseTimeChip(timeChipBlock);
 
   // 動詞句を取得
-  const verbBlock = block.getInputTargetBlock('VERB_PHRASE');
+  const verbBlock = block.getInputTargetBlock('ACTION');
   if (!verbBlock) {
     return null;
   }
@@ -42,8 +43,8 @@ function parseSentenceBlock(block: Blockly.Block): SentenceNode | null {
   const clause: ClauseNode = {
     type: 'clause',
     verbPhrase,
-    tense: tense as 'past' | 'present' | 'future',
-    aspect: 'simple',
+    tense,
+    aspect,
     polarity: 'affirmative',
   };
 
@@ -51,6 +52,47 @@ function parseSentenceBlock(block: Blockly.Block): SentenceNode | null {
     type: 'sentence',
     clause,
     sentenceType: 'declarative',
+  };
+}
+
+function parseTimeChip(block: Blockly.Block | null): {
+  tense: 'past' | 'present' | 'future';
+  aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive';
+} {
+  // デフォルト値
+  const defaults = { tense: 'present' as const, aspect: 'simple' as const };
+
+  if (!block) {
+    return defaults;
+  }
+
+  const blockType = block.type;
+  let value: string | null = null;
+  let options: typeof TIME_CHIP_DATA.concrete | null = null;
+
+  if (blockType === 'time_chip_concrete') {
+    value = block.getFieldValue('TIME_VALUE');
+    options = TIME_CHIP_DATA.concrete;
+  } else if (blockType === 'time_chip_aspectual') {
+    value = block.getFieldValue('ASPECT_VALUE');
+    options = TIME_CHIP_DATA.aspectual;
+  } else if (blockType === 'time_chip_abstract') {
+    value = block.getFieldValue('MODIFIER_VALUE');
+    options = TIME_CHIP_DATA.abstract;
+  }
+
+  if (!value || !options || value === '__placeholder__') {
+    return defaults;
+  }
+
+  const option = options.find(o => o.value === value);
+  if (!option) {
+    return defaults;
+  }
+
+  return {
+    tense: option.tense === 'inherit' ? 'present' : option.tense,
+    aspect: option.aspect === 'inherit' ? 'simple' : option.aspect,
   };
 }
 

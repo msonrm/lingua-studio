@@ -5,46 +5,118 @@ import { verbs, nouns, adjectives, adverbs } from '../data/dictionary';
 // 色の定義
 // ============================================
 const COLORS = {
-  sentence: 45,    // オレンジ
-  verb: 160,       // 緑
-  noun: 230,       // 青
-  adjective: 290,  // 紫
-  adverb: 20,      // 赤オレンジ
-  tense: 65,       // 黄色
+  timeFrame: '#8B0000',  // ダークレッド
+  timeChip: '#DAA520',   // ゴールド
+  verb: 160,             // 緑
+  noun: 230,             // 青
+  adjective: 290,        // 紫
+  adverb: 20,            // 赤オレンジ
 };
 
 // ============================================
-// 文ブロック（ルート）
+// TimeChip データ定義
 // ============================================
-Blockly.Blocks['sentence'] = {
+type Tense = 'past' | 'present' | 'future' | 'inherit';
+type Aspect = 'simple' | 'progressive' | 'perfect' | 'perfectProgressive' | 'inherit';
+
+interface TimeChipOption {
+  label: string;
+  value: string;
+  tense: Tense;
+  aspect: Aspect;
+}
+
+const CONCRETE_OPTIONS: TimeChipOption[] = [
+  { label: 'Select time...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
+  { label: 'Yesterday', value: 'yesterday', tense: 'past', aspect: 'simple' },
+  { label: 'Tomorrow', value: 'tomorrow', tense: 'future', aspect: 'simple' },
+  { label: 'Every day', value: 'every_day', tense: 'present', aspect: 'simple' },
+  { label: 'Last Sunday', value: 'last_sunday', tense: 'past', aspect: 'simple' },
+  { label: 'Right now', value: 'right_now', tense: 'present', aspect: 'progressive' },
+  { label: 'Next week', value: 'next_week', tense: 'future', aspect: 'simple' },
+];
+
+const ASPECTUAL_OPTIONS: TimeChipOption[] = [
+  { label: 'Select aspect...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
+  { label: 'Now', value: 'now', tense: 'present', aspect: 'progressive' },
+  { label: 'Just now', value: 'just_now', tense: 'past', aspect: 'perfect' },
+  { label: 'Already/Yet', value: 'completion', tense: 'inherit', aspect: 'perfect' },
+  { label: 'Still', value: 'still', tense: 'inherit', aspect: 'progressive' },
+  { label: 'Recently', value: 'recently', tense: 'past', aspect: 'perfect' },
+];
+
+const ABSTRACT_OPTIONS: TimeChipOption[] = [
+  { label: 'Select modifier...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
+  { label: 'Past', value: 'past', tense: 'past', aspect: 'inherit' },
+  { label: 'Future', value: 'future', tense: 'future', aspect: 'inherit' },
+  { label: 'Current', value: 'current', tense: 'present', aspect: 'inherit' },
+  { label: '-ing', value: 'progressive', tense: 'inherit', aspect: 'progressive' },
+  { label: 'Perfect', value: 'perfect', tense: 'inherit', aspect: 'perfect' },
+];
+
+// ============================================
+// TimeFrame ブロック（ルート）
+// ============================================
+Blockly.Blocks['time_frame'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("SENTENCE");
-    this.appendValueInput("TENSE")
-        .setCheck("tense")
-        .appendField("time/aspect:");
-    this.appendStatementInput("VERB_PHRASE")
+        .appendField("TIME FRAME");
+    this.appendValueInput("TIME_CHIP")
+        .setCheck("timeChip")
+        .appendField("when:");
+    this.appendStatementInput("ACTION")
         .setCheck("verb")
-        .appendField("verb:");
-    this.setColour(COLORS.sentence);
-    this.setTooltip("A complete sentence");
+        .appendField("action:");
+    this.setColour(COLORS.timeFrame);
+    this.setTooltip("The root of a sentence, specifying time frame");
   }
 };
 
 // ============================================
-// 時制ブロック
+// TimeChip - Concrete (時点指定)
 // ============================================
-Blockly.Blocks['tense'] = {
+Blockly.Blocks['time_chip_concrete'] = {
   init: function() {
+    const options: [string, string][] = CONCRETE_OPTIONS.map(o => [o.label, o.value]);
+
     this.appendDummyInput()
-        .appendField(new Blockly.FieldDropdown([
-          ["present", "present"],
-          ["past", "past"],
-          ["future", "future"],
-        ]), "TENSE");
-    this.setOutput(true, "tense");
-    this.setColour(COLORS.tense);
-    this.setTooltip("Select tense");
+        .appendField("TIME")
+        .appendField(new Blockly.FieldDropdown(options), "TIME_VALUE");
+    this.setOutput(true, "timeChip");
+    this.setColour(COLORS.timeChip);
+    this.setTooltip("Concrete time specification (when?)");
+  }
+};
+
+// ============================================
+// TimeChip - Aspectual (状態指定)
+// ============================================
+Blockly.Blocks['time_chip_aspectual'] = {
+  init: function() {
+    const options: [string, string][] = ASPECTUAL_OPTIONS.map(o => [o.label, o.value]);
+
+    this.appendDummyInput()
+        .appendField("ASPECT")
+        .appendField(new Blockly.FieldDropdown(options), "ASPECT_VALUE");
+    this.setOutput(true, "timeChip");
+    this.setColour(COLORS.timeChip);
+    this.setTooltip("Aspectual marker (progressive, perfect, etc.)");
+  }
+};
+
+// ============================================
+// TimeChip - Abstract (抽象指定)
+// ============================================
+Blockly.Blocks['time_chip_abstract'] = {
+  init: function() {
+    const options: [string, string][] = ABSTRACT_OPTIONS.map(o => [o.label, o.value]);
+
+    this.appendDummyInput()
+        .appendField("MODIFIER")
+        .appendField(new Blockly.FieldDropdown(options), "MODIFIER_VALUE");
+    this.setOutput(true, "timeChip");
+    this.setColour(COLORS.timeChip);
+    this.setTooltip("Abstract time modifier (affects verb conjugation only)");
   }
 };
 
@@ -162,6 +234,15 @@ Blockly.Blocks['adverb'] = {
 };
 
 // ============================================
+// TimeChipオプションのエクスポート（コンパイラ用）
+// ============================================
+export const TIME_CHIP_DATA = {
+  concrete: CONCRETE_OPTIONS,
+  aspectual: ASPECTUAL_OPTIONS,
+  abstract: ABSTRACT_OPTIONS,
+};
+
+// ============================================
 // ツールボックス定義
 // ============================================
 export const toolbox = {
@@ -169,18 +250,17 @@ export const toolbox = {
   contents: [
     {
       kind: "category",
-      name: "Sentence",
-      colour: COLORS.sentence,
+      name: "Time",
+      colour: COLORS.timeFrame,
       contents: [
-        { kind: "block", type: "sentence" },
-      ]
-    },
-    {
-      kind: "category",
-      name: "Tense",
-      colour: COLORS.tense,
-      contents: [
-        { kind: "block", type: "tense" },
+        { kind: "label", text: "── TimeFrame ──" },
+        { kind: "block", type: "time_frame" },
+        { kind: "label", text: "── Concrete ──" },
+        { kind: "block", type: "time_chip_concrete" },
+        { kind: "label", text: "── Aspectual ──" },
+        { kind: "block", type: "time_chip_aspectual" },
+        { kind: "label", text: "── Abstract ──" },
+        { kind: "block", type: "time_chip_abstract" },
       ]
     },
     {

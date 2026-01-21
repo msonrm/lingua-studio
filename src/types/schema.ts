@@ -62,6 +62,7 @@ export interface SentenceNode {
   type: "sentence";
   clause: ClauseNode;
   sentenceType: "declarative" | "imperative";
+  timeAdverbial?: string;  // TimeChipから生成される時間副詞（Yesterday, Now など）
 }
 
 export interface ClauseNode {

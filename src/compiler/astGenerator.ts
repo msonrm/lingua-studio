@@ -25,9 +25,9 @@ export function generateAST(workspace: Blockly.Workspace): SentenceNode | null {
 }
 
 function parseTimeFrameBlock(block: Blockly.Block): SentenceNode | null {
-  // TimeChipを取得してTense/Aspectを決定
+  // TimeChipを取得してTense/Aspect/出力単語を決定
   const timeChipBlock = block.getInputTargetBlock('TIME_CHIP');
-  const { tense, aspect } = parseTimeChip(timeChipBlock);
+  const { tense, aspect, timeAdverbial } = parseTimeChip(timeChipBlock);
 
   // 動詞句を取得
   const verbBlock = block.getInputTargetBlock('ACTION');
@@ -52,15 +52,41 @@ function parseTimeFrameBlock(block: Blockly.Block): SentenceNode | null {
     type: 'sentence',
     clause,
     sentenceType: 'declarative',
+    timeAdverbial,
   };
 }
+
+// TimeChipの値から出力テキストへのマッピング
+const TIME_CHIP_OUTPUT: Record<string, string | null> = {
+  // Concrete - 時点指定（出力あり）
+  '__placeholder__': null,
+  'yesterday': 'yesterday',
+  'tomorrow': 'tomorrow',
+  'every_day': 'every day',
+  'last_sunday': 'last Sunday',
+  'right_now': 'right now',
+  'next_week': 'next week',
+  // Aspectual - 状態指定（出力あり）
+  'now': 'now',
+  'just_now': 'just now',
+  'completion': 'already',  // already/yet はここではalready、否定/疑問で切り替え
+  'still': 'still',
+  'recently': 'recently',
+  // Abstract - 抽象指定（出力なし）
+  'past': null,
+  'future': null,
+  'current': null,
+  'progressive': null,
+  'perfect': null,
+};
 
 function parseTimeChip(block: Blockly.Block | null): {
   tense: 'past' | 'present' | 'future';
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive';
+  timeAdverbial?: string;
 } {
   // デフォルト値
-  const defaults = { tense: 'present' as const, aspect: 'simple' as const };
+  const defaults = { tense: 'present' as const, aspect: 'simple' as const, timeAdverbial: undefined };
 
   if (!block) {
     return defaults;
@@ -90,9 +116,12 @@ function parseTimeChip(block: Blockly.Block | null): {
     return defaults;
   }
 
+  const timeAdverbial = TIME_CHIP_OUTPUT[value] ?? undefined;
+
   return {
     tense: option.tense === 'inherit' ? 'present' : option.tense,
     aspect: option.aspect === 'inherit' ? 'simple' : option.aspect,
+    timeAdverbial,
   };
 }
 

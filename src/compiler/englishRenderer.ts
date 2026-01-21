@@ -13,8 +13,12 @@ import { findVerb, findNoun } from '../data/dictionary';
 export function renderToEnglish(ast: SentenceNode): string {
   const clause = renderClause(ast.clause);
 
+  // 時間副詞を文末に追加
+  const timeAdverbial = ast.timeAdverbial;
+  const fullSentence = timeAdverbial ? `${clause} ${timeAdverbial}` : clause;
+
   // 文頭を大文字に、末尾にピリオド
-  const capitalized = clause.charAt(0).toUpperCase() + clause.slice(1);
+  const capitalized = fullSentence.charAt(0).toUpperCase() + fullSentence.slice(1);
   return capitalized + '.';
 }
 

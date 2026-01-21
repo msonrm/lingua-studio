@@ -9,9 +9,9 @@ const COLORS = {
   timeChip: '#DAA520',   // ゴールド
   action: '#DC143C',     // クリムゾンレッド（モンテッソーリ的）
   noun: 230,             // 青（レガシー）
-  person: '#1a237e',     // 黒寄りの青（モンテッソーリ的）
-  thing: '#1a237e',      // 黒寄りの青（モンテッソーリ的）
-  place: '#4a1010',      // 黒寄りの赤（モンテッソーリ的）
+  person: '#0d1321',     // ほぼ黒の濃紺（モンテッソーリ的）
+  thing: '#0d1321',      // ほぼ黒の濃紺（モンテッソーリ的）
+  place: '#1a0a0a',      // ほぼ黒の暗赤（モンテッソーリ的）
   adjective: 290,        // 紫
   adverb: 20,            // 赤オレンジ
 };
@@ -398,11 +398,8 @@ export const toolbox = {
       name: "Nouns",
       colour: COLORS.person,
       contents: [
-        { kind: "label", text: "── Person ──" },
         { kind: "block", type: "person_block" },
-        { kind: "label", text: "── Thing ──" },
         { kind: "block", type: "thing_block" },
-        { kind: "label", text: "── Place ──" },
         { kind: "block", type: "place_block" },
       ]
     },

@@ -137,3 +137,7 @@ body {
 .blocklyTreeLabel {
   color: #000 !important;
 }
+
+.blocklyTreeRowContentContainer {
+  color: #000 !important;
+}

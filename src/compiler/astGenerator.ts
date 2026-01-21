@@ -169,6 +169,16 @@ function parseVerbBlock(block: Blockly.Block): VerbPhraseNode | null {
 function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode {
   const blockType = block.type;
 
+  // 限定詞ラッパーブロックの処理
+  if (blockType === 'determiner_block') {
+    return parseDeterminerBlock(block);
+  }
+
+  // 数量詞ラッパーブロックの処理
+  if (blockType === 'quantifier_block') {
+    return parseQuantifierBlock(block);
+  }
+
   // 新しいPerson/Thing/Placeブロックの処理
   if (blockType === 'person_block' || blockType === 'thing_block' || blockType === 'place_block') {
     return parseNewNounBlock(block, blockType);
@@ -206,6 +216,42 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode {
   };
 }
 
+function parseDeterminerBlock(block: Blockly.Block): NounPhraseNode {
+  const detValue = block.getFieldValue('DET_VALUE');
+  const nounBlock = block.getInputTargetBlock('NOUN');
+
+  // 内部の名詞ブロックを解析
+  const innerNP = nounBlock ? parseNounPhraseBlock(nounBlock) : {
+    type: 'nounPhrase' as const,
+    adjectives: [],
+    head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
+  };
+
+  // 限定詞を追加
+  return {
+    ...innerNP,
+    determiner: { kind: 'definite', lexeme: detValue },
+  };
+}
+
+function parseQuantifierBlock(block: Blockly.Block): NounPhraseNode {
+  const qtyValue = block.getFieldValue('QTY_VALUE');
+  const nounBlock = block.getInputTargetBlock('NOUN');
+
+  // 内部の名詞ブロックを解析
+  const innerNP = nounBlock ? parseNounPhraseBlock(nounBlock) : {
+    type: 'nounPhrase' as const,
+    adjectives: [],
+    head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
+  };
+
+  // 数量詞を追加
+  return {
+    ...innerNP,
+    quantifier: qtyValue,
+  };
+}
+
 function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseNode {
   let value: string;
 
@@ -217,7 +263,6 @@ function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseN
     value = block.getFieldValue('PLACE_VALUE');
   }
 
-  const determiner = block.getFieldValue('DETERMINER');
   const number = block.getFieldValue('NUMBER') as 'singular' | 'plural';
 
   // プレースホルダーやラベルの場合はデフォルト値を返す
@@ -265,12 +310,9 @@ function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseN
     };
   }
 
-  // 通常の名詞
+  // 通常の名詞（限定詞なし）
   return {
     type: 'nounPhrase',
-    determiner: determiner !== 'none'
-      ? { kind: determiner as 'definite' | 'indefinite', lexeme: determiner === 'definite' ? 'the' : 'a' }
-      : undefined,
     adjectives: [],
     head: {
       type: 'noun',

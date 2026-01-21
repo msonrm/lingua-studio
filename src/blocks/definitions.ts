@@ -12,6 +12,8 @@ const COLORS = {
   person: '#0d1321',     // ほぼ黒の濃紺（モンテッソーリ的）
   thing: '#0d1321',      // ほぼ黒の濃紺（モンテッソーリ的）
   place: '#1a0a0a',      // ほぼ黒の暗赤（モンテッソーリ的）
+  determiner: '#2d4a3e', // 暗緑（限定詞）
+  quantifier: '#3d2d4a', // 暗紫（数量詞）
   adjective: 290,        // 紫
   adverb: 20,            // 赤オレンジ
 };
@@ -157,7 +159,7 @@ Blockly.Blocks['verb'] = {
     verb.valency.forEach((slot, index) => {
       const inputName = `ARG_${index}`;
       const label = slot.label || slot.role;
-      const checkType = slot.role === 'attribute' ? ['nounPhrase', 'adjective'] : 'nounPhrase';
+      const checkType = slot.role === 'attribute' ? ['noun', 'nounPhrase', 'adjective'] : ['noun', 'nounPhrase'];
       this.appendValueInput(inputName)
           .setCheck(checkType)
           .appendField(`${label}${slot.required ? '*' : ''}:`);
@@ -225,19 +227,13 @@ Blockly.Blocks['person_block'] = {
 
     this.appendDummyInput()
         .appendField("PERSON")
-        .appendField(new Blockly.FieldDropdown(allOptions), "PERSON_VALUE");
-    this.appendDummyInput()
-        .appendField(new Blockly.FieldDropdown([
-          ["(none)", "none"],
-          ["a/an", "indefinite"],
-          ["the", "definite"],
-        ]), "DETERMINER")
+        .appendField(new Blockly.FieldDropdown(allOptions), "PERSON_VALUE")
         .appendField(new Blockly.FieldDropdown([
           ["singular", "singular"],
           ["plural", "plural"],
         ]), "NUMBER");
 
-    this.setOutput(true, "nounPhrase");
+    this.setOutput(true, "noun");
     this.setColour(COLORS.person);
     this.setTooltip("A person (pronoun or noun)");
   }
@@ -262,19 +258,13 @@ Blockly.Blocks['thing_block'] = {
 
     this.appendDummyInput()
         .appendField("THING")
-        .appendField(new Blockly.FieldDropdown(allOptions), "THING_VALUE");
-    this.appendDummyInput()
-        .appendField(new Blockly.FieldDropdown([
-          ["(none)", "none"],
-          ["a/an", "indefinite"],
-          ["the", "definite"],
-        ]), "DETERMINER")
+        .appendField(new Blockly.FieldDropdown(allOptions), "THING_VALUE")
         .appendField(new Blockly.FieldDropdown([
           ["singular", "singular"],
           ["plural", "plural"],
         ]), "NUMBER");
 
-    this.setOutput(true, "nounPhrase");
+    this.setOutput(true, "noun");
     this.setColour(COLORS.thing);
     this.setTooltip("A thing (pronoun or noun)");
   }
@@ -303,19 +293,13 @@ Blockly.Blocks['place_block'] = {
 
     this.appendDummyInput()
         .appendField("PLACE")
-        .appendField(new Blockly.FieldDropdown(allOptions), "PLACE_VALUE");
-    this.appendDummyInput()
-        .appendField(new Blockly.FieldDropdown([
-          ["(none)", "none"],
-          ["a/an", "indefinite"],
-          ["the", "definite"],
-        ]), "DETERMINER")
+        .appendField(new Blockly.FieldDropdown(allOptions), "PLACE_VALUE")
         .appendField(new Blockly.FieldDropdown([
           ["singular", "singular"],
           ["plural", "plural"],
         ]), "NUMBER");
 
-    this.setOutput(true, "nounPhrase");
+    this.setOutput(true, "noun");
     this.setColour(COLORS.place);
     this.setTooltip("A place (noun or adverb)");
   }
@@ -352,6 +336,52 @@ Blockly.Blocks['adverb'] = {
     this.setOutput(true, "adverb");
     this.setColour(COLORS.adverb);
     this.setTooltip("An adverb");
+  }
+};
+
+// ============================================
+// 限定詞ブロック（ラッパー）
+// ============================================
+Blockly.Blocks['determiner_block'] = {
+  init: function() {
+    this.appendValueInput("NOUN")
+        .setCheck("noun")
+        .appendField("DET")
+        .appendField(new Blockly.FieldDropdown([
+          ["the", "the"],
+          ["this", "this"],
+          ["that", "that"],
+        ]), "DET_VALUE");
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.determiner);
+    this.setTooltip("Determiner: specifies WHICH one (definite)");
+  }
+};
+
+// ============================================
+// 数量詞ブロック（ラッパー）
+// ============================================
+Blockly.Blocks['quantifier_block'] = {
+  init: function() {
+    this.appendValueInput("NOUN")
+        .setCheck("noun")
+        .appendField("QTY")
+        .appendField(new Blockly.FieldDropdown([
+          ["a/an", "a"],
+          ["one", "one"],
+          ["two", "two"],
+          ["three", "three"],
+          ["many", "many"],
+          ["some", "some"],
+          ["few", "few"],
+          ["all", "all"],
+          ["no", "no"],
+        ]), "QTY_VALUE");
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.quantifier);
+    this.setTooltip("Quantifier: specifies HOW MANY");
   }
 };
 
@@ -398,6 +428,8 @@ export const toolbox = {
       name: "Nouns",
       colour: COLORS.person,
       contents: [
+        { kind: "block", type: "determiner_block" },
+        { kind: "block", type: "quantifier_block" },
         { kind: "block", type: "person_block" },
         { kind: "block", type: "thing_block" },
         { kind: "block", type: "place_block" },

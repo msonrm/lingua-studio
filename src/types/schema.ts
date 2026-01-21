@@ -102,6 +102,7 @@ export interface FilledArgumentSlot {
 export interface NounPhraseNode {
   type: "nounPhrase";
   determiner?: { kind: "definite" | "indefinite" | "none"; lexeme?: string };
+  quantifier?: string;  // a, one, two, many, some, few, all, no
   adjectives: { lemma: string }[];
   head: NounHead | PronounHead;
 }

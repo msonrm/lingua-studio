@@ -94,13 +94,18 @@ function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarit
 
   const parts: string[] = [];
 
-  // 限定詞
-  if (np.determiner) {
-    if (np.determiner.kind === 'definite') {
-      parts.push('the');
-    } else if (np.determiner.kind === 'indefinite') {
-      // a/an の判定は後で
+  // 限定詞（the, this, that など）
+  if (np.determiner && np.determiner.lexeme) {
+    parts.push(np.determiner.lexeme);
+  }
+
+  // 数量詞（a, one, two, many など）
+  if (np.quantifier) {
+    if (np.quantifier === 'a') {
+      // a/an の判定は後で行う
       parts.push('INDEF');
+    } else {
+      parts.push(np.quantifier);
     }
   }
 
@@ -123,11 +128,13 @@ function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarit
 
   // a/an の処理
   let result = parts.join(' ');
-  if (result.startsWith('INDEF ')) {
-    const rest = result.slice(6);
-    const firstChar = rest.charAt(0).toLowerCase();
+  if (result.includes('INDEF ')) {
+    const idx = result.indexOf('INDEF ');
+    const before = result.slice(0, idx);
+    const after = result.slice(idx + 6);
+    const firstChar = after.charAt(0).toLowerCase();
     const article = ['a', 'e', 'i', 'o', 'u'].includes(firstChar) ? 'an' : 'a';
-    result = article + ' ' + rest;
+    result = before + article + ' ' + after;
   }
 
   return result;

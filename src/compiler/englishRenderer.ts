@@ -4,8 +4,13 @@ import {
   NounPhraseNode,
   NounHead,
   FilledArgumentSlot,
+  AdjectivePhraseNode,
+  SemanticRole,
 } from '../types/schema';
 import { findVerb, findNoun } from '../data/dictionary';
+
+// 主語となりうるロール
+const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
 
 // ============================================
 // AST → 英文レンダラー
@@ -25,27 +30,54 @@ export function renderToEnglish(ast: SentenceNode): string {
 function renderClause(clause: ClauseNode): string {
   const { verbPhrase, tense, aspect } = clause;
 
-  // 主語（agent）を取得
-  const agentSlot = verbPhrase.arguments.find(a => a.role === 'agent');
-  const subject = agentSlot?.filler ? renderNounPhrase(agentSlot.filler as NounPhraseNode) : '';
+  // 主語を取得（agent, experiencer, possessor, theme の順で探す）
+  let subjectSlot: FilledArgumentSlot | undefined;
+  for (const role of SUBJECT_ROLES) {
+    subjectSlot = verbPhrase.arguments.find(a => a.role === role);
+    if (subjectSlot?.filler) break;
+  }
+
+  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler) : '';
+
+  // 動詞エントリを取得して前置詞情報を参照
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
 
   // 動詞を活用
-  const verbForm = conjugateVerb(verbPhrase.verb.lemma, tense, aspect, agentSlot?.filler as NounPhraseNode | undefined);
+  const verbForm = conjugateVerb(
+    verbPhrase.verb.lemma,
+    tense,
+    aspect,
+    subjectSlot?.filler as NounPhraseNode | undefined
+  );
 
   // 副詞
   const adverbs = verbPhrase.adverbs.map(a => a.lemma).join(' ');
 
-  // その他の引数（目的語など）
+  // その他の引数（目的語など）- 主語以外
   const otherArgs = verbPhrase.arguments
-    .filter(a => a.role !== 'agent' && a.filler)
-    .map(a => renderArgument(a))
+    .filter(a => a !== subjectSlot && a.filler)
+    .map(a => {
+      // 前置詞を辞書から取得
+      const slotDef = verbEntry?.valency.find(v => v.role === a.role);
+      const preposition = slotDef?.preposition;
+      const rendered = renderFiller(a.filler!);
+      return preposition ? `${preposition} ${rendered}` : rendered;
+    })
     .join(' ');
 
-  // 語順: Subject + Verb + Adverb または Subject + Adverb + Verb
-  // 英語では様態副詞は文末が一般的
+  // 語順: Subject + Verb + Objects + Adverbs
   const parts = [subject, verbForm, otherArgs, adverbs].filter(p => p.length > 0);
 
   return parts.join(' ');
+}
+
+function renderFiller(filler: NounPhraseNode | AdjectivePhraseNode): string {
+  if (filler.type === 'nounPhrase') {
+    return renderNounPhrase(filler as NounPhraseNode);
+  } else if (filler.type === 'adjectivePhrase') {
+    return (filler as AdjectivePhraseNode).head.lemma;
+  }
+  return '';
 }
 
 function renderNounPhrase(np: NounPhraseNode): string {
@@ -90,16 +122,6 @@ function renderNounPhrase(np: NounPhraseNode): string {
   return result;
 }
 
-function renderArgument(slot: FilledArgumentSlot): string {
-  if (!slot.filler) return '';
-
-  if (slot.filler.type === 'nounPhrase') {
-    return renderNounPhrase(slot.filler as NounPhraseNode);
-  }
-
-  return '';
-}
-
 function conjugateVerb(
   lemma: string,
   tense: 'past' | 'present' | 'future',
@@ -112,7 +134,7 @@ function conjugateVerb(
   // 主語の人称・数を判定
   const isThirdPersonSingular = subject && isThirdSingular(subject);
 
-  // Simple aspect のみ実装（Phase 1）
+  // Simple aspect
   if (aspect === 'simple') {
     switch (tense) {
       case 'past':
@@ -134,6 +156,12 @@ function conjugateVerb(
   if (aspect === 'perfect') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
     return haveForm + ' ' + verbEntry.forms.pp;
+  }
+
+  // Perfect Progressive
+  if (aspect === 'perfectProgressive') {
+    const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
+    return haveForm + ' been ' + verbEntry.forms.ing;
   }
 
   return lemma;

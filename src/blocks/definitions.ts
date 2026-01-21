@@ -7,7 +7,7 @@ import { verbs, nouns, adjectives, adverbs } from '../data/dictionary';
 const COLORS = {
   timeFrame: '#8B0000',  // ダークレッド
   timeChip: '#DAA520',   // ゴールド
-  verb: 160,             // 緑
+  action: '#DC143C',     // クリムゾンレッド（モンテッソーリ的）
   noun: 230,             // 青
   adjective: 290,        // 紫
   adverb: 20,            // 赤オレンジ
@@ -121,35 +121,31 @@ Blockly.Blocks['time_chip_abstract'] = {
 };
 
 // ============================================
-// 動詞ブロック（動的スロット生成）
+// Action ブロック（動的スロット生成）
 // ============================================
 Blockly.Blocks['verb'] = {
   init: function() {
     const verbOptions: [string, string][] = verbs.map(v => [v.lemma, v.lemma]);
 
     this.appendDummyInput()
-        .appendField("VERB")
+        .appendField("ACTION")
         .appendField(new Blockly.FieldDropdown(verbOptions, this.updateShape.bind(this)), "VERB");
 
-    this.appendValueInput("ADVERB")
-        .setCheck("adverb")
-        .appendField("adverb:");
-
     this.setPreviousStatement(true, "verb");
-    this.setColour(COLORS.verb);
-    this.setTooltip("Select a verb");
+    this.setColour(COLORS.action);
+    this.setTooltip("Select an action (verb)");
 
     // 初期形状を設定
-    this.updateShape(verbs[0]?.lemma || "sleep");
+    this.updateShape(verbs[0]?.lemma || "run");
   },
 
   updateShape: function(verbLemma: string) {
     const verb = verbs.find(v => v.lemma === verbLemma);
     if (!verb) return verbLemma;
 
-    // 既存のスロットを削除
+    // 既存のスロットを削除（ARG_で始まるものとADVERB）
     const existingInputs = this.inputList
-      .filter((input: Blockly.Input) => input.name.startsWith("ARG_"))
+      .filter((input: Blockly.Input) => input.name.startsWith("ARG_") || input.name === "ADVERB")
       .map((input: Blockly.Input) => input.name);
 
     existingInputs.forEach((name: string) => this.removeInput(name));
@@ -157,10 +153,17 @@ Blockly.Blocks['verb'] = {
     // 新しいスロットを追加
     verb.valency.forEach((slot, index) => {
       const inputName = `ARG_${index}`;
+      const label = slot.label || slot.role;
+      const checkType = slot.role === 'attribute' ? ['nounPhrase', 'adjective'] : 'nounPhrase';
       this.appendValueInput(inputName)
-          .setCheck("nounPhrase")
-          .appendField(`${slot.role}${slot.required ? '*' : ''}:`);
+          .setCheck(checkType)
+          .appendField(`${label}${slot.required ? '*' : ''}:`);
     });
+
+    // 副詞スロットを最後に追加
+    this.appendValueInput("ADVERB")
+        .setCheck("adverb")
+        .appendField("how:");
 
     return verbLemma;
   }
@@ -265,8 +268,8 @@ export const toolbox = {
     },
     {
       kind: "category",
-      name: "Verbs",
-      colour: COLORS.verb,
+      name: "Actions",
+      colour: COLORS.action,
       contents: [
         { kind: "block", type: "verb" },
       ]

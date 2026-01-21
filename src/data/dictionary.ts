@@ -4,20 +4,7 @@ import { VerbEntry, NounEntry, AdjectiveEntry, AdverbEntry } from '../types/sche
 // 動詞辞書
 // ============================================
 export const verbs: VerbEntry[] = [
-  {
-    lemma: "sleep",
-    forms: {
-      base: "sleep",
-      past: "slept",
-      pp: "slept",
-      ing: "sleeping",
-      s: "sleeps",
-    },
-    type: "action",
-    valency: [
-      { role: "agent", required: true },
-    ],
-  },
+  // 自動詞（agent のみ）
   {
     lemma: "run",
     forms: {
@@ -29,24 +16,104 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true },
+      { role: "agent", required: true, label: "who" },
     ],
   },
   {
-    lemma: "kick",
+    lemma: "sleep",
     forms: {
-      base: "kick",
-      past: "kicked",
-      pp: "kicked",
-      ing: "kicking",
-      s: "kicks",
+      base: "sleep",
+      past: "slept",
+      pp: "slept",
+      ing: "sleeping",
+      s: "sleeps",
     },
     type: "action",
     valency: [
-      { role: "agent", required: true },
-      { role: "patient", required: true },
+      { role: "agent", required: true, label: "who" },
     ],
   },
+
+  // 他動詞（agent + patient/theme）
+  {
+    lemma: "eat",
+    forms: {
+      base: "eat",
+      past: "ate",
+      pp: "eaten",
+      ing: "eating",
+      s: "eats",
+    },
+    type: "action",
+    valency: [
+      { role: "agent", required: true, label: "who" },
+      { role: "patient", required: false, label: "what" },
+    ],
+  },
+  {
+    lemma: "make",
+    forms: {
+      base: "make",
+      past: "made",
+      pp: "made",
+      ing: "making",
+      s: "makes",
+    },
+    type: "action",
+    valency: [
+      { role: "agent", required: true, label: "who" },
+      { role: "patient", required: true, label: "what" },
+    ],
+  },
+  {
+    lemma: "watch",
+    forms: {
+      base: "watch",
+      past: "watched",
+      pp: "watched",
+      ing: "watching",
+      s: "watches",
+    },
+    type: "action",
+    valency: [
+      { role: "agent", required: true, label: "who" },
+      { role: "theme", required: true, label: "what" },
+    ],
+  },
+
+  // 状態動詞（stative）- 通常進行形不可
+  {
+    lemma: "like",
+    forms: {
+      base: "like",
+      past: "liked",
+      pp: "liked",
+      ing: "liking",
+      s: "likes",
+    },
+    type: "stative",
+    valency: [
+      { role: "experiencer", required: true, label: "who" },
+      { role: "stimulus", required: true, label: "what" },
+    ],
+  },
+  {
+    lemma: "have",
+    forms: {
+      base: "have",
+      past: "had",
+      pp: "had",
+      ing: "having",
+      s: "has",
+    },
+    type: "stative",
+    valency: [
+      { role: "possessor", required: true, label: "who" },
+      { role: "theme", required: true, label: "what" },
+    ],
+  },
+
+  // 授与動詞（agent + theme + recipient）
   {
     lemma: "give",
     forms: {
@@ -58,11 +125,29 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true },
-      { role: "theme", required: true },
-      { role: "recipient", required: true },
+      { role: "agent", required: true, label: "who" },
+      { role: "theme", required: true, label: "what" },
+      { role: "recipient", required: true, label: "to whom", preposition: "to" },
     ],
   },
+  {
+    lemma: "show",
+    forms: {
+      base: "show",
+      past: "showed",
+      pp: "shown",
+      ing: "showing",
+      s: "shows",
+    },
+    type: "action",
+    valency: [
+      { role: "agent", required: true, label: "who" },
+      { role: "theme", required: true, label: "what" },
+      { role: "recipient", required: true, label: "to whom", preposition: "to" },
+    ],
+  },
+
+  // 繋辞動詞（copula）
   {
     lemma: "be",
     forms: {
@@ -84,8 +169,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "copula",
     valency: [
-      { role: "theme", required: true },
-      { role: "attribute", required: true },
+      { role: "theme", required: true, label: "who/what" },
+      { role: "attribute", required: true, label: "is what" },
     ],
   },
 ];

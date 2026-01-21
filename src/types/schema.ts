@@ -14,12 +14,14 @@ export type SemanticRole =
   | "source"       // 起点
   | "location"     // 場所
   | "instrument"   // 道具
+  | "possessor"    // 所有者（have用）
   | "attribute";   // 属性（繋辞動詞用）
 
 export interface ArgumentSlot {
   role: SemanticRole;
   required: boolean;
   preposition?: string;
+  label?: string;  // UI表示用のラベル（例: "what", "to whom"）
 }
 
 export interface VerbEntry {
@@ -32,7 +34,7 @@ export interface VerbEntry {
     s: string;
     irregular?: Record<string, string>;
   };
-  type: "action" | "copula";
+  type: "action" | "stative" | "copula";
   valency: ArgumentSlot[];
 }
 

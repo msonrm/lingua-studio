@@ -133,3 +133,7 @@ body {
 .blocklyTreeRow {
   padding: 8px 16px !important;
 }
+
+.blocklyTreeLabel {
+  color: #ffff00 !important;
+}

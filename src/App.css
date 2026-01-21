@@ -134,6 +134,6 @@ body {
   padding: 8px 16px !important;
 }
 
-.blocklyTreeRowContentContainer {
-  background: #333333 !important;
+.blocklyTreeRow {
+  background: #666666 !important;
 }

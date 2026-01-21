@@ -6,8 +6,9 @@ import {
   NounPhraseNode,
   FilledArgumentSlot,
   AdverbNode,
+  PronounHead,
 } from '../types/schema';
-import { findVerb } from '../data/dictionary';
+import { findVerb, findPronoun } from '../data/dictionary';
 import { TIME_CHIP_DATA } from '../blocks/definitions';
 
 // ============================================
@@ -166,6 +167,14 @@ function parseVerbBlock(block: Blockly.Block): VerbPhraseNode | null {
 }
 
 function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode {
+  const blockType = block.type;
+
+  // 新しいPerson/Thing/Placeブロックの処理
+  if (blockType === 'person_block' || blockType === 'thing_block' || blockType === 'place_block') {
+    return parseNewNounBlock(block, blockType);
+  }
+
+  // レガシーnoun_phraseブロックの処理
   const determiner = block.getFieldValue('DETERMINER');
   const noun = block.getFieldValue('NOUN');
   const number = block.getFieldValue('NUMBER');
@@ -193,6 +202,80 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode {
       type: 'noun',
       lemma: noun,
       number: number as 'singular' | 'plural',
+    },
+  };
+}
+
+function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseNode {
+  let value: string;
+
+  if (blockType === 'person_block') {
+    value = block.getFieldValue('PERSON_VALUE');
+  } else if (blockType === 'thing_block') {
+    value = block.getFieldValue('THING_VALUE');
+  } else {
+    value = block.getFieldValue('PLACE_VALUE');
+  }
+
+  const determiner = block.getFieldValue('DETERMINER');
+  const number = block.getFieldValue('NUMBER') as 'singular' | 'plural';
+
+  // プレースホルダーやラベルの場合はデフォルト値を返す
+  if (!value || value.startsWith('__')) {
+    return {
+      type: 'nounPhrase',
+      adjectives: [],
+      head: {
+        type: 'noun',
+        lemma: 'something',
+        number: 'singular',
+      },
+    };
+  }
+
+  // 代名詞かどうかをチェック
+  const pronoun = findPronoun(value);
+  if (pronoun) {
+    const head: PronounHead = {
+      type: 'pronoun',
+      lemma: pronoun.lemma,
+      person: pronoun.person,
+      number: pronoun.number,
+      pronounType: pronoun.type,
+      polaritySensitive: pronoun.polaritySensitive,
+    };
+
+    return {
+      type: 'nounPhrase',
+      adjectives: [],
+      head,
+    };
+  }
+
+  // 場所副詞（here, there）の特殊処理
+  if (value === 'here' || value === 'there') {
+    return {
+      type: 'nounPhrase',
+      adjectives: [],
+      head: {
+        type: 'noun',
+        lemma: value,
+        number: 'singular',
+      },
+    };
+  }
+
+  // 通常の名詞
+  return {
+    type: 'nounPhrase',
+    determiner: determiner !== 'none'
+      ? { kind: determiner as 'definite' | 'indefinite', lexeme: determiner === 'definite' ? 'the' : 'a' }
+      : undefined,
+    adjectives: [],
+    head: {
+      type: 'noun',
+      lemma: value,
+      number,
     },
   };
 }

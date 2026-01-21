@@ -3,11 +3,12 @@ import {
   ClauseNode,
   NounPhraseNode,
   NounHead,
+  PronounHead,
   FilledArgumentSlot,
   AdjectivePhraseNode,
   SemanticRole,
 } from '../types/schema';
-import { findVerb, findNoun } from '../data/dictionary';
+import { findVerb, findNoun, findPronoun } from '../data/dictionary';
 
 // 主語となりうるロール
 const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
@@ -28,7 +29,7 @@ export function renderToEnglish(ast: SentenceNode): string {
 }
 
 function renderClause(clause: ClauseNode): string {
-  const { verbPhrase, tense, aspect } = clause;
+  const { verbPhrase, tense, aspect, polarity } = clause;
 
   // 主語を取得（agent, experiencer, possessor, theme の順で探す）
   let subjectSlot: FilledArgumentSlot | undefined;
@@ -37,7 +38,8 @@ function renderClause(clause: ClauseNode): string {
     if (subjectSlot?.filler) break;
   }
 
-  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler) : '';
+  // 主語をレンダリング（isSubject = true）
+  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : '';
 
   // 動詞エントリを取得して前置詞情報を参照
   const verbEntry = findVerb(verbPhrase.verb.lemma);
@@ -53,14 +55,14 @@ function renderClause(clause: ClauseNode): string {
   // 副詞
   const adverbs = verbPhrase.adverbs.map(a => a.lemma).join(' ');
 
-  // その他の引数（目的語など）- 主語以外
+  // その他の引数（目的語など）- 主語以外（isSubject = false）
   const otherArgs = verbPhrase.arguments
     .filter(a => a !== subjectSlot && a.filler)
     .map(a => {
       // 前置詞を辞書から取得
       const slotDef = verbEntry?.valency.find(v => v.role === a.role);
       const preposition = slotDef?.preposition;
-      const rendered = renderFiller(a.filler!);
+      const rendered = renderFiller(a.filler!, false, polarity);  // 目的語は isSubject = false
       return preposition ? `${preposition} ${rendered}` : rendered;
     })
     .join(' ');
@@ -71,16 +73,25 @@ function renderClause(clause: ClauseNode): string {
   return parts.join(' ');
 }
 
-function renderFiller(filler: NounPhraseNode | AdjectivePhraseNode): string {
+function renderFiller(
+  filler: NounPhraseNode | AdjectivePhraseNode,
+  isSubject: boolean = false,
+  polarity: 'affirmative' | 'negative' = 'affirmative'
+): string {
   if (filler.type === 'nounPhrase') {
-    return renderNounPhrase(filler as NounPhraseNode);
+    return renderNounPhrase(filler as NounPhraseNode, isSubject, polarity);
   } else if (filler.type === 'adjectivePhrase') {
     return (filler as AdjectivePhraseNode).head.lemma;
   }
   return '';
 }
 
-function renderNounPhrase(np: NounPhraseNode): string {
+function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarity: 'affirmative' | 'negative' = 'affirmative'): string {
+  // 代名詞の処理
+  if (np.head.type === 'pronoun') {
+    return renderPronoun(np.head as PronounHead, isSubject, polarity);
+  }
+
   const parts: string[] = [];
 
   // 限定詞
@@ -120,6 +131,31 @@ function renderNounPhrase(np: NounPhraseNode): string {
   }
 
   return result;
+}
+
+function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirmative' | 'negative'): string {
+  const pronoun = findPronoun(head.lemma);
+
+  if (!pronoun) {
+    return head.lemma;
+  }
+
+  // 不定代名詞の極性による切り替え（someone → anyone / nobody）
+  if (pronoun.polaritySensitive) {
+    if (polarity === 'negative' && pronoun.negativeForm) {
+      // 否定文の場合は nobody/nothing を使用
+      return pronoun.negativeForm;
+    }
+    // 疑問文や否定コンテキストでは anyone/anything を使用（将来対応）
+    // 現時点では肯定形をそのまま使用
+  }
+
+  // 格変化: 主格 vs 目的格
+  if (isSubject) {
+    return pronoun.lemma;
+  } else {
+    return pronoun.objectForm;
+  }
 }
 
 function conjugateVerb(
@@ -172,5 +208,12 @@ function isThirdSingular(np: NounPhraseNode): boolean {
     const nounHead = np.head as NounHead;
     return nounHead.number === 'singular';
   }
+
+  if (np.head.type === 'pronoun') {
+    const pronounHead = np.head as PronounHead;
+    // 3人称単数のみ true
+    return pronounHead.person === 3 && pronounHead.number === 'singular';
+  }
+
   return false;
 }

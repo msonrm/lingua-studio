@@ -45,6 +45,18 @@ export interface NounEntry {
   countable: boolean;
 }
 
+export interface PronounEntry {
+  lemma: string;           // 基本形（主格）
+  objectForm: string;      // 目的格
+  possessive?: string;     // 所有格（オプション）
+  person: 1 | 2 | 3;
+  number: "singular" | "plural";
+  gender?: "masculine" | "feminine" | "neuter";
+  type: "personal" | "indefinite";
+  polaritySensitive?: boolean;  // someone/anyone など
+  negativeForm?: string;        // nobody, nothing など
+}
+
 export interface AdjectiveEntry {
   lemma: string;
   comparative?: string;
@@ -102,8 +114,11 @@ export interface NounHead {
 
 export interface PronounHead {
   type: "pronoun";
+  lemma: string;           // 代名詞の基本形（I, you, he など）
   person: 1 | 2 | 3;
   number: "singular" | "plural";
+  pronounType: "personal" | "indefinite";
+  polaritySensitive?: boolean;  // someone/anyone 系
 }
 
 export interface AdjectivePhraseNode {

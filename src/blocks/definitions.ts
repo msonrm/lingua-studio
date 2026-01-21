@@ -345,7 +345,7 @@ Blockly.Blocks['adverb'] = {
 Blockly.Blocks['determiner_block'] = {
   init: function() {
     this.appendValueInput("NOUN")
-        .setCheck("noun")
+        .setCheck(["noun", "nounPhrase"])
         .appendField("DET")
         .appendField(new Blockly.FieldDropdown([
           ["the", "the"],

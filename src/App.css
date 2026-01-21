@@ -134,6 +134,6 @@ body {
   padding: 8px 16px !important;
 }
 
-.blocklyTreeRoot {
-  background: #666666 !important;
+.blocklyTreeLabel {
+  color: #000000 !important;
 }

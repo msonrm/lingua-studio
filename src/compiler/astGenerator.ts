@@ -9,7 +9,7 @@ import {
   PronounHead,
 } from '../types/schema';
 import { findVerb, findPronoun } from '../data/dictionary';
-import { TIME_CHIP_DATA } from '../blocks/definitions';
+import { TIME_CHIP_DATA, QUANTIFIER_DATA } from '../blocks/definitions';
 
 // ============================================
 // BlocklyワークスペースからAST生成
@@ -238,6 +238,10 @@ function parseQuantifierBlock(block: Blockly.Block): NounPhraseNode {
   const qtyValue = block.getFieldValue('QTY_VALUE');
   const nounBlock = block.getInputTargetBlock('NOUN');
 
+  // 数量詞データから数を取得
+  const qtyOption = QUANTIFIER_DATA.find(o => o.value === qtyValue);
+  const grammaticalNumber = qtyOption?.number === 'plural' ? 'plural' : 'singular';
+
   // 内部の名詞ブロックを解析
   const innerNP = nounBlock ? parseNounPhraseBlock(nounBlock) : {
     type: 'nounPhrase' as const,
@@ -245,10 +249,16 @@ function parseQuantifierBlock(block: Blockly.Block): NounPhraseNode {
     head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
   };
 
-  // 数量詞を追加
+  // 数量詞で数を上書き
+  const updatedHead = innerNP.head.type === 'noun'
+    ? { ...innerNP.head, number: grammaticalNumber as 'singular' | 'plural' }
+    : innerNP.head;
+
+  // 数量詞を追加（出力がnullの場合は値を保存しない）
   return {
     ...innerNP,
-    quantifier: qtyValue,
+    head: updatedHead,
+    quantifier: qtyOption?.output ?? undefined,
   };
 }
 
@@ -262,8 +272,6 @@ function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseN
   } else {
     value = block.getFieldValue('PLACE_VALUE');
   }
-
-  const number = block.getFieldValue('NUMBER') as 'singular' | 'plural';
 
   // プレースホルダーやラベルの場合はデフォルト値を返す
   if (!value || value.startsWith('__')) {
@@ -310,14 +318,14 @@ function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseN
     };
   }
 
-  // 通常の名詞（限定詞なし）
+  // 通常の名詞（デフォルトは単数、QTYで上書き可能）
   return {
     type: 'nounPhrase',
     adjectives: [],
     head: {
       type: 'noun',
       lemma: value,
-      number,
+      number: 'singular',
     },
   };
 }

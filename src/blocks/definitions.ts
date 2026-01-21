@@ -60,6 +60,35 @@ const ABSTRACT_OPTIONS: TimeChipOption[] = [
 ];
 
 // ============================================
+// 数量詞データ定義
+// ============================================
+type GrammaticalNumber = 'singular' | 'plural' | 'uncountable';
+
+interface QuantifierOption {
+  label: string;
+  value: string;
+  number: GrammaticalNumber;
+  output: string | null;  // null = 出力なし（[plural]など）
+}
+
+const QUANTIFIER_OPTIONS: QuantifierOption[] = [
+  // 単数
+  { label: 'a/an', value: 'a', number: 'singular', output: 'a' },
+  { label: 'one', value: 'one', number: 'singular', output: 'one' },
+  // 複数
+  { label: 'two', value: 'two', number: 'plural', output: 'two' },
+  { label: 'three', value: 'three', number: 'plural', output: 'three' },
+  { label: 'many', value: 'many', number: 'plural', output: 'many' },
+  { label: 'some', value: 'some', number: 'plural', output: 'some' },
+  { label: 'few', value: 'few', number: 'plural', output: 'few' },
+  { label: 'all', value: 'all', number: 'plural', output: 'all' },
+  { label: 'no', value: 'no', number: 'plural', output: 'no' },
+  // 抽象（出力なし）
+  { label: '[plural]', value: '__plural__', number: 'plural', output: null },
+  { label: '[–]', value: '__uncountable__', number: 'uncountable', output: null },
+];
+
+// ============================================
 // TimeFrame ブロック（ルート）
 // ============================================
 Blockly.Blocks['time_frame'] = {
@@ -227,11 +256,7 @@ Blockly.Blocks['person_block'] = {
 
     this.appendDummyInput()
         .appendField("PERSON")
-        .appendField(new Blockly.FieldDropdown(allOptions), "PERSON_VALUE")
-        .appendField(new Blockly.FieldDropdown([
-          ["singular", "singular"],
-          ["plural", "plural"],
-        ]), "NUMBER");
+        .appendField(new Blockly.FieldDropdown(allOptions), "PERSON_VALUE");
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.person);
@@ -258,11 +283,7 @@ Blockly.Blocks['thing_block'] = {
 
     this.appendDummyInput()
         .appendField("THING")
-        .appendField(new Blockly.FieldDropdown(allOptions), "THING_VALUE")
-        .appendField(new Blockly.FieldDropdown([
-          ["singular", "singular"],
-          ["plural", "plural"],
-        ]), "NUMBER");
+        .appendField(new Blockly.FieldDropdown(allOptions), "THING_VALUE");
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.thing);
@@ -293,11 +314,7 @@ Blockly.Blocks['place_block'] = {
 
     this.appendDummyInput()
         .appendField("PLACE")
-        .appendField(new Blockly.FieldDropdown(allOptions), "PLACE_VALUE")
-        .appendField(new Blockly.FieldDropdown([
-          ["singular", "singular"],
-          ["plural", "plural"],
-        ]), "NUMBER");
+        .appendField(new Blockly.FieldDropdown(allOptions), "PLACE_VALUE");
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.place);
@@ -364,20 +381,12 @@ Blockly.Blocks['determiner_block'] = {
 // ============================================
 Blockly.Blocks['quantifier_block'] = {
   init: function() {
+    const options: [string, string][] = QUANTIFIER_OPTIONS.map(o => [o.label, o.value]);
+
     this.appendValueInput("NOUN")
         .setCheck("noun")
         .appendField("QTY")
-        .appendField(new Blockly.FieldDropdown([
-          ["a/an", "a"],
-          ["one", "one"],
-          ["two", "two"],
-          ["three", "three"],
-          ["many", "many"],
-          ["some", "some"],
-          ["few", "few"],
-          ["all", "all"],
-          ["no", "no"],
-        ]), "QTY_VALUE");
+        .appendField(new Blockly.FieldDropdown(options), "QTY_VALUE");
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.quantifier);
@@ -386,13 +395,15 @@ Blockly.Blocks['quantifier_block'] = {
 };
 
 // ============================================
-// TimeChipオプションのエクスポート（コンパイラ用）
+// オプションのエクスポート（コンパイラ用）
 // ============================================
 export const TIME_CHIP_DATA = {
   concrete: CONCRETE_OPTIONS,
   aspectual: ASPECTUAL_OPTIONS,
   abstract: ABSTRACT_OPTIONS,
 };
+
+export const QUANTIFIER_DATA = QUANTIFIER_OPTIONS;
 
 // ============================================
 // ツールボックス定義

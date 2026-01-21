@@ -47,11 +47,11 @@ const ASPECTUAL_OPTIONS: TimeChipOption[] = [
 
 const ABSTRACT_OPTIONS: TimeChipOption[] = [
   { label: 'Select modifier...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
-  { label: 'Past', value: 'past', tense: 'past', aspect: 'inherit' },
-  { label: 'Future', value: 'future', tense: 'future', aspect: 'inherit' },
-  { label: 'Current', value: 'current', tense: 'present', aspect: 'inherit' },
-  { label: '-ing', value: 'progressive', tense: 'inherit', aspect: 'progressive' },
-  { label: 'Perfect', value: 'perfect', tense: 'inherit', aspect: 'perfect' },
+  { label: '[Past]', value: 'past', tense: 'past', aspect: 'inherit' },
+  { label: '[Future]', value: 'future', tense: 'future', aspect: 'inherit' },
+  { label: '[Current]', value: 'current', tense: 'present', aspect: 'inherit' },
+  { label: '[-ing]', value: 'progressive', tense: 'inherit', aspect: 'progressive' },
+  { label: '[Perfect]', value: 'perfect', tense: 'inherit', aspect: 'perfect' },
 ];
 
 // ============================================

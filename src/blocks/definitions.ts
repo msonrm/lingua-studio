@@ -347,9 +347,8 @@ Blockly.Blocks['pronoun_block'] = {
     const personalOptions: [string, string][] = personalPronouns.map(p => [p.lemma, p.lemma]);
     const indefiniteOptions: [string, string][] = indefinitePronouns.map(p => [p.lemma, p.lemma]);
     const allOptions: [string, string][] = [
-      ...personalOptions.slice(0, 1),  // 最初の1つをデフォルトに
       ["── Personal ──", "__label_personal__"],
-      ...personalOptions.slice(1),
+      ...personalOptions,
       ["── Indefinite ──", "__label_indefinite__"],
       ...indefiniteOptions,
     ];
@@ -357,6 +356,11 @@ Blockly.Blocks['pronoun_block'] = {
     this.appendDummyInput()
         .appendField("PRONOUN")
         .appendField(new Blockly.FieldDropdown(allOptions), "PRONOUN_VALUE");
+
+    // デフォルト値を最初の実際の項目に設定
+    if (personalOptions.length > 0) {
+      this.setFieldValue(personalOptions[0][1], "PRONOUN_VALUE");
+    }
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.person);
@@ -375,15 +379,19 @@ Blockly.Blocks['human_block'] = {
     const commonOptions: [string, string][] = humanNouns.map(n => [n.lemma, n.lemma]);
     const properOptions: [string, string][] = humanProperNouns.map(n => [n.lemma, n.lemma]);
     const nounOptions: [string, string][] = [
-      ...commonOptions.slice(0, 1),  // 最初の1つをデフォルトに
       ["── Common ──", "__label_common__"],
-      ...commonOptions.slice(1),
+      ...commonOptions,
       ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
     ];
 
     this.appendDummyInput()
         .appendField("HUMAN")
         .appendField(new Blockly.FieldDropdown(nounOptions), "HUMAN_VALUE");
+
+    // デフォルト値を最初の実際の項目に設定
+    if (commonOptions.length > 0) {
+      this.setFieldValue(commonOptions[0][1], "HUMAN_VALUE");
+    }
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.person);
@@ -449,9 +457,8 @@ Blockly.Blocks['place_block'] = {
     const properOptions: [string, string][] = placeProperNouns.map(n => [n.lemma, n.lemma]);
     const adverbOptions: [string, string][] = placeAdverbs.map(a => [a.lemma, a.value]);
     const nounOptions: [string, string][] = [
-      ...adverbOptions.slice(0, 1),  // 最初の1つをデフォルトに
       ["── Adverbs ──", "__label_adverbs__"],
-      ...adverbOptions.slice(1),
+      ...adverbOptions,
       ["── Common ──", "__label_common__"],
       ...commonOptions,
       ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
@@ -460,6 +467,11 @@ Blockly.Blocks['place_block'] = {
     this.appendDummyInput()
         .appendField("PLACE")
         .appendField(new Blockly.FieldDropdown(nounOptions), "PLACE_VALUE");
+
+    // デフォルト値を最初の実際の項目に設定
+    if (adverbOptions.length > 0) {
+      this.setFieldValue(adverbOptions[0][1], "PLACE_VALUE");
+    }
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.place);
@@ -499,9 +511,8 @@ Blockly.Blocks['person_block'] = {
     const pronounOptions: [string, string][] = personPronouns.map(p => [p.lemma, p.lemma]);
     const nounOptions: [string, string][] = personNouns.map(n => [n.lemma, n.lemma]);
     const allOptions: [string, string][] = [
-      ...pronounOptions.slice(0, 1),  // 最初の1つをデフォルトに
       ["── Pronouns ──", "__label_pronouns__"],
-      ...pronounOptions.slice(1),
+      ...pronounOptions,
       ["── People ──", "__label_people__"],
       ...nounOptions,
     ];
@@ -509,6 +520,11 @@ Blockly.Blocks['person_block'] = {
     this.appendDummyInput()
         .appendField("PERSON")
         .appendField(new Blockly.FieldDropdown(allOptions), "PERSON_VALUE");
+
+    // デフォルト値を最初の実際の項目に設定
+    if (pronounOptions.length > 0) {
+      this.setFieldValue(pronounOptions[0][1], "PERSON_VALUE");
+    }
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.person);
@@ -528,21 +544,26 @@ Blockly.Blocks['thing_block'] = {
     const nounOptions: [string, string][] = thingNouns.map(n => [n.lemma, n.lemma]);
     const allOptions: [string, string][] = pronounOptions.length > 0
       ? [
-          ...pronounOptions.slice(0, 1),  // 最初の1つをデフォルトに
           ["── Pronouns ──", "__label_pronouns__"],
-          ...pronounOptions.slice(1),
+          ...pronounOptions,
           ["── Things ──", "__label_things__"],
           ...nounOptions,
         ]
       : [
-          ...nounOptions.slice(0, 1),  // 最初の1つをデフォルトに
           ["── Things ──", "__label_things__"],
-          ...nounOptions.slice(1),
+          ...nounOptions,
         ];
 
     this.appendDummyInput()
         .appendField("THING")
         .appendField(new Blockly.FieldDropdown(allOptions), "THING_VALUE");
+
+    // デフォルト値を最初の実際の項目に設定
+    if (pronounOptions.length > 0) {
+      this.setFieldValue(pronounOptions[0][1], "THING_VALUE");
+    } else if (nounOptions.length > 0) {
+      this.setFieldValue(nounOptions[0][1], "THING_VALUE");
+    }
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.thing);

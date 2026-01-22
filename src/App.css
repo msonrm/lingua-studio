@@ -80,7 +80,9 @@ body {
   border-radius: 8px;
   min-height: 60px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .placeholder {

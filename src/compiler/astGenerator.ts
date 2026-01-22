@@ -16,14 +16,27 @@ import { TIME_CHIP_DATA, QUANTIFIER_DATA, DETERMINER_DATA } from '../blocks/defi
 // BlocklyワークスペースからAST生成
 // ============================================
 export function generateAST(workspace: Blockly.Workspace): SentenceNode | null {
+  const sentences = generateMultipleAST(workspace);
+  return sentences.length > 0 ? sentences[0] : null;
+}
+
+// 複数のSENTENCEブロックから複数のASTを生成
+export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[] {
   const timeFrameBlocks = workspace.getBlocksByType('time_frame', false);
 
   if (timeFrameBlocks.length === 0) {
-    return null;
+    return [];
   }
 
-  const timeFrameBlock = timeFrameBlocks[0];
-  return parseTimeFrameBlock(timeFrameBlock);
+  const sentences: SentenceNode[] = [];
+  for (const block of timeFrameBlocks) {
+    const ast = parseTimeFrameBlock(block);
+    if (ast) {
+      sentences.push(ast);
+    }
+  }
+
+  return sentences;
 }
 
 // 動詞ラッパーチェーンの解析結果

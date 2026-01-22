@@ -2,13 +2,13 @@ import { useEffect, useRef, useCallback } from 'react';
 import * as Blockly from 'blockly';
 import '../blocks/definitions';
 import { toolbox } from '../blocks/definitions';
-import { generateAST } from '../compiler/astGenerator';
+import { generateMultipleAST } from '../compiler/astGenerator';
 import { renderToEnglish } from '../compiler/englishRenderer';
 import { SentenceNode } from '../types/schema';
 
 interface BlocklyWorkspaceProps {
-  onASTChange: (ast: SentenceNode | null) => void;
-  onSentenceChange: (sentence: string) => void;
+  onASTChange: (asts: SentenceNode[]) => void;
+  onSentenceChange: (sentences: string[]) => void;
 }
 
 export function BlocklyWorkspace({ onASTChange, onSentenceChange }: BlocklyWorkspaceProps) {
@@ -18,19 +18,17 @@ export function BlocklyWorkspace({ onASTChange, onSentenceChange }: BlocklyWorks
   const handleWorkspaceChange = useCallback(() => {
     if (!workspaceRef.current) return;
 
-    const ast = generateAST(workspaceRef.current);
-    onASTChange(ast);
+    const asts = generateMultipleAST(workspaceRef.current);
+    onASTChange(asts);
 
-    if (ast) {
+    const sentences = asts.map(ast => {
       try {
-        const sentence = renderToEnglish(ast);
-        onSentenceChange(sentence);
+        return renderToEnglish(ast);
       } catch {
-        onSentenceChange('(incomplete)');
+        return '(incomplete)';
       }
-    } else {
-      onSentenceChange('');
-    }
+    });
+    onSentenceChange(sentences);
   }, [onASTChange, onSentenceChange]);
 
   useEffect(() => {

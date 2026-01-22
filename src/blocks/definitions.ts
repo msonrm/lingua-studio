@@ -988,7 +988,7 @@ Blockly.Blocks['preposition_verb'] = {
 
     this.appendValueInput("OBJECT")
         .setCheck(["noun", "adjective", "nounPhrase"])
-        .appendField("(object):");
+        .appendField("object:");
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.prepVerb);
@@ -1008,11 +1008,11 @@ Blockly.Blocks['preposition_noun'] = {
 
     this.appendValueInput("OBJECT")
         .setCheck(["noun", "adjective", "nounPhrase"])
-        .appendField("(location):");
+        .appendField("object:");
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.prepNoun);
-    this.setTooltip("Prepositional Phrase (Noun): modifies a noun with location/relation");
+    this.setTooltip("Prepositional Phrase (Noun): modifies a noun with a prepositional phrase");
   }
 };
 

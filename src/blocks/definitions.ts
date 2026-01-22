@@ -136,24 +136,62 @@ const POST_DETERMINERS: DeterminerOption[] = [
   { label: '[–]', value: '__uncountable__', number: 'uncountable', output: null },
 ];
 
-// 制約ルール
+// ============================================
+// 制約ルール（双方向）
+// ============================================
 const DETERMINER_CONSTRAINTS = {
-  // pre が all/both/half の場合、central で選べないもの
+  // PRE が選ばれた場合、CENTRAL で選べないもの
   preBlocksCentral: {
-    'all': ['a', 'no'],
-    'both': ['a', 'no'],
-    'half': ['a', 'no'],
+    'all': ['a', 'no'],           // "all a student" ✗, "all no students" ✗
+    'both': ['a', 'no', 'this', 'that'],  // "both a/this student" ✗ (both=2, this=1)
+    'half': ['a', 'no'],          // "half a student" ✗ (half the=OK)
   } as Record<string, string[]>,
-  // pre が all/both/half の場合、post で選べないもの
+
+  // PRE が選ばれた場合、POST で選べないもの
   preBlocksPost: {
-    'all': ['one'],
-    'both': ['one'],
-    'half': ['one'],
+    'all': ['one'],               // "all the one" ✗ (数の不一致)
+    'both': ['one', 'three', 'many', 'few', 'some', 'several'],  // both=2のみ
+    'half': ['one'],              // "half the one" ✗
   } as Record<string, string[]>,
-  // central が選ばれた場合、pre をリセットするもの
-  centralResetsPre: ['a', 'no'],
-  // central が選ばれた場合、post をリセットするもの
-  centralResetsPost: ['a'],
+
+  // CENTRAL が選ばれた場合、PRE で選べないもの
+  centralBlocksPre: {
+    'a': ['all', 'both', 'half'],   // "all a student" ✗
+    'no': ['all', 'both', 'half'],  // "all no students" ✗
+    'this': ['both'],               // "both this student" ✗
+    'that': ['both'],               // "both that student" ✗
+  } as Record<string, string[]>,
+
+  // CENTRAL が選ばれた場合、POST で選べないもの
+  centralBlocksPost: {
+    'a': ['one', 'two', 'three', 'many', 'few', 'some', 'several', '__plural__'],  // a + 数量詞 ✗
+    'this': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],  // this + 複数 ✗
+    'that': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],  // that + 複数 ✗
+  } as Record<string, string[]>,
+
+  // POST が選ばれた場合、PRE で選べないもの
+  postBlocksPre: {
+    'one': ['all', 'both', 'half'],     // "all the one" ✗
+    'two': ['half'],                     // "half the two" is odd
+    'three': ['both', 'half'],           // "both the three" ✗
+    'many': ['both', 'half'],
+    'few': ['both', 'half'],
+    'some': ['both', 'half'],
+    'several': ['both', 'half'],
+    '__plural__': ['both'],              // "both the [plural]" is vague
+  } as Record<string, string[]>,
+
+  // POST が選ばれた場合、CENTRAL で選べないもの
+  postBlocksCentral: {
+    'one': ['a'],                        // "a one book" ✗ (冗長)
+    'two': ['a', 'this', 'that'],        // "a/this two books" ✗
+    'three': ['a', 'this', 'that'],
+    'many': ['a', 'this', 'that'],
+    'few': ['a', 'this', 'that'],        // 注: "a few" は例外的イディオム
+    'some': ['a', 'this', 'that'],
+    'several': ['a', 'this', 'that'],
+    '__plural__': ['a', 'this', 'that'], // 数の不一致
+  } as Record<string, string[]>,
 };
 
 
@@ -551,14 +589,65 @@ Blockly.Blocks['adverb'] = {
 // ============================================
 Blockly.Blocks['determiner_unified'] = {
   init: function() {
-    const preOptions: [string, string][] = PRE_DETERMINERS.map(o => [o.label, o.value]);
-    const centralOptions: [string, string][] = CENTRAL_DETERMINERS.map(o => [o.label, o.value]);
-    const postOptions: [string, string][] = POST_DETERMINERS.map(o => [o.label, o.value]);
+    // 動的オプション生成関数（開くたびに呼ばれる）
+    const getPreOptions = (): [string, string][] => {
+      const central = this.getFieldValue('CENTRAL') || '__none__';
+      const post = this.getFieldValue('POST') || '__none__';
 
-    // プルダウンの参照を保持
-    const preDropdown = new Blockly.FieldDropdown(preOptions, this.validatePre.bind(this));
-    const centralDropdown = new Blockly.FieldDropdown(centralOptions, this.validateCentral.bind(this));
-    const postDropdown = new Blockly.FieldDropdown(postOptions, this.validatePost.bind(this));
+      return PRE_DETERMINERS
+        .filter(o => {
+          if (o.value === '__none__') return true;
+          // CENTRAL がこの PRE をブロックしているか？
+          const centralBlocks = DETERMINER_CONSTRAINTS.centralBlocksPre[central] || [];
+          if (centralBlocks.includes(o.value)) return false;
+          // POST がこの PRE をブロックしているか？
+          const postBlocks = DETERMINER_CONSTRAINTS.postBlocksPre[post] || [];
+          if (postBlocks.includes(o.value)) return false;
+          return true;
+        })
+        .map(o => [o.label, o.value]);
+    };
+
+    const getCentralOptions = (): [string, string][] => {
+      const pre = this.getFieldValue('PRE') || '__none__';
+      const post = this.getFieldValue('POST') || '__none__';
+
+      return CENTRAL_DETERMINERS
+        .filter(o => {
+          if (o.value === '__none__') return true;
+          // PRE がこの CENTRAL をブロックしているか？
+          const preBlocks = DETERMINER_CONSTRAINTS.preBlocksCentral[pre] || [];
+          if (preBlocks.includes(o.value)) return false;
+          // POST がこの CENTRAL をブロックしているか？
+          const postBlocks = DETERMINER_CONSTRAINTS.postBlocksCentral[post] || [];
+          if (postBlocks.includes(o.value)) return false;
+          return true;
+        })
+        .map(o => [o.label, o.value]);
+    };
+
+    const getPostOptions = (): [string, string][] => {
+      const pre = this.getFieldValue('PRE') || '__none__';
+      const central = this.getFieldValue('CENTRAL') || '__none__';
+
+      return POST_DETERMINERS
+        .filter(o => {
+          if (o.value === '__none__') return true;
+          // PRE がこの POST をブロックしているか？
+          const preBlocks = DETERMINER_CONSTRAINTS.preBlocksPost[pre] || [];
+          if (preBlocks.includes(o.value)) return false;
+          // CENTRAL がこの POST をブロックしているか？
+          const centralBlocks = DETERMINER_CONSTRAINTS.centralBlocksPost[central] || [];
+          if (centralBlocks.includes(o.value)) return false;
+          return true;
+        })
+        .map(o => [o.label, o.value]);
+    };
+
+    // プルダウンの参照を保持（動的オプション生成）
+    const preDropdown = new Blockly.FieldDropdown(getPreOptions, this.validatePre.bind(this));
+    const centralDropdown = new Blockly.FieldDropdown(getCentralOptions, this.validateCentral.bind(this));
+    const postDropdown = new Blockly.FieldDropdown(getPostOptions, this.validatePost.bind(this));
 
     this.appendValueInput("NOUN")
         .setCheck(["noun", "nounPhrase"])
@@ -574,24 +663,47 @@ Blockly.Blocks['determiner_unified'] = {
 
   // Pre選択時のバリデーション
   validatePre: function(newValue: string): string | null {
-    // 選択を許可
+    if (newValue === '__none__') return newValue;
+
+    const central = this.getFieldValue('CENTRAL');
+    const post = this.getFieldValue('POST');
+
+    // CENTRAL がこの PRE をブロックしているか？
+    const centralBlocks = DETERMINER_CONSTRAINTS.centralBlocksPre[central] || [];
+    if (centralBlocks.includes(newValue)) {
+      // CENTRAL をリセット
+      setTimeout(() => {
+        if (this.getField('CENTRAL')) {
+          this.setFieldValue('__none__', 'CENTRAL');
+        }
+      }, 0);
+    }
+
+    // POST がこの PRE をブロックしているか？
+    const postBlocks = DETERMINER_CONSTRAINTS.postBlocksPre[post] || [];
+    if (postBlocks.includes(newValue)) {
+      // POST をリセット
+      setTimeout(() => {
+        if (this.getField('POST')) {
+          this.setFieldValue('__none__', 'POST');
+        }
+      }, 0);
+    }
+
     return newValue;
   },
 
   // Central選択時のバリデーション
   validateCentral: function(newValue: string): string | null {
+    if (newValue === '__none__') return newValue;
+
     const pre = this.getFieldValue('PRE');
+    const post = this.getFieldValue('POST');
 
-    // pre が all/both/half の場合、a/an や no は選べない
-    if (pre && pre !== '__none__') {
-      const blocked = DETERMINER_CONSTRAINTS.preBlocksCentral[pre] || [];
-      if (blocked.includes(newValue)) {
-        return null;  // 選択を拒否
-      }
-    }
-
-    // a/an や no を選んだ場合、pre をリセット
-    if (DETERMINER_CONSTRAINTS.centralResetsPre.includes(newValue)) {
+    // PRE がこの CENTRAL をブロックしているか？
+    const preBlocks = DETERMINER_CONSTRAINTS.preBlocksCentral[pre] || [];
+    if (preBlocks.includes(newValue)) {
+      // PRE をリセット
       setTimeout(() => {
         if (this.getField('PRE')) {
           this.setFieldValue('__none__', 'PRE');
@@ -599,8 +711,10 @@ Blockly.Blocks['determiner_unified'] = {
       }, 0);
     }
 
-    // a/an を選んだ場合、post もリセット
-    if (DETERMINER_CONSTRAINTS.centralResetsPost.includes(newValue)) {
+    // POST がこの CENTRAL をブロックしているか？
+    const postBlocks = DETERMINER_CONSTRAINTS.postBlocksCentral[post] || [];
+    if (postBlocks.includes(newValue)) {
+      // POST をリセット
       setTimeout(() => {
         if (this.getField('POST')) {
           this.setFieldValue('__none__', 'POST');
@@ -613,20 +727,31 @@ Blockly.Blocks['determiner_unified'] = {
 
   // Post選択時のバリデーション
   validatePost: function(newValue: string): string | null {
+    if (newValue === '__none__') return newValue;
+
     const pre = this.getFieldValue('PRE');
     const central = this.getFieldValue('CENTRAL');
 
-    // pre が all/both/half の場合、one は選べない
-    if (pre && pre !== '__none__') {
-      const blocked = DETERMINER_CONSTRAINTS.preBlocksPost[pre] || [];
-      if (blocked.includes(newValue)) {
-        return null;  // 選択を拒否
-      }
+    // PRE がこの POST をブロックしているか？
+    const preBlocks = DETERMINER_CONSTRAINTS.preBlocksPost[pre] || [];
+    if (preBlocks.includes(newValue)) {
+      // PRE をリセット
+      setTimeout(() => {
+        if (this.getField('PRE')) {
+          this.setFieldValue('__none__', 'PRE');
+        }
+      }, 0);
     }
 
-    // central が a/an の場合、post は none のみ
-    if (central === 'a' && newValue !== '__none__') {
-      return null;  // 選択を拒否
+    // CENTRAL がこの POST をブロックしているか？
+    const centralBlocks = DETERMINER_CONSTRAINTS.centralBlocksPost[central] || [];
+    if (centralBlocks.includes(newValue)) {
+      // CENTRAL をリセット
+      setTimeout(() => {
+        if (this.getField('CENTRAL')) {
+          this.setFieldValue('__none__', 'CENTRAL');
+        }
+      }, 0);
     }
 
     return newValue;

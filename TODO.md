@@ -6,13 +6,10 @@
   - 原因: 空のnounスロットに"something"がデフォルト設定され、ラッパーの出力と重複
   - 修正案: プレースホルダー時はラッパーの出力を抑制、または別のデフォルト処理
 
-- [ ] 副詞の語順が不自然（"has run always" → "has always run"）
-  - 現状: 副詞が文末に配置される
-  - 正しい位置: 副詞タイプにより異なる
-    - 頻度副詞 (always, often): have と過去分詞の間
-    - アスペクト副詞 (already, still): have と過去分詞の間
-    - 様態副詞 (slowly, quickly): 文末または動詞後
-  - 修正案: AdverbNode.advType に応じた配置ロジック
+- [x] 副詞の語順が不自然（"has run always" → "has always run"）
+  - 解決済み: Verb Modifiers (FREQ, MANNER) で副詞タイプ別配置を実装
+    - 頻度副詞: 助動詞と本動詞の間 ("has always run")
+    - 様態副詞: 文末 ("runs quickly")
 
 - [ ] be動詞の人称活用が不完全（"I is" → "I am", "you is" → "you are"）
   - 現状: 3人称単数のみ判定
@@ -28,9 +25,12 @@
 - [ ] 指示代名詞 (this/that as pronouns, these/those)
 - [ ] 所有限定詞 (my, your, his, her, its, our, their)
 - [ ] 場所前置詞 (in, at, to, from)
-- [ ] 否定文対応 (someone → anyone/nobody 切り替え)
+- [x] 否定文対応 - NOT wrapper で実装済み
 - [ ] 疑問文対応
 - [ ] 前置限定詞の語順対応（"all the things" not "the all things"）
+- [ ] Modal（法助動詞）wrapper (can, may, must, should)
+  - TimeFrame の will は時制用、Modal の will は意思表明用
+  - 能力 (can)、許可 (may)、義務 (must)、助言 (should)
   - all, both, half → predeterminer（限定詞の前）
   - two, many, some → postdeterminer（限定詞の後）
   - 修正案: `QUANTIFIER_OPTIONS` に `position: 'pre' | 'post'` を追加

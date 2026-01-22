@@ -6,6 +6,7 @@ import {
   PronounHead,
   FilledArgumentSlot,
   AdjectivePhraseNode,
+  AdverbNode,
   SemanticRole,
 } from '../types/schema';
 import { findVerb, findNoun, findPronoun } from '../data/dictionary';
@@ -44,16 +45,19 @@ function renderClause(clause: ClauseNode): string {
   // 動詞エントリを取得して前置詞情報を参照
   const verbEntry = findVerb(verbPhrase.verb.lemma);
 
-  // 動詞を活用
-  const verbForm = conjugateVerb(
+  // 副詞を種類別に分類
+  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
+  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
+
+  // 動詞を活用（否定含む、頻度副詞を挿入位置で返す）
+  const verbForm = conjugateVerbWithAdverbs(
     verbPhrase.verb.lemma,
     tense,
     aspect,
+    polarity,
+    frequencyAdverbs,
     subjectSlot?.filler as NounPhraseNode | undefined
   );
-
-  // 副詞
-  const adverbs = verbPhrase.adverbs.map(a => a.lemma).join(' ');
 
   // その他の引数（目的語など）- 主語以外（isSubject = false）
   const otherArgs = verbPhrase.arguments
@@ -67,8 +71,11 @@ function renderClause(clause: ClauseNode): string {
     })
     .join(' ');
 
-  // 語順: Subject + Verb + Objects + Adverbs
-  const parts = [subject, verbForm, otherArgs, adverbs].filter(p => p.length > 0);
+  // 様態副詞は文末
+  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+
+  // 語順: Subject + Verb(+neg+freq) + Objects + Manner
+  const parts = [subject, verbForm, otherArgs, mannerStr].filter(p => p.length > 0);
 
   return parts.join(' ');
 }
@@ -165,46 +172,81 @@ function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirma
   }
 }
 
-function conjugateVerb(
+// 否定と頻度副詞を含む動詞活用
+function conjugateVerbWithAdverbs(
   lemma: string,
   tense: 'past' | 'present' | 'future',
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
+  polarity: 'affirmative' | 'negative',
+  frequencyAdverbs: AdverbNode[],
   subject?: NounPhraseNode
 ): string {
   const verbEntry = findVerb(lemma);
   if (!verbEntry) return lemma;
 
-  // 主語の人称・数を判定
+  const isNegative = polarity === 'negative';
   const isThirdPersonSingular = subject && isThirdSingular(subject);
+  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
 
-  // Simple aspect
+  // Simple aspect - 否定は do-support が必要
   if (aspect === 'simple') {
-    switch (tense) {
-      case 'past':
-        return verbEntry.forms.past;
-      case 'present':
-        return isThirdPersonSingular ? verbEntry.forms.s : verbEntry.forms.base;
-      case 'future':
-        return 'will ' + verbEntry.forms.base;
+    if (isNegative) {
+      // 否定: do/does/did + not + [freq] + base
+      let doForm: string;
+      switch (tense) {
+        case 'past':
+          doForm = 'did';
+          break;
+        case 'present':
+          doForm = isThirdPersonSingular ? 'does' : 'do';
+          break;
+        case 'future':
+          // will not [freq] base
+          return freqStr
+            ? `will not ${freqStr} ${verbEntry.forms.base}`
+            : `will not ${verbEntry.forms.base}`;
+      }
+      return freqStr
+        ? `${doForm} not ${freqStr} ${verbEntry.forms.base}`
+        : `${doForm} not ${verbEntry.forms.base}`;
+    } else {
+      // 肯定: [freq] + verb (頻度副詞は動詞の前)
+      switch (tense) {
+        case 'past':
+          return freqStr ? `${freqStr} ${verbEntry.forms.past}` : verbEntry.forms.past;
+        case 'present':
+          const form = isThirdPersonSingular ? verbEntry.forms.s : verbEntry.forms.base;
+          return freqStr ? `${freqStr} ${form}` : form;
+        case 'future':
+          return freqStr
+            ? `will ${freqStr} ${verbEntry.forms.base}`
+            : `will ${verbEntry.forms.base}`;
+      }
     }
   }
 
-  // Progressive
+  // Progressive: aux + [not] + [freq] + verb-ing
   if (aspect === 'progressive') {
     const beForm = tense === 'past' ? 'was' : (tense === 'future' ? 'will be' : (isThirdPersonSingular ? 'is' : 'are'));
-    return beForm + ' ' + verbEntry.forms.ing;
+    const notPart = isNegative ? 'not' : '';
+    const parts = [beForm, notPart, freqStr, verbEntry.forms.ing].filter(p => p.length > 0);
+    return parts.join(' ');
   }
 
-  // Perfect
+  // Perfect: aux + [not] + [freq] + verb-pp
   if (aspect === 'perfect') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
-    return haveForm + ' ' + verbEntry.forms.pp;
+    const notPart = isNegative ? 'not' : '';
+    const parts = [haveForm, notPart, freqStr, verbEntry.forms.pp].filter(p => p.length > 0);
+    return parts.join(' ');
   }
 
-  // Perfect Progressive
+  // Perfect Progressive: aux + [not] + [freq] + been + verb-ing
   if (aspect === 'perfectProgressive') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
-    return haveForm + ' been ' + verbEntry.forms.ing;
+    const notPart = isNegative ? 'not' : '';
+    const parts = [haveForm, notPart, freqStr, 'been', verbEntry.forms.ing].filter(p => p.length > 0);
+    return parts.join(' ');
   }
 
   return lemma;

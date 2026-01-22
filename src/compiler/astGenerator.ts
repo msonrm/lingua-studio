@@ -25,28 +25,46 @@ export function generateAST(workspace: Blockly.Workspace): SentenceNode | null {
   return parseTimeFrameBlock(timeFrameBlock);
 }
 
+// 動詞ラッパーチェーンの解析結果
+interface VerbChainResult {
+  verbPhrase: VerbPhraseNode;
+  polarity: 'affirmative' | 'negative';
+  frequencyAdverbs: AdverbNode[];
+  mannerAdverbs: AdverbNode[];
+}
+
 function parseTimeFrameBlock(block: Blockly.Block): SentenceNode | null {
   // TimeChipを取得してTense/Aspect/出力単語を決定
   const timeChipBlock = block.getInputTargetBlock('TIME_CHIP');
   const { tense, aspect, timeAdverbial } = parseTimeChip(timeChipBlock);
 
-  // 動詞句を取得
-  const verbBlock = block.getInputTargetBlock('ACTION');
-  if (!verbBlock) {
+  // 動詞句を取得（ラッパー含む）
+  const actionBlock = block.getInputTargetBlock('ACTION');
+  if (!actionBlock) {
     return null;
   }
 
-  const verbPhrase = parseVerbBlock(verbBlock);
-  if (!verbPhrase) {
+  const verbChain = parseVerbChain(actionBlock);
+  if (!verbChain) {
     return null;
   }
+
+  // ラッパーから収集した副詞を動詞句に追加
+  const verbPhrase: VerbPhraseNode = {
+    ...verbChain.verbPhrase,
+    adverbs: [
+      ...verbChain.mannerAdverbs,
+      ...verbChain.frequencyAdverbs,
+      ...verbChain.verbPhrase.adverbs,
+    ],
+  };
 
   const clause: ClauseNode = {
     type: 'clause',
     verbPhrase,
     tense,
     aspect,
-    polarity: 'affirmative',
+    polarity: verbChain.polarity,
   };
 
   return {
@@ -55,6 +73,83 @@ function parseTimeFrameBlock(block: Blockly.Block): SentenceNode | null {
     sentenceType: 'declarative',
     timeAdverbial,
   };
+}
+
+// 動詞ラッパーチェーンを解析
+function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
+  const blockType = block.type;
+
+  // 否定ラッパーの処理
+  if (blockType === 'negation_wrapper') {
+    const innerBlock = block.getInputTargetBlock('VERB');
+    if (!innerBlock) {
+      return null;
+    }
+    const innerResult = parseVerbChain(innerBlock);
+    if (!innerResult) {
+      return null;
+    }
+    return {
+      ...innerResult,
+      polarity: 'negative',
+    };
+  }
+
+  // 頻度副詞ラッパーの処理
+  if (blockType === 'frequency_wrapper') {
+    const freqValue = block.getFieldValue('FREQ_VALUE');
+    const innerBlock = block.getInputTargetBlock('VERB');
+    if (!innerBlock) {
+      return null;
+    }
+    const innerResult = parseVerbChain(innerBlock);
+    if (!innerResult) {
+      return null;
+    }
+    return {
+      ...innerResult,
+      frequencyAdverbs: [
+        { type: 'adverb', lemma: freqValue, advType: 'frequency' },
+        ...innerResult.frequencyAdverbs,
+      ],
+    };
+  }
+
+  // 様態副詞ラッパーの処理
+  if (blockType === 'manner_wrapper') {
+    const mannerValue = block.getFieldValue('MANNER_VALUE');
+    const innerBlock = block.getInputTargetBlock('VERB');
+    if (!innerBlock) {
+      return null;
+    }
+    const innerResult = parseVerbChain(innerBlock);
+    if (!innerResult) {
+      return null;
+    }
+    return {
+      ...innerResult,
+      mannerAdverbs: [
+        { type: 'adverb', lemma: mannerValue, advType: 'manner' },
+        ...innerResult.mannerAdverbs,
+      ],
+    };
+  }
+
+  // 実際の動詞ブロックの処理
+  if (blockType === 'verb') {
+    const verbPhrase = parseVerbBlock(block);
+    if (!verbPhrase) {
+      return null;
+    }
+    return {
+      verbPhrase,
+      polarity: 'affirmative',
+      frequencyAdverbs: [],
+      mannerAdverbs: [],
+    };
+  }
+
+  return null;
 }
 
 // TimeChipの値から出力テキストへのマッピング

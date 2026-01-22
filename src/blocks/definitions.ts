@@ -16,6 +16,10 @@ const COLORS = {
   quantifier: '#3d2d4a', // 暗紫（数量詞）
   adjective: 290,        // 紫
   adverb: 20,            // 赤オレンジ
+  // Verb modifiers
+  negation: '#C71585',   // マゼンタ（否定）
+  frequency: '#FF8C00',  // オレンジ（頻度副詞）
+  manner: '#FF6347',     // トマト（様態副詞）
 };
 
 // ============================================
@@ -413,6 +417,74 @@ Blockly.Blocks['adjective_wrapper'] = {
 };
 
 // ============================================
+// 頻度副詞データ定義
+// ============================================
+const FREQUENCY_ADVERBS = [
+  { label: 'always', value: 'always' },
+  { label: 'usually', value: 'usually' },
+  { label: 'often', value: 'often' },
+  { label: 'sometimes', value: 'sometimes' },
+  { label: 'rarely', value: 'rarely' },
+  { label: 'never', value: 'never' },
+];
+
+// ============================================
+// 様態副詞データ定義
+// ============================================
+const MANNER_ADVERBS = adverbs.filter(a => a.type === 'manner');
+
+// ============================================
+// 否定ラッパーブロック（動詞修飾）
+// ============================================
+Blockly.Blocks['negation_wrapper'] = {
+  init: function() {
+    this.appendStatementInput("VERB")
+        .setCheck("verb")
+        .appendField("NOT");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.negation);
+    this.setTooltip("Negation: makes the action negative");
+  }
+};
+
+// ============================================
+// 頻度副詞ラッパーブロック（動詞修飾）
+// ============================================
+Blockly.Blocks['frequency_wrapper'] = {
+  init: function() {
+    const options: [string, string][] = FREQUENCY_ADVERBS.map(a => [a.label, a.value]);
+
+    this.appendStatementInput("VERB")
+        .setCheck("verb")
+        .appendField("FREQ")
+        .appendField(new Blockly.FieldDropdown(options), "FREQ_VALUE");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.frequency);
+    this.setTooltip("Frequency: how often the action occurs");
+  }
+};
+
+// ============================================
+// 様態副詞ラッパーブロック（動詞修飾・外側のみ）
+// ============================================
+Blockly.Blocks['manner_wrapper'] = {
+  init: function() {
+    const options: [string, string][] = MANNER_ADVERBS.map(a => [a.lemma, a.lemma]);
+
+    this.appendStatementInput("VERB")
+        .setCheck("verb")
+        .appendField("MANNER")
+        .appendField(new Blockly.FieldDropdown(options), "MANNER_VALUE");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.manner);
+    this.setTooltip("Manner: how the action is performed (outer wrapper only)");
+  }
+};
+
+// ============================================
 // オプションのエクスポート（コンパイラ用）
 // ============================================
 export const TIME_CHIP_DATA = {
@@ -422,6 +494,8 @@ export const TIME_CHIP_DATA = {
 };
 
 export const QUANTIFIER_DATA = QUANTIFIER_OPTIONS;
+
+export const FREQUENCY_ADVERB_DATA = FREQUENCY_ADVERBS;
 
 // ============================================
 // ツールボックス定義
@@ -474,10 +548,12 @@ export const toolbox = {
     },
     {
       kind: "category",
-      name: "Adverbs",
-      colour: COLORS.adverb,
+      name: "Verb Modifiers",
+      colour: COLORS.frequency,
       contents: [
-        { kind: "block", type: "adverb" },
+        { kind: "block", type: "negation_wrapper" },
+        { kind: "block", type: "frequency_wrapper" },
+        { kind: "block", type: "manner_wrapper" },
       ]
     },
   ]

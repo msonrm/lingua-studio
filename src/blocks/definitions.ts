@@ -36,7 +36,6 @@ interface TimeChipOption {
 }
 
 const CONCRETE_OPTIONS: TimeChipOption[] = [
-  { label: 'Select time...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
   { label: 'Yesterday', value: 'yesterday', tense: 'past', aspect: 'simple' },
   { label: 'Tomorrow', value: 'tomorrow', tense: 'future', aspect: 'simple' },
   { label: 'Every day', value: 'every_day', tense: 'present', aspect: 'simple' },
@@ -46,7 +45,6 @@ const CONCRETE_OPTIONS: TimeChipOption[] = [
 ];
 
 const ASPECTUAL_OPTIONS: TimeChipOption[] = [
-  { label: 'Select aspect...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
   { label: 'Now', value: 'now', tense: 'present', aspect: 'progressive' },
   { label: 'Just now', value: 'just_now', tense: 'past', aspect: 'perfect' },
   { label: 'Already/Yet', value: 'completion', tense: 'inherit', aspect: 'perfect' },
@@ -55,7 +53,6 @@ const ASPECTUAL_OPTIONS: TimeChipOption[] = [
 ];
 
 const ABSTRACT_OPTIONS: TimeChipOption[] = [
-  { label: 'Select modifier...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
   { label: '[Past]', value: 'past', tense: 'past', aspect: 'inherit' },
   { label: '[Future]', value: 'future', tense: 'future', aspect: 'inherit' },
   { label: '[Current]', value: 'current', tense: 'present', aspect: 'inherit' },
@@ -350,7 +347,6 @@ Blockly.Blocks['pronoun_block'] = {
     const personalOptions: [string, string][] = personalPronouns.map(p => [p.lemma, p.lemma]);
     const indefiniteOptions: [string, string][] = indefinitePronouns.map(p => [p.lemma, p.lemma]);
     const allOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
       ["── Personal ──", "__label_personal__"],
       ...personalOptions,
       ["── Indefinite ──", "__label_indefinite__"],
@@ -378,7 +374,6 @@ Blockly.Blocks['human_block'] = {
     const commonOptions: [string, string][] = humanNouns.map(n => [n.lemma, n.lemma]);
     const properOptions: [string, string][] = humanProperNouns.map(n => [n.lemma, n.lemma]);
     const nounOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
       ["── Common ──", "__label_common__"],
       ...commonOptions,
       ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
@@ -402,7 +397,6 @@ const animalNouns = nouns.filter(n => n.category === 'animal');
 Blockly.Blocks['animal_block'] = {
   init: function() {
     const nounOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
       ...animalNouns.map(n => [n.lemma, n.lemma] as [string, string]),
     ];
 
@@ -424,7 +418,6 @@ const objectNouns = nouns.filter(n => n.category === 'object');
 Blockly.Blocks['object_block'] = {
   init: function() {
     const nounOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
       ...objectNouns.map(n => [n.lemma, n.lemma] as [string, string]),
     ];
 
@@ -454,7 +447,6 @@ Blockly.Blocks['place_block'] = {
     const properOptions: [string, string][] = placeProperNouns.map(n => [n.lemma, n.lemma]);
     const adverbOptions: [string, string][] = placeAdverbs.map(a => [a.lemma, a.value]);
     const nounOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
       ["── Adverbs ──", "__label_adverbs__"],
       ...adverbOptions,
       ["── Common ──", "__label_common__"],
@@ -480,7 +472,6 @@ const abstractNouns = nouns.filter(n => n.category === 'abstract');
 Blockly.Blocks['abstract_block'] = {
   init: function() {
     const nounOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
       ...abstractNouns.map(n => [n.lemma, n.lemma] as [string, string]),
     ];
 
@@ -505,7 +496,6 @@ Blockly.Blocks['person_block'] = {
     const pronounOptions: [string, string][] = personPronouns.map(p => [p.lemma, p.lemma]);
     const nounOptions: [string, string][] = personNouns.map(n => [n.lemma, n.lemma]);
     const allOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
       ["── Pronouns ──", "__label_pronouns__"],
       ...pronounOptions,
       ["── People ──", "__label_people__"],
@@ -533,7 +523,6 @@ Blockly.Blocks['thing_block'] = {
     const pronounOptions: [string, string][] = thingPronouns.map(p => [p.lemma, p.lemma]);
     const nounOptions: [string, string][] = thingNouns.map(n => [n.lemma, n.lemma]);
     const allOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
       ...pronounOptions.length > 0 ? [["── Pronouns ──", "__label_pronouns__"] as [string, string], ...pronounOptions] : [],
       ["── Things ──", "__label_things__"],
       ...nounOptions,

@@ -384,7 +384,7 @@ Blockly.Blocks['quantifier_block'] = {
     const options: [string, string][] = QUANTIFIER_OPTIONS.map(o => [o.label, o.value]);
 
     this.appendValueInput("NOUN")
-        .setCheck("noun")
+        .setCheck(["noun", "nounPhrase"])
         .appendField("QTY")
         .appendField(new Blockly.FieldDropdown(options), "QTY_VALUE");
 

@@ -2,24 +2,32 @@ import * as Blockly from 'blockly';
 import { verbs, nouns, adjectives, adverbs, pronouns, findNoun } from '../data/dictionary';
 
 // ============================================
-// 色の定義
+// 色の定義（モンテッソーリベース）
 // ============================================
 const COLORS = {
-  timeFrame: '#8B0000',  // ダークレッド
-  timeChip: '#DAA520',   // ゴールド
-  action: '#DC143C',     // クリムゾンレッド（モンテッソーリ的）
-  noun: 230,             // 青（レガシー）
-  person: '#0d1321',     // ほぼ黒の濃紺（モンテッソーリ的）
-  thing: '#0d1321',      // ほぼ黒の濃紺（モンテッソーリ的）
-  place: '#1a0a0a',      // ほぼ黒の暗赤（モンテッソーリ的）
-  determiner: '#2d4a3e', // 暗緑（限定詞）
-  quantifier: '#3d2d4a', // 暗紫（数量詞）
-  adjective: 290,        // 紫
-  adverb: 20,            // 赤オレンジ
-  // Verb modifiers
-  negation: '#C71585',   // マゼンタ（否定）
-  frequency: '#FF8C00',  // オレンジ（頻度副詞）
-  manner: '#FF6347',     // トマト（様態副詞）
+  // Sentence系（中立・ブラウン系）
+  timeFrame: '#5D4E37',  // 暖かみのあるブラウン
+  timeChip: '#8B7355',   // 明るめのブラウン
+
+  // Verb系（暖色・赤系グラデーション）
+  action: '#DC143C',     // クリムゾンレッド（モンテッソーリ）
+  negation: '#E53935',   // 明るい赤
+  frequency: '#EF5350',  // さらに明るい赤
+  manner: '#EF6C57',     // 赤オレンジ
+
+  // Noun系（寒色・黒〜青系グラデーション）
+  person: '#0d1321',     // ほぼ黒（モンテッソーリ）
+  thing: '#0d1321',      // ほぼ黒（モンテッソーリ）
+  place: '#0d1321',      // ほぼ黒（モンテッソーリ）
+  noun: '#0d1321',       // ほぼ黒（統一）
+
+  // Noun Modifier系（寒色・ネイビー系グラデーション）
+  determiner: '#1a365d', // ダークネイビー
+  adjective: '#2c5282',  // ネイビー
+  quantifier: '#2b4c7e', // ネイビー（中間）
+
+  // レガシー
+  adverb: '#EF6C57',     // 赤オレンジ（様態副詞と同系）
 };
 
 // ============================================

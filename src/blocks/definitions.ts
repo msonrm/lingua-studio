@@ -1,5 +1,5 @@
 import * as Blockly from 'blockly';
-import { verbs, nouns, adjectives, adverbs, pronouns } from '../data/dictionary';
+import { verbs, nouns, adjectives, adverbs, pronouns, findNoun } from '../data/dictionary';
 
 // ============================================
 // 色の定義
@@ -136,6 +136,63 @@ const POST_DETERMINERS: DeterminerOption[] = [
   { label: '[–]', value: '__uncountable__', number: 'uncountable', output: null },
 ];
 
+// ============================================
+// 制約ルール（双方向）
+// ============================================
+const DETERMINER_CONSTRAINTS = {
+  // PRE が選ばれた場合、CENTRAL で選べないもの
+  preBlocksCentral: {
+    'all': ['a', 'no'],
+    'both': ['a', 'no', 'this', 'that'],
+    'half': ['a', 'no'],
+  } as Record<string, string[]>,
+
+  // PRE が選ばれた場合、POST で選べないもの
+  preBlocksPost: {
+    'all': ['one'],
+    'both': ['one', 'three', 'many', 'few', 'some', 'several'],
+    'half': ['one'],
+  } as Record<string, string[]>,
+
+  // CENTRAL が選ばれた場合、PRE で選べないもの
+  centralBlocksPre: {
+    'a': ['all', 'both', 'half'],
+    'no': ['all', 'both', 'half'],
+    'this': ['both'],
+    'that': ['both'],
+  } as Record<string, string[]>,
+
+  // CENTRAL が選ばれた場合、POST で選べないもの
+  centralBlocksPost: {
+    'a': ['one', 'two', 'three', 'many', 'few', 'some', 'several', '__plural__'],
+    'this': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],
+    'that': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],
+  } as Record<string, string[]>,
+
+  // POST が選ばれた場合、PRE で選べないもの
+  postBlocksPre: {
+    'one': ['all', 'both', 'half'],
+    'two': ['half'],
+    'three': ['both', 'half'],
+    'many': ['both', 'half'],
+    'few': ['both', 'half'],
+    'some': ['both', 'half'],
+    'several': ['both', 'half'],
+    '__plural__': ['both'],
+  } as Record<string, string[]>,
+
+  // POST が選ばれた場合、CENTRAL で選べないもの
+  postBlocksCentral: {
+    'one': ['a'],
+    'two': ['a', 'this', 'that'],
+    'three': ['a', 'this', 'that'],
+    'many': ['a', 'this', 'that'],
+    'few': ['a', 'this', 'that'],
+    'some': ['a', 'this', 'that'],
+    'several': ['a', 'this', 'that'],
+    '__plural__': ['a', 'this', 'that'],
+  } as Record<string, string[]>,
+};
 
 // ============================================
 // TimeFrame ブロック（ルート）
@@ -527,25 +584,146 @@ Blockly.Blocks['adverb'] = {
 };
 
 // ============================================
-// 統合限定詞ブロック（3つのプルダウン）- シンプル版
+// 統合限定詞ブロック（3つのプルダウン）- 動的ラベル版
 // ============================================
 Blockly.Blocks['determiner_unified'] = {
   init: function() {
-    // シンプルなオプション配列
-    const preOptions: [string, string][] = PRE_DETERMINERS.map(o => [o.label, o.value]);
-    const centralOptions: [string, string][] = CENTRAL_DETERMINERS.map(o => [o.label, o.value]);
-    const postOptions: [string, string][] = POST_DETERMINERS.map(o => [o.label, o.value]);
+    const block = this;
+
+    // 接続された名詞のプロパティを取得
+    const getConnectedNounInfo = (): { countable: boolean; proper: boolean } | null => {
+      const nounInput = block.getInput('NOUN');
+      if (!nounInput) return null;
+      const connection = nounInput.connection;
+      if (!connection || !connection.targetBlock()) return null;
+      const targetBlock = connection.targetBlock();
+      if (!targetBlock) return null;
+
+      const fieldMap: Record<string, string> = {
+        'human_block': 'HUMAN_VALUE',
+        'animal_block': 'ANIMAL_VALUE',
+        'object_block': 'OBJECT_VALUE',
+        'place_block': 'PLACE_VALUE',
+        'abstract_block': 'ABSTRACT_VALUE',
+        'person_block': 'PERSON_VALUE',
+        'thing_block': 'THING_VALUE',
+      };
+      const fieldName = fieldMap[targetBlock.type];
+      if (!fieldName) return null;
+      const nounLemma = targetBlock.getFieldValue(fieldName);
+      if (!nounLemma || nounLemma.startsWith('__')) return null;
+      const nounEntry = findNoun(nounLemma);
+      if (!nounEntry) return null;
+      return { countable: nounEntry.countable, proper: nounEntry.proper === true };
+    };
+
+    // 無効マーク付きラベルを生成
+    const markInvalid = (label: string) => `× ${label}`;
+
+    // PRE オプション生成（クリック時に呼ばれる）
+    const getPreOptions = (): [string, string][] => {
+      const central = block.getFieldValue('CENTRAL') || '__none__';
+      const post = block.getFieldValue('POST') || '__none__';
+      const nounInfo = getConnectedNounInfo();
+
+      return PRE_DETERMINERS.map(o => {
+        if (o.value === '__none__') return [o.label, o.value];
+
+        // 固有名詞：全て無効
+        if (nounInfo?.proper) return [markInvalid(o.label), o.value];
+        // 不可算名詞：both/half 無効
+        if (nounInfo && !nounInfo.countable && (o.value === 'both' || o.value === 'half')) {
+          return [markInvalid(o.label), o.value];
+        }
+        // CENTRAL による制約
+        if (DETERMINER_CONSTRAINTS.centralBlocksPre[central]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        // POST による制約
+        if (DETERMINER_CONSTRAINTS.postBlocksPre[post]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        return [o.label, o.value];
+      });
+    };
+
+    // CENTRAL オプション生成
+    const getCentralOptions = (): [string, string][] => {
+      const pre = block.getFieldValue('PRE') || '__none__';
+      const post = block.getFieldValue('POST') || '__none__';
+      const nounInfo = getConnectedNounInfo();
+
+      return CENTRAL_DETERMINERS.map(o => {
+        if (o.value === '__none__') return [o.label, o.value];
+
+        // 固有名詞：全て無効
+        if (nounInfo?.proper) return [markInvalid(o.label), o.value];
+        // 不可算名詞：a/an 無効
+        if (nounInfo && !nounInfo.countable && o.value === 'a') {
+          return [markInvalid(o.label), o.value];
+        }
+        // PRE による制約
+        if (DETERMINER_CONSTRAINTS.preBlocksCentral[pre]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        // POST による制約
+        if (DETERMINER_CONSTRAINTS.postBlocksCentral[post]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        return [o.label, o.value];
+      });
+    };
+
+    // POST オプション生成
+    const getPostOptions = (): [string, string][] => {
+      const pre = block.getFieldValue('PRE') || '__none__';
+      const central = block.getFieldValue('CENTRAL') || '__none__';
+      const nounInfo = getConnectedNounInfo();
+      const countableOnly = ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'];
+
+      return POST_DETERMINERS.map(o => {
+        if (o.value === '__none__') return [o.label, o.value];
+
+        // 固有名詞：全て無効
+        if (nounInfo?.proper) return [markInvalid(o.label), o.value];
+        // 不可算名詞：数量詞無効
+        if (nounInfo && !nounInfo.countable && countableOnly.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        // PRE による制約
+        if (DETERMINER_CONSTRAINTS.preBlocksPost[pre]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        // CENTRAL による制約
+        if (DETERMINER_CONSTRAINTS.centralBlocksPost[central]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        return [o.label, o.value];
+      });
+    };
+
+    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否
+    const createValidator = (getOptions: () => [string, string][]) => {
+      return function(newValue: string) {
+        const options = getOptions();
+        const selected = options.find(([, v]) => v === newValue);
+        if (selected && selected[0].startsWith('×')) {
+          return null;  // 選択を拒否
+        }
+        return newValue;
+      };
+    };
 
     this.appendValueInput("NOUN")
         .setCheck(["noun", "nounPhrase"])
         .appendField("DET")
-        .appendField(new Blockly.FieldDropdown(preOptions), "PRE")
-        .appendField(new Blockly.FieldDropdown(centralOptions), "CENTRAL")
-        .appendField(new Blockly.FieldDropdown(postOptions), "POST");
+        .appendField(new Blockly.FieldDropdown(getPreOptions, createValidator(getPreOptions)), "PRE")
+        .appendField(new Blockly.FieldDropdown(getCentralOptions, createValidator(getCentralOptions)), "CENTRAL")
+        .appendField(new Blockly.FieldDropdown(getPostOptions, createValidator(getPostOptions)), "POST");
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.determiner);
-    this.setTooltip("Determiner: pre + central + post (e.g., 'all the two')");
+    this.setTooltip("Determiner: pre + central + post (× = 選択不可)");
   },
 };
 

@@ -981,6 +981,16 @@ export const toolbox = {
     },
     {
       kind: "category",
+      name: "Verb Modifiers",
+      colour: COLORS.frequency,
+      contents: [
+        { kind: "block", type: "negation_wrapper" },
+        { kind: "block", type: "frequency_wrapper" },
+        { kind: "block", type: "manner_wrapper" },
+      ]
+    },
+    {
+      kind: "category",
       name: "Nouns",
       colour: COLORS.person,
       contents: [
@@ -1070,16 +1080,6 @@ export const toolbox = {
       contents: [
         { kind: "block", type: "determiner_unified" },
         { kind: "block", type: "adjective_wrapper" },
-      ]
-    },
-    {
-      kind: "category",
-      name: "Verb Modifiers",
-      colour: COLORS.frequency,
-      contents: [
-        { kind: "block", type: "negation_wrapper" },
-        { kind: "block", type: "frequency_wrapper" },
-        { kind: "block", type: "manner_wrapper" },
       ]
     },
   ]

@@ -1,5 +1,6 @@
 import * as Blockly from 'blockly';
 import { verbs, nouns, adjectives, adverbs, pronouns, findNoun } from '../data/dictionary';
+import { FieldDropdownWithDisabled, DropdownOptionWithReason } from './FieldDropdownWithDisabled';
 
 // ============================================
 // 色の定義
@@ -137,61 +138,75 @@ const POST_DETERMINERS: DeterminerOption[] = [
 ];
 
 // ============================================
-// 制約ルール（双方向）
+// 制約ルール（双方向）+ 理由（教育用）
 // ============================================
+interface ConstraintWithReason {
+  blocked: string[];
+  reason: string;
+}
+
 const DETERMINER_CONSTRAINTS = {
   // PRE が選ばれた場合、CENTRAL で選べないもの
   preBlocksCentral: {
-    'all': ['a', 'no'],           // "all a student" ✗, "all no students" ✗
-    'both': ['a', 'no', 'this', 'that'],  // "both a/this student" ✗ (both=2, this=1)
-    'half': ['a', 'no'],          // "half a student" ✗ (half the=OK)
-  } as Record<string, string[]>,
+    'all': { blocked: ['a', 'no'], reason: 'all + a/no は不可' },
+    'both': { blocked: ['a', 'no', 'this', 'that'], reason: 'both は複数を指す' },
+    'half': { blocked: ['a', 'no'], reason: 'half + a/no は不可' },
+  } as Record<string, ConstraintWithReason>,
 
   // PRE が選ばれた場合、POST で選べないもの
   preBlocksPost: {
-    'all': ['one'],               // "all the one" ✗ (数の不一致)
-    'both': ['one', 'three', 'many', 'few', 'some', 'several'],  // both=2のみ
-    'half': ['one'],              // "half the one" ✗
-  } as Record<string, string[]>,
+    'all': { blocked: ['one'], reason: 'all + one は数が矛盾' },
+    'both': { blocked: ['one', 'three', 'many', 'few', 'some', 'several'], reason: 'both = 2のみ' },
+    'half': { blocked: ['one'], reason: 'half + one は不可' },
+  } as Record<string, ConstraintWithReason>,
 
   // CENTRAL が選ばれた場合、PRE で選べないもの
   centralBlocksPre: {
-    'a': ['all', 'both', 'half'],   // "all a student" ✗
-    'no': ['all', 'both', 'half'],  // "all no students" ✗
-    'this': ['both'],               // "both this student" ✗
-    'that': ['both'],               // "both that student" ✗
-  } as Record<string, string[]>,
+    'a': { blocked: ['all', 'both', 'half'], reason: 'a/an は単数' },
+    'no': { blocked: ['all', 'both', 'half'], reason: 'no + 前置詞は不可' },
+    'this': { blocked: ['both'], reason: 'this は単数' },
+    'that': { blocked: ['both'], reason: 'that は単数' },
+  } as Record<string, ConstraintWithReason>,
 
   // CENTRAL が選ばれた場合、POST で選べないもの
   centralBlocksPost: {
-    'a': ['one', 'two', 'three', 'many', 'few', 'some', 'several', '__plural__'],  // a + 数量詞 ✗
-    'this': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],  // this + 複数 ✗
-    'that': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],  // that + 複数 ✗
-  } as Record<string, string[]>,
+    'a': { blocked: ['one', 'two', 'three', 'many', 'few', 'some', 'several', '__plural__'], reason: 'a/an は単数、数量詞不可' },
+    'this': { blocked: ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'], reason: 'this は単数' },
+    'that': { blocked: ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'], reason: 'that は単数' },
+  } as Record<string, ConstraintWithReason>,
 
   // POST が選ばれた場合、PRE で選べないもの
   postBlocksPre: {
-    'one': ['all', 'both', 'half'],     // "all the one" ✗
-    'two': ['half'],                     // "half the two" is odd
-    'three': ['both', 'half'],           // "both the three" ✗
-    'many': ['both', 'half'],
-    'few': ['both', 'half'],
-    'some': ['both', 'half'],
-    'several': ['both', 'half'],
-    '__plural__': ['both'],              // "both the [plural]" is vague
-  } as Record<string, string[]>,
+    'one': { blocked: ['all', 'both', 'half'], reason: 'one は単数' },
+    'two': { blocked: ['half'], reason: 'two + half は不自然' },
+    'three': { blocked: ['both', 'half'], reason: 'three + both/half は矛盾' },
+    'many': { blocked: ['both', 'half'], reason: 'many + both/half は矛盾' },
+    'few': { blocked: ['both', 'half'], reason: 'few + both/half は矛盾' },
+    'some': { blocked: ['both', 'half'], reason: 'some + both/half は矛盾' },
+    'several': { blocked: ['both', 'half'], reason: 'several + both/half は矛盾' },
+    '__plural__': { blocked: ['both'], reason: 'both は具体的な数が必要' },
+  } as Record<string, ConstraintWithReason>,
 
   // POST が選ばれた場合、CENTRAL で選べないもの
   postBlocksCentral: {
-    'one': ['a'],                        // "a one book" ✗ (冗長)
-    'two': ['a', 'this', 'that'],        // "a/this two books" ✗
-    'three': ['a', 'this', 'that'],
-    'many': ['a', 'this', 'that'],
-    'few': ['a', 'this', 'that'],        // 注: "a few" は例外的イディオム
-    'some': ['a', 'this', 'that'],
-    'several': ['a', 'this', 'that'],
-    '__plural__': ['a', 'this', 'that'], // 数の不一致
-  } as Record<string, string[]>,
+    'one': { blocked: ['a'], reason: 'a + one は冗長' },
+    'two': { blocked: ['a', 'this', 'that'], reason: '複数 + a/this/that は不可' },
+    'three': { blocked: ['a', 'this', 'that'], reason: '複数 + a/this/that は不可' },
+    'many': { blocked: ['a', 'this', 'that'], reason: '複数 + a/this/that は不可' },
+    'few': { blocked: ['a', 'this', 'that'], reason: '複数 + a/this/that は不可' },
+    'some': { blocked: ['a', 'this', 'that'], reason: '複数 + a/this/that は不可' },
+    'several': { blocked: ['a', 'this', 'that'], reason: '複数 + a/this/that は不可' },
+    '__plural__': { blocked: ['a', 'this', 'that'], reason: '複数 + a/this/that は不可' },
+  } as Record<string, ConstraintWithReason>,
+};
+
+// 名詞プロパティに基づく制約理由
+const NOUN_CONSTRAINT_REASONS = {
+  proper: '固有名詞には限定詞不要',
+  uncountable_a: '不可算名詞に a/an は使えない',
+  uncountable_both: '不可算名詞に both は使えない',
+  uncountable_half: '不可算名詞に half は使えない',
+  uncountable_count: '不可算名詞に数量詞は使えない',
 };
 
 
@@ -585,7 +600,7 @@ Blockly.Blocks['adverb'] = {
 };
 
 // ============================================
-// 統合限定詞ブロック（3つのプルダウン）
+// 統合限定詞ブロック（3つのプルダウン）- グレーアウト対応版
 // ============================================
 Blockly.Blocks['determiner_unified'] = {
   init: function() {
@@ -628,83 +643,113 @@ Blockly.Blocks['determiner_unified'] = {
       };
     };
 
-    // 動的オプション生成関数（開くたびに呼ばれる）
-    const getPreOptions = (): [string, string][] => {
+    // 動的オプション生成関数（グレーアウト対応）
+    const getPreOptions = (): DropdownOptionWithReason[] => {
       const central = this.getFieldValue('CENTRAL') || '__none__';
       const post = this.getFieldValue('POST') || '__none__';
       const nounInfo = getConnectedNounInfo();
 
-      return PRE_DETERMINERS
-        .filter(o => {
-          if (o.value === '__none__') return true;
-          // 固有名詞：全ての限定詞を無効化
-          if (nounInfo?.proper) return false;
-          // 不可算名詞：both/half を無効化（all は OK: "all the water"）
-          if (nounInfo && !nounInfo.countable && (o.value === 'both' || o.value === 'half')) return false;
-          // CENTRAL がこの PRE をブロックしているか？
-          const centralBlocks = DETERMINER_CONSTRAINTS.centralBlocksPre[central] || [];
-          if (centralBlocks.includes(o.value)) return false;
-          // POST がこの PRE をブロックしているか？
-          const postBlocks = DETERMINER_CONSTRAINTS.postBlocksPre[post] || [];
-          if (postBlocks.includes(o.value)) return false;
-          return true;
-        })
-        .map(o => [o.label, o.value]);
-    };
+      return PRE_DETERMINERS.map(o => {
+        if (o.value === '__none__') {
+          return { label: o.label, value: o.value };
+        }
 
-    const getCentralOptions = (): [string, string][] => {
-      const pre = this.getFieldValue('PRE') || '__none__';
-      const post = this.getFieldValue('POST') || '__none__';
-      const nounInfo = getConnectedNounInfo();
-
-      return CENTRAL_DETERMINERS
-        .filter(o => {
-          if (o.value === '__none__') return true;
-          // 固有名詞：全ての限定詞を無効化
-          if (nounInfo?.proper) return false;
-          // 不可算名詞：a/an を無効化
-          if (nounInfo && !nounInfo.countable && o.value === 'a') return false;
-          // PRE がこの CENTRAL をブロックしているか？
-          const preBlocks = DETERMINER_CONSTRAINTS.preBlocksCentral[pre] || [];
-          if (preBlocks.includes(o.value)) return false;
-          // POST がこの CENTRAL をブロックしているか？
-          const postBlocks = DETERMINER_CONSTRAINTS.postBlocksCentral[post] || [];
-          if (postBlocks.includes(o.value)) return false;
-          return true;
-        })
-        .map(o => [o.label, o.value]);
-    };
-
-    const getPostOptions = (): [string, string][] => {
-      const pre = this.getFieldValue('PRE') || '__none__';
-      const central = this.getFieldValue('CENTRAL') || '__none__';
-      const nounInfo = getConnectedNounInfo();
-
-      return POST_DETERMINERS
-        .filter(o => {
-          if (o.value === '__none__') return true;
-          // 固有名詞：全ての限定詞を無効化
-          if (nounInfo?.proper) return false;
-          // 不可算名詞：数量詞を無効化（one, two, many, few, several, [plural]）
-          if (nounInfo && !nounInfo.countable) {
-            const countableOnly = ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'];
-            if (countableOnly.includes(o.value)) return false;
+        // 固有名詞：全ての限定詞を無効化
+        if (nounInfo?.proper) {
+          return { label: o.label, value: o.value, disabled: true, reason: NOUN_CONSTRAINT_REASONS.proper };
+        }
+        // 不可算名詞：both/half を無効化
+        if (nounInfo && !nounInfo.countable) {
+          if (o.value === 'both') {
+            return { label: o.label, value: o.value, disabled: true, reason: NOUN_CONSTRAINT_REASONS.uncountable_both };
           }
-          // PRE がこの POST をブロックしているか？
-          const preBlocks = DETERMINER_CONSTRAINTS.preBlocksPost[pre] || [];
-          if (preBlocks.includes(o.value)) return false;
-          // CENTRAL がこの POST をブロックしているか？
-          const centralBlocks = DETERMINER_CONSTRAINTS.centralBlocksPost[central] || [];
-          if (centralBlocks.includes(o.value)) return false;
-          return true;
-        })
-        .map(o => [o.label, o.value]);
+          if (o.value === 'half') {
+            return { label: o.label, value: o.value, disabled: true, reason: NOUN_CONSTRAINT_REASONS.uncountable_half };
+          }
+        }
+        // CENTRAL がこの PRE をブロックしているか？
+        const centralConstraint = DETERMINER_CONSTRAINTS.centralBlocksPre[central];
+        if (centralConstraint?.blocked.includes(o.value)) {
+          return { label: o.label, value: o.value, disabled: true, reason: centralConstraint.reason };
+        }
+        // POST がこの PRE をブロックしているか？
+        const postConstraint = DETERMINER_CONSTRAINTS.postBlocksPre[post];
+        if (postConstraint?.blocked.includes(o.value)) {
+          return { label: o.label, value: o.value, disabled: true, reason: postConstraint.reason };
+        }
+        return { label: o.label, value: o.value };
+      });
     };
 
-    // プルダウンの参照を保持（動的オプション生成）
-    const preDropdown = new Blockly.FieldDropdown(getPreOptions, this.validatePre.bind(this));
-    const centralDropdown = new Blockly.FieldDropdown(getCentralOptions, this.validateCentral.bind(this));
-    const postDropdown = new Blockly.FieldDropdown(getPostOptions, this.validatePost.bind(this));
+    const getCentralOptions = (): DropdownOptionWithReason[] => {
+      const pre = this.getFieldValue('PRE') || '__none__';
+      const post = this.getFieldValue('POST') || '__none__';
+      const nounInfo = getConnectedNounInfo();
+
+      return CENTRAL_DETERMINERS.map(o => {
+        if (o.value === '__none__') {
+          return { label: o.label, value: o.value };
+        }
+
+        // 固有名詞：全ての限定詞を無効化
+        if (nounInfo?.proper) {
+          return { label: o.label, value: o.value, disabled: true, reason: NOUN_CONSTRAINT_REASONS.proper };
+        }
+        // 不可算名詞：a/an を無効化
+        if (nounInfo && !nounInfo.countable && o.value === 'a') {
+          return { label: o.label, value: o.value, disabled: true, reason: NOUN_CONSTRAINT_REASONS.uncountable_a };
+        }
+        // PRE がこの CENTRAL をブロックしているか？
+        const preConstraint = DETERMINER_CONSTRAINTS.preBlocksCentral[pre];
+        if (preConstraint?.blocked.includes(o.value)) {
+          return { label: o.label, value: o.value, disabled: true, reason: preConstraint.reason };
+        }
+        // POST がこの CENTRAL をブロックしているか？
+        const postConstraint = DETERMINER_CONSTRAINTS.postBlocksCentral[post];
+        if (postConstraint?.blocked.includes(o.value)) {
+          return { label: o.label, value: o.value, disabled: true, reason: postConstraint.reason };
+        }
+        return { label: o.label, value: o.value };
+      });
+    };
+
+    const getPostOptions = (): DropdownOptionWithReason[] => {
+      const pre = this.getFieldValue('PRE') || '__none__';
+      const central = this.getFieldValue('CENTRAL') || '__none__';
+      const nounInfo = getConnectedNounInfo();
+      const countableOnly = ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'];
+
+      return POST_DETERMINERS.map(o => {
+        if (o.value === '__none__') {
+          return { label: o.label, value: o.value };
+        }
+
+        // 固有名詞：全ての限定詞を無効化
+        if (nounInfo?.proper) {
+          return { label: o.label, value: o.value, disabled: true, reason: NOUN_CONSTRAINT_REASONS.proper };
+        }
+        // 不可算名詞：数量詞を無効化
+        if (nounInfo && !nounInfo.countable && countableOnly.includes(o.value)) {
+          return { label: o.label, value: o.value, disabled: true, reason: NOUN_CONSTRAINT_REASONS.uncountable_count };
+        }
+        // PRE がこの POST をブロックしているか？
+        const preConstraint = DETERMINER_CONSTRAINTS.preBlocksPost[pre];
+        if (preConstraint?.blocked.includes(o.value)) {
+          return { label: o.label, value: o.value, disabled: true, reason: preConstraint.reason };
+        }
+        // CENTRAL がこの POST をブロックしているか？
+        const centralConstraint = DETERMINER_CONSTRAINTS.centralBlocksPost[central];
+        if (centralConstraint?.blocked.includes(o.value)) {
+          return { label: o.label, value: o.value, disabled: true, reason: centralConstraint.reason };
+        }
+        return { label: o.label, value: o.value };
+      });
+    };
+
+    // カスタムドロップダウン（グレーアウト対応）
+    const preDropdown = new FieldDropdownWithDisabled(getPreOptions);
+    const centralDropdown = new FieldDropdownWithDisabled(getCentralOptions);
+    const postDropdown = new FieldDropdownWithDisabled(getPostOptions);
 
     this.appendValueInput("NOUN")
         .setCheck(["noun", "nounPhrase"])
@@ -759,102 +804,6 @@ Blockly.Blocks['determiner_unified'] = {
         this.setFieldValue('__none__', 'POST');
       }
     }
-  },
-
-  // Pre選択時のバリデーション
-  validatePre: function(newValue: string): string | null {
-    if (newValue === '__none__') return newValue;
-
-    const central = this.getFieldValue('CENTRAL');
-    const post = this.getFieldValue('POST');
-
-    // CENTRAL がこの PRE をブロックしているか？
-    const centralBlocks = DETERMINER_CONSTRAINTS.centralBlocksPre[central] || [];
-    if (centralBlocks.includes(newValue)) {
-      // CENTRAL をリセット
-      setTimeout(() => {
-        if (this.getField('CENTRAL')) {
-          this.setFieldValue('__none__', 'CENTRAL');
-        }
-      }, 0);
-    }
-
-    // POST がこの PRE をブロックしているか？
-    const postBlocks = DETERMINER_CONSTRAINTS.postBlocksPre[post] || [];
-    if (postBlocks.includes(newValue)) {
-      // POST をリセット
-      setTimeout(() => {
-        if (this.getField('POST')) {
-          this.setFieldValue('__none__', 'POST');
-        }
-      }, 0);
-    }
-
-    return newValue;
-  },
-
-  // Central選択時のバリデーション
-  validateCentral: function(newValue: string): string | null {
-    if (newValue === '__none__') return newValue;
-
-    const pre = this.getFieldValue('PRE');
-    const post = this.getFieldValue('POST');
-
-    // PRE がこの CENTRAL をブロックしているか？
-    const preBlocks = DETERMINER_CONSTRAINTS.preBlocksCentral[pre] || [];
-    if (preBlocks.includes(newValue)) {
-      // PRE をリセット
-      setTimeout(() => {
-        if (this.getField('PRE')) {
-          this.setFieldValue('__none__', 'PRE');
-        }
-      }, 0);
-    }
-
-    // POST がこの CENTRAL をブロックしているか？
-    const postBlocks = DETERMINER_CONSTRAINTS.postBlocksCentral[post] || [];
-    if (postBlocks.includes(newValue)) {
-      // POST をリセット
-      setTimeout(() => {
-        if (this.getField('POST')) {
-          this.setFieldValue('__none__', 'POST');
-        }
-      }, 0);
-    }
-
-    return newValue;
-  },
-
-  // Post選択時のバリデーション
-  validatePost: function(newValue: string): string | null {
-    if (newValue === '__none__') return newValue;
-
-    const pre = this.getFieldValue('PRE');
-    const central = this.getFieldValue('CENTRAL');
-
-    // PRE がこの POST をブロックしているか？
-    const preBlocks = DETERMINER_CONSTRAINTS.preBlocksPost[pre] || [];
-    if (preBlocks.includes(newValue)) {
-      // PRE をリセット
-      setTimeout(() => {
-        if (this.getField('PRE')) {
-          this.setFieldValue('__none__', 'PRE');
-        }
-      }, 0);
-    }
-
-    // CENTRAL がこの POST をブロックしているか？
-    const centralBlocks = DETERMINER_CONSTRAINTS.centralBlocksPost[central] || [];
-    if (centralBlocks.includes(newValue)) {
-      // CENTRAL をリセット
-      setTimeout(() => {
-        if (this.getField('CENTRAL')) {
-          this.setFieldValue('__none__', 'CENTRAL');
-        }
-      }, 0);
-    }
-
-    return newValue;
   },
 };
 

@@ -179,6 +179,11 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode {
     return parseQuantifierBlock(block);
   }
 
+  // 形容詞ラッパーブロックの処理
+  if (blockType === 'adjective_wrapper') {
+    return parseAdjectiveWrapperBlock(block);
+  }
+
   // 新しいPerson/Thing/Placeブロックの処理
   if (blockType === 'person_block' || blockType === 'thing_block' || blockType === 'place_block') {
     return parseNewNounBlock(block, blockType);
@@ -259,6 +264,24 @@ function parseQuantifierBlock(block: Blockly.Block): NounPhraseNode {
     ...innerNP,
     head: updatedHead,
     quantifier: qtyOption?.output ?? undefined,
+  };
+}
+
+function parseAdjectiveWrapperBlock(block: Blockly.Block): NounPhraseNode {
+  const adjValue = block.getFieldValue('ADJ_VALUE');
+  const nounBlock = block.getInputTargetBlock('NOUN');
+
+  // 内部の名詞ブロックを解析
+  const innerNP = nounBlock ? parseNounPhraseBlock(nounBlock) : {
+    type: 'nounPhrase' as const,
+    adjectives: [],
+    head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
+  };
+
+  // 形容詞を先頭に追加（外側の形容詞が先）
+  return {
+    ...innerNP,
+    adjectives: [{ lemma: adjValue }, ...innerNP.adjectives],
   };
 }
 

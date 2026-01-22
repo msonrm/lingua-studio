@@ -395,6 +395,24 @@ Blockly.Blocks['quantifier_block'] = {
 };
 
 // ============================================
+// 形容詞ラッパーブロック（名詞修飾用）
+// ============================================
+Blockly.Blocks['adjective_wrapper'] = {
+  init: function() {
+    const adjOptions: [string, string][] = adjectives.map(a => [a.lemma, a.lemma]);
+
+    this.appendValueInput("NOUN")
+        .setCheck(["noun", "nounPhrase"])
+        .appendField("ADJ")
+        .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE");
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.adjective);
+    this.setTooltip("Adjective: modifies a noun");
+  }
+};
+
+// ============================================
 // オプションのエクスポート（コンパイラ用）
 // ============================================
 export const TIME_CHIP_DATA = {
@@ -439,8 +457,6 @@ export const toolbox = {
       name: "Nouns",
       colour: COLORS.person,
       contents: [
-        { kind: "block", type: "determiner_block" },
-        { kind: "block", type: "quantifier_block" },
         { kind: "block", type: "person_block" },
         { kind: "block", type: "thing_block" },
         { kind: "block", type: "place_block" },
@@ -448,10 +464,12 @@ export const toolbox = {
     },
     {
       kind: "category",
-      name: "Adjectives",
-      colour: COLORS.adjective,
+      name: "Noun Modifiers",
+      colour: COLORS.determiner,
       contents: [
-        { kind: "block", type: "adjective" },
+        { kind: "block", type: "determiner_block" },
+        { kind: "block", type: "quantifier_block" },
+        { kind: "block", type: "adjective_wrapper" },
       ]
     },
     {

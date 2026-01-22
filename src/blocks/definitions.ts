@@ -1,6 +1,5 @@
 import * as Blockly from 'blockly';
-import { verbs, nouns, adjectives, adverbs, pronouns, findNoun, getDeterminerConfig } from '../data/dictionary';
-import { NounEntry } from '../types/schema';
+import { verbs, nouns, adjectives, adverbs, pronouns } from '../data/dictionary';
 
 // ============================================
 // 色の定義
@@ -157,60 +156,6 @@ const DETERMINER_CONSTRAINTS = {
   centralResetsPost: ['a'],
 };
 
-// ============================================
-// 限定詞統合名詞ブロック用ヘルパー
-// ============================================
-
-// 名詞のプロパティに基づいて限定詞オプションをフィルタリング
-function getFilteredDeterminerOptions(noun: NounEntry | undefined) {
-  if (!noun) {
-    // デフォルト（可算普通名詞）
-    return {
-      pre: PRE_DETERMINERS,
-      central: CENTRAL_DETERMINERS,
-      post: POST_DETERMINERS,
-      defaults: { pre: '__none__', central: 'a', post: '__none__' },
-      disabled: false,
-    };
-  }
-
-  const config = getDeterminerConfig(noun);
-
-  // 固有名詞の場合
-  if (noun.proper) {
-    return {
-      pre: [{ label: '─', value: '__none__', output: null }],
-      central: [{ label: '─', value: '__none__', output: null }],
-      post: [{ label: '─', value: '__none__', output: null }],
-      defaults: { pre: '__none__', central: '__none__', post: '__none__' },
-      disabled: true,
-    };
-  }
-
-  // 不可算名詞の場合
-  if (!noun.countable) {
-    return {
-      pre: PRE_DETERMINERS.filter(o => config.options.pre.includes(o.value)),
-      central: CENTRAL_DETERMINERS.filter(o => config.options.central.includes(o.value)),
-      post: [
-        { label: '─', value: '__none__', output: null },
-        { label: '[–]', value: '__uncountable__', number: 'uncountable' as GrammaticalNumber, output: null },
-      ],
-      defaults: config.defaults,
-      disabled: false,
-    };
-  }
-
-  // 可算名詞の場合
-  return {
-    pre: PRE_DETERMINERS,
-    central: CENTRAL_DETERMINERS,
-    post: POST_DETERMINERS,
-    defaults: config.defaults,
-    disabled: false,
-  };
-}
-
 
 // ============================================
 // TimeFrame ブロック（ルート）
@@ -358,7 +303,7 @@ Blockly.Blocks['noun_phrase'] = {
 };
 
 // ============================================
-// 代名詞ブロック（限定詞なし）
+// 代名詞ブロック（限定詞不要）
 // ============================================
 const personalPronouns = pronouns.filter(p => p.type === 'personal');
 const indefinitePronouns = pronouns.filter(p => p.type === 'indefinite');
@@ -386,7 +331,7 @@ Blockly.Blocks['pronoun_block'] = {
 };
 
 // ============================================
-// 人間ブロック (human) - 限定詞統合版
+// 人間ブロック (human)
 // ============================================
 const humanNouns = nouns.filter(n => n.category === 'human' && !n.proper);
 const humanProperNouns = nouns.filter(n => n.category === 'human' && n.proper);
@@ -402,61 +347,18 @@ Blockly.Blocks['human_block'] = {
       ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
     ];
 
-    // 初期の限定詞オプション（可算名詞用）
-    const defaultDetOptions = getFilteredDeterminerOptions(undefined);
-    const preOptions: [string, string][] = defaultDetOptions.pre.map(o => [o.label, o.value]);
-    const centralOptions: [string, string][] = defaultDetOptions.central.map(o => [o.label, o.value]);
-    const postOptions: [string, string][] = defaultDetOptions.post.map(o => [o.label, o.value]);
-
     this.appendDummyInput()
         .appendField("HUMAN")
-        .appendField(new Blockly.FieldDropdown(preOptions), "DET_PRE")
-        .appendField(new Blockly.FieldDropdown(centralOptions), "DET_CENTRAL")
-        .appendField(new Blockly.FieldDropdown(postOptions), "DET_POST")
-        .appendField(new Blockly.FieldDropdown(nounOptions, this.onNounChange.bind(this)), "HUMAN_VALUE");
+        .appendField(new Blockly.FieldDropdown(nounOptions), "HUMAN_VALUE");
 
-    this.setOutput(true, "nounPhrase");
+    this.setOutput(true, "noun");
     this.setColour(COLORS.person);
-    this.setTooltip("A human with determiner (a father, the teacher, John, etc.)");
-
-    // 初期値を設定
-    this.setFieldValue('__none__', 'DET_PRE');
-    this.setFieldValue('a', 'DET_CENTRAL');
-    this.setFieldValue('__none__', 'DET_POST');
-  },
-
-  onNounChange: function(newValue: string): string | null {
-    if (!newValue || newValue.startsWith('__')) {
-      return newValue;
-    }
-
-    const noun = findNoun(newValue);
-    if (!noun) {
-      return newValue;
-    }
-
-    const detOptions = getFilteredDeterminerOptions(noun);
-
-    setTimeout(() => {
-      if (noun.proper) {
-        // 固有名詞: 全て__none__に
-        this.setFieldValue('__none__', 'DET_PRE');
-        this.setFieldValue('__none__', 'DET_CENTRAL');
-        this.setFieldValue('__none__', 'DET_POST');
-      } else {
-        // デフォルト値を設定
-        this.setFieldValue(detOptions.defaults.pre, 'DET_PRE');
-        this.setFieldValue(detOptions.defaults.central, 'DET_CENTRAL');
-        this.setFieldValue(detOptions.defaults.post, 'DET_POST');
-      }
-    }, 0);
-
-    return newValue;
-  },
+    this.setTooltip("A human (father, teacher, John, etc.)");
+  }
 };
 
 // ============================================
-// 動物ブロック (animal) - 限定詞統合版
+// 動物ブロック (animal)
 // ============================================
 const animalNouns = nouns.filter(n => n.category === 'animal');
 
@@ -467,45 +369,18 @@ Blockly.Blocks['animal_block'] = {
       ...animalNouns.map(n => [n.lemma, n.lemma] as [string, string]),
     ];
 
-    const defaultDetOptions = getFilteredDeterminerOptions(undefined);
-    const preOptions: [string, string][] = defaultDetOptions.pre.map(o => [o.label, o.value]);
-    const centralOptions: [string, string][] = defaultDetOptions.central.map(o => [o.label, o.value]);
-    const postOptions: [string, string][] = defaultDetOptions.post.map(o => [o.label, o.value]);
-
     this.appendDummyInput()
         .appendField("ANIMAL")
-        .appendField(new Blockly.FieldDropdown(preOptions), "DET_PRE")
-        .appendField(new Blockly.FieldDropdown(centralOptions), "DET_CENTRAL")
-        .appendField(new Blockly.FieldDropdown(postOptions), "DET_POST")
-        .appendField(new Blockly.FieldDropdown(nounOptions, this.onNounChange.bind(this)), "ANIMAL_VALUE");
+        .appendField(new Blockly.FieldDropdown(nounOptions), "ANIMAL_VALUE");
 
-    this.setOutput(true, "nounPhrase");
+    this.setOutput(true, "noun");
     this.setColour(COLORS.thing);
-    this.setTooltip("An animal with determiner (a cat, the dogs, etc.)");
-
-    this.setFieldValue('__none__', 'DET_PRE');
-    this.setFieldValue('a', 'DET_CENTRAL');
-    this.setFieldValue('__none__', 'DET_POST');
-  },
-
-  onNounChange: function(newValue: string): string | null {
-    if (!newValue || newValue.startsWith('__')) {
-      return newValue;
-    }
-    const noun = findNoun(newValue);
-    if (!noun) return newValue;
-    const detOptions = getFilteredDeterminerOptions(noun);
-    setTimeout(() => {
-      this.setFieldValue(detOptions.defaults.pre, 'DET_PRE');
-      this.setFieldValue(detOptions.defaults.central, 'DET_CENTRAL');
-      this.setFieldValue(detOptions.defaults.post, 'DET_POST');
-    }, 0);
-    return newValue;
-  },
+    this.setTooltip("An animal (cat, dog, bird, etc.)");
+  }
 };
 
 // ============================================
-// 物体ブロック (object) - 限定詞統合版
+// 物体ブロック (object)
 // ============================================
 const objectNouns = nouns.filter(n => n.category === 'object');
 
@@ -516,52 +391,18 @@ Blockly.Blocks['object_block'] = {
       ...objectNouns.map(n => [n.lemma, n.lemma] as [string, string]),
     ];
 
-    const defaultDetOptions = getFilteredDeterminerOptions(undefined);
-    const preOptions: [string, string][] = defaultDetOptions.pre.map(o => [o.label, o.value]);
-    const centralOptions: [string, string][] = defaultDetOptions.central.map(o => [o.label, o.value]);
-    const postOptions: [string, string][] = defaultDetOptions.post.map(o => [o.label, o.value]);
-
     this.appendDummyInput()
         .appendField("OBJECT")
-        .appendField(new Blockly.FieldDropdown(preOptions), "DET_PRE")
-        .appendField(new Blockly.FieldDropdown(centralOptions), "DET_CENTRAL")
-        .appendField(new Blockly.FieldDropdown(postOptions), "DET_POST")
-        .appendField(new Blockly.FieldDropdown(nounOptions, this.onNounChange.bind(this)), "OBJECT_VALUE");
+        .appendField(new Blockly.FieldDropdown(nounOptions), "OBJECT_VALUE");
 
-    this.setOutput(true, "nounPhrase");
+    this.setOutput(true, "noun");
     this.setColour(COLORS.thing);
-    this.setTooltip("An object with determiner (an apple, the books, water, etc.)");
-
-    this.setFieldValue('__none__', 'DET_PRE');
-    this.setFieldValue('a', 'DET_CENTRAL');
-    this.setFieldValue('__none__', 'DET_POST');
-  },
-
-  onNounChange: function(newValue: string): string | null {
-    if (!newValue || newValue.startsWith('__')) {
-      return newValue;
-    }
-    const noun = findNoun(newValue);
-    if (!noun) return newValue;
-    const detOptions = getFilteredDeterminerOptions(noun);
-    setTimeout(() => {
-      if (!noun.countable) {
-        // 不可算名詞: 限定詞なしがデフォルト
-        this.setFieldValue('__none__', 'DET_PRE');
-        this.setFieldValue('__none__', 'DET_CENTRAL');
-        this.setFieldValue('__none__', 'DET_POST');
-      } else {
-        this.setFieldValue(detOptions.defaults.pre, 'DET_PRE');
-        this.setFieldValue(detOptions.defaults.central, 'DET_CENTRAL');
-        this.setFieldValue(detOptions.defaults.post, 'DET_POST');
-      }
-    }, 0);
-    return newValue;
-  },
+    this.setTooltip("An object (apple, book, pen, water, etc.)");
+  }
 };
 
 // ============================================
-// 場所ブロック (place) - 限定詞統合版
+// 場所ブロック (place)
 // ============================================
 const placeNouns = nouns.filter(n => n.category === 'place' && !n.proper);
 const placeProperNouns = nouns.filter(n => n.category === 'place' && n.proper);
@@ -584,70 +425,18 @@ Blockly.Blocks['place_block'] = {
       ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
     ];
 
-    const defaultDetOptions = getFilteredDeterminerOptions(undefined);
-    const preOptions: [string, string][] = defaultDetOptions.pre.map(o => [o.label, o.value]);
-    const centralOptions: [string, string][] = defaultDetOptions.central.map(o => [o.label, o.value]);
-    const postOptions: [string, string][] = defaultDetOptions.post.map(o => [o.label, o.value]);
-
     this.appendDummyInput()
         .appendField("PLACE")
-        .appendField(new Blockly.FieldDropdown(preOptions), "DET_PRE")
-        .appendField(new Blockly.FieldDropdown(centralOptions), "DET_CENTRAL")
-        .appendField(new Blockly.FieldDropdown(postOptions), "DET_POST")
-        .appendField(new Blockly.FieldDropdown(nounOptions, this.onNounChange.bind(this)), "PLACE_VALUE");
+        .appendField(new Blockly.FieldDropdown(nounOptions), "PLACE_VALUE");
 
-    this.setOutput(true, "nounPhrase");
+    this.setOutput(true, "noun");
     this.setColour(COLORS.place);
-    this.setTooltip("A place with determiner (the park, school, Tokyo, here, etc.)");
-
-    this.setFieldValue('__none__', 'DET_PRE');
-    this.setFieldValue('the', 'DET_CENTRAL');
-    this.setFieldValue('__none__', 'DET_POST');
-  },
-
-  onNounChange: function(newValue: string): string | null {
-    if (!newValue || newValue.startsWith('__')) {
-      return newValue;
-    }
-
-    // 場所副詞（here, there）の場合
-    if (newValue === 'here' || newValue === 'there') {
-      setTimeout(() => {
-        this.setFieldValue('__none__', 'DET_PRE');
-        this.setFieldValue('__none__', 'DET_CENTRAL');
-        this.setFieldValue('__none__', 'DET_POST');
-      }, 0);
-      return newValue;
-    }
-
-    const noun = findNoun(newValue);
-    if (!noun) return newValue;
-
-    setTimeout(() => {
-      if (noun.proper) {
-        // 固有名詞: 限定詞なし
-        this.setFieldValue('__none__', 'DET_PRE');
-        this.setFieldValue('__none__', 'DET_CENTRAL');
-        this.setFieldValue('__none__', 'DET_POST');
-      } else if (noun.zeroArticle) {
-        // 機能的場所: デフォルト無冠詞（at school, go home）
-        this.setFieldValue('__none__', 'DET_PRE');
-        this.setFieldValue('__none__', 'DET_CENTRAL');
-        this.setFieldValue('__none__', 'DET_POST');
-      } else {
-        // 普通の場所名詞: the がデフォルト
-        this.setFieldValue('__none__', 'DET_PRE');
-        this.setFieldValue('the', 'DET_CENTRAL');
-        this.setFieldValue('__none__', 'DET_POST');
-      }
-    }, 0);
-
-    return newValue;
-  },
+    this.setTooltip("A place (park, school, Tokyo, here, etc.)");
+  }
 };
 
 // ============================================
-// 抽象概念ブロック (abstract) - 限定詞統合版
+// 抽象概念ブロック (abstract)
 // ============================================
 const abstractNouns = nouns.filter(n => n.category === 'abstract');
 
@@ -658,48 +447,14 @@ Blockly.Blocks['abstract_block'] = {
       ...abstractNouns.map(n => [n.lemma, n.lemma] as [string, string]),
     ];
 
-    const defaultDetOptions = getFilteredDeterminerOptions(undefined);
-    const preOptions: [string, string][] = defaultDetOptions.pre.map(o => [o.label, o.value]);
-    const centralOptions: [string, string][] = defaultDetOptions.central.map(o => [o.label, o.value]);
-    const postOptions: [string, string][] = defaultDetOptions.post.map(o => [o.label, o.value]);
-
     this.appendDummyInput()
         .appendField("ABSTRACT")
-        .appendField(new Blockly.FieldDropdown(preOptions), "DET_PRE")
-        .appendField(new Blockly.FieldDropdown(centralOptions), "DET_CENTRAL")
-        .appendField(new Blockly.FieldDropdown(postOptions), "DET_POST")
-        .appendField(new Blockly.FieldDropdown(nounOptions, this.onNounChange.bind(this)), "ABSTRACT_VALUE");
+        .appendField(new Blockly.FieldDropdown(nounOptions), "ABSTRACT_VALUE");
 
-    this.setOutput(true, "nounPhrase");
+    this.setOutput(true, "noun");
     this.setColour(COLORS.thing);
-    this.setTooltip("An abstract concept with determiner (an idea, the music, love, etc.)");
-
-    this.setFieldValue('__none__', 'DET_PRE');
-    this.setFieldValue('a', 'DET_CENTRAL');
-    this.setFieldValue('__none__', 'DET_POST');
-  },
-
-  onNounChange: function(newValue: string): string | null {
-    if (!newValue || newValue.startsWith('__')) {
-      return newValue;
-    }
-    const noun = findNoun(newValue);
-    if (!noun) return newValue;
-    setTimeout(() => {
-      if (!noun.countable) {
-        // 不可算抽象名詞: 限定詞なしがデフォルト
-        this.setFieldValue('__none__', 'DET_PRE');
-        this.setFieldValue('__none__', 'DET_CENTRAL');
-        this.setFieldValue('__none__', 'DET_POST');
-      } else {
-        // 可算抽象名詞: a/an がデフォルト
-        this.setFieldValue('__none__', 'DET_PRE');
-        this.setFieldValue('a', 'DET_CENTRAL');
-        this.setFieldValue('__none__', 'DET_POST');
-      }
-    }, 0);
-    return newValue;
-  },
+    this.setTooltip("An abstract concept (idea, love, music, etc.)");
+  }
 };
 
 // ============================================
@@ -1059,15 +814,80 @@ export const toolbox = {
         { kind: "label", text: "── 代名詞 ──" },
         { kind: "block", type: "pronoun_block" },
         { kind: "label", text: "── 人 ──" },
-        { kind: "block", type: "human_block" },
+        {
+          kind: "block",
+          type: "determiner_unified",
+          inputs: {
+            NOUN: {
+              block: { type: "human_block" }
+            }
+          },
+          fields: {
+            PRE: "__none__",
+            CENTRAL: "a",
+            POST: "__none__"
+          }
+        },
         { kind: "label", text: "── 生き物 ──" },
-        { kind: "block", type: "animal_block" },
+        {
+          kind: "block",
+          type: "determiner_unified",
+          inputs: {
+            NOUN: {
+              block: { type: "animal_block" }
+            }
+          },
+          fields: {
+            PRE: "__none__",
+            CENTRAL: "a",
+            POST: "__none__"
+          }
+        },
         { kind: "label", text: "── もの ──" },
-        { kind: "block", type: "object_block" },
+        {
+          kind: "block",
+          type: "determiner_unified",
+          inputs: {
+            NOUN: {
+              block: { type: "object_block" }
+            }
+          },
+          fields: {
+            PRE: "__none__",
+            CENTRAL: "a",
+            POST: "__none__"
+          }
+        },
         { kind: "label", text: "── 場所 ──" },
-        { kind: "block", type: "place_block" },
+        {
+          kind: "block",
+          type: "determiner_unified",
+          inputs: {
+            NOUN: {
+              block: { type: "place_block" }
+            }
+          },
+          fields: {
+            PRE: "__none__",
+            CENTRAL: "the",
+            POST: "__none__"
+          }
+        },
         { kind: "label", text: "── 抽象 ──" },
-        { kind: "block", type: "abstract_block" },
+        {
+          kind: "block",
+          type: "determiner_unified",
+          inputs: {
+            NOUN: {
+              block: { type: "abstract_block" }
+            }
+          },
+          fields: {
+            PRE: "__none__",
+            CENTRAL: "a",
+            POST: "__none__"
+          }
+        },
       ]
     },
     {

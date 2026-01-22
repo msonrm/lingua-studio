@@ -19,6 +19,32 @@
   - 解決済み: 限定詞ブロックが接続名詞の `proper` フラグを検出
   - 固有名詞接続時は全限定詞オプションに「×」マークを表示、選択不可に
 
+## Completed (This Session)
+
+- [x] ブロックラベルの言語学的表現への統一
+  - ACTION → VERB, TIME FRAME → SENTENCE
+  - スロットラベル: who/what → agent/patient/theme 等
+  - 必須スロット: `label:` / 任意スロット: `(label):`
+  - ToolboxカテゴリをSentence/Verbs/Verb Modifiers/Nouns/Noun Modifiersに再編成
+
+- [x] モンテッソーリベースの配色
+  - Sentence系: ブラウン (#5D4E37, #8B7355)
+  - Verb系: 赤グラデーション (#DC143C → #EF6C57)
+  - Noun系: ほぼ黒 (#0d1321)
+  - Noun Modifier系: ネイビーグラデーション (#1a365d → #2c5282)
+
+- [x] ADJ/DET接続順序の制約
+  - ADJ: 入力 ["noun", "adjective"] → 出力 "adjective"
+  - DET: 入力 ["noun", "adjective"] → 出力 "nounPhrase"
+  - 正しい順序: DET → ADJ → NOUN のみ許可
+
+- [x] 起動時に初期ブロック配置
+  - SENTENCE + VERB を接続した状態で配置
+  - チョムスキー的な TP > VP 構造を反映
+
+- [x] ドロップダウンの "Select..." プレースホルダー削除
+  - 全ブロックで実際の値がデフォルト選択されるように変更
+
 ## Future Enhancements
 
 ### Grammar & Syntax

@@ -100,3 +100,45 @@
   - 副詞配置、語順などのルールをデータとして定義
   - UI言語に応じた説明表示（文法ヒント機能）
   - 例: `{ position: 'pre-verb', description: { en: "...", ja: "..." } }`
+
+### UI Redesign (MakeCode Style)
+
+**Phase 1: レイアウト変更**
+- [ ] 上下2分割レイアウト
+  - 上部: メインワークスペース（Blocks）
+  - 下部左: Output（生成文 + 読み上げボタン + ハイライト）
+  - 下部右: Grammar Console（文法説明ログ）
+- [ ] AST表示のトグル化（デフォルト非表示）
+- [ ] ヘッダーにモード切替タブ（Blocks / LinguaScript）の場所確保
+
+**Phase 2: Grammar Console**
+- [ ] レンダリング時の文法判断をログ収集する仕組み
+  - 例: "subject 'I' → 1st person singular"
+  - 例: "verb 'see' + PAST → 'saw'"
+  - 例: "NP: the + man (definite, singular)"
+- [ ] コンソールUIコンポーネント作成
+- [ ] 日本語/英語切り替え対応
+
+**Phase 3: Output ハイライト & 読み上げ**
+- [ ] 生成文の構成要素を色分け表示（ブロック色と対応）
+  - 主語（名詞）: 黒系
+  - 動詞: 赤系
+  - 目的語: 黒系
+  - 前置詞句: PP色
+- [ ] Web Speech API による読み上げ機能
+- [ ] ホバーで詳細表示（オプション）
+
+**Phase 4: LinguaScript エディタ**
+- [ ] Monaco Editor 統合
+- [ ] LinguaScript用シンタックスハイライト定義
+- [ ] 辞書連携オートコンプリート
+  - 動詞: run, eat, see, give...
+  - 名詞: cat, dog, man, telescope...
+  - 関数: present, past, future, simple, perfect, not, the, a...
+  - 前置詞: to, from, with, in, on...
+
+**Phase 5: 双方向同期**
+- [ ] Blocks → LinguaScript（既存）
+- [ ] LinguaScript → AST パーサー実装
+- [ ] AST → Blocks 変換（ブロック自動生成）
+- [ ] モード切替時の同期処理

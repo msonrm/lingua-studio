@@ -4,9 +4,13 @@ import { SentenceNode } from './types/schema';
 import { renderToLinguaScript } from './compiler/linguaScriptRenderer';
 import './App.css';
 
+type EditorMode = 'blocks' | 'linguascript';
+
 function App() {
   const [asts, setASTs] = useState<SentenceNode[]>([]);
   const [sentences, setSentences] = useState<string[]>([]);
+  const [editorMode, setEditorMode] = useState<EditorMode>('blocks');
+  const [showAST, setShowAST] = useState(false);
 
   // ASTs から LinguaScripts を生成
   const linguaScripts = useMemo(() => {
@@ -22,59 +26,105 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>Lingua Studio</h1>
-        <p className="subtitle">IDE for Natural Language</p>
+        <div className="header-left">
+          <h1>Lingua Studio</h1>
+          <p className="subtitle">IDE for Natural Language</p>
+        </div>
+        <div className="header-center">
+          <div className="mode-tabs">
+            <button
+              className={`mode-tab ${editorMode === 'blocks' ? 'active' : ''}`}
+              onClick={() => setEditorMode('blocks')}
+            >
+              🧱 Blocks
+            </button>
+            <button
+              className={`mode-tab ${editorMode === 'linguascript' ? 'active' : ''}`}
+              onClick={() => setEditorMode('linguascript')}
+              disabled
+              title="Coming soon"
+            >
+              📝 LinguaScript
+            </button>
+          </div>
+        </div>
+        <div className="header-right">
+          <label className="ast-toggle">
+            <input
+              type="checkbox"
+              checked={showAST}
+              onChange={(e) => setShowAST(e.target.checked)}
+            />
+            AST
+          </label>
+        </div>
       </header>
 
       <main className="main">
-        <div className="workspace-container">
-          <BlocklyWorkspace
-            onASTChange={setASTs}
-            onSentenceChange={setSentences}
-          />
+        <div className="workspace-area">
+          {editorMode === 'blocks' ? (
+            <div className="workspace-container">
+              <BlocklyWorkspace
+                onASTChange={setASTs}
+                onSentenceChange={setSentences}
+              />
+            </div>
+          ) : (
+            <div className="linguascript-editor">
+              <p className="coming-soon">LinguaScript Editor - Coming Soon</p>
+            </div>
+          )}
         </div>
 
-        <div className="output-panel">
-          <div className="output-section">
-            <h2>Generated Sentence{sentences.length > 1 ? 's' : ''}</h2>
-            <div className="sentence-output">
-              {sentences.length > 0
-                ? sentences.map((s, i) => <div key={i}>{s}</div>)
-                : <span className="placeholder">Build a sentence using blocks...</span>
-              }
+        <div className="bottom-panel">
+          <div className="output-panel">
+            <div className="output-section">
+              <h2>Output</h2>
+              <div className="sentence-output">
+                {sentences.length > 0
+                  ? sentences.map((s, i) => <div key={i}>{s}</div>)
+                  : <span className="placeholder">Build a sentence using blocks...</span>
+                }
+              </div>
+            </div>
+
+            <div className="output-section">
+              <h2>LinguaScript</h2>
+              <pre className="linguascript-output">
+                {linguaScripts.length > 0
+                  ? linguaScripts.join('\n')
+                  : '// Build a sentence to see LinguaScript'
+                }
+              </pre>
             </div>
           </div>
 
-          <div className="output-section">
-            <h2>LinguaScript</h2>
-            <pre className="linguascript-output">
-              {linguaScripts.length > 0
-                ? linguaScripts.join('\n')
-                : '// Build a sentence to see LinguaScript'
-              }
-            </pre>
+          <div className="console-panel">
+            <div className="output-section">
+              <h2>Grammar Console</h2>
+              <div className="console-output">
+                <p className="console-placeholder">
+                  Grammar explanations will appear here...
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="output-section">
-            <h2>AST{asts.length > 1 ? 's' : ''}</h2>
-            <pre className="ast-output">
-              {asts.length > 0
-                ? JSON.stringify(asts.length === 1 ? asts[0] : asts, null, 2)
-                : '// No AST generated yet'
-              }
-            </pre>
-          </div>
+          {showAST && (
+            <div className="ast-panel">
+              <div className="output-section">
+                <h2>AST</h2>
+                <pre className="ast-output">
+                  {asts.length > 0
+                    ? JSON.stringify(asts.length === 1 ? asts[0] : asts, null, 2)
+                    : '// No AST generated yet'
+                  }
+                </pre>
+              </div>
+            </div>
+          )}
         </div>
       </main>
-
-      <footer className="footer">
-        <p>
-          Try building: <strong>"Colorless green ideas sleep furiously."</strong>
-        </p>
-        <p className="hint">
-          Hint: Use SENTENCE → VERB(sleep) → NP(ideas, plural) with ADJ(colorless, green) → ADV(furiously)
-        </p>
-      </footer>
     </div>
   );
 }

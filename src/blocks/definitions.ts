@@ -958,7 +958,7 @@ export const toolbox = {
   contents: [
     {
       kind: "category",
-      name: "Time",
+      name: "Sentence",
       colour: COLORS.timeFrame,
       contents: [
         { kind: "label", text: "── Sentence ──" },

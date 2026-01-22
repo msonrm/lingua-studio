@@ -241,23 +241,12 @@ function parseVerbBlock(block: Blockly.Block): VerbPhraseNode | null {
     });
   });
 
-  // 副詞を取得
-  const adverbs: AdverbNode[] = [];
-  const adverbBlock = block.getInputTargetBlock('ADVERB');
-  if (adverbBlock) {
-    const adverbLemma = adverbBlock.getFieldValue('ADVERB');
-    adverbs.push({
-      type: 'adverb',
-      lemma: adverbLemma,
-      advType: 'manner',
-    });
-  }
-
+  // 副詞は Verb Modifiers で処理されるため、ここでは空配列
   return {
     type: 'verbPhrase',
     verb: { lemma: verbLemma },
     arguments: args,
-    adverbs,
+    adverbs: [],
   };
 }
 

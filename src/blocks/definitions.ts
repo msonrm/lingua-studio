@@ -181,9 +181,9 @@ Blockly.Blocks['verb'] = {
     const verb = verbs.find(v => v.lemma === verbLemma);
     if (!verb) return verbLemma;
 
-    // 既存のスロットを削除（ARG_で始まるものとADVERB）
+    // 既存のスロットを削除（ARG_で始まるもの）
     const existingInputs = this.inputList
-      .filter((input: Blockly.Input) => input.name.startsWith("ARG_") || input.name === "ADVERB")
+      .filter((input: Blockly.Input) => input.name.startsWith("ARG_"))
       .map((input: Blockly.Input) => input.name);
 
     existingInputs.forEach((name: string) => this.removeInput(name));
@@ -198,10 +198,7 @@ Blockly.Blocks['verb'] = {
           .appendField(`${label}${slot.required ? '*' : ''}:`);
     });
 
-    // 副詞スロットを最後に追加
-    this.appendValueInput("ADVERB")
-        .setCheck("adverb")
-        .appendField("how:");
+    // 副詞は Verb Modifiers (FREQ, MANNER) で対応
 
     return verbLemma;
   }

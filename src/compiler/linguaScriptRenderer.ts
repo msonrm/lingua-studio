@@ -33,46 +33,31 @@ function renderClauseToScript(clause: ClauseNode): string {
     result = `not(${result})`;
   }
 
-  // 時制/アスペクトをラップ
-  const tenseAspect = getTenseAspectWrapper(tense, aspect);
-  if (tenseAspect) {
-    result = `${tenseAspect}(${result})`;
+  // アスペクトをラップ（simple以外）
+  const aspectWrapper = getAspectWrapper(aspect);
+  if (aspectWrapper) {
+    result = `${aspectWrapper}(${result})`;
+  }
+
+  // 時制をラップ（present + simple以外）
+  if (!(tense === 'present' && aspect === 'simple')) {
+    result = `${tense}(${result})`;
   }
 
   return result;
 }
 
-function getTenseAspectWrapper(
-  tense: 'past' | 'present' | 'future',
+function getAspectWrapper(
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive'
 ): string | null {
-  // 現在単純形はデフォルトなのでラッパーなし
-  if (tense === 'present' && aspect === 'simple') {
-    return null;
-  }
-
-  // tense + aspect の組み合わせ
-  const aspectMap: Record<string, string> = {
-    'simple': '',
-    'progressive': '_prog',
-    'perfect': '_perf',
-    'perfectProgressive': '_perf_prog',
+  const aspectMap: Record<string, string | null> = {
+    'simple': null,
+    'progressive': 'progressive',
+    'perfect': 'perfect',
+    'perfectProgressive': 'perfect_progressive',
   };
 
-  const tenseMap: Record<string, string> = {
-    'past': 'past',
-    'present': 'present',
-    'future': 'future',
-  };
-
-  const aspectSuffix = aspectMap[aspect];
-  const tensePrefix = tenseMap[tense];
-
-  if (aspect === 'simple') {
-    return tensePrefix;
-  }
-
-  return `${tensePrefix}${aspectSuffix}`;
+  return aspectMap[aspect];
 }
 
 function renderVerbPhraseToScript(vp: VerbPhraseNode): string {

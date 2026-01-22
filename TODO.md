@@ -21,6 +21,26 @@
 
 ## Completed (This Session)
 
+- [x] 前置詞ブロックの実装
+  - PP (VERB): 動詞修飾用（"I go to the park"）- 赤系 (#C0392B)
+  - PP (NOUN): 名詞修飾用（"the man with the telescope"）- 青系 (#3c6e91)
+  - 構造的曖昧性を明示的に解消可能
+  - 前置詞カテゴリ: location (in, on, at, under, behind), direction (to, from, into), relation (with, of, for, about)
+
+- [x] LinguaScriptレンダラーの追加
+  - LISP風の明示的構文表記: `present(simple(see('I, the('man))))`
+  - 完全明示: tenseとaspectを常に表示（`simple`も省略せず）
+  - 時間副詞はコメントで付記: `// yesterday`
+  - AI間通信に適した曖昧性のない表現
+
+- [x] 複数SENTENCEブロックのサポート
+  - ワークスペースに複数のSENTENCEブロックを配置可能
+  - Generated Sentences / LinguaScript を縦に並べて表示
+  - 構造的曖昧性の比較（例: "I saw the man with the telescope" の2解釈）
+
+- [x] 辞書に 'see' 動詞と 'telescope' 名詞を追加
+  - 構造的曖昧性デモ用
+
 - [x] ブロックラベルの言語学的表現への統一
   - ACTION → VERB, TIME FRAME → SENTENCE
   - スロットラベル: who/what → agent/patient/theme 等
@@ -51,7 +71,7 @@
 - [ ] 代名詞選択時のNUMBER非表示（UX改善）
 - [ ] 指示代名詞 (this/that as pronouns, these/those)
 - [ ] 所有限定詞 (my, your, his, her, its, our, their)
-- [ ] 場所前置詞 (in, at, to, from)
+- [x] 前置詞ブロック (in, on, at, to, from, with, etc.) - PP (VERB) / PP (NOUN) で実装済み
 - [x] 否定文対応 - NOT wrapper で実装済み
 - [x] 頻度副詞 - FREQ wrapper (always, usually, often, sometimes, rarely, never)
 - [x] 様態副詞 - MANNER wrapper (quickly, slowly, furiously)

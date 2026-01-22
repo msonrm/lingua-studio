@@ -199,9 +199,11 @@ Blockly.Blocks['time_frame'] = {
     this.appendDummyInput()
         .appendField("SENTENCE");
     this.appendValueInput("TIME_CHIP")
-        .setCheck("timeChip");
+        .setCheck("timeChip")
+        .appendField("T/A:");
     this.appendStatementInput("ACTION")
-        .setCheck("verb");
+        .setCheck("verb")
+        .appendField("predicate:");
     this.setColour(COLORS.timeFrame);
     this.setTooltip("The root of a sentence, specifying tense and aspect");
   }
@@ -247,11 +249,11 @@ Blockly.Blocks['time_chip_abstract'] = {
     const options: [string, string][] = ABSTRACT_OPTIONS.map(o => [o.label, o.value]);
 
     this.appendDummyInput()
-        .appendField("MODIFIER")
+        .appendField("TENSE/ASPECT")
         .appendField(new Blockly.FieldDropdown(options), "MODIFIER_VALUE");
     this.setOutput(true, "timeChip");
     this.setColour(COLORS.timeChip);
-    this.setTooltip("Abstract time modifier (affects verb conjugation only)");
+    this.setTooltip("Tense/aspect modifier (affects verb conjugation)");
   }
 };
 
@@ -290,9 +292,11 @@ Blockly.Blocks['verb'] = {
       const inputName = `ARG_${index}`;
       const label = slot.label || slot.role;
       const checkType = slot.role === 'attribute' ? ['noun', 'nounPhrase', 'adjective'] : ['noun', 'nounPhrase'];
+      // 必須: "label:" / 任意: "(label):"
+      const displayLabel = slot.required ? `${label}:` : `(${label}):`;
       this.appendValueInput(inputName)
           .setCheck(checkType)
-          .appendField(`${label}${slot.required ? '*' : ''}:`);
+          .appendField(displayLabel);
     });
 
     // 副詞は Verb Modifiers (FREQ, MANNER) で対応
@@ -957,13 +961,13 @@ export const toolbox = {
       name: "Time",
       colour: COLORS.timeFrame,
       contents: [
-        { kind: "label", text: "── TimeFrame ──" },
+        { kind: "label", text: "── Sentence ──" },
         { kind: "block", type: "time_frame" },
-        { kind: "label", text: "── Concrete ──" },
+        { kind: "label", text: "── Time ──" },
         { kind: "block", type: "time_chip_concrete" },
-        { kind: "label", text: "── Aspectual ──" },
+        { kind: "label", text: "── Aspect ──" },
         { kind: "block", type: "time_chip_aspectual" },
-        { kind: "label", text: "── Abstract ──" },
+        { kind: "label", text: "── Tense/Aspect ──" },
         { kind: "block", type: "time_chip_abstract" },
       ]
     },

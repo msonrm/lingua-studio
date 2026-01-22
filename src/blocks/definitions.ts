@@ -197,15 +197,13 @@ const DETERMINER_CONSTRAINTS = {
 Blockly.Blocks['time_frame'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("TIME FRAME");
+        .appendField("SENTENCE");
     this.appendValueInput("TIME_CHIP")
-        .setCheck("timeChip")
-        .appendField("when:");
+        .setCheck("timeChip");
     this.appendStatementInput("ACTION")
-        .setCheck("verb")
-        .appendField("action:");
+        .setCheck("verb");
     this.setColour(COLORS.timeFrame);
-    this.setTooltip("The root of a sentence, specifying time frame");
+    this.setTooltip("The root of a sentence, specifying tense and aspect");
   }
 };
 
@@ -265,12 +263,12 @@ Blockly.Blocks['verb'] = {
     const verbOptions: [string, string][] = verbs.map(v => [v.lemma, v.lemma]);
 
     this.appendDummyInput()
-        .appendField("ACTION")
+        .appendField("VERB")
         .appendField(new Blockly.FieldDropdown(verbOptions, this.updateShape.bind(this)), "VERB");
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.action);
-    this.setTooltip("Select an action (verb)");
+    this.setTooltip("Verb: the action or state");
 
     // 初期形状を設定
     this.updateShape(verbs[0]?.lemma || "run");
@@ -971,7 +969,7 @@ export const toolbox = {
     },
     {
       kind: "category",
-      name: "Actions",
+      name: "Verbs",
       colour: COLORS.action,
       contents: [
         { kind: "block", type: "verb" },

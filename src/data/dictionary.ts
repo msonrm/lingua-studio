@@ -16,7 +16,7 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
+      { role: "agent", required: true, label: "agent" },
     ],
   },
   {
@@ -30,7 +30,7 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
+      { role: "agent", required: true, label: "agent" },
     ],
   },
 
@@ -46,8 +46,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
-      { role: "patient", required: false, label: "what" },
+      { role: "agent", required: true, label: "agent" },
+      { role: "patient", required: false, label: "patient" },
     ],
   },
   {
@@ -61,8 +61,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
-      { role: "patient", required: true, label: "what" },
+      { role: "agent", required: true, label: "agent" },
+      { role: "patient", required: true, label: "patient" },
     ],
   },
   {
@@ -76,8 +76,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
-      { role: "theme", required: true, label: "what" },
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
     ],
   },
 
@@ -93,8 +93,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "stative",
     valency: [
-      { role: "experiencer", required: true, label: "who" },
-      { role: "stimulus", required: true, label: "what" },
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "stimulus", required: true, label: "stimulus" },
     ],
   },
   {
@@ -108,8 +108,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "stative",
     valency: [
-      { role: "possessor", required: true, label: "who" },
-      { role: "theme", required: true, label: "what" },
+      { role: "possessor", required: true, label: "possessor" },
+      { role: "theme", required: true, label: "theme" },
     ],
   },
 
@@ -125,9 +125,9 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
-      { role: "theme", required: true, label: "what" },
-      { role: "recipient", required: true, label: "to whom", preposition: "to" },
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+      { role: "recipient", required: true, label: "recipient", preposition: "to" },
     ],
   },
   {
@@ -141,9 +141,9 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
-      { role: "theme", required: true, label: "what" },
-      { role: "recipient", required: true, label: "to whom", preposition: "to" },
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+      { role: "recipient", required: true, label: "recipient", preposition: "to" },
     ],
   },
 
@@ -169,8 +169,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "copula",
     valency: [
-      { role: "theme", required: true, label: "who/what" },
-      { role: "attribute", required: true, label: "is what" },
+      { role: "theme", required: true, label: "subject" },
+      { role: "attribute", required: true, label: "attribute" },
     ],
   },
 ];

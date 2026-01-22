@@ -44,7 +44,11 @@
   - TimeFrame の will は時制用、Modal の will は意思表明用
   - 能力 (can)、許可 (may)、義務 (must)、助言 (should)
 
-### Multi-language
+### UI & Localization
+- [ ] ブロックラベルの切り替え機能
+  - 現在: 言語学的表現（VERB, agent, theme, etc.）
+  - オプション: カジュアル（ACTION, who, what）、子供向け、日本語
+  - 設定UIから切り替え可能に
 - [ ] 日本語レンダラー
 - [ ] 文法ルールの定数化・多言語説明対応
   - 副詞配置、語順などのルールをデータとして定義

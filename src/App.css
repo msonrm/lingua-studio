@@ -80,7 +80,9 @@ body {
   border-radius: 8px;
   min-height: 60px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .placeholder {
@@ -88,6 +90,18 @@ body {
   font-style: italic;
   font-weight: normal;
   font-size: 1rem;
+}
+
+.linguascript-output {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  color: #50fa7b;
+  background: #0a0a1a;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .ast-output {

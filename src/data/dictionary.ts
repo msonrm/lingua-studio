@@ -80,6 +80,21 @@ export const verbs: VerbEntry[] = [
       { role: "theme", required: true, label: "theme" },
     ],
   },
+  {
+    lemma: "see",
+    forms: {
+      base: "see",
+      past: "saw",
+      pp: "seen",
+      ing: "seeing",
+      s: "sees",
+    },
+    type: "action",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
 
   // 状態動詞（stative）- 通常進行形不可
   {
@@ -345,6 +360,7 @@ export const nouns: NounEntry[] = [
   { lemma: "flower", plural: "flowers", category: "object", countable: true },
   { lemma: "piano", plural: "pianos", category: "object", countable: true },
   { lemma: "guitar", plural: "guitars", category: "object", countable: true },
+  { lemma: "telescope", plural: "telescopes", category: "object", countable: true },
   { lemma: "money", plural: "money", category: "object", countable: false },
 
   // ============================================

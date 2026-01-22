@@ -347,8 +347,9 @@ Blockly.Blocks['pronoun_block'] = {
     const personalOptions: [string, string][] = personalPronouns.map(p => [p.lemma, p.lemma]);
     const indefiniteOptions: [string, string][] = indefinitePronouns.map(p => [p.lemma, p.lemma]);
     const allOptions: [string, string][] = [
+      ...personalOptions.slice(0, 1),  // 最初の1つをデフォルトに
       ["── Personal ──", "__label_personal__"],
-      ...personalOptions,
+      ...personalOptions.slice(1),
       ["── Indefinite ──", "__label_indefinite__"],
       ...indefiniteOptions,
     ];
@@ -374,8 +375,9 @@ Blockly.Blocks['human_block'] = {
     const commonOptions: [string, string][] = humanNouns.map(n => [n.lemma, n.lemma]);
     const properOptions: [string, string][] = humanProperNouns.map(n => [n.lemma, n.lemma]);
     const nounOptions: [string, string][] = [
+      ...commonOptions.slice(0, 1),  // 最初の1つをデフォルトに
       ["── Common ──", "__label_common__"],
-      ...commonOptions,
+      ...commonOptions.slice(1),
       ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
     ];
 
@@ -447,8 +449,9 @@ Blockly.Blocks['place_block'] = {
     const properOptions: [string, string][] = placeProperNouns.map(n => [n.lemma, n.lemma]);
     const adverbOptions: [string, string][] = placeAdverbs.map(a => [a.lemma, a.value]);
     const nounOptions: [string, string][] = [
+      ...adverbOptions.slice(0, 1),  // 最初の1つをデフォルトに
       ["── Adverbs ──", "__label_adverbs__"],
-      ...adverbOptions,
+      ...adverbOptions.slice(1),
       ["── Common ──", "__label_common__"],
       ...commonOptions,
       ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
@@ -496,8 +499,9 @@ Blockly.Blocks['person_block'] = {
     const pronounOptions: [string, string][] = personPronouns.map(p => [p.lemma, p.lemma]);
     const nounOptions: [string, string][] = personNouns.map(n => [n.lemma, n.lemma]);
     const allOptions: [string, string][] = [
+      ...pronounOptions.slice(0, 1),  // 最初の1つをデフォルトに
       ["── Pronouns ──", "__label_pronouns__"],
-      ...pronounOptions,
+      ...pronounOptions.slice(1),
       ["── People ──", "__label_people__"],
       ...nounOptions,
     ];
@@ -522,11 +526,19 @@ Blockly.Blocks['thing_block'] = {
   init: function() {
     const pronounOptions: [string, string][] = thingPronouns.map(p => [p.lemma, p.lemma]);
     const nounOptions: [string, string][] = thingNouns.map(n => [n.lemma, n.lemma]);
-    const allOptions: [string, string][] = [
-      ...pronounOptions.length > 0 ? [["── Pronouns ──", "__label_pronouns__"] as [string, string], ...pronounOptions] : [],
-      ["── Things ──", "__label_things__"],
-      ...nounOptions,
-    ];
+    const allOptions: [string, string][] = pronounOptions.length > 0
+      ? [
+          ...pronounOptions.slice(0, 1),  // 最初の1つをデフォルトに
+          ["── Pronouns ──", "__label_pronouns__"],
+          ...pronounOptions.slice(1),
+          ["── Things ──", "__label_things__"],
+          ...nounOptions,
+        ]
+      : [
+          ...nounOptions.slice(0, 1),  // 最初の1つをデフォルトに
+          ["── Things ──", "__label_things__"],
+          ...nounOptions.slice(1),
+        ];
 
     this.appendDummyInput()
         .appendField("THING")

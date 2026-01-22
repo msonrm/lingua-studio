@@ -36,6 +36,9 @@
 - [x] 名詞プロパティに基づく限定詞制約
   - 固有名詞: 全限定詞無効
   - 不可算名詞: a/an, both, half, 数量詞(one,two,many,few,several,[plural])無効
+- [ ] 不定代名詞 + 形容詞対応 ("something good", "someone important")
+  - 現状: 代名詞に形容詞を付けてもコンパイル時に無視される
+  - 修正案: 不定代名詞(something, someone, etc.)の場合のみ形容詞を後置でレンダリング
 - [ ] 疑問文対応
 - [ ] Modal（法助動詞）wrapper (can, may, must, should)
   - TimeFrame の will は時制用、Modal の will は意思表明用

@@ -15,8 +15,9 @@
   - 現状: 3人称単数のみ判定
   - 修正案: 1人称/2人称の判定を追加、be動詞専用の活用テーブル
 
-- [ ] 固有名詞に冠詞がつく（"the Tokyo" → "Tokyo"）
-  - 修正案: NounEntry に `proper: boolean` を追加、レンダラーで冠詞を抑制
+- [x] 固有名詞に冠詞がつく（"the Tokyo" → "Tokyo"）
+  - 解決済み: 限定詞ブロックが接続名詞の `proper` フラグを検出
+  - 固有名詞接続時は全限定詞オプションに「×」マークを表示、選択不可に
 
 ## Future Enhancements
 
@@ -30,7 +31,11 @@
 - [x] 様態副詞 - MANNER wrapper (quickly, slowly, furiously)
 - [x] 前置限定詞の語順対応 - 統合DETERMINERブロック (`determiner_unified`) で実装
   - 3つのドロップダウン: 前置(all,both,half) / 中央(the,this,that,a/an,my,your,no) / 後置(one,two,many,few,some,several,[plural],[–])
-  - バリデーションで無効な組み合わせを防止
+  - 双方向制約チェック（PRE↔CENTRAL↔POST）
+  - 無効なオプションに「×」マーク表示、選択不可
+- [x] 名詞プロパティに基づく限定詞制約
+  - 固有名詞: 全限定詞無効
+  - 不可算名詞: a/an, both, half, 数量詞(one,two,many,few,several,[plural])無効
 - [ ] 疑問文対応
 - [ ] Modal（法助動詞）wrapper (can, may, must, should)
   - TimeFrame の will は時制用、Modal の will は意思表明用

@@ -499,7 +499,59 @@ function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseN
     };
   }
 
-  // 通常の名詞（デフォルトは単数、QTYで上書き可能）
+  // 統合ブロックの限定詞フィールドを取得（存在する場合）
+  const preValue = block.getFieldValue('DET_PRE');
+  const centralValue = block.getFieldValue('DET_CENTRAL');
+  const postValue = block.getFieldValue('DET_POST');
+
+  // 限定詞フィールドがある場合（統合ブロック）
+  if (preValue !== null || centralValue !== null || postValue !== null) {
+    // 各限定詞データから出力と文法数を取得
+    const preOption = DETERMINER_DATA.pre.find(o => o.value === preValue);
+    const centralOption = DETERMINER_DATA.central.find(o => o.value === centralValue);
+    const postOption = DETERMINER_DATA.post.find(o => o.value === postValue);
+
+    // 文法数を決定（post > central > pre の優先順位）
+    let grammaticalNumber: 'singular' | 'plural' = 'singular';
+    if (postOption?.number === 'plural' || postOption?.number === 'uncountable') {
+      grammaticalNumber = 'plural';
+    } else if (postOption?.number === 'singular') {
+      grammaticalNumber = 'singular';
+    } else if (centralOption?.number === 'plural') {
+      grammaticalNumber = 'plural';
+    } else if (centralOption?.number === 'singular') {
+      grammaticalNumber = 'singular';
+    } else if (preOption?.number === 'plural') {
+      grammaticalNumber = 'plural';
+    }
+
+    // 限定詞の種類を決定
+    let determiner: NounPhraseNode['determiner'] = undefined;
+    if (centralOption?.output) {
+      if (centralValue === 'the') {
+        determiner = { kind: 'definite', lexeme: 'the' };
+      } else if (centralValue === 'a') {
+        determiner = { kind: 'indefinite', lexeme: 'a' };
+      } else {
+        determiner = { kind: 'definite', lexeme: centralOption.output };
+      }
+    }
+
+    return {
+      type: 'nounPhrase',
+      preDeterminer: preOption?.output ?? undefined,
+      determiner,
+      postDeterminer: postOption?.output ?? undefined,
+      adjectives: [],
+      head: {
+        type: 'noun',
+        lemma: value,
+        number: grammaticalNumber,
+      },
+    };
+  }
+
+  // 限定詞フィールドがない場合（レガシーまたは代名詞ブロック）
   return {
     type: 'nounPhrase',
     adjectives: [],

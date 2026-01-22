@@ -58,6 +58,22 @@ export function BlocklyWorkspace({ onASTChange, onSentenceChange }: BlocklyWorks
 
     workspaceRef.current = workspace;
 
+    // 初期ブロックを配置（SENTENCE + VERB）
+    const sentenceBlock = workspace.newBlock('time_frame');
+    sentenceBlock.initSvg();
+    sentenceBlock.render();
+    sentenceBlock.moveBy(50, 50);
+
+    const verbBlock = workspace.newBlock('verb');
+    verbBlock.initSvg();
+    verbBlock.render();
+
+    // VERBをSENTENCEのpredicateスロットに接続
+    const connection = sentenceBlock.getInput('ACTION')?.connection;
+    if (connection) {
+      connection.connect(verbBlock.previousConnection);
+    }
+
     // 変更リスナーを追加
     workspace.addChangeListener(handleWorkspaceChange);
 

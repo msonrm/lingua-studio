@@ -15,8 +15,35 @@
   - 現状: 3人称単数のみ判定
   - 修正案: 1人称/2人称の判定を追加、be動詞専用の活用テーブル
 
-- [ ] 固有名詞に冠詞がつく（"the Tokyo" → "Tokyo"）
-  - 修正案: NounEntry に `proper: boolean` を追加、レンダラーで冠詞を抑制
+- [x] 固有名詞に冠詞がつく（"the Tokyo" → "Tokyo"）
+  - 解決済み: 限定詞ブロックが接続名詞の `proper` フラグを検出
+  - 固有名詞接続時は全限定詞オプションに「×」マークを表示、選択不可に
+
+## Completed (This Session)
+
+- [x] ブロックラベルの言語学的表現への統一
+  - ACTION → VERB, TIME FRAME → SENTENCE
+  - スロットラベル: who/what → agent/patient/theme 等
+  - 必須スロット: `label:` / 任意スロット: `(label):`
+  - ToolboxカテゴリをSentence/Verbs/Verb Modifiers/Nouns/Noun Modifiersに再編成
+
+- [x] モンテッソーリベースの配色
+  - Sentence系: ブラウン (#5D4E37, #8B7355)
+  - Verb系: 赤グラデーション (#DC143C → #EF6C57)
+  - Noun系: ほぼ黒 (#0d1321)
+  - Noun Modifier系: ネイビーグラデーション (#1a365d → #2c5282)
+
+- [x] ADJ/DET接続順序の制約
+  - ADJ: 入力 ["noun", "adjective"] → 出力 "adjective"
+  - DET: 入力 ["noun", "adjective"] → 出力 "nounPhrase"
+  - 正しい順序: DET → ADJ → NOUN のみ許可
+
+- [x] 起動時に初期ブロック配置
+  - SENTENCE + VERB を接続した状態で配置
+  - チョムスキー的な TP > VP 構造を反映
+
+- [x] ドロップダウンの "Select..." プレースホルダー削除
+  - 全ブロックで実際の値がデフォルト選択されるように変更
 
 ## Future Enhancements
 
@@ -30,13 +57,24 @@
 - [x] 様態副詞 - MANNER wrapper (quickly, slowly, furiously)
 - [x] 前置限定詞の語順対応 - 統合DETERMINERブロック (`determiner_unified`) で実装
   - 3つのドロップダウン: 前置(all,both,half) / 中央(the,this,that,a/an,my,your,no) / 後置(one,two,many,few,some,several,[plural],[–])
-  - バリデーションで無効な組み合わせを防止
+  - 双方向制約チェック（PRE↔CENTRAL↔POST）
+  - 無効なオプションに「×」マーク表示、選択不可
+- [x] 名詞プロパティに基づく限定詞制約
+  - 固有名詞: 全限定詞無効
+  - 不可算名詞: a/an, both, half, 数量詞(one,two,many,few,several,[plural])無効
+- [ ] 不定代名詞 + 形容詞対応 ("something good", "someone important")
+  - 現状: 代名詞に形容詞を付けてもコンパイル時に無視される
+  - 修正案: 不定代名詞(something, someone, etc.)の場合のみ形容詞を後置でレンダリング
 - [ ] 疑問文対応
 - [ ] Modal（法助動詞）wrapper (can, may, must, should)
   - TimeFrame の will は時制用、Modal の will は意思表明用
   - 能力 (can)、許可 (may)、義務 (must)、助言 (should)
 
-### Multi-language
+### UI & Localization
+- [ ] ブロックラベルの切り替え機能
+  - 現在: 言語学的表現（VERB, agent, theme, etc.）
+  - オプション: カジュアル（ACTION, who, what）、子供向け、日本語
+  - 設定UIから切り替え可能に
 - [ ] 日本語レンダラー
 - [ ] 文法ルールの定数化・多言語説明対応
   - 副詞配置、語順などのルールをデータとして定義

@@ -137,3 +137,25 @@ body {
 .blocklyTreeRowContentContainer {
   color: #000000 !important;
 }
+
+/* グレーアウトされた限定詞オプション */
+.blocklyMenuItemDisabled {
+  color: #999 !important;
+  cursor: not-allowed !important;
+  font-style: italic;
+  background-color: #f8f8f8 !important;
+}
+
+.blocklyMenuItemDisabled:hover {
+  background-color: #f0f0f0 !important;
+}
+
+/* 無効化理由の表示 */
+.disabledReason {
+  display: block;
+  font-size: 10px;
+  color: #c66;
+  margin-top: 2px;
+  font-style: normal;
+  padding-left: 4px;
+}

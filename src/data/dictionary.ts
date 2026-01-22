@@ -1,4 +1,4 @@
-import { VerbEntry, NounEntry, AdjectiveEntry, AdverbEntry, PronounEntry } from '../types/schema';
+import { VerbEntry, NounEntry, AdjectiveEntry, AdverbEntry, PronounEntry, DeterminerConfig } from '../types/schema';
 
 // ============================================
 // 動詞辞書
@@ -16,7 +16,7 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
+      { role: "agent", required: true, label: "agent" },
     ],
   },
   {
@@ -30,7 +30,7 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
+      { role: "agent", required: true, label: "agent" },
     ],
   },
 
@@ -46,8 +46,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
-      { role: "patient", required: false, label: "what" },
+      { role: "agent", required: true, label: "agent" },
+      { role: "patient", required: false, label: "patient" },
     ],
   },
   {
@@ -61,8 +61,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
-      { role: "patient", required: true, label: "what" },
+      { role: "agent", required: true, label: "agent" },
+      { role: "patient", required: true, label: "patient" },
     ],
   },
   {
@@ -76,8 +76,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
-      { role: "theme", required: true, label: "what" },
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
     ],
   },
 
@@ -93,8 +93,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "stative",
     valency: [
-      { role: "experiencer", required: true, label: "who" },
-      { role: "stimulus", required: true, label: "what" },
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "stimulus", required: true, label: "stimulus" },
     ],
   },
   {
@@ -108,8 +108,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "stative",
     valency: [
-      { role: "possessor", required: true, label: "who" },
-      { role: "theme", required: true, label: "what" },
+      { role: "possessor", required: true, label: "possessor" },
+      { role: "theme", required: true, label: "theme" },
     ],
   },
 
@@ -125,9 +125,9 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
-      { role: "theme", required: true, label: "what" },
-      { role: "recipient", required: true, label: "to whom", preposition: "to" },
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+      { role: "recipient", required: true, label: "recipient", preposition: "to" },
     ],
   },
   {
@@ -141,9 +141,9 @@ export const verbs: VerbEntry[] = [
     },
     type: "action",
     valency: [
-      { role: "agent", required: true, label: "who" },
-      { role: "theme", required: true, label: "what" },
-      { role: "recipient", required: true, label: "to whom", preposition: "to" },
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+      { role: "recipient", required: true, label: "recipient", preposition: "to" },
     ],
   },
 
@@ -169,8 +169,8 @@ export const verbs: VerbEntry[] = [
     },
     type: "copula",
     valency: [
-      { role: "theme", required: true, label: "who/what" },
-      { role: "attribute", required: true, label: "is what" },
+      { role: "theme", required: true, label: "subject" },
+      { role: "attribute", required: true, label: "attribute" },
     ],
   },
 ];
@@ -281,119 +281,118 @@ export const pronouns: PronounEntry[] = [
 // 名詞辞書
 // ============================================
 export const nouns: NounEntry[] = [
-  // Person nouns
-  {
-    lemma: "father",
-    plural: "fathers",
-    category: "human",
-    countable: true,
-  },
-  {
-    lemma: "mother",
-    plural: "mothers",
-    category: "human",
-    countable: true,
-  },
-  {
-    lemma: "teacher",
-    plural: "teachers",
-    category: "human",
-    countable: true,
-  },
-  {
-    lemma: "student",
-    plural: "students",
-    category: "human",
-    countable: true,
-  },
-  // Animal nouns
-  {
-    lemma: "cat",
-    plural: "cats",
-    category: "animal",
-    countable: true,
-  },
-  {
-    lemma: "dog",
-    plural: "dogs",
-    category: "animal",
-    countable: true,
-  },
-  // Thing nouns
-  {
-    lemma: "apple",
-    plural: "apples",
-    category: "thing",
-    countable: true,
-  },
-  {
-    lemma: "pen",
-    plural: "pens",
-    category: "thing",
-    countable: true,
-  },
-  {
-    lemma: "book",
-    plural: "books",
-    category: "thing",
-    countable: true,
-  },
-  {
-    lemma: "ball",
-    plural: "balls",
-    category: "thing",
-    countable: true,
-  },
-  {
-    lemma: "flower",
-    plural: "flowers",
-    category: "thing",
-    countable: true,
-  },
-  {
-    lemma: "piano",
-    plural: "pianos",
-    category: "thing",
-    countable: true,
-  },
-  // Abstract nouns
-  {
-    lemma: "idea",
-    plural: "ideas",
-    category: "abstract",
-    countable: true,
-  },
-  {
-    lemma: "advice",
-    plural: "advice",
-    category: "abstract",
-    countable: false,
-  },
-  // Place nouns
-  {
-    lemma: "Tokyo",
-    plural: "Tokyo",
-    category: "place",
-    countable: false,
-  },
-  {
-    lemma: "park",
-    plural: "parks",
-    category: "place",
-    countable: true,
-  },
-  {
-    lemma: "school",
-    plural: "schools",
-    category: "place",
-    countable: true,
-  },
-  {
-    lemma: "home",
-    plural: "homes",
-    category: "place",
-    countable: true,
-  },
+  // ============================================
+  // 人間 (human)
+  // ============================================
+  { lemma: "father", plural: "fathers", category: "human", countable: true },
+  { lemma: "mother", plural: "mothers", category: "human", countable: true },
+  { lemma: "brother", plural: "brothers", category: "human", countable: true },
+  { lemma: "sister", plural: "sisters", category: "human", countable: true },
+  { lemma: "son", plural: "sons", category: "human", countable: true },
+  { lemma: "daughter", plural: "daughters", category: "human", countable: true },
+  { lemma: "friend", plural: "friends", category: "human", countable: true },
+  { lemma: "teacher", plural: "teachers", category: "human", countable: true },
+  { lemma: "student", plural: "students", category: "human", countable: true },
+  { lemma: "doctor", plural: "doctors", category: "human", countable: true },
+  { lemma: "child", plural: "children", category: "human", countable: true },
+  { lemma: "baby", plural: "babies", category: "human", countable: true },
+  { lemma: "man", plural: "men", category: "human", countable: true },
+  { lemma: "woman", plural: "women", category: "human", countable: true },
+  { lemma: "person", plural: "people", category: "human", countable: true },
+  // 固有名詞（人名）
+  { lemma: "John", plural: "John", category: "human", countable: true, proper: true },
+  { lemma: "Mary", plural: "Mary", category: "human", countable: true, proper: true },
+  { lemma: "Tom", plural: "Tom", category: "human", countable: true, proper: true },
+
+  // ============================================
+  // 動物・生き物 (animal)
+  // ============================================
+  { lemma: "cat", plural: "cats", category: "animal", countable: true },
+  { lemma: "dog", plural: "dogs", category: "animal", countable: true },
+  { lemma: "bird", plural: "birds", category: "animal", countable: true },
+  { lemma: "fish", plural: "fish", category: "animal", countable: true },
+  { lemma: "horse", plural: "horses", category: "animal", countable: true },
+  { lemma: "rabbit", plural: "rabbits", category: "animal", countable: true },
+  { lemma: "mouse", plural: "mice", category: "animal", countable: true },
+  { lemma: "elephant", plural: "elephants", category: "animal", countable: true },
+  { lemma: "lion", plural: "lions", category: "animal", countable: true },
+  { lemma: "monkey", plural: "monkeys", category: "animal", countable: true },
+
+  // ============================================
+  // 物体 (object)
+  // ============================================
+  // 食べ物
+  { lemma: "apple", plural: "apples", category: "object", countable: true },
+  { lemma: "orange", plural: "oranges", category: "object", countable: true },
+  { lemma: "bread", plural: "bread", category: "object", countable: false },
+  { lemma: "rice", plural: "rice", category: "object", countable: false },
+  { lemma: "water", plural: "water", category: "object", countable: false },
+  { lemma: "milk", plural: "milk", category: "object", countable: false },
+  { lemma: "coffee", plural: "coffee", category: "object", countable: false },
+  { lemma: "cake", plural: "cakes", category: "object", countable: true },
+  // 道具・物
+  { lemma: "pen", plural: "pens", category: "object", countable: true },
+  { lemma: "pencil", plural: "pencils", category: "object", countable: true },
+  { lemma: "book", plural: "books", category: "object", countable: true },
+  { lemma: "bag", plural: "bags", category: "object", countable: true },
+  { lemma: "chair", plural: "chairs", category: "object", countable: true },
+  { lemma: "table", plural: "tables", category: "object", countable: true },
+  { lemma: "phone", plural: "phones", category: "object", countable: true },
+  { lemma: "computer", plural: "computers", category: "object", countable: true },
+  { lemma: "car", plural: "cars", category: "object", countable: true },
+  { lemma: "key", plural: "keys", category: "object", countable: true },
+  { lemma: "ball", plural: "balls", category: "object", countable: true },
+  { lemma: "flower", plural: "flowers", category: "object", countable: true },
+  { lemma: "piano", plural: "pianos", category: "object", countable: true },
+  { lemma: "guitar", plural: "guitars", category: "object", countable: true },
+  { lemma: "money", plural: "money", category: "object", countable: false },
+
+  // ============================================
+  // 場所 (place)
+  // ============================================
+  // 普通名詞
+  { lemma: "home", plural: "homes", category: "place", countable: true, zeroArticle: true },
+  { lemma: "school", plural: "schools", category: "place", countable: true, zeroArticle: true },
+  { lemma: "office", plural: "offices", category: "place", countable: true },
+  { lemma: "hospital", plural: "hospitals", category: "place", countable: true, zeroArticle: true },
+  { lemma: "church", plural: "churches", category: "place", countable: true, zeroArticle: true },
+  { lemma: "park", plural: "parks", category: "place", countable: true },
+  { lemma: "station", plural: "stations", category: "place", countable: true },
+  { lemma: "airport", plural: "airports", category: "place", countable: true },
+  { lemma: "restaurant", plural: "restaurants", category: "place", countable: true },
+  { lemma: "store", plural: "stores", category: "place", countable: true },
+  { lemma: "room", plural: "rooms", category: "place", countable: true },
+  { lemma: "kitchen", plural: "kitchens", category: "place", countable: true },
+  { lemma: "garden", plural: "gardens", category: "place", countable: true },
+  // 固有名詞（地名）
+  { lemma: "Tokyo", plural: "Tokyo", category: "place", countable: false, proper: true },
+  { lemma: "Japan", plural: "Japan", category: "place", countable: false, proper: true },
+  { lemma: "America", plural: "America", category: "place", countable: false, proper: true },
+  { lemma: "London", plural: "London", category: "place", countable: false, proper: true },
+  { lemma: "Paris", plural: "Paris", category: "place", countable: false, proper: true },
+
+  // ============================================
+  // 抽象概念 (abstract)
+  // ============================================
+  // 可算
+  { lemma: "idea", plural: "ideas", category: "abstract", countable: true },
+  { lemma: "dream", plural: "dreams", category: "abstract", countable: true },
+  { lemma: "problem", plural: "problems", category: "abstract", countable: true },
+  { lemma: "question", plural: "questions", category: "abstract", countable: true },
+  { lemma: "answer", plural: "answers", category: "abstract", countable: true },
+  { lemma: "story", plural: "stories", category: "abstract", countable: true },
+  { lemma: "song", plural: "songs", category: "abstract", countable: true },
+  { lemma: "game", plural: "games", category: "abstract", countable: true },
+  // 不可算
+  { lemma: "advice", plural: "advice", category: "abstract", countable: false },
+  { lemma: "information", plural: "information", category: "abstract", countable: false },
+  { lemma: "news", plural: "news", category: "abstract", countable: false },
+  { lemma: "music", plural: "music", category: "abstract", countable: false },
+  { lemma: "love", plural: "love", category: "abstract", countable: false },
+  { lemma: "time", plural: "time", category: "abstract", countable: false },
+  { lemma: "work", plural: "work", category: "abstract", countable: false },
+  { lemma: "help", plural: "help", category: "abstract", countable: false },
+  { lemma: "fun", plural: "fun", category: "abstract", countable: false },
 ];
 
 // ============================================
@@ -478,3 +477,51 @@ export const findAdverb = (lemma: string): AdverbEntry | undefined =>
 
 export const findPronoun = (lemma: string): PronounEntry | undefined =>
   pronouns.find(p => p.lemma.toLowerCase() === lemma.toLowerCase());
+
+// ============================================
+// 限定詞設定ヘルパー
+// ============================================
+const NONE = '__none__';
+
+export function getDeterminerConfig(noun: NounEntry): DeterminerConfig {
+  // 固有名詞：限定詞なし（変更不可）
+  if (noun.proper) {
+    return {
+      defaults: { pre: NONE, central: NONE, post: NONE },
+      options: { pre: [NONE], central: [NONE], post: [NONE] },
+      disabled: true,
+    };
+  }
+
+  // 不可算名詞
+  if (!noun.countable) {
+    return {
+      defaults: { pre: NONE, central: NONE, post: NONE },
+      options: {
+        pre: [NONE, 'all'],
+        central: [NONE, 'the', 'this', 'that', 'my', 'your', 'some', 'no'],
+        post: [NONE, '__uncountable__'],  // [–] のみ
+      },
+    };
+  }
+
+  // 可算名詞（デフォルト: a/an + 単数）
+  return {
+    defaults: { pre: NONE, central: 'a', post: NONE },
+    options: {
+      pre: [NONE, 'all', 'both', 'half'],
+      central: [NONE, 'the', 'a', 'this', 'that', 'my', 'your', 'no'],
+      post: [NONE, 'one', 'two', 'three', 'many', 'few', 'some', 'several', '__plural__', '__uncountable__'],
+    },
+  };
+}
+
+// カテゴリ別に名詞を取得
+export const getNounsByCategory = (category: NounEntry['category']): NounEntry[] =>
+  nouns.filter(n => n.category === category);
+
+// 固有名詞かどうかをチェック
+export const isProperNoun = (lemma: string): boolean => {
+  const noun = findNoun(lemma);
+  return noun?.proper === true;
+};

@@ -1,25 +1,33 @@
 import * as Blockly from 'blockly';
-import { verbs, nouns, adjectives, adverbs, pronouns } from '../data/dictionary';
+import { verbs, nouns, adjectives, adverbs, pronouns, findNoun } from '../data/dictionary';
 
 // ============================================
-// 色の定義
+// 色の定義（モンテッソーリベース）
 // ============================================
 const COLORS = {
-  timeFrame: '#8B0000',  // ダークレッド
-  timeChip: '#DAA520',   // ゴールド
-  action: '#DC143C',     // クリムゾンレッド（モンテッソーリ的）
-  noun: 230,             // 青（レガシー）
-  person: '#0d1321',     // ほぼ黒の濃紺（モンテッソーリ的）
-  thing: '#0d1321',      // ほぼ黒の濃紺（モンテッソーリ的）
-  place: '#1a0a0a',      // ほぼ黒の暗赤（モンテッソーリ的）
-  determiner: '#2d4a3e', // 暗緑（限定詞）
-  quantifier: '#3d2d4a', // 暗紫（数量詞）
-  adjective: 290,        // 紫
-  adverb: 20,            // 赤オレンジ
-  // Verb modifiers
-  negation: '#C71585',   // マゼンタ（否定）
-  frequency: '#FF8C00',  // オレンジ（頻度副詞）
-  manner: '#FF6347',     // トマト（様態副詞）
+  // Sentence系（中立・ブラウン系）
+  timeFrame: '#5D4E37',  // 暖かみのあるブラウン
+  timeChip: '#8B7355',   // 明るめのブラウン
+
+  // Verb系（暖色・赤系グラデーション）
+  action: '#DC143C',     // クリムゾンレッド（モンテッソーリ）
+  negation: '#E53935',   // 明るい赤
+  frequency: '#EF5350',  // さらに明るい赤
+  manner: '#EF6C57',     // 赤オレンジ
+
+  // Noun系（寒色・黒〜青系グラデーション）
+  person: '#0d1321',     // ほぼ黒（モンテッソーリ）
+  thing: '#0d1321',      // ほぼ黒（モンテッソーリ）
+  place: '#0d1321',      // ほぼ黒（モンテッソーリ）
+  noun: '#0d1321',       // ほぼ黒（統一）
+
+  // Noun Modifier系（寒色・ネイビー系グラデーション）
+  determiner: '#1a365d', // ダークネイビー
+  adjective: '#2c5282',  // ネイビー
+  quantifier: '#2b4c7e', // ネイビー（中間）
+
+  // レガシー
+  adverb: '#EF6C57',     // 赤オレンジ（様態副詞と同系）
 };
 
 // ============================================
@@ -36,7 +44,6 @@ interface TimeChipOption {
 }
 
 const CONCRETE_OPTIONS: TimeChipOption[] = [
-  { label: 'Select time...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
   { label: 'Yesterday', value: 'yesterday', tense: 'past', aspect: 'simple' },
   { label: 'Tomorrow', value: 'tomorrow', tense: 'future', aspect: 'simple' },
   { label: 'Every day', value: 'every_day', tense: 'present', aspect: 'simple' },
@@ -46,7 +53,6 @@ const CONCRETE_OPTIONS: TimeChipOption[] = [
 ];
 
 const ASPECTUAL_OPTIONS: TimeChipOption[] = [
-  { label: 'Select aspect...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
   { label: 'Now', value: 'now', tense: 'present', aspect: 'progressive' },
   { label: 'Just now', value: 'just_now', tense: 'past', aspect: 'perfect' },
   { label: 'Already/Yet', value: 'completion', tense: 'inherit', aspect: 'perfect' },
@@ -55,7 +61,6 @@ const ASPECTUAL_OPTIONS: TimeChipOption[] = [
 ];
 
 const ABSTRACT_OPTIONS: TimeChipOption[] = [
-  { label: 'Select modifier...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
   { label: '[Past]', value: 'past', tense: 'past', aspect: 'inherit' },
   { label: '[Future]', value: 'future', tense: 'future', aspect: 'inherit' },
   { label: '[Current]', value: 'current', tense: 'present', aspect: 'inherit' },
@@ -136,24 +141,62 @@ const POST_DETERMINERS: DeterminerOption[] = [
   { label: '[–]', value: '__uncountable__', number: 'uncountable', output: null },
 ];
 
-// 制約ルール
+// ============================================
+// 制約ルール（双方向）
+// ============================================
 const DETERMINER_CONSTRAINTS = {
-  // pre が all/both/half の場合、central で選べないもの
+  // PRE が選ばれた場合、CENTRAL で選べないもの
   preBlocksCentral: {
     'all': ['a', 'no'],
-    'both': ['a', 'no'],
+    'both': ['a', 'no', 'this', 'that'],
     'half': ['a', 'no'],
   } as Record<string, string[]>,
-  // pre が all/both/half の場合、post で選べないもの
+
+  // PRE が選ばれた場合、POST で選べないもの
   preBlocksPost: {
     'all': ['one'],
-    'both': ['one'],
+    'both': ['one', 'three', 'many', 'few', 'some', 'several'],
     'half': ['one'],
   } as Record<string, string[]>,
-  // central が選ばれた場合、pre をリセットするもの
-  centralResetsPre: ['a', 'no'],
-  // central が選ばれた場合、post をリセットするもの
-  centralResetsPost: ['a'],
+
+  // CENTRAL が選ばれた場合、PRE で選べないもの
+  centralBlocksPre: {
+    'a': ['all', 'both', 'half'],
+    'no': ['all', 'both', 'half'],
+    'this': ['both'],
+    'that': ['both'],
+  } as Record<string, string[]>,
+
+  // CENTRAL が選ばれた場合、POST で選べないもの
+  centralBlocksPost: {
+    'a': ['one', 'two', 'three', 'many', 'few', 'some', 'several', '__plural__'],
+    'this': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],
+    'that': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],
+  } as Record<string, string[]>,
+
+  // POST が選ばれた場合、PRE で選べないもの
+  postBlocksPre: {
+    'one': ['all', 'both', 'half'],
+    'two': ['half'],
+    'three': ['both', 'half'],
+    'many': ['both', 'half'],
+    'few': ['both', 'half'],
+    'some': ['both', 'half'],
+    'several': ['both', 'half'],
+    '__plural__': ['both'],
+  } as Record<string, string[]>,
+
+  // POST が選ばれた場合、CENTRAL で選べないもの
+  postBlocksCentral: {
+    'one': ['a'],
+    'two': ['a', 'this', 'that'],
+    'three': ['a', 'this', 'that'],
+    'many': ['a', 'this', 'that'],
+    'few': ['a', 'this', 'that'],
+    'some': ['a', 'this', 'that'],
+    'several': ['a', 'this', 'that'],
+    '__plural__': ['a', 'this', 'that'],
+  } as Record<string, string[]>,
 };
 
 // ============================================
@@ -162,15 +205,15 @@ const DETERMINER_CONSTRAINTS = {
 Blockly.Blocks['time_frame'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("TIME FRAME");
+        .appendField("SENTENCE");
     this.appendValueInput("TIME_CHIP")
         .setCheck("timeChip")
-        .appendField("when:");
+        .appendField("T/A:");
     this.appendStatementInput("ACTION")
         .setCheck("verb")
-        .appendField("action:");
+        .appendField("predicate:");
     this.setColour(COLORS.timeFrame);
-    this.setTooltip("The root of a sentence, specifying time frame");
+    this.setTooltip("The root of a sentence, specifying tense and aspect");
   }
 };
 
@@ -214,11 +257,11 @@ Blockly.Blocks['time_chip_abstract'] = {
     const options: [string, string][] = ABSTRACT_OPTIONS.map(o => [o.label, o.value]);
 
     this.appendDummyInput()
-        .appendField("MODIFIER")
+        .appendField("TENSE/ASPECT")
         .appendField(new Blockly.FieldDropdown(options), "MODIFIER_VALUE");
     this.setOutput(true, "timeChip");
     this.setColour(COLORS.timeChip);
-    this.setTooltip("Abstract time modifier (affects verb conjugation only)");
+    this.setTooltip("Tense/aspect modifier (affects verb conjugation)");
   }
 };
 
@@ -230,12 +273,12 @@ Blockly.Blocks['verb'] = {
     const verbOptions: [string, string][] = verbs.map(v => [v.lemma, v.lemma]);
 
     this.appendDummyInput()
-        .appendField("ACTION")
+        .appendField("VERB")
         .appendField(new Blockly.FieldDropdown(verbOptions, this.updateShape.bind(this)), "VERB");
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.action);
-    this.setTooltip("Select an action (verb)");
+    this.setTooltip("Verb: the action or state");
 
     // 初期形状を設定
     this.updateShape(verbs[0]?.lemma || "run");
@@ -257,9 +300,11 @@ Blockly.Blocks['verb'] = {
       const inputName = `ARG_${index}`;
       const label = slot.label || slot.role;
       const checkType = slot.role === 'attribute' ? ['noun', 'nounPhrase', 'adjective'] : ['noun', 'nounPhrase'];
+      // 必須: "label:" / 任意: "(label):"
+      const displayLabel = slot.required ? `${label}:` : `(${label}):`;
       this.appendValueInput(inputName)
           .setCheck(checkType)
-          .appendField(`${label}${slot.required ? '*' : ''}:`);
+          .appendField(displayLabel);
     });
 
     // 副詞は Verb Modifiers (FREQ, MANNER) で対応
@@ -302,7 +347,171 @@ Blockly.Blocks['noun_phrase'] = {
 };
 
 // ============================================
-// Person ブロック（代名詞・人名詞）
+// 代名詞ブロック（限定詞不要）
+// ============================================
+const personalPronouns = pronouns.filter(p => p.type === 'personal');
+const indefinitePronouns = pronouns.filter(p => p.type === 'indefinite');
+
+Blockly.Blocks['pronoun_block'] = {
+  init: function() {
+    const personalOptions: [string, string][] = personalPronouns.map(p => [p.lemma, p.lemma]);
+    const indefiniteOptions: [string, string][] = indefinitePronouns.map(p => [p.lemma, p.lemma]);
+    const allOptions: [string, string][] = [
+      ["── Personal ──", "__label_personal__"],
+      ...personalOptions,
+      ["── Indefinite ──", "__label_indefinite__"],
+      ...indefiniteOptions,
+    ];
+
+    this.appendDummyInput()
+        .appendField("PRONOUN")
+        .appendField(new Blockly.FieldDropdown(allOptions), "PRONOUN_VALUE");
+
+    // デフォルト値を最初の実際の項目に設定
+    if (personalOptions.length > 0) {
+      this.setFieldValue(personalOptions[0][1], "PRONOUN_VALUE");
+    }
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.person);
+    this.setTooltip("A pronoun (I, you, he, someone, etc.) - no determiner needed");
+  }
+};
+
+// ============================================
+// 人間ブロック (human)
+// ============================================
+const humanNouns = nouns.filter(n => n.category === 'human' && !n.proper);
+const humanProperNouns = nouns.filter(n => n.category === 'human' && n.proper);
+
+Blockly.Blocks['human_block'] = {
+  init: function() {
+    const commonOptions: [string, string][] = humanNouns.map(n => [n.lemma, n.lemma]);
+    const properOptions: [string, string][] = humanProperNouns.map(n => [n.lemma, n.lemma]);
+    const nounOptions: [string, string][] = [
+      ["── Common ──", "__label_common__"],
+      ...commonOptions,
+      ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
+    ];
+
+    this.appendDummyInput()
+        .appendField("HUMAN")
+        .appendField(new Blockly.FieldDropdown(nounOptions), "HUMAN_VALUE");
+
+    // デフォルト値を最初の実際の項目に設定
+    if (commonOptions.length > 0) {
+      this.setFieldValue(commonOptions[0][1], "HUMAN_VALUE");
+    }
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.person);
+    this.setTooltip("A human (father, teacher, John, etc.)");
+  }
+};
+
+// ============================================
+// 動物ブロック (animal)
+// ============================================
+const animalNouns = nouns.filter(n => n.category === 'animal');
+
+Blockly.Blocks['animal_block'] = {
+  init: function() {
+    const nounOptions: [string, string][] = [
+      ...animalNouns.map(n => [n.lemma, n.lemma] as [string, string]),
+    ];
+
+    this.appendDummyInput()
+        .appendField("ANIMAL")
+        .appendField(new Blockly.FieldDropdown(nounOptions), "ANIMAL_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.thing);
+    this.setTooltip("An animal (cat, dog, bird, etc.)");
+  }
+};
+
+// ============================================
+// 物体ブロック (object)
+// ============================================
+const objectNouns = nouns.filter(n => n.category === 'object');
+
+Blockly.Blocks['object_block'] = {
+  init: function() {
+    const nounOptions: [string, string][] = [
+      ...objectNouns.map(n => [n.lemma, n.lemma] as [string, string]),
+    ];
+
+    this.appendDummyInput()
+        .appendField("OBJECT")
+        .appendField(new Blockly.FieldDropdown(nounOptions), "OBJECT_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.thing);
+    this.setTooltip("An object (apple, book, pen, water, etc.)");
+  }
+};
+
+// ============================================
+// 場所ブロック (place)
+// ============================================
+const placeNouns = nouns.filter(n => n.category === 'place' && !n.proper);
+const placeProperNouns = nouns.filter(n => n.category === 'place' && n.proper);
+const placeAdverbs = [
+  { lemma: "here", value: "here" },
+  { lemma: "there", value: "there" },
+];
+
+Blockly.Blocks['place_block'] = {
+  init: function() {
+    const commonOptions: [string, string][] = placeNouns.map(n => [n.lemma, n.lemma]);
+    const properOptions: [string, string][] = placeProperNouns.map(n => [n.lemma, n.lemma]);
+    const adverbOptions: [string, string][] = placeAdverbs.map(a => [a.lemma, a.value]);
+    const nounOptions: [string, string][] = [
+      ["── Adverbs ──", "__label_adverbs__"],
+      ...adverbOptions,
+      ["── Common ──", "__label_common__"],
+      ...commonOptions,
+      ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
+    ];
+
+    this.appendDummyInput()
+        .appendField("PLACE")
+        .appendField(new Blockly.FieldDropdown(nounOptions), "PLACE_VALUE");
+
+    // デフォルト値を最初の実際の項目に設定
+    if (adverbOptions.length > 0) {
+      this.setFieldValue(adverbOptions[0][1], "PLACE_VALUE");
+    }
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.place);
+    this.setTooltip("A place (park, school, Tokyo, here, etc.)");
+  }
+};
+
+// ============================================
+// 抽象概念ブロック (abstract)
+// ============================================
+const abstractNouns = nouns.filter(n => n.category === 'abstract');
+
+Blockly.Blocks['abstract_block'] = {
+  init: function() {
+    const nounOptions: [string, string][] = [
+      ...abstractNouns.map(n => [n.lemma, n.lemma] as [string, string]),
+    ];
+
+    this.appendDummyInput()
+        .appendField("ABSTRACT")
+        .appendField(new Blockly.FieldDropdown(nounOptions), "ABSTRACT_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.thing);
+    this.setTooltip("An abstract concept (idea, love, music, etc.)");
+  }
+};
+
+// ============================================
+// レガシー互換：Person ブロック
 // ============================================
 const personPronouns = pronouns.filter(p => p.type === 'personal' || !p.lemma.includes('thing'));
 const personNouns = nouns.filter(n => n.category === 'human');
@@ -312,7 +521,6 @@ Blockly.Blocks['person_block'] = {
     const pronounOptions: [string, string][] = personPronouns.map(p => [p.lemma, p.lemma]);
     const nounOptions: [string, string][] = personNouns.map(n => [n.lemma, n.lemma]);
     const allOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
       ["── Pronouns ──", "__label_pronouns__"],
       ...pronounOptions,
       ["── People ──", "__label_people__"],
@@ -323,6 +531,11 @@ Blockly.Blocks['person_block'] = {
         .appendField("PERSON")
         .appendField(new Blockly.FieldDropdown(allOptions), "PERSON_VALUE");
 
+    // デフォルト値を最初の実際の項目に設定
+    if (pronounOptions.length > 0) {
+      this.setFieldValue(pronounOptions[0][1], "PERSON_VALUE");
+    }
+
     this.setOutput(true, "noun");
     this.setColour(COLORS.person);
     this.setTooltip("A person (pronoun or noun)");
@@ -330,60 +543,41 @@ Blockly.Blocks['person_block'] = {
 };
 
 // ============================================
-// Thing ブロック（物・抽象名詞）
+// レガシー互換：Thing ブロック
 // ============================================
 const thingPronouns = pronouns.filter(p => p.lemma.includes('thing'));
-const thingNouns = nouns.filter(n => n.category === 'thing' || n.category === 'abstract' || n.category === 'animal');
+const thingNouns = nouns.filter(n => n.category === 'object' || n.category === 'abstract' || n.category === 'animal');
 
 Blockly.Blocks['thing_block'] = {
   init: function() {
     const pronounOptions: [string, string][] = thingPronouns.map(p => [p.lemma, p.lemma]);
     const nounOptions: [string, string][] = thingNouns.map(n => [n.lemma, n.lemma]);
-    const allOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
-      ...pronounOptions.length > 0 ? [["── Pronouns ──", "__label_pronouns__"] as [string, string], ...pronounOptions] : [],
-      ["── Things ──", "__label_things__"],
-      ...nounOptions,
-    ];
+    const allOptions: [string, string][] = pronounOptions.length > 0
+      ? [
+          ["── Pronouns ──", "__label_pronouns__"],
+          ...pronounOptions,
+          ["── Things ──", "__label_things__"],
+          ...nounOptions,
+        ]
+      : [
+          ["── Things ──", "__label_things__"],
+          ...nounOptions,
+        ];
 
     this.appendDummyInput()
         .appendField("THING")
         .appendField(new Blockly.FieldDropdown(allOptions), "THING_VALUE");
 
+    // デフォルト値を最初の実際の項目に設定
+    if (pronounOptions.length > 0) {
+      this.setFieldValue(pronounOptions[0][1], "THING_VALUE");
+    } else if (nounOptions.length > 0) {
+      this.setFieldValue(nounOptions[0][1], "THING_VALUE");
+    }
+
     this.setOutput(true, "noun");
     this.setColour(COLORS.thing);
     this.setTooltip("A thing (pronoun or noun)");
-  }
-};
-
-// ============================================
-// Place ブロック（場所名詞）
-// ============================================
-const placeNouns = nouns.filter(n => n.category === 'place');
-const placeAdverbs = [
-  { lemma: "here", value: "here" },
-  { lemma: "there", value: "there" },
-];
-
-Blockly.Blocks['place_block'] = {
-  init: function() {
-    const nounOptions: [string, string][] = placeNouns.map(n => [n.lemma, n.lemma]);
-    const adverbOptions: [string, string][] = placeAdverbs.map(a => [a.lemma, a.value]);
-    const allOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
-      ["── Place Adverbs ──", "__label_adverbs__"],
-      ...adverbOptions,
-      ["── Places ──", "__label_places__"],
-      ...nounOptions,
-    ];
-
-    this.appendDummyInput()
-        .appendField("PLACE")
-        .appendField(new Blockly.FieldDropdown(allOptions), "PLACE_VALUE");
-
-    this.setOutput(true, "noun");
-    this.setColour(COLORS.place);
-    this.setTooltip("A place (noun or adverb)");
   }
 };
 
@@ -422,89 +616,202 @@ Blockly.Blocks['adverb'] = {
 };
 
 // ============================================
-// 統合限定詞ブロック（3つのプルダウン）
+// 統合限定詞ブロック（3つのプルダウン）- 動的ラベル版
 // ============================================
 Blockly.Blocks['determiner_unified'] = {
   init: function() {
-    const preOptions: [string, string][] = PRE_DETERMINERS.map(o => [o.label, o.value]);
-    const centralOptions: [string, string][] = CENTRAL_DETERMINERS.map(o => [o.label, o.value]);
-    const postOptions: [string, string][] = POST_DETERMINERS.map(o => [o.label, o.value]);
+    const block = this;
 
-    // プルダウンの参照を保持
-    const preDropdown = new Blockly.FieldDropdown(preOptions, this.validatePre.bind(this));
-    const centralDropdown = new Blockly.FieldDropdown(centralOptions, this.validateCentral.bind(this));
-    const postDropdown = new Blockly.FieldDropdown(postOptions, this.validatePost.bind(this));
+    // 接続された名詞のプロパティを取得
+    const getConnectedNounInfo = (): { countable: boolean; proper: boolean } | null => {
+      const nounInput = block.getInput('NOUN');
+      if (!nounInput) return null;
+      const connection = nounInput.connection;
+      if (!connection || !connection.targetBlock()) return null;
+      const targetBlock = connection.targetBlock();
+      if (!targetBlock) return null;
+
+      const fieldMap: Record<string, string> = {
+        'human_block': 'HUMAN_VALUE',
+        'animal_block': 'ANIMAL_VALUE',
+        'object_block': 'OBJECT_VALUE',
+        'place_block': 'PLACE_VALUE',
+        'abstract_block': 'ABSTRACT_VALUE',
+        'person_block': 'PERSON_VALUE',
+        'thing_block': 'THING_VALUE',
+      };
+      const fieldName = fieldMap[targetBlock.type];
+      if (!fieldName) return null;
+      const nounLemma = targetBlock.getFieldValue(fieldName);
+      if (!nounLemma || nounLemma.startsWith('__')) return null;
+      const nounEntry = findNoun(nounLemma);
+      if (!nounEntry) return null;
+      return { countable: nounEntry.countable, proper: nounEntry.proper === true };
+    };
+
+    // 無効マーク付きラベルを生成
+    const markInvalid = (label: string) => `× ${label}`;
+
+    // PRE オプション生成（クリック時に呼ばれる）
+    const getPreOptions = (): [string, string][] => {
+      const central = block.getFieldValue('CENTRAL') || '__none__';
+      const post = block.getFieldValue('POST') || '__none__';
+      const nounInfo = getConnectedNounInfo();
+
+      return PRE_DETERMINERS.map(o => {
+        if (o.value === '__none__') return [o.label, o.value];
+
+        // 固有名詞：全て無効
+        if (nounInfo?.proper) return [markInvalid(o.label), o.value];
+        // 不可算名詞：both/half 無効
+        if (nounInfo && !nounInfo.countable && (o.value === 'both' || o.value === 'half')) {
+          return [markInvalid(o.label), o.value];
+        }
+        // CENTRAL による制約
+        if (DETERMINER_CONSTRAINTS.centralBlocksPre[central]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        // POST による制約
+        if (DETERMINER_CONSTRAINTS.postBlocksPre[post]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        return [o.label, o.value];
+      });
+    };
+
+    // CENTRAL オプション生成
+    const getCentralOptions = (): [string, string][] => {
+      const pre = block.getFieldValue('PRE') || '__none__';
+      const post = block.getFieldValue('POST') || '__none__';
+      const nounInfo = getConnectedNounInfo();
+
+      return CENTRAL_DETERMINERS.map(o => {
+        if (o.value === '__none__') return [o.label, o.value];
+
+        // 固有名詞：全て無効
+        if (nounInfo?.proper) return [markInvalid(o.label), o.value];
+        // 不可算名詞：a/an 無効
+        if (nounInfo && !nounInfo.countable && o.value === 'a') {
+          return [markInvalid(o.label), o.value];
+        }
+        // PRE による制約
+        if (DETERMINER_CONSTRAINTS.preBlocksCentral[pre]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        // POST による制約
+        if (DETERMINER_CONSTRAINTS.postBlocksCentral[post]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        return [o.label, o.value];
+      });
+    };
+
+    // POST オプション生成
+    const getPostOptions = (): [string, string][] => {
+      const pre = block.getFieldValue('PRE') || '__none__';
+      const central = block.getFieldValue('CENTRAL') || '__none__';
+      const nounInfo = getConnectedNounInfo();
+      const countableOnly = ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'];
+
+      return POST_DETERMINERS.map(o => {
+        if (o.value === '__none__') return [o.label, o.value];
+
+        // 固有名詞：全て無効
+        if (nounInfo?.proper) return [markInvalid(o.label), o.value];
+        // 不可算名詞：数量詞無効
+        if (nounInfo && !nounInfo.countable && countableOnly.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        // PRE による制約
+        if (DETERMINER_CONSTRAINTS.preBlocksPost[pre]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        // CENTRAL による制約
+        if (DETERMINER_CONSTRAINTS.centralBlocksPost[central]?.includes(o.value)) {
+          return [markInvalid(o.label), o.value];
+        }
+        return [o.label, o.value];
+      });
+    };
+
+    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否
+    const createValidator = (getOptions: () => [string, string][]) => {
+      return function(newValue: string) {
+        const options = getOptions();
+        const selected = options.find(([, v]) => v === newValue);
+        if (selected && selected[0].startsWith('×')) {
+          return null;  // 選択を拒否
+        }
+        return newValue;
+      };
+    };
 
     this.appendValueInput("NOUN")
-        .setCheck(["noun", "nounPhrase"])
+        .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞
         .appendField("DET")
-        .appendField(preDropdown, "PRE")
-        .appendField(centralDropdown, "CENTRAL")
-        .appendField(postDropdown, "POST");
+        .appendField(new Blockly.FieldDropdown(getPreOptions, createValidator(getPreOptions)), "PRE")
+        .appendField(new Blockly.FieldDropdown(getCentralOptions, createValidator(getCentralOptions)), "CENTRAL")
+        .appendField(new Blockly.FieldDropdown(getPostOptions, createValidator(getPostOptions)), "POST");
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.determiner);
-    this.setTooltip("Determiner: pre + central + post (e.g., 'all the two')");
+    this.setTooltip("Determiner: pre + central + post (× = 選択不可)");
+
+    // 名詞情報取得関数を保存（onchangeで使用）
+    this._getConnectedNounInfo = getConnectedNounInfo;
   },
 
-  // Pre選択時のバリデーション
-  validatePre: function(newValue: string): string | null {
-    // 選択を許可
-    return newValue;
-  },
+  // 接続変更・名詞変更時に無効な値をリセット
+  onchange: function(e: Blockly.Events.Abstract) {
+    if (!this.workspace) return;
 
-  // Central選択時のバリデーション
-  validateCentral: function(newValue: string): string | null {
-    const pre = this.getFieldValue('PRE');
+    // 接続された名詞ブロックを取得
+    const nounInput = this.getInput('NOUN');
+    const connectedBlock = nounInput?.connection?.targetBlock();
 
-    // pre が all/both/half の場合、a/an や no は選べない
-    if (pre && pre !== '__none__') {
-      const blocked = DETERMINER_CONSTRAINTS.preBlocksCentral[pre] || [];
-      if (blocked.includes(newValue)) {
-        return null;  // 選択を拒否
+    // BLOCK_MOVE: ブロック接続/切断
+    // BLOCK_CHANGE: 接続中の名詞ブロック内のドロップダウン変更
+    const isRelevantEvent =
+      e.type === Blockly.Events.BLOCK_MOVE ||
+      (e.type === Blockly.Events.BLOCK_CHANGE &&
+       connectedBlock &&
+       (e as Blockly.Events.BlockChange).blockId === connectedBlock.id);
+
+    if (!isRelevantEvent) return;
+
+    const nounInfo = this._getConnectedNounInfo?.();
+    if (!nounInfo) return;
+
+    const countableOnly = ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'];
+
+    // 固有名詞：全てリセット
+    if (nounInfo.proper) {
+      if (this.getFieldValue('PRE') !== '__none__') {
+        this.setFieldValue('__none__', 'PRE');
+      }
+      if (this.getFieldValue('CENTRAL') !== '__none__') {
+        this.setFieldValue('__none__', 'CENTRAL');
+      }
+      if (this.getFieldValue('POST') !== '__none__') {
+        this.setFieldValue('__none__', 'POST');
+      }
+      return;
+    }
+
+    // 不可算名詞：無効な値をリセット
+    if (!nounInfo.countable) {
+      const pre = this.getFieldValue('PRE');
+      if (pre === 'both' || pre === 'half') {
+        this.setFieldValue('__none__', 'PRE');
+      }
+      if (this.getFieldValue('CENTRAL') === 'a') {
+        this.setFieldValue('__none__', 'CENTRAL');
+      }
+      const post = this.getFieldValue('POST');
+      if (countableOnly.includes(post)) {
+        this.setFieldValue('__none__', 'POST');
       }
     }
-
-    // a/an や no を選んだ場合、pre をリセット
-    if (DETERMINER_CONSTRAINTS.centralResetsPre.includes(newValue)) {
-      setTimeout(() => {
-        if (this.getField('PRE')) {
-          this.setFieldValue('__none__', 'PRE');
-        }
-      }, 0);
-    }
-
-    // a/an を選んだ場合、post もリセット
-    if (DETERMINER_CONSTRAINTS.centralResetsPost.includes(newValue)) {
-      setTimeout(() => {
-        if (this.getField('POST')) {
-          this.setFieldValue('__none__', 'POST');
-        }
-      }, 0);
-    }
-
-    return newValue;
-  },
-
-  // Post選択時のバリデーション
-  validatePost: function(newValue: string): string | null {
-    const pre = this.getFieldValue('PRE');
-    const central = this.getFieldValue('CENTRAL');
-
-    // pre が all/both/half の場合、one は選べない
-    if (pre && pre !== '__none__') {
-      const blocked = DETERMINER_CONSTRAINTS.preBlocksPost[pre] || [];
-      if (blocked.includes(newValue)) {
-        return null;  // 選択を拒否
-      }
-    }
-
-    // central が a/an の場合、post は none のみ
-    if (central === 'a' && newValue !== '__none__') {
-      return null;  // 選択を拒否
-    }
-
-    return newValue;
   },
 };
 
@@ -514,7 +821,7 @@ Blockly.Blocks['determiner_unified'] = {
 Blockly.Blocks['determiner_block'] = {
   init: function() {
     this.appendValueInput("NOUN")
-        .setCheck(["noun", "nounPhrase"])
+        .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞
         .appendField("DET")
         .appendField(new Blockly.FieldDropdown([
           ["the", "the"],
@@ -536,7 +843,7 @@ Blockly.Blocks['quantifier_block'] = {
     const options: [string, string][] = QUANTIFIER_OPTIONS.map(o => [o.label, o.value]);
 
     this.appendValueInput("NOUN")
-        .setCheck(["noun", "nounPhrase"])
+        .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞
         .appendField("QTY")
         .appendField(new Blockly.FieldDropdown(options), "QTY_VALUE");
 
@@ -554,13 +861,13 @@ Blockly.Blocks['adjective_wrapper'] = {
     const adjOptions: [string, string][] = adjectives.map(a => [a.lemma, a.lemma]);
 
     this.appendValueInput("NOUN")
-        .setCheck(["noun", "nounPhrase"])
+        .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞のみ
         .appendField("ADJ")
         .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE");
 
-    this.setOutput(true, "nounPhrase");
+    this.setOutput(true, "adjective");  // 形容詞付き名詞として出力
     this.setColour(COLORS.adjective);
-    this.setTooltip("Adjective: modifies a noun");
+    this.setTooltip("Adjective: modifies a noun (place before DET)");
   }
 };
 
@@ -647,7 +954,6 @@ export const DETERMINER_DATA = {
   pre: PRE_DETERMINERS,
   central: CENTRAL_DETERMINERS,
   post: POST_DETERMINERS,
-  constraints: DETERMINER_CONSTRAINTS,
 };
 
 export const FREQUENCY_ADVERB_DATA = FREQUENCY_ADVERBS;
@@ -660,44 +966,25 @@ export const toolbox = {
   contents: [
     {
       kind: "category",
-      name: "Time",
+      name: "Sentence",
       colour: COLORS.timeFrame,
       contents: [
-        { kind: "label", text: "── TimeFrame ──" },
+        { kind: "label", text: "── Sentence ──" },
         { kind: "block", type: "time_frame" },
-        { kind: "label", text: "── Concrete ──" },
+        { kind: "label", text: "── Time ──" },
         { kind: "block", type: "time_chip_concrete" },
-        { kind: "label", text: "── Aspectual ──" },
+        { kind: "label", text: "── Aspect ──" },
         { kind: "block", type: "time_chip_aspectual" },
-        { kind: "label", text: "── Abstract ──" },
+        { kind: "label", text: "── Tense/Aspect ──" },
         { kind: "block", type: "time_chip_abstract" },
       ]
     },
     {
       kind: "category",
-      name: "Actions",
+      name: "Verbs",
       colour: COLORS.action,
       contents: [
         { kind: "block", type: "verb" },
-      ]
-    },
-    {
-      kind: "category",
-      name: "Nouns",
-      colour: COLORS.person,
-      contents: [
-        { kind: "block", type: "person_block" },
-        { kind: "block", type: "thing_block" },
-        { kind: "block", type: "place_block" },
-      ]
-    },
-    {
-      kind: "category",
-      name: "Noun Modifiers",
-      colour: COLORS.determiner,
-      contents: [
-        { kind: "block", type: "determiner_unified" },
-        { kind: "block", type: "adjective_wrapper" },
       ]
     },
     {
@@ -708,6 +995,99 @@ export const toolbox = {
         { kind: "block", type: "negation_wrapper" },
         { kind: "block", type: "frequency_wrapper" },
         { kind: "block", type: "manner_wrapper" },
+      ]
+    },
+    {
+      kind: "category",
+      name: "Nouns",
+      colour: COLORS.person,
+      contents: [
+        { kind: "label", text: "── Pronouns ──" },
+        { kind: "block", type: "pronoun_block" },
+        { kind: "label", text: "── People ──" },
+        {
+          kind: "block",
+          type: "determiner_unified",
+          inputs: {
+            NOUN: {
+              block: { type: "human_block" }
+            }
+          },
+          fields: {
+            PRE: "__none__",
+            CENTRAL: "a",
+            POST: "__none__"
+          }
+        },
+        { kind: "label", text: "── Animals ──" },
+        {
+          kind: "block",
+          type: "determiner_unified",
+          inputs: {
+            NOUN: {
+              block: { type: "animal_block" }
+            }
+          },
+          fields: {
+            PRE: "__none__",
+            CENTRAL: "a",
+            POST: "__none__"
+          }
+        },
+        { kind: "label", text: "── Objects ──" },
+        {
+          kind: "block",
+          type: "determiner_unified",
+          inputs: {
+            NOUN: {
+              block: { type: "object_block" }
+            }
+          },
+          fields: {
+            PRE: "__none__",
+            CENTRAL: "a",
+            POST: "__none__"
+          }
+        },
+        { kind: "label", text: "── Places ──" },
+        {
+          kind: "block",
+          type: "determiner_unified",
+          inputs: {
+            NOUN: {
+              block: { type: "place_block" }
+            }
+          },
+          fields: {
+            PRE: "__none__",
+            CENTRAL: "the",
+            POST: "__none__"
+          }
+        },
+        { kind: "label", text: "── Abstract ──" },
+        {
+          kind: "block",
+          type: "determiner_unified",
+          inputs: {
+            NOUN: {
+              block: { type: "abstract_block" }
+            }
+          },
+          fields: {
+            PRE: "__none__",
+            CENTRAL: "a",
+            POST: "__none__"
+          }
+        },
+      ]
+    },
+    {
+      kind: "category",
+      name: "Noun Modifiers",
+      colour: COLORS.determiner,
+      contents: [
+        { kind: "block", type: "determiner_unified" },
+        { kind: "block", type: "adjective_wrapper" },
       ]
     },
   ]

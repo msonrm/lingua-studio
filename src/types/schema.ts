@@ -14,12 +14,14 @@ export type SemanticRole =
   | "source"       // 起点
   | "location"     // 場所
   | "instrument"   // 道具
+  | "possessor"    // 所有者（have用）
   | "attribute";   // 属性（繋辞動詞用）
 
 export interface ArgumentSlot {
   role: SemanticRole;
   required: boolean;
   preposition?: string;
+  label?: string;  // UI表示用のラベル（例: "what", "to whom"）
 }
 
 export interface VerbEntry {
@@ -32,7 +34,7 @@ export interface VerbEntry {
     s: string;
     irregular?: Record<string, string>;
   };
-  type: "action" | "copula";
+  type: "action" | "stative" | "copula";
   valency: ArgumentSlot[];
 }
 
@@ -41,6 +43,18 @@ export interface NounEntry {
   plural: string;
   category?: "human" | "animal" | "thing" | "place" | "abstract" | "time";
   countable: boolean;
+}
+
+export interface PronounEntry {
+  lemma: string;           // 基本形（主格）
+  objectForm: string;      // 目的格
+  possessive?: string;     // 所有格（オプション）
+  person: 1 | 2 | 3;
+  number: "singular" | "plural";
+  gender?: "masculine" | "feminine" | "neuter";
+  type: "personal" | "indefinite";
+  polaritySensitive?: boolean;  // someone/anyone など
+  negativeForm?: string;        // nobody, nothing など
 }
 
 export interface AdjectiveEntry {
@@ -62,6 +76,7 @@ export interface SentenceNode {
   type: "sentence";
   clause: ClauseNode;
   sentenceType: "declarative" | "imperative";
+  timeAdverbial?: string;  // TimeChipから生成される時間副詞（Yesterday, Now など）
 }
 
 export interface ClauseNode {
@@ -86,7 +101,10 @@ export interface FilledArgumentSlot {
 
 export interface NounPhraseNode {
   type: "nounPhrase";
+  preDeterminer?: string;  // all, both, half
   determiner?: { kind: "definite" | "indefinite" | "none"; lexeme?: string };
+  postDeterminer?: string;  // one, two, many, few, some, several
+  quantifier?: string;  // レガシー: a, one, two, many, some, few, all, no
   adjectives: { lemma: string }[];
   head: NounHead | PronounHead;
 }
@@ -99,8 +117,11 @@ export interface NounHead {
 
 export interface PronounHead {
   type: "pronoun";
+  lemma: string;           // 代名詞の基本形（I, you, he など）
   person: 1 | 2 | 3;
   number: "singular" | "plural";
+  pronounType: "personal" | "indefinite";
+  polaritySensitive?: boolean;  // someone/anyone 系
 }
 
 export interface AdjectivePhraseNode {

@@ -3,9 +3,16 @@ import {
   ClauseNode,
   NounPhraseNode,
   NounHead,
+  PronounHead,
   FilledArgumentSlot,
+  AdjectivePhraseNode,
+  AdverbNode,
+  SemanticRole,
 } from '../types/schema';
-import { findVerb, findNoun } from '../data/dictionary';
+import { findVerb, findNoun, findPronoun } from '../data/dictionary';
+
+// 主語となりうるロール
+const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
 
 // ============================================
 // AST → 英文レンダラー
@@ -13,47 +20,114 @@ import { findVerb, findNoun } from '../data/dictionary';
 export function renderToEnglish(ast: SentenceNode): string {
   const clause = renderClause(ast.clause);
 
+  // 時間副詞を文末に追加
+  const timeAdverbial = ast.timeAdverbial;
+  const fullSentence = timeAdverbial ? `${clause} ${timeAdverbial}` : clause;
+
   // 文頭を大文字に、末尾にピリオド
-  const capitalized = clause.charAt(0).toUpperCase() + clause.slice(1);
+  const capitalized = fullSentence.charAt(0).toUpperCase() + fullSentence.slice(1);
   return capitalized + '.';
 }
 
 function renderClause(clause: ClauseNode): string {
-  const { verbPhrase, tense, aspect } = clause;
+  const { verbPhrase, tense, aspect, polarity } = clause;
 
-  // 主語（agent）を取得
-  const agentSlot = verbPhrase.arguments.find(a => a.role === 'agent');
-  const subject = agentSlot?.filler ? renderNounPhrase(agentSlot.filler as NounPhraseNode) : '';
+  // 主語を取得（agent, experiencer, possessor, theme の順で探す）
+  let subjectSlot: FilledArgumentSlot | undefined;
+  for (const role of SUBJECT_ROLES) {
+    subjectSlot = verbPhrase.arguments.find(a => a.role === role);
+    if (subjectSlot?.filler) break;
+  }
 
-  // 動詞を活用
-  const verbForm = conjugateVerb(verbPhrase.verb.lemma, tense, aspect, agentSlot?.filler as NounPhraseNode | undefined);
+  // 主語をレンダリング（isSubject = true）
+  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : '';
 
-  // 副詞
-  const adverbs = verbPhrase.adverbs.map(a => a.lemma).join(' ');
+  // 動詞エントリを取得して前置詞情報を参照
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
 
-  // その他の引数（目的語など）
+  // 副詞を種類別に分類
+  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
+  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
+
+  // 動詞を活用（否定含む、頻度副詞を挿入位置で返す）
+  const verbForm = conjugateVerbWithAdverbs(
+    verbPhrase.verb.lemma,
+    tense,
+    aspect,
+    polarity,
+    frequencyAdverbs,
+    subjectSlot?.filler as NounPhraseNode | undefined
+  );
+
+  // その他の引数（目的語など）- 主語以外（isSubject = false）
   const otherArgs = verbPhrase.arguments
-    .filter(a => a.role !== 'agent' && a.filler)
-    .map(a => renderArgument(a))
+    .filter(a => a !== subjectSlot && a.filler)
+    .map(a => {
+      // 前置詞を辞書から取得
+      const slotDef = verbEntry?.valency.find(v => v.role === a.role);
+      const preposition = slotDef?.preposition;
+      const rendered = renderFiller(a.filler!, false, polarity);  // 目的語は isSubject = false
+      return preposition ? `${preposition} ${rendered}` : rendered;
+    })
     .join(' ');
 
-  // 語順: Subject + Verb + Adverb または Subject + Adverb + Verb
-  // 英語では様態副詞は文末が一般的
-  const parts = [subject, verbForm, otherArgs, adverbs].filter(p => p.length > 0);
+  // 様態副詞は文末
+  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+
+  // 語順: Subject + Verb(+neg+freq) + Objects + Manner
+  const parts = [subject, verbForm, otherArgs, mannerStr].filter(p => p.length > 0);
 
   return parts.join(' ');
 }
 
-function renderNounPhrase(np: NounPhraseNode): string {
+function renderFiller(
+  filler: NounPhraseNode | AdjectivePhraseNode,
+  isSubject: boolean = false,
+  polarity: 'affirmative' | 'negative' = 'affirmative'
+): string {
+  if (filler.type === 'nounPhrase') {
+    return renderNounPhrase(filler as NounPhraseNode, isSubject, polarity);
+  } else if (filler.type === 'adjectivePhrase') {
+    return (filler as AdjectivePhraseNode).head.lemma;
+  }
+  return '';
+}
+
+function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarity: 'affirmative' | 'negative' = 'affirmative'): string {
+  // 代名詞の処理
+  if (np.head.type === 'pronoun') {
+    return renderPronoun(np.head as PronounHead, isSubject, polarity);
+  }
+
   const parts: string[] = [];
 
-  // 限定詞
-  if (np.determiner) {
-    if (np.determiner.kind === 'definite') {
-      parts.push('the');
-    } else if (np.determiner.kind === 'indefinite') {
-      // a/an の判定は後で
+  // 前置限定詞（all, both, half）
+  if (np.preDeterminer) {
+    parts.push(np.preDeterminer);
+  }
+
+  // 中央限定詞（the, this, my, a/an, no）
+  if (np.determiner && np.determiner.lexeme) {
+    if (np.determiner.lexeme === 'a') {
+      // a/an の判定は後で行う
       parts.push('INDEF');
+    } else {
+      parts.push(np.determiner.lexeme);
+    }
+  }
+
+  // 後置限定詞（one, two, many, few）
+  if (np.postDeterminer) {
+    parts.push(np.postDeterminer);
+  }
+
+  // レガシー数量詞（a, one, two, many など）
+  if (np.quantifier) {
+    if (np.quantifier === 'a') {
+      // a/an の判定は後で行う
+      parts.push('INDEF');
+    } else {
+      parts.push(np.quantifier);
     }
   }
 
@@ -76,60 +150,118 @@ function renderNounPhrase(np: NounPhraseNode): string {
 
   // a/an の処理
   let result = parts.join(' ');
-  if (result.startsWith('INDEF ')) {
-    const rest = result.slice(6);
-    const firstChar = rest.charAt(0).toLowerCase();
+  if (result.includes('INDEF ')) {
+    const idx = result.indexOf('INDEF ');
+    const before = result.slice(0, idx);
+    const after = result.slice(idx + 6);
+    const firstChar = after.charAt(0).toLowerCase();
     const article = ['a', 'e', 'i', 'o', 'u'].includes(firstChar) ? 'an' : 'a';
-    result = article + ' ' + rest;
+    result = before + article + ' ' + after;
   }
 
   return result;
 }
 
-function renderArgument(slot: FilledArgumentSlot): string {
-  if (!slot.filler) return '';
+function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirmative' | 'negative'): string {
+  const pronoun = findPronoun(head.lemma);
 
-  if (slot.filler.type === 'nounPhrase') {
-    return renderNounPhrase(slot.filler as NounPhraseNode);
+  if (!pronoun) {
+    return head.lemma;
   }
 
-  return '';
+  // 不定代名詞の極性による切り替え（someone → anyone / nobody）
+  if (pronoun.polaritySensitive) {
+    if (polarity === 'negative' && pronoun.negativeForm) {
+      // 否定文の場合は nobody/nothing を使用
+      return pronoun.negativeForm;
+    }
+    // 疑問文や否定コンテキストでは anyone/anything を使用（将来対応）
+    // 現時点では肯定形をそのまま使用
+  }
+
+  // 格変化: 主格 vs 目的格
+  if (isSubject) {
+    return pronoun.lemma;
+  } else {
+    return pronoun.objectForm;
+  }
 }
 
-function conjugateVerb(
+// 否定と頻度副詞を含む動詞活用
+function conjugateVerbWithAdverbs(
   lemma: string,
   tense: 'past' | 'present' | 'future',
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
+  polarity: 'affirmative' | 'negative',
+  frequencyAdverbs: AdverbNode[],
   subject?: NounPhraseNode
 ): string {
   const verbEntry = findVerb(lemma);
   if (!verbEntry) return lemma;
 
-  // 主語の人称・数を判定
+  const isNegative = polarity === 'negative';
   const isThirdPersonSingular = subject && isThirdSingular(subject);
+  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
 
-  // Simple aspect のみ実装（Phase 1）
+  // Simple aspect - 否定は do-support が必要
   if (aspect === 'simple') {
-    switch (tense) {
-      case 'past':
-        return verbEntry.forms.past;
-      case 'present':
-        return isThirdPersonSingular ? verbEntry.forms.s : verbEntry.forms.base;
-      case 'future':
-        return 'will ' + verbEntry.forms.base;
+    if (isNegative) {
+      // 否定: do/does/did + not + [freq] + base
+      let doForm: string;
+      switch (tense) {
+        case 'past':
+          doForm = 'did';
+          break;
+        case 'present':
+          doForm = isThirdPersonSingular ? 'does' : 'do';
+          break;
+        case 'future':
+          // will not [freq] base
+          return freqStr
+            ? `will not ${freqStr} ${verbEntry.forms.base}`
+            : `will not ${verbEntry.forms.base}`;
+      }
+      return freqStr
+        ? `${doForm} not ${freqStr} ${verbEntry.forms.base}`
+        : `${doForm} not ${verbEntry.forms.base}`;
+    } else {
+      // 肯定: [freq] + verb (頻度副詞は動詞の前)
+      switch (tense) {
+        case 'past':
+          return freqStr ? `${freqStr} ${verbEntry.forms.past}` : verbEntry.forms.past;
+        case 'present':
+          const form = isThirdPersonSingular ? verbEntry.forms.s : verbEntry.forms.base;
+          return freqStr ? `${freqStr} ${form}` : form;
+        case 'future':
+          return freqStr
+            ? `will ${freqStr} ${verbEntry.forms.base}`
+            : `will ${verbEntry.forms.base}`;
+      }
     }
   }
 
-  // Progressive
+  // Progressive: aux + [not] + [freq] + verb-ing
   if (aspect === 'progressive') {
     const beForm = tense === 'past' ? 'was' : (tense === 'future' ? 'will be' : (isThirdPersonSingular ? 'is' : 'are'));
-    return beForm + ' ' + verbEntry.forms.ing;
+    const notPart = isNegative ? 'not' : '';
+    const parts = [beForm, notPart, freqStr, verbEntry.forms.ing].filter(p => p.length > 0);
+    return parts.join(' ');
   }
 
-  // Perfect
+  // Perfect: aux + [not] + [freq] + verb-pp
   if (aspect === 'perfect') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
-    return haveForm + ' ' + verbEntry.forms.pp;
+    const notPart = isNegative ? 'not' : '';
+    const parts = [haveForm, notPart, freqStr, verbEntry.forms.pp].filter(p => p.length > 0);
+    return parts.join(' ');
+  }
+
+  // Perfect Progressive: aux + [not] + [freq] + been + verb-ing
+  if (aspect === 'perfectProgressive') {
+    const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
+    const notPart = isNegative ? 'not' : '';
+    const parts = [haveForm, notPart, freqStr, 'been', verbEntry.forms.ing].filter(p => p.length > 0);
+    return parts.join(' ');
   }
 
   return lemma;
@@ -140,5 +272,12 @@ function isThirdSingular(np: NounPhraseNode): boolean {
     const nounHead = np.head as NounHead;
     return nounHead.number === 'singular';
   }
+
+  if (np.head.type === 'pronoun') {
+    const pronounHead = np.head as PronounHead;
+    // 3人称単数のみ true
+    return pronounHead.person === 3 && pronounHead.number === 'singular';
+  }
+
   return false;
 }

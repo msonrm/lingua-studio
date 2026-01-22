@@ -1,81 +1,251 @@
 import * as Blockly from 'blockly';
-import { verbs, nouns, adjectives, adverbs } from '../data/dictionary';
+import { verbs, nouns, adjectives, adverbs, pronouns } from '../data/dictionary';
 
 // ============================================
 // 色の定義
 // ============================================
 const COLORS = {
-  sentence: 45,    // オレンジ
-  verb: 160,       // 緑
-  noun: 230,       // 青
-  adjective: 290,  // 紫
-  adverb: 20,      // 赤オレンジ
-  tense: 65,       // 黄色
+  timeFrame: '#8B0000',  // ダークレッド
+  timeChip: '#DAA520',   // ゴールド
+  action: '#DC143C',     // クリムゾンレッド（モンテッソーリ的）
+  noun: 230,             // 青（レガシー）
+  person: '#0d1321',     // ほぼ黒の濃紺（モンテッソーリ的）
+  thing: '#0d1321',      // ほぼ黒の濃紺（モンテッソーリ的）
+  place: '#1a0a0a',      // ほぼ黒の暗赤（モンテッソーリ的）
+  determiner: '#2d4a3e', // 暗緑（限定詞）
+  quantifier: '#3d2d4a', // 暗紫（数量詞）
+  adjective: 290,        // 紫
+  adverb: 20,            // 赤オレンジ
+  // Verb modifiers
+  negation: '#C71585',   // マゼンタ（否定）
+  frequency: '#FF8C00',  // オレンジ（頻度副詞）
+  manner: '#FF6347',     // トマト（様態副詞）
 };
 
 // ============================================
-// 文ブロック（ルート）
+// TimeChip データ定義
 // ============================================
-Blockly.Blocks['sentence'] = {
+type Tense = 'past' | 'present' | 'future' | 'inherit';
+type Aspect = 'simple' | 'progressive' | 'perfect' | 'perfectProgressive' | 'inherit';
+
+interface TimeChipOption {
+  label: string;
+  value: string;
+  tense: Tense;
+  aspect: Aspect;
+}
+
+const CONCRETE_OPTIONS: TimeChipOption[] = [
+  { label: 'Select time...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
+  { label: 'Yesterday', value: 'yesterday', tense: 'past', aspect: 'simple' },
+  { label: 'Tomorrow', value: 'tomorrow', tense: 'future', aspect: 'simple' },
+  { label: 'Every day', value: 'every_day', tense: 'present', aspect: 'simple' },
+  { label: 'Last Sunday', value: 'last_sunday', tense: 'past', aspect: 'simple' },
+  { label: 'Right now', value: 'right_now', tense: 'present', aspect: 'progressive' },
+  { label: 'Next week', value: 'next_week', tense: 'future', aspect: 'simple' },
+];
+
+const ASPECTUAL_OPTIONS: TimeChipOption[] = [
+  { label: 'Select aspect...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
+  { label: 'Now', value: 'now', tense: 'present', aspect: 'progressive' },
+  { label: 'Just now', value: 'just_now', tense: 'past', aspect: 'perfect' },
+  { label: 'Already/Yet', value: 'completion', tense: 'inherit', aspect: 'perfect' },
+  { label: 'Still', value: 'still', tense: 'inherit', aspect: 'progressive' },
+  { label: 'Recently', value: 'recently', tense: 'past', aspect: 'perfect' },
+];
+
+const ABSTRACT_OPTIONS: TimeChipOption[] = [
+  { label: 'Select modifier...', value: '__placeholder__', tense: 'present', aspect: 'simple' },
+  { label: '[Past]', value: 'past', tense: 'past', aspect: 'inherit' },
+  { label: '[Future]', value: 'future', tense: 'future', aspect: 'inherit' },
+  { label: '[Current]', value: 'current', tense: 'present', aspect: 'inherit' },
+  { label: '[-ing]', value: 'progressive', tense: 'inherit', aspect: 'progressive' },
+  { label: '[Perfect]', value: 'perfect', tense: 'inherit', aspect: 'perfect' },
+];
+
+// ============================================
+// 数量詞データ定義（レガシー）
+// ============================================
+type GrammaticalNumber = 'singular' | 'plural' | 'uncountable';
+
+interface QuantifierOption {
+  label: string;
+  value: string;
+  number: GrammaticalNumber;
+  output: string | null;  // null = 出力なし（[plural]など）
+}
+
+const QUANTIFIER_OPTIONS: QuantifierOption[] = [
+  // 単数
+  { label: 'a/an', value: 'a', number: 'singular', output: 'a' },
+  { label: 'one', value: 'one', number: 'singular', output: 'one' },
+  // 複数
+  { label: 'two', value: 'two', number: 'plural', output: 'two' },
+  { label: 'three', value: 'three', number: 'plural', output: 'three' },
+  { label: 'many', value: 'many', number: 'plural', output: 'many' },
+  { label: 'some', value: 'some', number: 'plural', output: 'some' },
+  { label: 'few', value: 'few', number: 'plural', output: 'few' },
+  { label: 'all', value: 'all', number: 'plural', output: 'all' },
+  { label: 'no', value: 'no', number: 'plural', output: 'no' },
+  // 抽象（出力なし）
+  { label: '[plural]', value: '__plural__', number: 'plural', output: null },
+  { label: '[–]', value: '__uncountable__', number: 'uncountable', output: null },
+];
+
+// ============================================
+// 統合限定詞データ定義
+// ============================================
+interface DeterminerOption {
+  label: string;
+  value: string;
+  number?: GrammaticalNumber;  // 文法数への影響
+  output: string | null;       // null = 出力なし
+}
+
+// 前置限定詞（predeterminer）
+const PRE_DETERMINERS: DeterminerOption[] = [
+  { label: '─', value: '__none__', output: null },
+  { label: 'all', value: 'all', number: 'plural', output: 'all' },
+  { label: 'both', value: 'both', number: 'plural', output: 'both' },
+  { label: 'half', value: 'half', output: 'half' },
+];
+
+// 中央限定詞（central determiner）
+const CENTRAL_DETERMINERS: DeterminerOption[] = [
+  { label: '─', value: '__none__', output: null },
+  { label: 'the', value: 'the', output: 'the' },
+  { label: 'this', value: 'this', number: 'singular', output: 'this' },
+  { label: 'that', value: 'that', number: 'singular', output: 'that' },
+  { label: 'a/an', value: 'a', number: 'singular', output: 'a' },
+  { label: 'my', value: 'my', output: 'my' },
+  { label: 'your', value: 'your', output: 'your' },
+  { label: 'no', value: 'no', output: 'no' },
+];
+
+// 後置限定詞（postdeterminer）
+const POST_DETERMINERS: DeterminerOption[] = [
+  { label: '─', value: '__none__', output: null },
+  { label: 'one', value: 'one', number: 'singular', output: 'one' },
+  { label: 'two', value: 'two', number: 'plural', output: 'two' },
+  { label: 'three', value: 'three', number: 'plural', output: 'three' },
+  { label: 'many', value: 'many', number: 'plural', output: 'many' },
+  { label: 'few', value: 'few', number: 'plural', output: 'few' },
+  { label: 'some', value: 'some', number: 'plural', output: 'some' },
+  { label: 'several', value: 'several', number: 'plural', output: 'several' },
+  { label: '[plural]', value: '__plural__', number: 'plural', output: null },
+  { label: '[–]', value: '__uncountable__', number: 'uncountable', output: null },
+];
+
+// 制約ルール
+const DETERMINER_CONSTRAINTS = {
+  // pre が all/both/half の場合、central で選べないもの
+  preBlocksCentral: {
+    'all': ['a', 'no'],
+    'both': ['a', 'no'],
+    'half': ['a', 'no'],
+  } as Record<string, string[]>,
+  // pre が all/both/half の場合、post で選べないもの
+  preBlocksPost: {
+    'all': ['one'],
+    'both': ['one'],
+    'half': ['one'],
+  } as Record<string, string[]>,
+  // central が選ばれた場合、pre をリセットするもの
+  centralResetsPre: ['a', 'no'],
+  // central が選ばれた場合、post をリセットするもの
+  centralResetsPost: ['a'],
+};
+
+// ============================================
+// TimeFrame ブロック（ルート）
+// ============================================
+Blockly.Blocks['time_frame'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("SENTENCE");
-    this.appendValueInput("TENSE")
-        .setCheck("tense")
-        .appendField("time/aspect:");
-    this.appendStatementInput("VERB_PHRASE")
+        .appendField("TIME FRAME");
+    this.appendValueInput("TIME_CHIP")
+        .setCheck("timeChip")
+        .appendField("when:");
+    this.appendStatementInput("ACTION")
         .setCheck("verb")
-        .appendField("verb:");
-    this.setColour(COLORS.sentence);
-    this.setTooltip("A complete sentence");
+        .appendField("action:");
+    this.setColour(COLORS.timeFrame);
+    this.setTooltip("The root of a sentence, specifying time frame");
   }
 };
 
 // ============================================
-// 時制ブロック
+// TimeChip - Concrete (時点指定)
 // ============================================
-Blockly.Blocks['tense'] = {
+Blockly.Blocks['time_chip_concrete'] = {
   init: function() {
+    const options: [string, string][] = CONCRETE_OPTIONS.map(o => [o.label, o.value]);
+
     this.appendDummyInput()
-        .appendField(new Blockly.FieldDropdown([
-          ["present", "present"],
-          ["past", "past"],
-          ["future", "future"],
-        ]), "TENSE");
-    this.setOutput(true, "tense");
-    this.setColour(COLORS.tense);
-    this.setTooltip("Select tense");
+        .appendField("TIME")
+        .appendField(new Blockly.FieldDropdown(options), "TIME_VALUE");
+    this.setOutput(true, "timeChip");
+    this.setColour(COLORS.timeChip);
+    this.setTooltip("Concrete time specification (when?)");
   }
 };
 
 // ============================================
-// 動詞ブロック（動的スロット生成）
+// TimeChip - Aspectual (状態指定)
+// ============================================
+Blockly.Blocks['time_chip_aspectual'] = {
+  init: function() {
+    const options: [string, string][] = ASPECTUAL_OPTIONS.map(o => [o.label, o.value]);
+
+    this.appendDummyInput()
+        .appendField("ASPECT")
+        .appendField(new Blockly.FieldDropdown(options), "ASPECT_VALUE");
+    this.setOutput(true, "timeChip");
+    this.setColour(COLORS.timeChip);
+    this.setTooltip("Aspectual marker (progressive, perfect, etc.)");
+  }
+};
+
+// ============================================
+// TimeChip - Abstract (抽象指定)
+// ============================================
+Blockly.Blocks['time_chip_abstract'] = {
+  init: function() {
+    const options: [string, string][] = ABSTRACT_OPTIONS.map(o => [o.label, o.value]);
+
+    this.appendDummyInput()
+        .appendField("MODIFIER")
+        .appendField(new Blockly.FieldDropdown(options), "MODIFIER_VALUE");
+    this.setOutput(true, "timeChip");
+    this.setColour(COLORS.timeChip);
+    this.setTooltip("Abstract time modifier (affects verb conjugation only)");
+  }
+};
+
+// ============================================
+// Action ブロック（動的スロット生成）
 // ============================================
 Blockly.Blocks['verb'] = {
   init: function() {
     const verbOptions: [string, string][] = verbs.map(v => [v.lemma, v.lemma]);
 
     this.appendDummyInput()
-        .appendField("VERB")
+        .appendField("ACTION")
         .appendField(new Blockly.FieldDropdown(verbOptions, this.updateShape.bind(this)), "VERB");
 
-    this.appendValueInput("ADVERB")
-        .setCheck("adverb")
-        .appendField("adverb:");
-
     this.setPreviousStatement(true, "verb");
-    this.setColour(COLORS.verb);
-    this.setTooltip("Select a verb");
+    this.setColour(COLORS.action);
+    this.setTooltip("Select an action (verb)");
 
     // 初期形状を設定
-    this.updateShape(verbs[0]?.lemma || "sleep");
+    this.updateShape(verbs[0]?.lemma || "run");
   },
 
   updateShape: function(verbLemma: string) {
     const verb = verbs.find(v => v.lemma === verbLemma);
     if (!verb) return verbLemma;
 
-    // 既存のスロットを削除
+    // 既存のスロットを削除（ARG_で始まるもの）
     const existingInputs = this.inputList
       .filter((input: Blockly.Input) => input.name.startsWith("ARG_"))
       .map((input: Blockly.Input) => input.name);
@@ -85,17 +255,21 @@ Blockly.Blocks['verb'] = {
     // 新しいスロットを追加
     verb.valency.forEach((slot, index) => {
       const inputName = `ARG_${index}`;
+      const label = slot.label || slot.role;
+      const checkType = slot.role === 'attribute' ? ['noun', 'nounPhrase', 'adjective'] : ['noun', 'nounPhrase'];
       this.appendValueInput(inputName)
-          .setCheck("nounPhrase")
-          .appendField(`${slot.role}${slot.required ? '*' : ''}:`);
+          .setCheck(checkType)
+          .appendField(`${label}${slot.required ? '*' : ''}:`);
     });
+
+    // 副詞は Verb Modifiers (FREQ, MANNER) で対応
 
     return verbLemma;
   }
 };
 
 // ============================================
-// 名詞句ブロック
+// 名詞句ブロック（レガシー）
 // ============================================
 Blockly.Blocks['noun_phrase'] = {
   init: function() {
@@ -124,6 +298,92 @@ Blockly.Blocks['noun_phrase'] = {
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.noun);
     this.setTooltip("A noun phrase");
+  }
+};
+
+// ============================================
+// Person ブロック（代名詞・人名詞）
+// ============================================
+const personPronouns = pronouns.filter(p => p.type === 'personal' || !p.lemma.includes('thing'));
+const personNouns = nouns.filter(n => n.category === 'human');
+
+Blockly.Blocks['person_block'] = {
+  init: function() {
+    const pronounOptions: [string, string][] = personPronouns.map(p => [p.lemma, p.lemma]);
+    const nounOptions: [string, string][] = personNouns.map(n => [n.lemma, n.lemma]);
+    const allOptions: [string, string][] = [
+      ["Select...", "__placeholder__"],
+      ["── Pronouns ──", "__label_pronouns__"],
+      ...pronounOptions,
+      ["── People ──", "__label_people__"],
+      ...nounOptions,
+    ];
+
+    this.appendDummyInput()
+        .appendField("PERSON")
+        .appendField(new Blockly.FieldDropdown(allOptions), "PERSON_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.person);
+    this.setTooltip("A person (pronoun or noun)");
+  }
+};
+
+// ============================================
+// Thing ブロック（物・抽象名詞）
+// ============================================
+const thingPronouns = pronouns.filter(p => p.lemma.includes('thing'));
+const thingNouns = nouns.filter(n => n.category === 'thing' || n.category === 'abstract' || n.category === 'animal');
+
+Blockly.Blocks['thing_block'] = {
+  init: function() {
+    const pronounOptions: [string, string][] = thingPronouns.map(p => [p.lemma, p.lemma]);
+    const nounOptions: [string, string][] = thingNouns.map(n => [n.lemma, n.lemma]);
+    const allOptions: [string, string][] = [
+      ["Select...", "__placeholder__"],
+      ...pronounOptions.length > 0 ? [["── Pronouns ──", "__label_pronouns__"] as [string, string], ...pronounOptions] : [],
+      ["── Things ──", "__label_things__"],
+      ...nounOptions,
+    ];
+
+    this.appendDummyInput()
+        .appendField("THING")
+        .appendField(new Blockly.FieldDropdown(allOptions), "THING_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.thing);
+    this.setTooltip("A thing (pronoun or noun)");
+  }
+};
+
+// ============================================
+// Place ブロック（場所名詞）
+// ============================================
+const placeNouns = nouns.filter(n => n.category === 'place');
+const placeAdverbs = [
+  { lemma: "here", value: "here" },
+  { lemma: "there", value: "there" },
+];
+
+Blockly.Blocks['place_block'] = {
+  init: function() {
+    const nounOptions: [string, string][] = placeNouns.map(n => [n.lemma, n.lemma]);
+    const adverbOptions: [string, string][] = placeAdverbs.map(a => [a.lemma, a.value]);
+    const allOptions: [string, string][] = [
+      ["Select...", "__placeholder__"],
+      ["── Place Adverbs ──", "__label_adverbs__"],
+      ...adverbOptions,
+      ["── Places ──", "__label_places__"],
+      ...nounOptions,
+    ];
+
+    this.appendDummyInput()
+        .appendField("PLACE")
+        .appendField(new Blockly.FieldDropdown(allOptions), "PLACE_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.place);
+    this.setTooltip("A place (noun or adverb)");
   }
 };
 
@@ -162,6 +422,237 @@ Blockly.Blocks['adverb'] = {
 };
 
 // ============================================
+// 統合限定詞ブロック（3つのプルダウン）
+// ============================================
+Blockly.Blocks['determiner_unified'] = {
+  init: function() {
+    const preOptions: [string, string][] = PRE_DETERMINERS.map(o => [o.label, o.value]);
+    const centralOptions: [string, string][] = CENTRAL_DETERMINERS.map(o => [o.label, o.value]);
+    const postOptions: [string, string][] = POST_DETERMINERS.map(o => [o.label, o.value]);
+
+    // プルダウンの参照を保持
+    const preDropdown = new Blockly.FieldDropdown(preOptions, this.validatePre.bind(this));
+    const centralDropdown = new Blockly.FieldDropdown(centralOptions, this.validateCentral.bind(this));
+    const postDropdown = new Blockly.FieldDropdown(postOptions, this.validatePost.bind(this));
+
+    this.appendValueInput("NOUN")
+        .setCheck(["noun", "nounPhrase"])
+        .appendField("DET")
+        .appendField(preDropdown, "PRE")
+        .appendField(centralDropdown, "CENTRAL")
+        .appendField(postDropdown, "POST");
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.determiner);
+    this.setTooltip("Determiner: pre + central + post (e.g., 'all the two')");
+  },
+
+  // Pre選択時のバリデーション
+  validatePre: function(newValue: string): string | null {
+    // 選択を許可
+    return newValue;
+  },
+
+  // Central選択時のバリデーション
+  validateCentral: function(newValue: string): string | null {
+    const pre = this.getFieldValue('PRE');
+
+    // pre が all/both/half の場合、a/an や no は選べない
+    if (pre && pre !== '__none__') {
+      const blocked = DETERMINER_CONSTRAINTS.preBlocksCentral[pre] || [];
+      if (blocked.includes(newValue)) {
+        return null;  // 選択を拒否
+      }
+    }
+
+    // a/an や no を選んだ場合、pre をリセット
+    if (DETERMINER_CONSTRAINTS.centralResetsPre.includes(newValue)) {
+      setTimeout(() => {
+        if (this.getField('PRE')) {
+          this.setFieldValue('__none__', 'PRE');
+        }
+      }, 0);
+    }
+
+    // a/an を選んだ場合、post もリセット
+    if (DETERMINER_CONSTRAINTS.centralResetsPost.includes(newValue)) {
+      setTimeout(() => {
+        if (this.getField('POST')) {
+          this.setFieldValue('__none__', 'POST');
+        }
+      }, 0);
+    }
+
+    return newValue;
+  },
+
+  // Post選択時のバリデーション
+  validatePost: function(newValue: string): string | null {
+    const pre = this.getFieldValue('PRE');
+    const central = this.getFieldValue('CENTRAL');
+
+    // pre が all/both/half の場合、one は選べない
+    if (pre && pre !== '__none__') {
+      const blocked = DETERMINER_CONSTRAINTS.preBlocksPost[pre] || [];
+      if (blocked.includes(newValue)) {
+        return null;  // 選択を拒否
+      }
+    }
+
+    // central が a/an の場合、post は none のみ
+    if (central === 'a' && newValue !== '__none__') {
+      return null;  // 選択を拒否
+    }
+
+    return newValue;
+  },
+};
+
+// ============================================
+// 限定詞ブロック（レガシー・ラッパー）
+// ============================================
+Blockly.Blocks['determiner_block'] = {
+  init: function() {
+    this.appendValueInput("NOUN")
+        .setCheck(["noun", "nounPhrase"])
+        .appendField("DET")
+        .appendField(new Blockly.FieldDropdown([
+          ["the", "the"],
+          ["this", "this"],
+          ["that", "that"],
+        ]), "DET_VALUE");
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.determiner);
+    this.setTooltip("Determiner: specifies WHICH one (definite)");
+  }
+};
+
+// ============================================
+// 数量詞ブロック（レガシー・ラッパー）
+// ============================================
+Blockly.Blocks['quantifier_block'] = {
+  init: function() {
+    const options: [string, string][] = QUANTIFIER_OPTIONS.map(o => [o.label, o.value]);
+
+    this.appendValueInput("NOUN")
+        .setCheck(["noun", "nounPhrase"])
+        .appendField("QTY")
+        .appendField(new Blockly.FieldDropdown(options), "QTY_VALUE");
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.quantifier);
+    this.setTooltip("Quantifier: specifies HOW MANY");
+  }
+};
+
+// ============================================
+// 形容詞ラッパーブロック（名詞修飾用）
+// ============================================
+Blockly.Blocks['adjective_wrapper'] = {
+  init: function() {
+    const adjOptions: [string, string][] = adjectives.map(a => [a.lemma, a.lemma]);
+
+    this.appendValueInput("NOUN")
+        .setCheck(["noun", "nounPhrase"])
+        .appendField("ADJ")
+        .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE");
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.adjective);
+    this.setTooltip("Adjective: modifies a noun");
+  }
+};
+
+// ============================================
+// 頻度副詞データ定義
+// ============================================
+const FREQUENCY_ADVERBS = [
+  { label: 'always', value: 'always' },
+  { label: 'usually', value: 'usually' },
+  { label: 'often', value: 'often' },
+  { label: 'sometimes', value: 'sometimes' },
+  { label: 'rarely', value: 'rarely' },
+  { label: 'never', value: 'never' },
+];
+
+// ============================================
+// 様態副詞データ定義
+// ============================================
+const MANNER_ADVERBS = adverbs.filter(a => a.type === 'manner');
+
+// ============================================
+// 否定ラッパーブロック（動詞修飾）
+// ============================================
+Blockly.Blocks['negation_wrapper'] = {
+  init: function() {
+    this.appendStatementInput("VERB")
+        .setCheck("verb")
+        .appendField("NOT");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.negation);
+    this.setTooltip("Negation: makes the action negative");
+  }
+};
+
+// ============================================
+// 頻度副詞ラッパーブロック（動詞修飾）
+// ============================================
+Blockly.Blocks['frequency_wrapper'] = {
+  init: function() {
+    const options: [string, string][] = FREQUENCY_ADVERBS.map(a => [a.label, a.value]);
+
+    this.appendStatementInput("VERB")
+        .setCheck("verb")
+        .appendField("FREQ")
+        .appendField(new Blockly.FieldDropdown(options), "FREQ_VALUE");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.frequency);
+    this.setTooltip("Frequency: how often the action occurs");
+  }
+};
+
+// ============================================
+// 様態副詞ラッパーブロック（動詞修飾）
+// ============================================
+Blockly.Blocks['manner_wrapper'] = {
+  init: function() {
+    const options: [string, string][] = MANNER_ADVERBS.map(a => [a.lemma, a.lemma]);
+
+    this.appendStatementInput("VERB")
+        .setCheck("verb")
+        .appendField("MANNER")
+        .appendField(new Blockly.FieldDropdown(options), "MANNER_VALUE");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.manner);
+    this.setTooltip("Manner: how the action is performed");
+  }
+};
+
+// ============================================
+// オプションのエクスポート（コンパイラ用）
+// ============================================
+export const TIME_CHIP_DATA = {
+  concrete: CONCRETE_OPTIONS,
+  aspectual: ASPECTUAL_OPTIONS,
+  abstract: ABSTRACT_OPTIONS,
+};
+
+export const QUANTIFIER_DATA = QUANTIFIER_OPTIONS;
+
+export const DETERMINER_DATA = {
+  pre: PRE_DETERMINERS,
+  central: CENTRAL_DETERMINERS,
+  post: POST_DETERMINERS,
+  constraints: DETERMINER_CONSTRAINTS,
+};
+
+export const FREQUENCY_ADVERB_DATA = FREQUENCY_ADVERBS;
+
+// ============================================
 // ツールボックス定義
 // ============================================
 export const toolbox = {
@@ -169,24 +660,23 @@ export const toolbox = {
   contents: [
     {
       kind: "category",
-      name: "Sentence",
-      colour: COLORS.sentence,
+      name: "Time",
+      colour: COLORS.timeFrame,
       contents: [
-        { kind: "block", type: "sentence" },
+        { kind: "label", text: "── TimeFrame ──" },
+        { kind: "block", type: "time_frame" },
+        { kind: "label", text: "── Concrete ──" },
+        { kind: "block", type: "time_chip_concrete" },
+        { kind: "label", text: "── Aspectual ──" },
+        { kind: "block", type: "time_chip_aspectual" },
+        { kind: "label", text: "── Abstract ──" },
+        { kind: "block", type: "time_chip_abstract" },
       ]
     },
     {
       kind: "category",
-      name: "Tense",
-      colour: COLORS.tense,
-      contents: [
-        { kind: "block", type: "tense" },
-      ]
-    },
-    {
-      kind: "category",
-      name: "Verbs",
-      colour: COLORS.verb,
+      name: "Actions",
+      colour: COLORS.action,
       contents: [
         { kind: "block", type: "verb" },
       ]
@@ -194,25 +684,30 @@ export const toolbox = {
     {
       kind: "category",
       name: "Nouns",
-      colour: COLORS.noun,
+      colour: COLORS.person,
       contents: [
-        { kind: "block", type: "noun_phrase" },
+        { kind: "block", type: "person_block" },
+        { kind: "block", type: "thing_block" },
+        { kind: "block", type: "place_block" },
       ]
     },
     {
       kind: "category",
-      name: "Adjectives",
-      colour: COLORS.adjective,
+      name: "Noun Modifiers",
+      colour: COLORS.determiner,
       contents: [
-        { kind: "block", type: "adjective" },
+        { kind: "block", type: "determiner_unified" },
+        { kind: "block", type: "adjective_wrapper" },
       ]
     },
     {
       kind: "category",
-      name: "Adverbs",
-      colour: COLORS.adverb,
+      name: "Verb Modifiers",
+      colour: COLORS.frequency,
       contents: [
-        { kind: "block", type: "adverb" },
+        { kind: "block", type: "negation_wrapper" },
+        { kind: "block", type: "frequency_wrapper" },
+        { kind: "block", type: "manner_wrapper" },
       ]
     },
   ]

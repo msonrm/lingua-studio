@@ -464,7 +464,7 @@ Blockly.Blocks['frequency_wrapper'] = {
 };
 
 // ============================================
-// 様態副詞ラッパーブロック（動詞修飾・外側のみ）
+// 様態副詞ラッパーブロック（動詞修飾）
 // ============================================
 Blockly.Blocks['manner_wrapper'] = {
   init: function() {
@@ -477,7 +477,7 @@ Blockly.Blocks['manner_wrapper'] = {
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.manner);
-    this.setTooltip("Manner: how the action is performed (outer wrapper only)");
+    this.setTooltip("Manner: how the action is performed");
   }
 };
 

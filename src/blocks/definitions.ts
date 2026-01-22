@@ -729,11 +729,23 @@ Blockly.Blocks['determiner_unified'] = {
     this._getConnectedNounInfo = getConnectedNounInfo;
   },
 
-  // 接続変更時に無効な値をリセット
+  // 接続変更・名詞変更時に無効な値をリセット
   onchange: function(e: Blockly.Events.Abstract) {
     if (!this.workspace) return;
-    // ブロック移動イベントのみ処理
-    if (e.type !== Blockly.Events.BLOCK_MOVE) return;
+
+    // 接続された名詞ブロックを取得
+    const nounInput = this.getInput('NOUN');
+    const connectedBlock = nounInput?.connection?.targetBlock();
+
+    // BLOCK_MOVE: ブロック接続/切断
+    // BLOCK_CHANGE: 接続中の名詞ブロック内のドロップダウン変更
+    const isRelevantEvent =
+      e.type === Blockly.Events.BLOCK_MOVE ||
+      (e.type === Blockly.Events.BLOCK_CHANGE &&
+       connectedBlock &&
+       (e as Blockly.Events.BlockChange).blockId === connectedBlock.id);
+
+    if (!isRelevantEvent) return;
 
     const nounInfo = this._getConnectedNounInfo?.();
     if (!nounInfo) return;

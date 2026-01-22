@@ -23,6 +23,10 @@
 - [ ] 場所前置詞 (in, at, to, from)
 - [ ] 否定文対応 (someone → anyone/nobody 切り替え)
 - [ ] 疑問文対応
+- [ ] 前置限定詞の語順対応（"all the things" not "the all things"）
+  - all, both, half → predeterminer（限定詞の前）
+  - two, many, some → postdeterminer（限定詞の後）
+  - 修正案: `QUANTIFIER_OPTIONS` に `position: 'pre' | 'post'` を追加
 
 ### Multi-language
 - [ ] 日本語レンダラー

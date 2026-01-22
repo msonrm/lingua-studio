@@ -26,14 +26,15 @@
 - [ ] 所有限定詞 (my, your, his, her, its, our, their)
 - [ ] 場所前置詞 (in, at, to, from)
 - [x] 否定文対応 - NOT wrapper で実装済み
+- [x] 頻度副詞 - FREQ wrapper (always, usually, often, sometimes, rarely, never)
+- [x] 様態副詞 - MANNER wrapper (quickly, slowly, furiously)
+- [x] 前置限定詞の語順対応 - 統合DETERMINERブロック (`determiner_unified`) で実装
+  - 3つのドロップダウン: 前置(all,both,half) / 中央(the,this,that,a/an,my,your,no) / 後置(one,two,many,few,some,several,[plural],[–])
+  - バリデーションで無効な組み合わせを防止
 - [ ] 疑問文対応
-- [ ] 前置限定詞の語順対応（"all the things" not "the all things"）
 - [ ] Modal（法助動詞）wrapper (can, may, must, should)
   - TimeFrame の will は時制用、Modal の will は意思表明用
   - 能力 (can)、許可 (may)、義務 (must)、助言 (should)
-  - all, both, half → predeterminer（限定詞の前）
-  - two, many, some → postdeterminer（限定詞の後）
-  - 修正案: `QUANTIFIER_OPTIONS` に `position: 'pre' | 'post'` を追加
 
 ### Multi-language
 - [ ] 日本語レンダラー

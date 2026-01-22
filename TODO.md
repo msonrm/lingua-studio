@@ -16,10 +16,17 @@
 
 ## Future Enhancements
 
+### Grammar & Syntax
 - [ ] 代名詞選択時のNUMBER非表示（UX改善）
 - [ ] 指示代名詞 (this/that as pronouns, these/those)
 - [ ] 所有限定詞 (my, your, his, her, its, our, their)
-- [ ] 日本語レンダラー
 - [ ] 場所前置詞 (in, at, to, from)
 - [ ] 否定文対応 (someone → anyone/nobody 切り替え)
 - [ ] 疑問文対応
+
+### Multi-language
+- [ ] 日本語レンダラー
+- [ ] 文法ルールの定数化・多言語説明対応
+  - 副詞配置、語順などのルールをデータとして定義
+  - UI言語に応じた説明表示（文法ヒント機能）
+  - 例: `{ position: 'pre-verb', description: { en: "...", ja: "..." } }`

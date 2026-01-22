@@ -724,6 +724,50 @@ Blockly.Blocks['determiner_unified'] = {
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.determiner);
     this.setTooltip("Determiner: pre + central + post (× = 選択不可)");
+
+    // 名詞情報取得関数を保存（onchangeで使用）
+    this._getConnectedNounInfo = getConnectedNounInfo;
+  },
+
+  // 接続変更時に無効な値をリセット
+  onchange: function(e: Blockly.Events.Abstract) {
+    if (!this.workspace) return;
+    // ブロック移動イベントのみ処理
+    if (e.type !== Blockly.Events.BLOCK_MOVE) return;
+
+    const nounInfo = this._getConnectedNounInfo?.();
+    if (!nounInfo) return;
+
+    const countableOnly = ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'];
+
+    // 固有名詞：全てリセット
+    if (nounInfo.proper) {
+      if (this.getFieldValue('PRE') !== '__none__') {
+        this.setFieldValue('__none__', 'PRE');
+      }
+      if (this.getFieldValue('CENTRAL') !== '__none__') {
+        this.setFieldValue('__none__', 'CENTRAL');
+      }
+      if (this.getFieldValue('POST') !== '__none__') {
+        this.setFieldValue('__none__', 'POST');
+      }
+      return;
+    }
+
+    // 不可算名詞：無効な値をリセット
+    if (!nounInfo.countable) {
+      const pre = this.getFieldValue('PRE');
+      if (pre === 'both' || pre === 'half') {
+        this.setFieldValue('__none__', 'PRE');
+      }
+      if (this.getFieldValue('CENTRAL') === 'a') {
+        this.setFieldValue('__none__', 'CENTRAL');
+      }
+      const post = this.getFieldValue('POST');
+      if (countableOnly.includes(post)) {
+        this.setFieldValue('__none__', 'POST');
+      }
+    }
   },
 };
 

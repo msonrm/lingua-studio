@@ -116,16 +116,28 @@ export class FieldDropdownWithDisabled extends Blockly.FieldDropdown {
    * 値の設定（無効化チェック付き）
    */
   setValue(newValue: string): void {
-    // 現在のオプションを取得
-    if (this.optionGeneratorWithReason) {
-      this.currentOptions = this.optionGeneratorWithReason();
+    // ブロックが完全に初期化されていない場合はスキップ
+    // （初期化中はsourceBlock_がnullまたはworkspaceがない）
+    const sourceBlock = this.getSourceBlock();
+    if (!sourceBlock || !sourceBlock.workspace) {
+      super.setValue(newValue);
+      return;
     }
 
-    // 無効化されているオプションは設定しない
-    const disabledOption = this.isOptionDisabled(newValue);
-    if (disabledOption) {
-      // 無効化されている場合は何もしない
-      return;
+    // 現在のオプションを取得（安全に）
+    try {
+      if (this.optionGeneratorWithReason) {
+        this.currentOptions = this.optionGeneratorWithReason();
+      }
+
+      // 無効化されているオプションは設定しない
+      const disabledOption = this.isOptionDisabled(newValue);
+      if (disabledOption) {
+        // 無効化されている場合は何もしない
+        return;
+      }
+    } catch {
+      // エラーが発生した場合は通常の設定を行う
     }
 
     super.setValue(newValue);

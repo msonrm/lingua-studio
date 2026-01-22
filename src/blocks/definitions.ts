@@ -747,7 +747,7 @@ Blockly.Blocks['determiner_unified'] = {
     };
 
     this.appendValueInput("NOUN")
-        .setCheck(["noun", "nounPhrase"])
+        .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞
         .appendField("DET")
         .appendField(new Blockly.FieldDropdown(getPreOptions, createValidator(getPreOptions)), "PRE")
         .appendField(new Blockly.FieldDropdown(getCentralOptions, createValidator(getCentralOptions)), "CENTRAL")
@@ -821,7 +821,7 @@ Blockly.Blocks['determiner_unified'] = {
 Blockly.Blocks['determiner_block'] = {
   init: function() {
     this.appendValueInput("NOUN")
-        .setCheck(["noun", "nounPhrase"])
+        .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞
         .appendField("DET")
         .appendField(new Blockly.FieldDropdown([
           ["the", "the"],
@@ -843,7 +843,7 @@ Blockly.Blocks['quantifier_block'] = {
     const options: [string, string][] = QUANTIFIER_OPTIONS.map(o => [o.label, o.value]);
 
     this.appendValueInput("NOUN")
-        .setCheck(["noun", "nounPhrase"])
+        .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞
         .appendField("QTY")
         .appendField(new Blockly.FieldDropdown(options), "QTY_VALUE");
 
@@ -861,13 +861,13 @@ Blockly.Blocks['adjective_wrapper'] = {
     const adjOptions: [string, string][] = adjectives.map(a => [a.lemma, a.lemma]);
 
     this.appendValueInput("NOUN")
-        .setCheck(["noun", "nounPhrase"])
+        .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞のみ
         .appendField("ADJ")
         .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE");
 
-    this.setOutput(true, "nounPhrase");
+    this.setOutput(true, "adjective");  // 形容詞付き名詞として出力
     this.setColour(COLORS.adjective);
-    this.setTooltip("Adjective: modifies a noun");
+    this.setTooltip("Adjective: modifies a noun (place before DET)");
   }
 };
 

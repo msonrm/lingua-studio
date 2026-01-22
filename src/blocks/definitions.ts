@@ -645,6 +645,10 @@ Blockly.Blocks['determiner_unified'] = {
 
     // 動的オプション生成関数（グレーアウト対応）
     const getPreOptions = (): DropdownOptionWithReason[] => {
+      // 初期化中は制約なしで返す（フライアウト対応）
+      if (!this.workspace) {
+        return PRE_DETERMINERS.map(o => ({ label: o.label, value: o.value }));
+      }
       const central = this.getFieldValue('CENTRAL') || '__none__';
       const post = this.getFieldValue('POST') || '__none__';
       const nounInfo = getConnectedNounInfo();
@@ -682,6 +686,10 @@ Blockly.Blocks['determiner_unified'] = {
     };
 
     const getCentralOptions = (): DropdownOptionWithReason[] => {
+      // 初期化中は制約なしで返す（フライアウト対応）
+      if (!this.workspace) {
+        return CENTRAL_DETERMINERS.map(o => ({ label: o.label, value: o.value }));
+      }
       const pre = this.getFieldValue('PRE') || '__none__';
       const post = this.getFieldValue('POST') || '__none__';
       const nounInfo = getConnectedNounInfo();
@@ -714,6 +722,10 @@ Blockly.Blocks['determiner_unified'] = {
     };
 
     const getPostOptions = (): DropdownOptionWithReason[] => {
+      // 初期化中は制約なしで返す（フライアウト対応）
+      if (!this.workspace) {
+        return POST_DETERMINERS.map(o => ({ label: o.label, value: o.value }));
+      }
       const pre = this.getFieldValue('PRE') || '__none__';
       const central = this.getFieldValue('CENTRAL') || '__none__';
       const nounInfo = getConnectedNounInfo();

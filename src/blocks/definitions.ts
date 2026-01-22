@@ -960,9 +960,9 @@ export const toolbox = {
       name: "Nouns",
       colour: COLORS.person,
       contents: [
-        { kind: "label", text: "── 代名詞 ──" },
+        { kind: "label", text: "── Pronouns ──" },
         { kind: "block", type: "pronoun_block" },
-        { kind: "label", text: "── 人 ──" },
+        { kind: "label", text: "── People ──" },
         {
           kind: "block",
           type: "determiner_unified",
@@ -977,7 +977,7 @@ export const toolbox = {
             POST: "__none__"
           }
         },
-        { kind: "label", text: "── 生き物 ──" },
+        { kind: "label", text: "── Animals ──" },
         {
           kind: "block",
           type: "determiner_unified",
@@ -992,7 +992,7 @@ export const toolbox = {
             POST: "__none__"
           }
         },
-        { kind: "label", text: "── もの ──" },
+        { kind: "label", text: "── Objects ──" },
         {
           kind: "block",
           type: "determiner_unified",
@@ -1007,7 +1007,7 @@ export const toolbox = {
             POST: "__none__"
           }
         },
-        { kind: "label", text: "── 場所 ──" },
+        { kind: "label", text: "── Places ──" },
         {
           kind: "block",
           type: "determiner_unified",
@@ -1022,7 +1022,7 @@ export const toolbox = {
             POST: "__none__"
           }
         },
-        { kind: "label", text: "── 抽象 ──" },
+        { kind: "label", text: "── Abstract ──" },
         {
           kind: "block",
           type: "determiner_unified",

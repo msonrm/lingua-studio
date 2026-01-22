@@ -1,11 +1,22 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { BlocklyWorkspace } from './components/BlocklyWorkspace';
 import { SentenceNode } from './types/schema';
+import { renderToLinguaScript } from './compiler/linguaScriptRenderer';
 import './App.css';
 
 function App() {
   const [ast, setAST] = useState<SentenceNode | null>(null);
   const [sentence, setSentence] = useState<string>('');
+
+  // AST から LinguaScript を生成
+  const linguaScript = useMemo(() => {
+    if (!ast) return null;
+    try {
+      return renderToLinguaScript(ast);
+    } catch {
+      return '// Error generating LinguaScript';
+    }
+  }, [ast]);
 
   return (
     <div className="app">
@@ -28,6 +39,13 @@ function App() {
             <div className="sentence-output">
               {sentence || <span className="placeholder">Build a sentence using blocks...</span>}
             </div>
+          </div>
+
+          <div className="output-section">
+            <h2>LinguaScript</h2>
+            <pre className="linguascript-output">
+              {linguaScript || '// Build a sentence to see LinguaScript'}
+            </pre>
           </div>
 
           <div className="output-section">

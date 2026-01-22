@@ -90,6 +90,18 @@ body {
   font-size: 1rem;
 }
 
+.linguascript-output {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  color: #50fa7b;
+  background: #0a0a1a;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 .ast-output {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.75rem;

@@ -101,12 +101,27 @@ function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarit
 
   const parts: string[] = [];
 
-  // 限定詞（the, this, that など）
-  if (np.determiner && np.determiner.lexeme) {
-    parts.push(np.determiner.lexeme);
+  // 前置限定詞（all, both, half）
+  if (np.preDeterminer) {
+    parts.push(np.preDeterminer);
   }
 
-  // 数量詞（a, one, two, many など）
+  // 中央限定詞（the, this, my, a/an, no）
+  if (np.determiner && np.determiner.lexeme) {
+    if (np.determiner.lexeme === 'a') {
+      // a/an の判定は後で行う
+      parts.push('INDEF');
+    } else {
+      parts.push(np.determiner.lexeme);
+    }
+  }
+
+  // 後置限定詞（one, two, many, few）
+  if (np.postDeterminer) {
+    parts.push(np.postDeterminer);
+  }
+
+  // レガシー数量詞（a, one, two, many など）
   if (np.quantifier) {
     if (np.quantifier === 'a') {
       // a/an の判定は後で行う

@@ -64,7 +64,7 @@ const ABSTRACT_OPTIONS: TimeChipOption[] = [
 ];
 
 // ============================================
-// 数量詞データ定義
+// 数量詞データ定義（レガシー）
 // ============================================
 type GrammaticalNumber = 'singular' | 'plural' | 'uncountable';
 
@@ -91,6 +91,70 @@ const QUANTIFIER_OPTIONS: QuantifierOption[] = [
   { label: '[plural]', value: '__plural__', number: 'plural', output: null },
   { label: '[–]', value: '__uncountable__', number: 'uncountable', output: null },
 ];
+
+// ============================================
+// 統合限定詞データ定義
+// ============================================
+interface DeterminerOption {
+  label: string;
+  value: string;
+  number?: GrammaticalNumber;  // 文法数への影響
+  output: string | null;       // null = 出力なし
+}
+
+// 前置限定詞（predeterminer）
+const PRE_DETERMINERS: DeterminerOption[] = [
+  { label: '─', value: '__none__', output: null },
+  { label: 'all', value: 'all', number: 'plural', output: 'all' },
+  { label: 'both', value: 'both', number: 'plural', output: 'both' },
+  { label: 'half', value: 'half', output: 'half' },
+];
+
+// 中央限定詞（central determiner）
+const CENTRAL_DETERMINERS: DeterminerOption[] = [
+  { label: '─', value: '__none__', output: null },
+  { label: 'the', value: 'the', output: 'the' },
+  { label: 'this', value: 'this', number: 'singular', output: 'this' },
+  { label: 'that', value: 'that', number: 'singular', output: 'that' },
+  { label: 'a/an', value: 'a', number: 'singular', output: 'a' },
+  { label: 'my', value: 'my', output: 'my' },
+  { label: 'your', value: 'your', output: 'your' },
+  { label: 'no', value: 'no', output: 'no' },
+];
+
+// 後置限定詞（postdeterminer）
+const POST_DETERMINERS: DeterminerOption[] = [
+  { label: '─', value: '__none__', output: null },
+  { label: 'one', value: 'one', number: 'singular', output: 'one' },
+  { label: 'two', value: 'two', number: 'plural', output: 'two' },
+  { label: 'three', value: 'three', number: 'plural', output: 'three' },
+  { label: 'many', value: 'many', number: 'plural', output: 'many' },
+  { label: 'few', value: 'few', number: 'plural', output: 'few' },
+  { label: 'some', value: 'some', number: 'plural', output: 'some' },
+  { label: 'several', value: 'several', number: 'plural', output: 'several' },
+  { label: '[plural]', value: '__plural__', number: 'plural', output: null },
+  { label: '[–]', value: '__uncountable__', number: 'uncountable', output: null },
+];
+
+// 制約ルール
+const DETERMINER_CONSTRAINTS = {
+  // pre が all/both/half の場合、central で選べないもの
+  preBlocksCentral: {
+    'all': ['a', 'no'],
+    'both': ['a', 'no'],
+    'half': ['a', 'no'],
+  } as Record<string, string[]>,
+  // pre が all/both/half の場合、post で選べないもの
+  preBlocksPost: {
+    'all': ['one'],
+    'both': ['one'],
+    'half': ['one'],
+  } as Record<string, string[]>,
+  // central が選ばれた場合、pre をリセットするもの
+  centralResetsPre: ['a', 'no'],
+  // central が選ばれた場合、post をリセットするもの
+  centralResetsPost: ['a'],
+};
 
 // ============================================
 // TimeFrame ブロック（ルート）
@@ -358,7 +422,94 @@ Blockly.Blocks['adverb'] = {
 };
 
 // ============================================
-// 限定詞ブロック（ラッパー）
+// 統合限定詞ブロック（3つのプルダウン）
+// ============================================
+Blockly.Blocks['determiner_unified'] = {
+  init: function() {
+    const preOptions: [string, string][] = PRE_DETERMINERS.map(o => [o.label, o.value]);
+    const centralOptions: [string, string][] = CENTRAL_DETERMINERS.map(o => [o.label, o.value]);
+    const postOptions: [string, string][] = POST_DETERMINERS.map(o => [o.label, o.value]);
+
+    // プルダウンの参照を保持
+    const preDropdown = new Blockly.FieldDropdown(preOptions, this.validatePre.bind(this));
+    const centralDropdown = new Blockly.FieldDropdown(centralOptions, this.validateCentral.bind(this));
+    const postDropdown = new Blockly.FieldDropdown(postOptions, this.validatePost.bind(this));
+
+    this.appendValueInput("NOUN")
+        .setCheck(["noun", "nounPhrase"])
+        .appendField("DET")
+        .appendField(preDropdown, "PRE")
+        .appendField(centralDropdown, "CENTRAL")
+        .appendField(postDropdown, "POST");
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.determiner);
+    this.setTooltip("Determiner: pre + central + post (e.g., 'all the two')");
+  },
+
+  // Pre選択時のバリデーション
+  validatePre: function(newValue: string): string | null {
+    // 選択を許可
+    return newValue;
+  },
+
+  // Central選択時のバリデーション
+  validateCentral: function(newValue: string): string | null {
+    const pre = this.getFieldValue('PRE');
+
+    // pre が all/both/half の場合、a/an や no は選べない
+    if (pre && pre !== '__none__') {
+      const blocked = DETERMINER_CONSTRAINTS.preBlocksCentral[pre] || [];
+      if (blocked.includes(newValue)) {
+        return null;  // 選択を拒否
+      }
+    }
+
+    // a/an や no を選んだ場合、pre をリセット
+    if (DETERMINER_CONSTRAINTS.centralResetsPre.includes(newValue)) {
+      setTimeout(() => {
+        if (this.getField('PRE')) {
+          this.setFieldValue('__none__', 'PRE');
+        }
+      }, 0);
+    }
+
+    // a/an を選んだ場合、post もリセット
+    if (DETERMINER_CONSTRAINTS.centralResetsPost.includes(newValue)) {
+      setTimeout(() => {
+        if (this.getField('POST')) {
+          this.setFieldValue('__none__', 'POST');
+        }
+      }, 0);
+    }
+
+    return newValue;
+  },
+
+  // Post選択時のバリデーション
+  validatePost: function(newValue: string): string | null {
+    const pre = this.getFieldValue('PRE');
+    const central = this.getFieldValue('CENTRAL');
+
+    // pre が all/both/half の場合、one は選べない
+    if (pre && pre !== '__none__') {
+      const blocked = DETERMINER_CONSTRAINTS.preBlocksPost[pre] || [];
+      if (blocked.includes(newValue)) {
+        return null;  // 選択を拒否
+      }
+    }
+
+    // central が a/an の場合、post は none のみ
+    if (central === 'a' && newValue !== '__none__') {
+      return null;  // 選択を拒否
+    }
+
+    return newValue;
+  },
+};
+
+// ============================================
+// 限定詞ブロック（レガシー・ラッパー）
 // ============================================
 Blockly.Blocks['determiner_block'] = {
   init: function() {
@@ -378,7 +529,7 @@ Blockly.Blocks['determiner_block'] = {
 };
 
 // ============================================
-// 数量詞ブロック（ラッパー）
+// 数量詞ブロック（レガシー・ラッパー）
 // ============================================
 Blockly.Blocks['quantifier_block'] = {
   init: function() {
@@ -492,6 +643,13 @@ export const TIME_CHIP_DATA = {
 
 export const QUANTIFIER_DATA = QUANTIFIER_OPTIONS;
 
+export const DETERMINER_DATA = {
+  pre: PRE_DETERMINERS,
+  central: CENTRAL_DETERMINERS,
+  post: POST_DETERMINERS,
+  constraints: DETERMINER_CONSTRAINTS,
+};
+
 export const FREQUENCY_ADVERB_DATA = FREQUENCY_ADVERBS;
 
 // ============================================
@@ -538,8 +696,7 @@ export const toolbox = {
       name: "Noun Modifiers",
       colour: COLORS.determiner,
       contents: [
-        { kind: "block", type: "determiner_block" },
-        { kind: "block", type: "quantifier_block" },
+        { kind: "block", type: "determiner_unified" },
         { kind: "block", type: "adjective_wrapper" },
       ]
     },

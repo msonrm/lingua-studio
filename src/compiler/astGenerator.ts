@@ -9,7 +9,7 @@ import {
   PronounHead,
 } from '../types/schema';
 import { findVerb, findPronoun } from '../data/dictionary';
-import { TIME_CHIP_DATA, QUANTIFIER_DATA } from '../blocks/definitions';
+import { TIME_CHIP_DATA, QUANTIFIER_DATA, DETERMINER_DATA } from '../blocks/definitions';
 
 // ============================================
 // BlocklyワークスペースからAST生成
@@ -253,12 +253,17 @@ function parseVerbBlock(block: Blockly.Block): VerbPhraseNode | null {
 function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode {
   const blockType = block.type;
 
-  // 限定詞ラッパーブロックの処理
+  // 統合限定詞ブロックの処理
+  if (blockType === 'determiner_unified') {
+    return parseDeterminerUnifiedBlock(block);
+  }
+
+  // 限定詞ラッパーブロックの処理（レガシー）
   if (blockType === 'determiner_block') {
     return parseDeterminerBlock(block);
   }
 
-  // 数量詞ラッパーブロックの処理
+  // 数量詞ラッパーブロックの処理（レガシー）
   if (blockType === 'quantifier_block') {
     return parseQuantifierBlock(block);
   }
@@ -302,6 +307,64 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode {
       lemma: noun,
       number: number as 'singular' | 'plural',
     },
+  };
+}
+
+function parseDeterminerUnifiedBlock(block: Blockly.Block): NounPhraseNode {
+  const preValue = block.getFieldValue('PRE');
+  const centralValue = block.getFieldValue('CENTRAL');
+  const postValue = block.getFieldValue('POST');
+  const nounBlock = block.getInputTargetBlock('NOUN');
+
+  // 内部の名詞ブロックを解析
+  const innerNP = nounBlock ? parseNounPhraseBlock(nounBlock) : {
+    type: 'nounPhrase' as const,
+    adjectives: [],
+    head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
+  };
+
+  // 各データから出力と文法数を取得
+  const preOption = DETERMINER_DATA.pre.find(o => o.value === preValue);
+  const centralOption = DETERMINER_DATA.central.find(o => o.value === centralValue);
+  const postOption = DETERMINER_DATA.post.find(o => o.value === postValue);
+
+  // 文法数を決定（post > central > pre の優先順位）
+  let grammaticalNumber: 'singular' | 'plural' = 'singular';
+  if (postOption?.number === 'plural' || postOption?.number === 'uncountable') {
+    grammaticalNumber = 'plural';
+  } else if (postOption?.number === 'singular') {
+    grammaticalNumber = 'singular';
+  } else if (centralOption?.number === 'plural') {
+    grammaticalNumber = 'plural';
+  } else if (centralOption?.number === 'singular') {
+    grammaticalNumber = 'singular';
+  } else if (preOption?.number === 'plural') {
+    grammaticalNumber = 'plural';
+  }
+
+  // 名詞の数を更新
+  const updatedHead = innerNP.head.type === 'noun'
+    ? { ...innerNP.head, number: grammaticalNumber }
+    : innerNP.head;
+
+  // 限定詞の種類を決定
+  let determiner: NounPhraseNode['determiner'] = undefined;
+  if (centralOption?.output) {
+    if (centralValue === 'the') {
+      determiner = { kind: 'definite', lexeme: 'the' };
+    } else if (centralValue === 'a') {
+      determiner = { kind: 'indefinite', lexeme: 'a' };
+    } else {
+      determiner = { kind: 'definite', lexeme: centralOption.output };
+    }
+  }
+
+  return {
+    ...innerNP,
+    head: updatedHead,
+    preDeterminer: preOption?.output ?? undefined,
+    determiner,
+    postDeterminer: postOption?.output ?? undefined,
   };
 }
 

@@ -14,6 +14,13 @@
     - 様態副詞 (slowly, quickly): 文末または動詞後
   - 修正案: AdverbNode.advType に応じた配置ロジック
 
+- [ ] be動詞の人称活用が不完全（"I is" → "I am", "you is" → "you are"）
+  - 現状: 3人称単数のみ判定
+  - 修正案: 1人称/2人称の判定を追加、be動詞専用の活用テーブル
+
+- [ ] 固有名詞に冠詞がつく（"the Tokyo" → "Tokyo"）
+  - 修正案: NounEntry に `proper: boolean` を追加、レンダラーで冠詞を抑制
+
 ## Future Enhancements
 
 ### Grammar & Syntax

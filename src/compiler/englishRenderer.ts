@@ -102,7 +102,12 @@ function renderFiller(
 function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarity: 'affirmative' | 'negative' = 'affirmative'): string {
   // 代名詞の処理
   if (np.head.type === 'pronoun') {
-    return renderPronoun(np.head as PronounHead, isSubject, polarity);
+    let result = renderPronoun(np.head as PronounHead, isSubject, polarity);
+    // 前置詞句修飾（代名詞用）: "someone in the room"
+    if (np.prepModifier) {
+      result += ' ' + renderPrepositionalPhrase(np.prepModifier, polarity);
+    }
+    return result;
   }
 
   const parts: string[] = [];

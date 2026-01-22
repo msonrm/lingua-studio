@@ -25,6 +25,10 @@ const COLORS = {
   determiner: '#1a365d', // ダークネイビー
   adjective: '#2c5282',  // ネイビー
   quantifier: '#2b4c7e', // ネイビー（中間）
+  prepNoun: '#3c6e91',   // 明るめネイビー（名詞用前置詞）
+
+  // Verb Modifier系の前置詞
+  prepVerb: '#C0392B',   // 暗めの赤（動詞用前置詞）
 
   // レガシー
   adverb: '#EF6C57',     // 赤オレンジ（様態副詞と同系）
@@ -940,6 +944,79 @@ Blockly.Blocks['manner_wrapper'] = {
 };
 
 // ============================================
+// 前置詞データ定義
+// ============================================
+const PREPOSITIONS = {
+  // 場所
+  location: [
+    { label: 'in', value: 'in' },
+    { label: 'on', value: 'on' },
+    { label: 'at', value: 'at' },
+    { label: 'under', value: 'under' },
+    { label: 'behind', value: 'behind' },
+  ],
+  // 方向・起点
+  direction: [
+    { label: 'to', value: 'to' },
+    { label: 'from', value: 'from' },
+    { label: 'into', value: 'into' },
+  ],
+  // 関係
+  relation: [
+    { label: 'with', value: 'with' },
+    { label: 'of', value: 'of' },
+    { label: 'for', value: 'for' },
+    { label: 'about', value: 'about' },
+  ],
+};
+
+const ALL_PREPOSITIONS: [string, string][] = [
+  ...PREPOSITIONS.location,
+  ...PREPOSITIONS.direction,
+  ...PREPOSITIONS.relation,
+].map(p => [p.label, p.value]);
+
+// ============================================
+// 前置詞ブロック（動詞用）- PP (VERB)
+// ============================================
+Blockly.Blocks['preposition_verb'] = {
+  init: function() {
+    this.appendStatementInput("VERB")
+        .setCheck("verb")
+        .appendField("PP")
+        .appendField(new Blockly.FieldDropdown(ALL_PREPOSITIONS), "PREP_VALUE");
+
+    this.appendValueInput("OBJECT")
+        .setCheck(["noun", "adjective", "nounPhrase"])
+        .appendField("(object):");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.prepVerb);
+    this.setTooltip("Prepositional Phrase (Verb): adds a prepositional phrase to a verb");
+  }
+};
+
+// ============================================
+// 前置詞ブロック（名詞用）- PP (NOUN)
+// ============================================
+Blockly.Blocks['preposition_noun'] = {
+  init: function() {
+    this.appendValueInput("NOUN")
+        .setCheck(["noun", "adjective", "nounPhrase"])
+        .appendField("PP")
+        .appendField(new Blockly.FieldDropdown(ALL_PREPOSITIONS), "PREP_VALUE");
+
+    this.appendValueInput("OBJECT")
+        .setCheck(["noun", "adjective", "nounPhrase"])
+        .appendField("(location):");
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.prepNoun);
+    this.setTooltip("Prepositional Phrase (Noun): modifies a noun with location/relation");
+  }
+};
+
+// ============================================
 // オプションのエクスポート（コンパイラ用）
 // ============================================
 export const TIME_CHIP_DATA = {
@@ -957,6 +1034,8 @@ export const DETERMINER_DATA = {
 };
 
 export const FREQUENCY_ADVERB_DATA = FREQUENCY_ADVERBS;
+
+export const PREPOSITION_DATA = PREPOSITIONS;
 
 // ============================================
 // ツールボックス定義
@@ -995,6 +1074,7 @@ export const toolbox = {
         { kind: "block", type: "negation_wrapper" },
         { kind: "block", type: "frequency_wrapper" },
         { kind: "block", type: "manner_wrapper" },
+        { kind: "block", type: "preposition_verb" },
       ]
     },
     {
@@ -1088,6 +1168,7 @@ export const toolbox = {
       contents: [
         { kind: "block", type: "determiner_unified" },
         { kind: "block", type: "adjective_wrapper" },
+        { kind: "block", type: "preposition_noun" },
       ]
     },
   ]

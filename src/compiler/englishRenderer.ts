@@ -8,6 +8,7 @@ import {
   AdjectivePhraseNode,
   AdverbNode,
   SemanticRole,
+  PrepositionalPhraseNode,
 } from '../types/schema';
 import { findVerb, findNoun, findPronoun } from '../data/dictionary';
 
@@ -74,8 +75,13 @@ function renderClause(clause: ClauseNode): string {
   // 様態副詞は文末
   const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
 
-  // 語順: Subject + Verb(+neg+freq) + Objects + Manner
-  const parts = [subject, verbForm, otherArgs, mannerStr].filter(p => p.length > 0);
+  // 前置詞句（動詞修飾）
+  const prepPhrases = verbPhrase.prepositionalPhrases
+    .map(pp => renderPrepositionalPhrase(pp, polarity))
+    .join(' ');
+
+  // 語順: Subject + Verb(+neg+freq) + Objects + PrepPhrases + Manner
+  const parts = [subject, verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
 
   return parts.join(' ');
 }
@@ -159,7 +165,17 @@ function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarit
     result = before + article + ' ' + after;
   }
 
+  // 前置詞句修飾（名詞用）: "the apple on the desk"
+  if (np.prepModifier) {
+    result += ' ' + renderPrepositionalPhrase(np.prepModifier, polarity);
+  }
+
   return result;
+}
+
+function renderPrepositionalPhrase(pp: PrepositionalPhraseNode, polarity: 'affirmative' | 'negative'): string {
+  const objectStr = renderNounPhrase(pp.object, false, polarity);
+  return `${pp.preposition} ${objectStr}`;
 }
 
 function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirmative' | 'negative'): string {

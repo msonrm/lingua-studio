@@ -7,6 +7,7 @@ import {
   FilledArgumentSlot,
   AdverbNode,
   PronounHead,
+  PrepositionalPhraseNode,
 } from '../types/schema';
 import { findVerb, findPronoun } from '../data/dictionary';
 import { TIME_CHIP_DATA, QUANTIFIER_DATA, DETERMINER_DATA } from '../blocks/definitions';
@@ -31,6 +32,7 @@ interface VerbChainResult {
   polarity: 'affirmative' | 'negative';
   frequencyAdverbs: AdverbNode[];
   mannerAdverbs: AdverbNode[];
+  prepositionalPhrases: PrepositionalPhraseNode[];
 }
 
 function parseTimeFrameBlock(block: Blockly.Block): SentenceNode | null {
@@ -49,13 +51,17 @@ function parseTimeFrameBlock(block: Blockly.Block): SentenceNode | null {
     return null;
   }
 
-  // ラッパーから収集した副詞を動詞句に追加
+  // ラッパーから収集した副詞と前置詞句を動詞句に追加
   const verbPhrase: VerbPhraseNode = {
     ...verbChain.verbPhrase,
     adverbs: [
       ...verbChain.mannerAdverbs,
       ...verbChain.frequencyAdverbs,
       ...verbChain.verbPhrase.adverbs,
+    ],
+    prepositionalPhrases: [
+      ...verbChain.prepositionalPhrases,
+      ...verbChain.verbPhrase.prepositionalPhrases,
     ],
   };
 
@@ -135,6 +141,33 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     };
   }
 
+  // 前置詞ラッパー（動詞用）の処理
+  if (blockType === 'preposition_verb') {
+    const prepValue = block.getFieldValue('PREP_VALUE');
+    const innerBlock = block.getInputTargetBlock('VERB');
+    const objectBlock = block.getInputTargetBlock('OBJECT');
+    if (!innerBlock) {
+      return null;
+    }
+    const innerResult = parseVerbChain(innerBlock);
+    if (!innerResult) {
+      return null;
+    }
+    const objectNP = objectBlock ? parseNounPhraseBlock(objectBlock) : {
+      type: 'nounPhrase' as const,
+      adjectives: [],
+      head: { type: 'noun' as const, lemma: 'something', number: 'singular' as const },
+      prepositionalPhrases: [],
+    };
+    return {
+      ...innerResult,
+      prepositionalPhrases: [
+        ...innerResult.prepositionalPhrases,
+        { type: 'prepositionalPhrase', preposition: prepValue, object: objectNP },
+      ],
+    };
+  }
+
   // 実際の動詞ブロックの処理
   if (blockType === 'verb') {
     const verbPhrase = parseVerbBlock(block);
@@ -146,6 +179,7 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
       polarity: 'affirmative',
       frequencyAdverbs: [],
       mannerAdverbs: [],
+      prepositionalPhrases: [],
     };
   }
 
@@ -241,17 +275,23 @@ function parseVerbBlock(block: Blockly.Block): VerbPhraseNode | null {
     });
   });
 
-  // 副詞は Verb Modifiers で処理されるため、ここでは空配列
+  // 副詞・前置詞句は Verb Modifiers で処理されるため、ここでは空配列
   return {
     type: 'verbPhrase',
     verb: { lemma: verbLemma },
     arguments: args,
     adverbs: [],
+    prepositionalPhrases: [],
   };
 }
 
 function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode {
   const blockType = block.type;
+
+  // 前置詞ラッパー（名詞用）の処理
+  if (blockType === 'preposition_noun') {
+    return parsePrepositionNounBlock(block);
+  }
 
   // 統合限定詞ブロックの処理
   if (blockType === 'determiner_unified') {
@@ -434,6 +474,36 @@ function parseAdjectiveWrapperBlock(block: Blockly.Block): NounPhraseNode {
   return {
     ...innerNP,
     adjectives: [{ lemma: adjValue }, ...innerNP.adjectives],
+  };
+}
+
+function parsePrepositionNounBlock(block: Blockly.Block): NounPhraseNode {
+  const prepValue = block.getFieldValue('PREP_VALUE');
+  const nounBlock = block.getInputTargetBlock('NOUN');
+  const objectBlock = block.getInputTargetBlock('OBJECT');
+
+  // 内部の名詞ブロックを解析
+  const innerNP = nounBlock ? parseNounPhraseBlock(nounBlock) : {
+    type: 'nounPhrase' as const,
+    adjectives: [],
+    head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
+  };
+
+  // 前置詞の目的語を解析
+  const objectNP = objectBlock ? parseNounPhraseBlock(objectBlock) : {
+    type: 'nounPhrase' as const,
+    adjectives: [],
+    head: { type: 'noun' as const, lemma: 'something', number: 'singular' as const },
+  };
+
+  // 前置詞句修飾を追加
+  return {
+    ...innerNP,
+    prepModifier: {
+      type: 'prepositionalPhrase',
+      preposition: prepValue,
+      object: objectNP,
+    },
   };
 }
 

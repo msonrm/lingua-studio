@@ -117,6 +117,7 @@ export interface VerbPhraseNode {
   verb: { lemma: string };
   arguments: FilledArgumentSlot[];
   adverbs: AdverbNode[];
+  prepositionalPhrases: PrepositionalPhraseNode[];  // 前置詞句 ("go TO THE PARK")
 }
 
 export interface FilledArgumentSlot {
@@ -132,6 +133,7 @@ export interface NounPhraseNode {
   quantifier?: string;  // レガシー: a, one, two, many, some, few, all, no
   adjectives: { lemma: string }[];
   head: NounHead | PronounHead;
+  prepModifier?: PrepositionalPhraseNode;  // 前置詞句修飾 ("the apple ON THE DESK")
 }
 
 export interface NounHead {
@@ -159,4 +161,13 @@ export interface AdverbNode {
   type: "adverb";
   lemma: string;
   advType: "manner" | "frequency" | "degree" | "time" | "place";
+}
+
+// ============================================
+// 前置詞句ノード
+// ============================================
+export interface PrepositionalPhraseNode {
+  type: "prepositionalPhrase";
+  preposition: string;
+  object: NounPhraseNode;
 }

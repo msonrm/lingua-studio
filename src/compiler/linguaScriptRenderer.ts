@@ -33,25 +33,21 @@ function renderClauseToScript(clause: ClauseNode): string {
     result = `not(${result})`;
   }
 
-  // アスペクトをラップ（simple以外）
+  // アスペクトをラップ（常に明示）
   const aspectWrapper = getAspectWrapper(aspect);
-  if (aspectWrapper) {
-    result = `${aspectWrapper}(${result})`;
-  }
+  result = `${aspectWrapper}(${result})`;
 
-  // 時制をラップ（present + simple以外）
-  if (!(tense === 'present' && aspect === 'simple')) {
-    result = `${tense}(${result})`;
-  }
+  // 時制をラップ（常に明示）
+  result = `${tense}(${result})`;
 
   return result;
 }
 
 function getAspectWrapper(
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive'
-): string | null {
-  const aspectMap: Record<string, string | null> = {
-    'simple': null,
+): string {
+  const aspectMap: Record<string, string> = {
+    'simple': 'simple',
     'progressive': 'progressive',
     'perfect': 'perfect',
     'perfectProgressive': 'perfect_progressive',

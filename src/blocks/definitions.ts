@@ -302,7 +302,165 @@ Blockly.Blocks['noun_phrase'] = {
 };
 
 // ============================================
-// Person ブロック（代名詞・人名詞）
+// 代名詞ブロック
+// ============================================
+const personalPronouns = pronouns.filter(p => p.type === 'personal');
+const indefinitePronouns = pronouns.filter(p => p.type === 'indefinite');
+
+Blockly.Blocks['pronoun_block'] = {
+  init: function() {
+    const personalOptions: [string, string][] = personalPronouns.map(p => [p.lemma, p.lemma]);
+    const indefiniteOptions: [string, string][] = indefinitePronouns.map(p => [p.lemma, p.lemma]);
+    const allOptions: [string, string][] = [
+      ["Select...", "__placeholder__"],
+      ["── Personal ──", "__label_personal__"],
+      ...personalOptions,
+      ["── Indefinite ──", "__label_indefinite__"],
+      ...indefiniteOptions,
+    ];
+
+    this.appendDummyInput()
+        .appendField("PRONOUN")
+        .appendField(new Blockly.FieldDropdown(allOptions), "PRONOUN_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.person);
+    this.setTooltip("A pronoun (I, you, he, someone, etc.)");
+  }
+};
+
+// ============================================
+// 人間ブロック (human)
+// ============================================
+const humanNouns = nouns.filter(n => n.category === 'human' && !n.proper);
+const humanProperNouns = nouns.filter(n => n.category === 'human' && n.proper);
+
+Blockly.Blocks['human_block'] = {
+  init: function() {
+    const nounOptions: [string, string][] = humanNouns.map(n => [n.lemma, n.lemma]);
+    const properOptions: [string, string][] = humanProperNouns.map(n => [n.lemma, n.lemma]);
+    const allOptions: [string, string][] = [
+      ["Select...", "__placeholder__"],
+      ["── Common ──", "__label_common__"],
+      ...nounOptions,
+      ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
+    ];
+
+    this.appendDummyInput()
+        .appendField("HUMAN")
+        .appendField(new Blockly.FieldDropdown(allOptions), "HUMAN_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.person);
+    this.setTooltip("A human (father, teacher, John, etc.)");
+  }
+};
+
+// ============================================
+// 動物ブロック (animal)
+// ============================================
+const animalNouns = nouns.filter(n => n.category === 'animal');
+
+Blockly.Blocks['animal_block'] = {
+  init: function() {
+    const nounOptions: [string, string][] = animalNouns.map(n => [n.lemma, n.lemma]);
+    const allOptions: [string, string][] = [
+      ["Select...", "__placeholder__"],
+      ...nounOptions,
+    ];
+
+    this.appendDummyInput()
+        .appendField("ANIMAL")
+        .appendField(new Blockly.FieldDropdown(allOptions), "ANIMAL_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.thing);
+    this.setTooltip("An animal (cat, dog, bird, etc.)");
+  }
+};
+
+// ============================================
+// 物体ブロック (object)
+// ============================================
+const objectNouns = nouns.filter(n => n.category === 'object');
+
+Blockly.Blocks['object_block'] = {
+  init: function() {
+    const nounOptions: [string, string][] = objectNouns.map(n => [n.lemma, n.lemma]);
+    const allOptions: [string, string][] = [
+      ["Select...", "__placeholder__"],
+      ...nounOptions,
+    ];
+
+    this.appendDummyInput()
+        .appendField("OBJECT")
+        .appendField(new Blockly.FieldDropdown(allOptions), "OBJECT_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.thing);
+    this.setTooltip("An object (apple, book, pen, etc.)");
+  }
+};
+
+// ============================================
+// 場所ブロック (place)
+// ============================================
+const placeNouns = nouns.filter(n => n.category === 'place' && !n.proper);
+const placeProperNouns = nouns.filter(n => n.category === 'place' && n.proper);
+const placeAdverbs = [
+  { lemma: "here", value: "here" },
+  { lemma: "there", value: "there" },
+];
+
+Blockly.Blocks['place_block'] = {
+  init: function() {
+    const nounOptions: [string, string][] = placeNouns.map(n => [n.lemma, n.lemma]);
+    const properOptions: [string, string][] = placeProperNouns.map(n => [n.lemma, n.lemma]);
+    const adverbOptions: [string, string][] = placeAdverbs.map(a => [a.lemma, a.value]);
+    const allOptions: [string, string][] = [
+      ["Select...", "__placeholder__"],
+      ["── Adverbs ──", "__label_adverbs__"],
+      ...adverbOptions,
+      ["── Common ──", "__label_common__"],
+      ...nounOptions,
+      ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
+    ];
+
+    this.appendDummyInput()
+        .appendField("PLACE")
+        .appendField(new Blockly.FieldDropdown(allOptions), "PLACE_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.place);
+    this.setTooltip("A place (park, school, Tokyo, etc.)");
+  }
+};
+
+// ============================================
+// 抽象概念ブロック (abstract)
+// ============================================
+const abstractNouns = nouns.filter(n => n.category === 'abstract');
+
+Blockly.Blocks['abstract_block'] = {
+  init: function() {
+    const nounOptions: [string, string][] = abstractNouns.map(n => [n.lemma, n.lemma]);
+    const allOptions: [string, string][] = [
+      ["Select...", "__placeholder__"],
+      ...nounOptions,
+    ];
+
+    this.appendDummyInput()
+        .appendField("ABSTRACT")
+        .appendField(new Blockly.FieldDropdown(allOptions), "ABSTRACT_VALUE");
+
+    this.setOutput(true, "noun");
+    this.setColour(COLORS.thing);
+    this.setTooltip("An abstract concept (idea, love, music, etc.)");
+  }
+};
+
+// ============================================
+// レガシー互換：Person ブロック
 // ============================================
 const personPronouns = pronouns.filter(p => p.type === 'personal' || !p.lemma.includes('thing'));
 const personNouns = nouns.filter(n => n.category === 'human');
@@ -330,10 +488,10 @@ Blockly.Blocks['person_block'] = {
 };
 
 // ============================================
-// Thing ブロック（物・抽象名詞）
+// レガシー互換：Thing ブロック
 // ============================================
 const thingPronouns = pronouns.filter(p => p.lemma.includes('thing'));
-const thingNouns = nouns.filter(n => n.category === 'thing' || n.category === 'abstract' || n.category === 'animal');
+const thingNouns = nouns.filter(n => n.category === 'object' || n.category === 'abstract' || n.category === 'animal');
 
 Blockly.Blocks['thing_block'] = {
   init: function() {
@@ -353,37 +511,6 @@ Blockly.Blocks['thing_block'] = {
     this.setOutput(true, "noun");
     this.setColour(COLORS.thing);
     this.setTooltip("A thing (pronoun or noun)");
-  }
-};
-
-// ============================================
-// Place ブロック（場所名詞）
-// ============================================
-const placeNouns = nouns.filter(n => n.category === 'place');
-const placeAdverbs = [
-  { lemma: "here", value: "here" },
-  { lemma: "there", value: "there" },
-];
-
-Blockly.Blocks['place_block'] = {
-  init: function() {
-    const nounOptions: [string, string][] = placeNouns.map(n => [n.lemma, n.lemma]);
-    const adverbOptions: [string, string][] = placeAdverbs.map(a => [a.lemma, a.value]);
-    const allOptions: [string, string][] = [
-      ["Select...", "__placeholder__"],
-      ["── Place Adverbs ──", "__label_adverbs__"],
-      ...adverbOptions,
-      ["── Places ──", "__label_places__"],
-      ...nounOptions,
-    ];
-
-    this.appendDummyInput()
-        .appendField("PLACE")
-        .appendField(new Blockly.FieldDropdown(allOptions), "PLACE_VALUE");
-
-    this.setOutput(true, "noun");
-    this.setColour(COLORS.place);
-    this.setTooltip("A place (noun or adverb)");
   }
 };
 
@@ -686,9 +813,18 @@ export const toolbox = {
       name: "Nouns",
       colour: COLORS.person,
       contents: [
-        { kind: "block", type: "person_block" },
-        { kind: "block", type: "thing_block" },
+        { kind: "label", text: "── 代名詞 ──" },
+        { kind: "block", type: "pronoun_block" },
+        { kind: "label", text: "── 人 ──" },
+        { kind: "block", type: "human_block" },
+        { kind: "label", text: "── 生き物 ──" },
+        { kind: "block", type: "animal_block" },
+        { kind: "label", text: "── もの ──" },
+        { kind: "block", type: "object_block" },
+        { kind: "label", text: "── 場所 ──" },
         { kind: "block", type: "place_block" },
+        { kind: "label", text: "── 抽象 ──" },
+        { kind: "block", type: "abstract_block" },
       ]
     },
     {

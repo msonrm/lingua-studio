@@ -273,8 +273,13 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode {
     return parseAdjectiveWrapperBlock(block);
   }
 
-  // 新しいPerson/Thing/Placeブロックの処理
-  if (blockType === 'person_block' || blockType === 'thing_block' || blockType === 'place_block') {
+  // 新しい名詞ブロックの処理（カテゴリ別）
+  const nounBlockTypes = [
+    'pronoun_block', 'human_block', 'animal_block', 'object_block', 'place_block', 'abstract_block',
+    // レガシー互換
+    'person_block', 'thing_block',
+  ];
+  if (nounBlockTypes.includes(blockType)) {
     return parseNewNounBlock(block, blockType);
   }
 
@@ -433,15 +438,21 @@ function parseAdjectiveWrapperBlock(block: Blockly.Block): NounPhraseNode {
 }
 
 function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseNode {
-  let value: string;
+  // ブロックタイプに応じたフィールド名のマッピング
+  const fieldMap: Record<string, string> = {
+    'pronoun_block': 'PRONOUN_VALUE',
+    'human_block': 'HUMAN_VALUE',
+    'animal_block': 'ANIMAL_VALUE',
+    'object_block': 'OBJECT_VALUE',
+    'place_block': 'PLACE_VALUE',
+    'abstract_block': 'ABSTRACT_VALUE',
+    // レガシー互換
+    'person_block': 'PERSON_VALUE',
+    'thing_block': 'THING_VALUE',
+  };
 
-  if (blockType === 'person_block') {
-    value = block.getFieldValue('PERSON_VALUE');
-  } else if (blockType === 'thing_block') {
-    value = block.getFieldValue('THING_VALUE');
-  } else {
-    value = block.getFieldValue('PLACE_VALUE');
-  }
+  const fieldName = fieldMap[blockType] || 'PLACE_VALUE';
+  const value: string = block.getFieldValue(fieldName);
 
   // プレースホルダーやラベルの場合はデフォルト値を返す
   if (!value || value.startsWith('__')) {

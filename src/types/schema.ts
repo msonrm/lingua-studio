@@ -38,11 +38,36 @@ export interface VerbEntry {
   valency: ArgumentSlot[];
 }
 
+// 名詞カテゴリ（意味的分類）
+export type NounCategory =
+  | "human"     // 人間（who で参照）
+  | "animal"    // 動物・生き物
+  | "object"    // 具体的な物
+  | "place"     // 場所
+  | "abstract"; // 抽象概念
+
+// 限定詞設定
+export interface DeterminerConfig {
+  defaults: {
+    pre: string;
+    central: string;
+    post: string;
+  };
+  options: {
+    pre: string[];
+    central: string[];
+    post: string[];
+  };
+  disabled?: boolean;  // 固有名詞用：限定詞変更不可
+}
+
 export interface NounEntry {
   lemma: string;
   plural: string;
-  category?: "human" | "animal" | "thing" | "place" | "abstract" | "time";
+  category: NounCategory;
   countable: boolean;
+  proper?: boolean;           // 固有名詞フラグ（冠詞なし）
+  zeroArticle?: boolean;      // 特殊な無冠詞用法（at home, go to school 等）
 }
 
 export interface PronounEntry {

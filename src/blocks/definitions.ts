@@ -847,8 +847,7 @@ Blockly.Blocks['coordination_noun_and'] = {
         .appendField("AND");
 
     this.appendValueInput("RIGHT")
-        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
-        .appendField("&");
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"]);
 
     this.setOutput(true, "coordinatedNounPhrase");
     this.setColour(COLORS.coordNoun);
@@ -866,8 +865,7 @@ Blockly.Blocks['coordination_noun_or'] = {
         .appendField("OR");
 
     this.appendValueInput("RIGHT")
-        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
-        .appendField("&");
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"]);
 
     this.setOutput(true, "coordinatedNounPhrase");
     this.setColour(COLORS.coordNoun);
@@ -885,8 +883,7 @@ Blockly.Blocks['coordination_verb_and'] = {
         .appendField("AND");
 
     this.appendStatementInput("RIGHT")
-        .setCheck("verb")
-        .appendField("&");
+        .setCheck("verb");
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.coordVerb);
@@ -904,8 +901,7 @@ Blockly.Blocks['coordination_verb_or'] = {
         .appendField("OR");
 
     this.appendStatementInput("RIGHT")
-        .setCheck("verb")
-        .appendField("&");
+        .setCheck("verb");
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.coordVerb);

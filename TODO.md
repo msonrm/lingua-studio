@@ -11,9 +11,10 @@
     - 頻度副詞: 助動詞と本動詞の間 ("has always run")
     - 様態副詞: 文末 ("runs quickly")
 
-- [ ] be動詞の人称活用が不完全（"I is" → "I am", "you is" → "you are"）
-  - 現状: 3人称単数のみ判定
-  - 修正案: 1人称/2人称の判定を追加、be動詞専用の活用テーブル
+- [x] be動詞の人称活用が不完全（"I is" → "I am", "you is" → "you are"）
+  - 解決済み: 主語の人称・数を取得するヘルパー関数を追加
+  - 辞書の `irregular` フィールドを活用して正しい活用形を選択
+  - 対応形: am/are/is (present), was/were (past)
 
 - [x] 固有名詞に冠詞がつく（"the Tokyo" → "Tokyo"）
   - 解決済み: 限定詞ブロックが接続名詞の `proper` フラグを検出

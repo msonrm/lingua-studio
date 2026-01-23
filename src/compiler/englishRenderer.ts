@@ -222,10 +222,51 @@ function conjugateVerbWithAdverbs(
 
   const isNegative = polarity === 'negative';
   const isThirdPersonSingular = subject && isThirdSingular(subject);
+  const personNumber = subject ? getPersonNumber(subject) : { person: 3 as const, number: 'singular' as const };
   const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
 
-  // Simple aspect - 否定は do-support が必要
+  // 不規則動詞（be動詞など）の活用形を取得
+  const getIrregularForm = (t: 'past' | 'present'): string | undefined => {
+    if (verbEntry.forms.irregular) {
+      const key = getIrregularFormKey(t, personNumber);
+      return verbEntry.forms.irregular[key];
+    }
+    return undefined;
+  };
+
+  // be動詞の助動詞形を取得（進行形などで使用）
+  const getBeAuxiliary = (t: 'past' | 'present' | 'future'): string => {
+    if (t === 'future') return 'will be';
+    // be動詞の不規則活用を使用
+    const beVerb = findVerb('be');
+    if (beVerb?.forms.irregular) {
+      const key = getIrregularFormKey(t, personNumber);
+      const form = beVerb.forms.irregular[key];
+      if (form) return form;
+    }
+    // フォールバック
+    return t === 'past' ? 'was' : (isThirdPersonSingular ? 'is' : 'are');
+  };
+
+  // Simple aspect - 否定は do-support が必要（be動詞は例外）
   if (aspect === 'simple') {
+    // be動詞の特別処理
+    if (lemma === 'be') {
+      const beForm = tense === 'future'
+        ? 'will be'
+        : getIrregularForm(tense as 'past' | 'present') || verbEntry.forms.base;
+
+      if (isNegative) {
+        // be + not: am not, is not, are not, was not, were not, will not be
+        if (tense === 'future') {
+          return freqStr ? `will ${freqStr} not be` : 'will not be';
+        }
+        return freqStr ? `${beForm} ${freqStr} not` : `${beForm} not`;
+      } else {
+        return freqStr ? `${beForm} ${freqStr}` : beForm;
+      }
+    }
+
     if (isNegative) {
       // 否定: do/does/did + not + [freq] + base
       let doForm: string;
@@ -248,11 +289,15 @@ function conjugateVerbWithAdverbs(
     } else {
       // 肯定: [freq] + verb (頻度副詞は動詞の前)
       switch (tense) {
-        case 'past':
-          return freqStr ? `${freqStr} ${verbEntry.forms.past}` : verbEntry.forms.past;
-        case 'present':
-          const form = isThirdPersonSingular ? verbEntry.forms.s : verbEntry.forms.base;
-          return freqStr ? `${freqStr} ${form}` : form;
+        case 'past': {
+          const pastForm = getIrregularForm('past') || verbEntry.forms.past;
+          return freqStr ? `${freqStr} ${pastForm}` : pastForm;
+        }
+        case 'present': {
+          const presentForm = getIrregularForm('present') ||
+            (isThirdPersonSingular ? verbEntry.forms.s : verbEntry.forms.base);
+          return freqStr ? `${freqStr} ${presentForm}` : presentForm;
+        }
         case 'future':
           return freqStr
             ? `will ${freqStr} ${verbEntry.forms.base}`
@@ -263,7 +308,7 @@ function conjugateVerbWithAdverbs(
 
   // Progressive: aux + [not] + [freq] + verb-ing
   if (aspect === 'progressive') {
-    const beForm = tense === 'past' ? 'was' : (tense === 'future' ? 'will be' : (isThirdPersonSingular ? 'is' : 'are'));
+    const beForm = getBeAuxiliary(tense);
     const notPart = isNegative ? 'not' : '';
     const parts = [beForm, notPart, freqStr, verbEntry.forms.ing].filter(p => p.length > 0);
     return parts.join(' ');
@@ -301,4 +346,43 @@ function isThirdSingular(np: NounPhraseNode): boolean {
   }
 
   return false;
+}
+
+// 主語の人称・数を取得（be動詞の活用用）
+type PersonNumber = {
+  person: 1 | 2 | 3;
+  number: 'singular' | 'plural';
+};
+
+function getPersonNumber(np: NounPhraseNode): PersonNumber {
+  if (np.head.type === 'pronoun') {
+    const pronounHead = np.head as PronounHead;
+    return {
+      person: (pronounHead.person || 3) as 1 | 2 | 3,
+      number: pronounHead.number || 'singular',
+    };
+  }
+
+  // 普通名詞は3人称
+  if (np.head.type === 'noun') {
+    const nounHead = np.head as NounHead;
+    return {
+      person: 3,
+      number: nounHead.number || 'singular',
+    };
+  }
+
+  return { person: 3, number: 'singular' };
+}
+
+// 不規則動詞の活用形キーを取得
+function getIrregularFormKey(
+  tense: 'past' | 'present',
+  personNumber: PersonNumber
+): string {
+  const { person, number } = personNumber;
+  if (number === 'plural') {
+    return `${tense}_pl`;
+  }
+  return `${tense}_${person}sg`;
 }

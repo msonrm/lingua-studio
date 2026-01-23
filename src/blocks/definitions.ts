@@ -1,5 +1,6 @@
 import * as Blockly from 'blockly';
-import { verbs, nouns, adjectives, adverbs, pronouns, findNoun } from '../data/dictionary';
+import { nouns, adjectives, adverbs, pronouns, findNoun, getVerbsByCategory } from '../data/dictionary';
+import type { VerbCategory } from '../types/schema';
 
 // ============================================
 // 色の定義（モンテッソーリベース）
@@ -15,6 +16,14 @@ const COLORS = {
   frequency: '#EF5350',  // さらに明るい赤
   manner: '#EF6C57',     // 赤オレンジ
 
+  // Verb カテゴリ別（モンテッソーリ: 動詞=赤で統一）
+  verbMotion: '#DC143C',        // 移動
+  verbAction: '#DC143C',        // 動作
+  verbTransfer: '#DC143C',      // 授受
+  verbCognition: '#DC143C',     // 認知
+  verbCommunication: '#DC143C', // 伝達
+  verbState: '#DC143C',         // 状態
+
   // Noun系（寒色・黒〜青系グラデーション）
   person: '#0d1321',     // ほぼ黒（モンテッソーリ）
   thing: '#0d1321',      // ほぼ黒（モンテッソーリ）
@@ -29,6 +38,10 @@ const COLORS = {
 
   // Verb Modifier系の前置詞
   prepVerb: '#C0392B',   // 暗めの赤（動詞用前置詞）
+
+  // Coordination（等位接続）- 紫系（論理演算のイメージ）
+  coordNoun: '#6B5B95',   // ダスティパープル（名詞用）
+  coordVerb: '#9B4D8B',   // マゼンタ寄り紫（動詞用）
 
   // レガシー
   adverb: '#EF6C57',     // 赤オレンジ（様態副詞と同系）
@@ -270,52 +283,69 @@ Blockly.Blocks['time_chip_abstract'] = {
 };
 
 // ============================================
-// Action ブロック（動的スロット生成）
+// カテゴリ別動詞ブロック
 // ============================================
-Blockly.Blocks['verb'] = {
-  init: function() {
-    const verbOptions: [string, string][] = verbs.map(v => [v.lemma, v.lemma]);
-
-    this.appendDummyInput()
-        .appendField("VERB")
-        .appendField(new Blockly.FieldDropdown(verbOptions, this.updateShape.bind(this)), "VERB");
-
-    this.setPreviousStatement(true, "verb");
-    this.setColour(COLORS.action);
-    this.setTooltip("Verb: the action or state");
-
-    // 初期形状を設定
-    this.updateShape(verbs[0]?.lemma || "run");
-  },
-
-  updateShape: function(verbLemma: string) {
-    const verb = verbs.find(v => v.lemma === verbLemma);
-    if (!verb) return verbLemma;
-
-    // 既存のスロットを削除（ARG_で始まるもの）
-    const existingInputs = this.inputList
-      .filter((input: Blockly.Input) => input.name.startsWith("ARG_"))
-      .map((input: Blockly.Input) => input.name);
-
-    existingInputs.forEach((name: string) => this.removeInput(name));
-
-    // 新しいスロットを追加
-    verb.valency.forEach((slot, index) => {
-      const inputName = `ARG_${index}`;
-      const label = slot.label || slot.role;
-      const checkType = slot.role === 'attribute' ? ['noun', 'nounPhrase', 'adjective'] : ['noun', 'nounPhrase'];
-      // 必須: "label:" / 任意: "(label):"
-      const displayLabel = slot.required ? `${label}:` : `(${label}):`;
-      this.appendValueInput(inputName)
-          .setCheck(checkType)
-          .appendField(displayLabel);
-    });
-
-    // 副詞は Verb Modifiers (FREQ, MANNER) で対応
-
-    return verbLemma;
-  }
+const VERB_CATEGORY_CONFIG: Record<VerbCategory, { label: string; color: string }> = {
+  motion: { label: 'MOTION', color: COLORS.verbMotion },
+  action: { label: 'ACTION', color: COLORS.verbAction },
+  transfer: { label: 'TRANSFER', color: COLORS.verbTransfer },
+  cognition: { label: 'COGNITION', color: COLORS.verbCognition },
+  communication: { label: 'COMMUNICATION', color: COLORS.verbCommunication },
+  state: { label: 'STATE', color: COLORS.verbState },
 };
+
+// カテゴリ別動詞ブロック生成関数
+function createVerbCategoryBlock(category: VerbCategory) {
+  const config = VERB_CATEGORY_CONFIG[category];
+  const categoryVerbs = getVerbsByCategory(category);
+
+  Blockly.Blocks[`verb_${category}`] = {
+    init: function() {
+      const verbOptions: [string, string][] = categoryVerbs.map(v => [v.lemma, v.lemma]);
+
+      this.appendDummyInput()
+          .appendField(config.label)
+          .appendField(new Blockly.FieldDropdown(verbOptions, this.updateShape.bind(this)), "VERB");
+
+      this.setPreviousStatement(true, "verb");
+      this.setColour(config.color);
+      this.setTooltip(`${config.label} verb`);
+
+      // 初期形状を設定
+      if (categoryVerbs.length > 0) {
+        this.updateShape(categoryVerbs[0].lemma);
+      }
+    },
+
+    updateShape: function(verbLemma: string) {
+      const verb = categoryVerbs.find(v => v.lemma === verbLemma);
+      if (!verb) return verbLemma;
+
+      // 既存のスロットを削除（ARG_で始まるもの）
+      const existingInputs = this.inputList
+        .filter((input: Blockly.Input) => input.name.startsWith("ARG_"))
+        .map((input: Blockly.Input) => input.name);
+
+      existingInputs.forEach((name: string) => this.removeInput(name));
+
+      // 新しいスロットを追加
+      verb.valency.forEach((slot: { role: string; label?: string; required: boolean }, index: number) => {
+        const inputName = `ARG_${index}`;
+        const label = slot.label || slot.role;
+        const checkType = slot.role === 'attribute' ? ['noun', 'nounPhrase', 'adjective', 'coordinatedNounPhrase'] : ['noun', 'nounPhrase', 'coordinatedNounPhrase'];
+        const displayLabel = slot.required ? `${label}:` : `(${label}):`;
+        this.appendValueInput(inputName)
+            .setCheck(checkType)
+            .appendField(displayLabel);
+      });
+
+      return verbLemma;
+    }
+  };
+}
+
+// 6カテゴリの動詞ブロックを生成
+(['motion', 'action', 'transfer', 'cognition', 'communication', 'state'] as VerbCategory[]).forEach(createVerbCategoryBlock);
 
 // ============================================
 // 名詞句ブロック（レガシー）
@@ -987,7 +1017,7 @@ Blockly.Blocks['preposition_verb'] = {
         .appendField(new Blockly.FieldDropdown(ALL_PREPOSITIONS), "PREP_VALUE");
 
     this.appendValueInput("OBJECT")
-        .setCheck(["noun", "adjective", "nounPhrase"])
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
         .appendField("object:");
 
     this.setPreviousStatement(true, "verb");
@@ -1007,12 +1037,56 @@ Blockly.Blocks['preposition_noun'] = {
         .appendField(new Blockly.FieldDropdown(ALL_PREPOSITIONS), "PREP_VALUE");
 
     this.appendValueInput("OBJECT")
-        .setCheck(["noun", "adjective", "nounPhrase"])
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
         .appendField("object:");
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.prepNoun);
     this.setTooltip("Prepositional Phrase (Noun): modifies a noun with a prepositional phrase");
+  }
+};
+
+// ============================================
+// 等位接続ブロック（名詞用）- AND/OR (NOUN)
+// ============================================
+Blockly.Blocks['coordination_noun'] = {
+  init: function() {
+    this.appendValueInput("LEFT")
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])  // 入れ子許可
+        .appendField(new Blockly.FieldDropdown([
+          ["AND", "and"],
+          ["OR", "or"],
+        ]), "CONJ_VALUE");
+
+    this.appendValueInput("RIGHT")
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])  // 入れ子許可
+        .appendField("&");
+
+    this.setOutput(true, "coordinatedNounPhrase");
+    this.setColour(COLORS.coordNoun);
+    this.setTooltip("Coordination (Noun): connects two noun phrases with AND/OR (nesting supported)");
+  }
+};
+
+// ============================================
+// 等位接続ブロック（動詞用）- AND/OR (VERB)
+// ============================================
+Blockly.Blocks['coordination_verb'] = {
+  init: function() {
+    this.appendStatementInput("LEFT")
+        .setCheck("verb")
+        .appendField(new Blockly.FieldDropdown([
+          ["AND", "and"],
+          ["OR", "or"],
+        ]), "CONJ_VALUE");
+
+    this.appendStatementInput("RIGHT")
+        .setCheck("verb")
+        .appendField("&");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.coordVerb);
+    this.setTooltip("Coordination (Verb): connects two verb phrases with AND/OR");
   }
 };
 
@@ -1063,7 +1137,18 @@ export const toolbox = {
       name: "Verbs",
       colour: COLORS.action,
       contents: [
-        { kind: "block", type: "verb" },
+        { kind: "label", text: "── Motion ──" },
+        { kind: "block", type: "verb_motion" },
+        { kind: "label", text: "── Action ──" },
+        { kind: "block", type: "verb_action" },
+        { kind: "label", text: "── Transfer ──" },
+        { kind: "block", type: "verb_transfer" },
+        { kind: "label", text: "── Cognition ──" },
+        { kind: "block", type: "verb_cognition" },
+        { kind: "label", text: "── Communication ──" },
+        { kind: "block", type: "verb_communication" },
+        { kind: "label", text: "── State ──" },
+        { kind: "block", type: "verb_state" },
       ]
     },
     {
@@ -1075,6 +1160,8 @@ export const toolbox = {
         { kind: "block", type: "frequency_wrapper" },
         { kind: "block", type: "manner_wrapper" },
         { kind: "block", type: "preposition_verb" },
+        { kind: "label", text: "── Coordination ──" },
+        { kind: "block", type: "coordination_verb" },
       ]
     },
     {
@@ -1169,6 +1256,8 @@ export const toolbox = {
         { kind: "block", type: "determiner_unified" },
         { kind: "block", type: "adjective_wrapper" },
         { kind: "block", type: "preposition_noun" },
+        { kind: "label", text: "── Coordination ──" },
+        { kind: "block", type: "coordination_noun" },
       ]
     },
   ]

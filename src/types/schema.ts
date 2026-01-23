@@ -24,6 +24,15 @@ export interface ArgumentSlot {
   label?: string;  // UI表示用のラベル（例: "what", "to whom"）
 }
 
+// 動詞カテゴリ（意味論的分類）
+export type VerbCategory =
+  | "motion"        // 移動: run, walk, go, come
+  | "action"        // 動作・創造: make, eat, build, break
+  | "transfer"      // 授受・移転: give, take, send, receive
+  | "cognition"     // 認知・知覚: think, know, see, hear
+  | "communication" // 伝達: say, tell, speak, ask
+  | "state";        // 状態・存在: be, have, exist, seem
+
 export interface VerbEntry {
   lemma: string;
   forms: {
@@ -35,6 +44,7 @@ export interface VerbEntry {
     irregular?: Record<string, string>;
   };
   type: "action" | "stative" | "copula";
+  category: VerbCategory;
   valency: ArgumentSlot[];
 }
 
@@ -118,11 +128,15 @@ export interface VerbPhraseNode {
   arguments: FilledArgumentSlot[];
   adverbs: AdverbNode[];
   prepositionalPhrases: PrepositionalPhraseNode[];  // 前置詞句 ("go TO THE PARK")
+  coordinatedWith?: {
+    conjunction: Conjunction;
+    verbPhrase: VerbPhraseNode;
+  };
 }
 
 export interface FilledArgumentSlot {
   role: SemanticRole;
-  filler: NounPhraseNode | AdjectivePhraseNode | null;
+  filler: NounPhraseNode | AdjectivePhraseNode | CoordinatedNounPhraseNode | null;
 }
 
 export interface NounPhraseNode {
@@ -169,5 +183,27 @@ export interface AdverbNode {
 export interface PrepositionalPhraseNode {
   type: "prepositionalPhrase";
   preposition: string;
-  object: NounPhraseNode;
+  object: NounPhraseNode | CoordinatedNounPhraseNode;
+}
+
+// ============================================
+// 等位接続ノード
+// ============================================
+export type Conjunction = "and" | "or";
+
+// 等位接続の要素型（入れ子対応）
+export type CoordinationConjunct = NounPhraseNode | CoordinatedNounPhraseNode;
+
+// NP等位接続（名詞句 AND/OR 名詞句）- 入れ子対応
+export interface CoordinatedNounPhraseNode {
+  type: "coordinatedNounPhrase";
+  conjunction: Conjunction;
+  conjuncts: CoordinationConjunct[];  // 入れ子の等位接続も許可
+}
+
+// VP等位接続（動詞句 AND/OR 動詞句）
+export interface CoordinatedVerbPhraseNode {
+  type: "coordinatedVerbPhrase";
+  conjunction: Conjunction;
+  conjuncts: VerbPhraseNode[];
 }

@@ -1,50 +1,94 @@
 import { VerbEntry, NounEntry, AdjectiveEntry, AdverbEntry, PronounEntry, DeterminerConfig } from '../types/schema';
 
 // ============================================
-// 動詞辞書
+// 動詞辞書（意味論的カテゴリ別）
 // ============================================
 export const verbs: VerbEntry[] = [
-  // 自動詞（agent のみ）
+  // ============================================
+  // Motion（移動）
+  // ============================================
   {
     lemma: "run",
-    forms: {
-      base: "run",
-      past: "ran",
-      pp: "run",
-      ing: "running",
-      s: "runs",
-    },
+    forms: { base: "run", past: "ran", pp: "run", ing: "running", s: "runs" },
     type: "action",
-    valency: [
-      { role: "agent", required: true, label: "agent" },
-    ],
+    category: "motion",
+    valency: [{ role: "agent", required: true, label: "agent" }],
   },
   {
-    lemma: "sleep",
-    forms: {
-      base: "sleep",
-      past: "slept",
-      pp: "slept",
-      ing: "sleeping",
-      s: "sleeps",
-    },
+    lemma: "walk",
+    forms: { base: "walk", past: "walked", pp: "walked", ing: "walking", s: "walks" },
     type: "action",
+    category: "motion",
+    valency: [{ role: "agent", required: true, label: "agent" }],
+  },
+  {
+    lemma: "go",
+    forms: { base: "go", past: "went", pp: "gone", ing: "going", s: "goes" },
+    type: "action",
+    category: "motion",
+    valency: [{ role: "agent", required: true, label: "agent" }],
+  },
+  {
+    lemma: "come",
+    forms: { base: "come", past: "came", pp: "come", ing: "coming", s: "comes" },
+    type: "action",
+    category: "motion",
+    valency: [{ role: "agent", required: true, label: "agent" }],
+  },
+  {
+    lemma: "fly",
+    forms: { base: "fly", past: "flew", pp: "flown", ing: "flying", s: "flies" },
+    type: "action",
+    category: "motion",
+    valency: [{ role: "agent", required: true, label: "agent" }],
+  },
+  {
+    lemma: "swim",
+    forms: { base: "swim", past: "swam", pp: "swum", ing: "swimming", s: "swims" },
+    type: "action",
+    category: "motion",
+    valency: [{ role: "agent", required: true, label: "agent" }],
+  },
+  {
+    lemma: "jump",
+    forms: { base: "jump", past: "jumped", pp: "jumped", ing: "jumping", s: "jumps" },
+    type: "action",
+    category: "motion",
+    valency: [{ role: "agent", required: true, label: "agent" }],
+  },
+  {
+    lemma: "fall",
+    forms: { base: "fall", past: "fell", pp: "fallen", ing: "falling", s: "falls" },
+    type: "action",
+    category: "motion",
+    valency: [{ role: "theme", required: true, label: "theme" }],
+  },
+  {
+    lemma: "arrive",
+    forms: { base: "arrive", past: "arrived", pp: "arrived", ing: "arriving", s: "arrives" },
+    type: "action",
+    category: "motion",
+    valency: [{ role: "agent", required: true, label: "agent" }],
+  },
+  {
+    lemma: "leave",
+    forms: { base: "leave", past: "left", pp: "left", ing: "leaving", s: "leaves" },
+    type: "action",
+    category: "motion",
     valency: [
       { role: "agent", required: true, label: "agent" },
+      { role: "source", required: false, label: "place" },
     ],
   },
 
-  // 他動詞（agent + patient/theme）
+  // ============================================
+  // Action（動作・創造）
+  // ============================================
   {
     lemma: "eat",
-    forms: {
-      base: "eat",
-      past: "ate",
-      pp: "eaten",
-      ing: "eating",
-      s: "eats",
-    },
+    forms: { base: "eat", past: "ate", pp: "eaten", ing: "eating", s: "eats" },
     type: "action",
+    category: "action",
     valency: [
       { role: "agent", required: true, label: "agent" },
       { role: "patient", required: false, label: "patient" },
@@ -52,117 +96,376 @@ export const verbs: VerbEntry[] = [
   },
   {
     lemma: "make",
-    forms: {
-      base: "make",
-      past: "made",
-      pp: "made",
-      ing: "making",
-      s: "makes",
-    },
+    forms: { base: "make", past: "made", pp: "made", ing: "making", s: "makes" },
     type: "action",
+    category: "action",
     valency: [
       { role: "agent", required: true, label: "agent" },
       { role: "patient", required: true, label: "patient" },
     ],
   },
   {
-    lemma: "watch",
-    forms: {
-      base: "watch",
-      past: "watched",
-      pp: "watched",
-      ing: "watching",
-      s: "watches",
-    },
+    lemma: "build",
+    forms: { base: "build", past: "built", pp: "built", ing: "building", s: "builds" },
     type: "action",
+    category: "action",
     valency: [
       { role: "agent", required: true, label: "agent" },
+      { role: "patient", required: true, label: "patient" },
+    ],
+  },
+  {
+    lemma: "break",
+    forms: { base: "break", past: "broke", pp: "broken", ing: "breaking", s: "breaks" },
+    type: "action",
+    category: "action",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "patient", required: true, label: "patient" },
+    ],
+  },
+  {
+    lemma: "cut",
+    forms: { base: "cut", past: "cut", pp: "cut", ing: "cutting", s: "cuts" },
+    type: "action",
+    category: "action",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "patient", required: true, label: "patient" },
+    ],
+  },
+  {
+    lemma: "open",
+    forms: { base: "open", past: "opened", pp: "opened", ing: "opening", s: "opens" },
+    type: "action",
+    category: "action",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "patient", required: true, label: "patient" },
+    ],
+  },
+  {
+    lemma: "close",
+    forms: { base: "close", past: "closed", pp: "closed", ing: "closing", s: "closes" },
+    type: "action",
+    category: "action",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "patient", required: true, label: "patient" },
+    ],
+  },
+  {
+    lemma: "read",
+    forms: { base: "read", past: "read", pp: "read", ing: "reading", s: "reads" },
+    type: "action",
+    category: "action",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: false, label: "theme" },
+    ],
+  },
+  {
+    lemma: "write",
+    forms: { base: "write", past: "wrote", pp: "written", ing: "writing", s: "writes" },
+    type: "action",
+    category: "action",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: false, label: "theme" },
+    ],
+  },
+  {
+    lemma: "play",
+    forms: { base: "play", past: "played", pp: "played", ing: "playing", s: "plays" },
+    type: "action",
+    category: "action",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: false, label: "theme" },
+    ],
+  },
+  {
+    lemma: "sleep",
+    forms: { base: "sleep", past: "slept", pp: "slept", ing: "sleeping", s: "sleeps" },
+    type: "action",
+    category: "action",
+    valency: [{ role: "agent", required: true, label: "agent" }],
+  },
+
+  // ============================================
+  // Transfer（授受・移転）
+  // ============================================
+  {
+    lemma: "give",
+    forms: { base: "give", past: "gave", pp: "given", ing: "giving", s: "gives" },
+    type: "action",
+    category: "transfer",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+      { role: "recipient", required: true, label: "recipient", preposition: "to" },
+    ],
+  },
+  {
+    lemma: "take",
+    forms: { base: "take", past: "took", pp: "taken", ing: "taking", s: "takes" },
+    type: "action",
+    category: "transfer",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "send",
+    forms: { base: "send", past: "sent", pp: "sent", ing: "sending", s: "sends" },
+    type: "action",
+    category: "transfer",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+      { role: "recipient", required: false, label: "recipient", preposition: "to" },
+    ],
+  },
+  {
+    lemma: "receive",
+    forms: { base: "receive", past: "received", pp: "received", ing: "receiving", s: "receives" },
+    type: "action",
+    category: "transfer",
+    valency: [
+      { role: "recipient", required: true, label: "recipient" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "bring",
+    forms: { base: "bring", past: "brought", pp: "brought", ing: "bringing", s: "brings" },
+    type: "action",
+    category: "transfer",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "buy",
+    forms: { base: "buy", past: "bought", pp: "bought", ing: "buying", s: "buys" },
+    type: "action",
+    category: "transfer",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "sell",
+    forms: { base: "sell", past: "sold", pp: "sold", ing: "selling", s: "sells" },
+    type: "action",
+    category: "transfer",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "show",
+    forms: { base: "show", past: "showed", pp: "shown", ing: "showing", s: "shows" },
+    type: "action",
+    category: "transfer",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+      { role: "recipient", required: false, label: "recipient", preposition: "to" },
+    ],
+  },
+
+  // ============================================
+  // Cognition（認知・知覚）
+  // ============================================
+  {
+    lemma: "think",
+    forms: { base: "think", past: "thought", pp: "thought", ing: "thinking", s: "thinks" },
+    type: "stative",
+    category: "cognition",
+    valency: [{ role: "experiencer", required: true, label: "experiencer" }],
+  },
+  {
+    lemma: "know",
+    forms: { base: "know", past: "knew", pp: "known", ing: "knowing", s: "knows" },
+    type: "stative",
+    category: "cognition",
+    valency: [
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "believe",
+    forms: { base: "believe", past: "believed", pp: "believed", ing: "believing", s: "believes" },
+    type: "stative",
+    category: "cognition",
+    valency: [
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "understand",
+    forms: { base: "understand", past: "understood", pp: "understood", ing: "understanding", s: "understands" },
+    type: "stative",
+    category: "cognition",
+    valency: [
+      { role: "experiencer", required: true, label: "experiencer" },
       { role: "theme", required: true, label: "theme" },
     ],
   },
   {
     lemma: "see",
-    forms: {
-      base: "see",
-      past: "saw",
-      pp: "seen",
-      ing: "seeing",
-      s: "sees",
-    },
+    forms: { base: "see", past: "saw", pp: "seen", ing: "seeing", s: "sees" },
     type: "action",
-    valency: [
-      { role: "agent", required: true, label: "agent" },
-      { role: "theme", required: true, label: "theme" },
-    ],
-  },
-
-  // 状態動詞（stative）- 通常進行形不可
-  {
-    lemma: "like",
-    forms: {
-      base: "like",
-      past: "liked",
-      pp: "liked",
-      ing: "liking",
-      s: "likes",
-    },
-    type: "stative",
+    category: "cognition",
     valency: [
       { role: "experiencer", required: true, label: "experiencer" },
       { role: "stimulus", required: true, label: "stimulus" },
     ],
   },
   {
-    lemma: "have",
-    forms: {
-      base: "have",
-      past: "had",
-      pp: "had",
-      ing: "having",
-      s: "has",
-    },
+    lemma: "hear",
+    forms: { base: "hear", past: "heard", pp: "heard", ing: "hearing", s: "hears" },
+    type: "action",
+    category: "cognition",
+    valency: [
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "stimulus", required: true, label: "stimulus" },
+    ],
+  },
+  {
+    lemma: "feel",
+    forms: { base: "feel", past: "felt", pp: "felt", ing: "feeling", s: "feels" },
     type: "stative",
+    category: "cognition",
     valency: [
-      { role: "possessor", required: true, label: "possessor" },
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "stimulus", required: false, label: "stimulus" },
+    ],
+  },
+  {
+    lemma: "remember",
+    forms: { base: "remember", past: "remembered", pp: "remembered", ing: "remembering", s: "remembers" },
+    type: "stative",
+    category: "cognition",
+    valency: [
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "forget",
+    forms: { base: "forget", past: "forgot", pp: "forgotten", ing: "forgetting", s: "forgets" },
+    type: "action",
+    category: "cognition",
+    valency: [
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "learn",
+    forms: { base: "learn", past: "learned", pp: "learned", ing: "learning", s: "learns" },
+    type: "action",
+    category: "cognition",
+    valency: [
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "theme", required: false, label: "theme" },
+    ],
+  },
+  {
+    lemma: "watch",
+    forms: { base: "watch", past: "watched", pp: "watched", ing: "watching", s: "watches" },
+    type: "action",
+    category: "cognition",
+    valency: [
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "stimulus", required: true, label: "stimulus" },
+    ],
+  },
+
+  // ============================================
+  // Communication（伝達）
+  // ============================================
+  {
+    lemma: "say",
+    forms: { base: "say", past: "said", pp: "said", ing: "saying", s: "says" },
+    type: "action",
+    category: "communication",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: false, label: "theme" },
+    ],
+  },
+  {
+    lemma: "tell",
+    forms: { base: "tell", past: "told", pp: "told", ing: "telling", s: "tells" },
+    type: "action",
+    category: "communication",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "recipient", required: true, label: "recipient" },
+      { role: "theme", required: false, label: "theme" },
+    ],
+  },
+  {
+    lemma: "speak",
+    forms: { base: "speak", past: "spoke", pp: "spoken", ing: "speaking", s: "speaks" },
+    type: "action",
+    category: "communication",
+    valency: [{ role: "agent", required: true, label: "agent" }],
+  },
+  {
+    lemma: "ask",
+    forms: { base: "ask", past: "asked", pp: "asked", ing: "asking", s: "asks" },
+    type: "action",
+    category: "communication",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "recipient", required: false, label: "recipient" },
+      { role: "theme", required: false, label: "theme" },
+    ],
+  },
+  {
+    lemma: "answer",
+    forms: { base: "answer", past: "answered", pp: "answered", ing: "answering", s: "answers" },
+    type: "action",
+    category: "communication",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: false, label: "theme" },
+    ],
+  },
+  {
+    lemma: "call",
+    forms: { base: "call", past: "called", pp: "called", ing: "calling", s: "calls" },
+    type: "action",
+    category: "communication",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "recipient", required: true, label: "recipient" },
+    ],
+  },
+  {
+    lemma: "explain",
+    forms: { base: "explain", past: "explained", pp: "explained", ing: "explaining", s: "explains" },
+    type: "action",
+    category: "communication",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
       { role: "theme", required: true, label: "theme" },
     ],
   },
 
-  // 授与動詞（agent + theme + recipient）
-  {
-    lemma: "give",
-    forms: {
-      base: "give",
-      past: "gave",
-      pp: "given",
-      ing: "giving",
-      s: "gives",
-    },
-    type: "action",
-    valency: [
-      { role: "agent", required: true, label: "agent" },
-      { role: "theme", required: true, label: "theme" },
-      { role: "recipient", required: true, label: "recipient", preposition: "to" },
-    ],
-  },
-  {
-    lemma: "show",
-    forms: {
-      base: "show",
-      past: "showed",
-      pp: "shown",
-      ing: "showing",
-      s: "shows",
-    },
-    type: "action",
-    valency: [
-      { role: "agent", required: true, label: "agent" },
-      { role: "theme", required: true, label: "theme" },
-      { role: "recipient", required: true, label: "recipient", preposition: "to" },
-    ],
-  },
-
-  // 繋辞動詞（copula）
+  // ============================================
+  // State（状態・存在）
+  // ============================================
   {
     lemma: "be",
     forms: {
@@ -183,9 +486,60 @@ export const verbs: VerbEntry[] = [
       },
     },
     type: "copula",
+    category: "state",
     valency: [
       { role: "theme", required: true, label: "subject" },
       { role: "attribute", required: true, label: "attribute" },
+    ],
+  },
+  {
+    lemma: "have",
+    forms: { base: "have", past: "had", pp: "had", ing: "having", s: "has" },
+    type: "stative",
+    category: "state",
+    valency: [
+      { role: "possessor", required: true, label: "possessor" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "like",
+    forms: { base: "like", past: "liked", pp: "liked", ing: "liking", s: "likes" },
+    type: "stative",
+    category: "state",
+    valency: [
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "stimulus", required: true, label: "stimulus" },
+    ],
+  },
+  {
+    lemma: "want",
+    forms: { base: "want", past: "wanted", pp: "wanted", ing: "wanting", s: "wants" },
+    type: "stative",
+    category: "state",
+    valency: [
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "need",
+    forms: { base: "need", past: "needed", pp: "needed", ing: "needing", s: "needs" },
+    type: "stative",
+    category: "state",
+    valency: [
+      { role: "experiencer", required: true, label: "experiencer" },
+      { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "seem",
+    forms: { base: "seem", past: "seemed", pp: "seemed", ing: "seeming", s: "seems" },
+    type: "stative",
+    category: "state",
+    valency: [
+      { role: "theme", required: true, label: "subject" },
+      { role: "attribute", required: false, label: "attribute" },
     ],
   },
 ];
@@ -493,6 +847,10 @@ export const findAdverb = (lemma: string): AdverbEntry | undefined =>
 
 export const findPronoun = (lemma: string): PronounEntry | undefined =>
   pronouns.find(p => p.lemma.toLowerCase() === lemma.toLowerCase());
+
+// カテゴリ別に動詞を取得
+export const getVerbsByCategory = (category: VerbEntry['category']): VerbEntry[] =>
+  verbs.filter(v => v.category === category);
 
 // ============================================
 // 限定詞設定ヘルパー

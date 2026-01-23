@@ -8,6 +8,9 @@ import {
   AdverbNode,
   PronounHead,
   PrepositionalPhraseNode,
+  CoordinatedNounPhraseNode,
+  CoordinationConjunct,
+  Conjunction,
 } from '../types/schema';
 import { findVerb, findPronoun } from '../data/dictionary';
 import { TIME_CHIP_DATA, QUANTIFIER_DATA, DETERMINER_DATA } from '../blocks/definitions';
@@ -46,6 +49,10 @@ interface VerbChainResult {
   frequencyAdverbs: AdverbNode[];
   mannerAdverbs: AdverbNode[];
   prepositionalPhrases: PrepositionalPhraseNode[];
+  coordination?: {
+    conjunction: Conjunction;
+    rightVerbPhrase: VerbPhraseNode;
+  };
 }
 
 function parseTimeFrameBlock(block: Blockly.Block): SentenceNode | null {
@@ -76,6 +83,11 @@ function parseTimeFrameBlock(block: Blockly.Block): SentenceNode | null {
       ...verbChain.prepositionalPhrases,
       ...verbChain.verbPhrase.prepositionalPhrases,
     ],
+    // 等位接続の情報を追加
+    coordinatedWith: verbChain.coordination ? {
+      conjunction: verbChain.coordination.conjunction,
+      verbPhrase: verbChain.coordination.rightVerbPhrase,
+    } : undefined,
   };
 
   const clause: ClauseNode = {
@@ -181,8 +193,31 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     };
   }
 
-  // 実際の動詞ブロックの処理
-  if (blockType === 'verb') {
+  // 等位接続ラッパー（動詞用）の処理
+  if (blockType === 'coordination_verb') {
+    const conjValue = block.getFieldValue('CONJ_VALUE') as Conjunction;
+    const leftBlock = block.getInputTargetBlock('LEFT');
+    const rightBlock = block.getInputTargetBlock('RIGHT');
+    if (!leftBlock) {
+      return null;
+    }
+    const leftResult = parseVerbChain(leftBlock);
+    if (!leftResult) {
+      return null;
+    }
+    // 右側も解析
+    const rightResult = rightBlock ? parseVerbChain(rightBlock) : null;
+    return {
+      ...leftResult,
+      coordination: rightResult ? {
+        conjunction: conjValue,
+        rightVerbPhrase: rightResult.verbPhrase,
+      } : undefined,
+    };
+  }
+
+  // 実際の動詞ブロックの処理（verb, verb_motion, verb_action, etc.）
+  if (blockType === 'verb' || blockType.startsWith('verb_')) {
     const verbPhrase = parseVerbBlock(block);
     if (!verbPhrase) {
       return null;
@@ -298,8 +333,13 @@ function parseVerbBlock(block: Blockly.Block): VerbPhraseNode | null {
   };
 }
 
-function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode {
+function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode | CoordinatedNounPhraseNode {
   const blockType = block.type;
+
+  // 等位接続ブロック（名詞用）の処理
+  if (blockType === 'coordination_noun') {
+    return parseCoordinationNounBlock(block);
+  }
 
   // 前置詞ラッパー（名詞用）の処理
   if (blockType === 'preposition_noun') {
@@ -368,18 +408,25 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode {
   };
 }
 
-function parseDeterminerUnifiedBlock(block: Blockly.Block): NounPhraseNode {
+function parseDeterminerUnifiedBlock(block: Blockly.Block): NounPhraseNode | CoordinatedNounPhraseNode {
   const preValue = block.getFieldValue('PRE');
   const centralValue = block.getFieldValue('CENTRAL');
   const postValue = block.getFieldValue('POST');
   const nounBlock = block.getInputTargetBlock('NOUN');
 
   // 内部の名詞ブロックを解析
-  const innerNP = nounBlock ? parseNounPhraseBlock(nounBlock) : {
+  const innerResult = nounBlock ? parseNounPhraseBlock(nounBlock) : {
     type: 'nounPhrase' as const,
     adjectives: [],
     head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
   };
+
+  // 等位接続の場合はそのまま返す（限定詞は適用しない）
+  if (innerResult.type === 'coordinatedNounPhrase') {
+    return innerResult;
+  }
+
+  const innerNP = innerResult as NounPhraseNode;
 
   // 各データから出力と文法数を取得
   const preOption = DETERMINER_DATA.pre.find(o => o.value === preValue);
@@ -426,16 +473,23 @@ function parseDeterminerUnifiedBlock(block: Blockly.Block): NounPhraseNode {
   };
 }
 
-function parseDeterminerBlock(block: Blockly.Block): NounPhraseNode {
+function parseDeterminerBlock(block: Blockly.Block): NounPhraseNode | CoordinatedNounPhraseNode {
   const detValue = block.getFieldValue('DET_VALUE');
   const nounBlock = block.getInputTargetBlock('NOUN');
 
   // 内部の名詞ブロックを解析
-  const innerNP = nounBlock ? parseNounPhraseBlock(nounBlock) : {
+  const innerResult = nounBlock ? parseNounPhraseBlock(nounBlock) : {
     type: 'nounPhrase' as const,
     adjectives: [],
     head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
   };
+
+  // 等位接続の場合はそのまま返す
+  if (innerResult.type === 'coordinatedNounPhrase') {
+    return innerResult;
+  }
+
+  const innerNP = innerResult as NounPhraseNode;
 
   // 限定詞を追加
   return {
@@ -444,7 +498,7 @@ function parseDeterminerBlock(block: Blockly.Block): NounPhraseNode {
   };
 }
 
-function parseQuantifierBlock(block: Blockly.Block): NounPhraseNode {
+function parseQuantifierBlock(block: Blockly.Block): NounPhraseNode | CoordinatedNounPhraseNode {
   const qtyValue = block.getFieldValue('QTY_VALUE');
   const nounBlock = block.getInputTargetBlock('NOUN');
 
@@ -453,11 +507,18 @@ function parseQuantifierBlock(block: Blockly.Block): NounPhraseNode {
   const grammaticalNumber = qtyOption?.number === 'plural' ? 'plural' : 'singular';
 
   // 内部の名詞ブロックを解析
-  const innerNP = nounBlock ? parseNounPhraseBlock(nounBlock) : {
+  const innerResult = nounBlock ? parseNounPhraseBlock(nounBlock) : {
     type: 'nounPhrase' as const,
     adjectives: [],
     head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
   };
+
+  // 等位接続の場合はそのまま返す
+  if (innerResult.type === 'coordinatedNounPhrase') {
+    return innerResult;
+  }
+
+  const innerNP = innerResult as NounPhraseNode;
 
   // 数量詞で数を上書き
   const updatedHead = innerNP.head.type === 'noun'
@@ -472,16 +533,23 @@ function parseQuantifierBlock(block: Blockly.Block): NounPhraseNode {
   };
 }
 
-function parseAdjectiveWrapperBlock(block: Blockly.Block): NounPhraseNode {
+function parseAdjectiveWrapperBlock(block: Blockly.Block): NounPhraseNode | CoordinatedNounPhraseNode {
   const adjValue = block.getFieldValue('ADJ_VALUE');
   const nounBlock = block.getInputTargetBlock('NOUN');
 
   // 内部の名詞ブロックを解析
-  const innerNP = nounBlock ? parseNounPhraseBlock(nounBlock) : {
+  const innerResult = nounBlock ? parseNounPhraseBlock(nounBlock) : {
     type: 'nounPhrase' as const,
     adjectives: [],
     head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
   };
+
+  // 等位接続の場合はそのまま返す（形容詞は適用しない）
+  if (innerResult.type === 'coordinatedNounPhrase') {
+    return innerResult;
+  }
+
+  const innerNP = innerResult as NounPhraseNode;
 
   // 形容詞を先頭に追加（外側の形容詞が先）
   return {
@@ -490,24 +558,31 @@ function parseAdjectiveWrapperBlock(block: Blockly.Block): NounPhraseNode {
   };
 }
 
-function parsePrepositionNounBlock(block: Blockly.Block): NounPhraseNode {
+function parsePrepositionNounBlock(block: Blockly.Block): NounPhraseNode | CoordinatedNounPhraseNode {
   const prepValue = block.getFieldValue('PREP_VALUE');
   const nounBlock = block.getInputTargetBlock('NOUN');
   const objectBlock = block.getInputTargetBlock('OBJECT');
 
   // 内部の名詞ブロックを解析
-  const innerNP = nounBlock ? parseNounPhraseBlock(nounBlock) : {
+  const innerResult = nounBlock ? parseNounPhraseBlock(nounBlock) : {
     type: 'nounPhrase' as const,
     adjectives: [],
     head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
   };
 
   // 前置詞の目的語を解析
-  const objectNP = objectBlock ? parseNounPhraseBlock(objectBlock) : {
+  const objectResult = objectBlock ? parseNounPhraseBlock(objectBlock) : {
     type: 'nounPhrase' as const,
     adjectives: [],
     head: { type: 'noun' as const, lemma: 'something', number: 'singular' as const },
   };
+
+  // 等位接続の場合はそのまま返す（前置詞句修飾は適用しない）
+  if (innerResult.type === 'coordinatedNounPhrase') {
+    return innerResult;
+  }
+
+  const innerNP = innerResult as NounPhraseNode;
 
   // 前置詞句修飾を追加
   return {
@@ -515,8 +590,62 @@ function parsePrepositionNounBlock(block: Blockly.Block): NounPhraseNode {
     prepModifier: {
       type: 'prepositionalPhrase',
       preposition: prepValue,
-      object: objectNP,
+      object: objectResult,
     },
+  };
+}
+
+function parseCoordinationNounBlock(block: Blockly.Block): CoordinatedNounPhraseNode {
+  const conjValue = block.getFieldValue('CONJ_VALUE') as Conjunction;
+  const leftBlock = block.getInputTargetBlock('LEFT');
+  const rightBlock = block.getInputTargetBlock('RIGHT');
+
+  // デフォルトの名詞句
+  const defaultNP: NounPhraseNode = {
+    type: 'nounPhrase',
+    adjectives: [],
+    head: { type: 'noun', lemma: 'something', number: 'singular' },
+  };
+
+  // 左右の名詞句を解析（再帰的にCoordinatedも可能）
+  const leftNP = leftBlock ? parseNounPhraseBlock(leftBlock) : defaultNP;
+  const rightNP = rightBlock ? parseNounPhraseBlock(rightBlock) : defaultNP;
+
+  // Coordinated名詞句を処理
+  // - 同じ接続詞の場合: フラット化 (A and (B and C) → A and B and C)
+  // - 異なる接続詞の場合: 入れ子を保持 (A and (B or C) → そのまま)
+  const conjuncts: CoordinationConjunct[] = [];
+
+  // 左側の処理
+  if (leftNP.type === 'coordinatedNounPhrase') {
+    if (leftNP.conjunction === conjValue) {
+      // 同じ接続詞: フラット化
+      conjuncts.push(...leftNP.conjuncts);
+    } else {
+      // 異なる接続詞: 入れ子として保持
+      conjuncts.push(leftNP);
+    }
+  } else {
+    conjuncts.push(leftNP);
+  }
+
+  // 右側の処理
+  if (rightNP.type === 'coordinatedNounPhrase') {
+    if (rightNP.conjunction === conjValue) {
+      // 同じ接続詞: フラット化
+      conjuncts.push(...rightNP.conjuncts);
+    } else {
+      // 異なる接続詞: 入れ子として保持
+      conjuncts.push(rightNP);
+    }
+  } else {
+    conjuncts.push(rightNP);
+  }
+
+  return {
+    type: 'coordinatedNounPhrase',
+    conjunction: conjValue,
+    conjuncts,
   };
 }
 

@@ -37,6 +37,15 @@
 
 ## Completed
 
+### Sentence / Time / Aspect
+- [x] Time/Aspect ブロックの言語学的レビューと修正
+  - Just now: `past + perfect` → `past + simple` に修正（"just now" は過去単純形と共起）
+  - Still: `progressive` → `inherit` に修正（状態動詞は単純形でも可）
+- [x] TIME ブロックに Today, At the moment を追加
+- [x] TENSE/ASPECT ブロックに [Progressive], [Perf. Prog.] を追加
+- [x] 統合 T/A ブロック追加（Tense × Aspect の2プルダウン方式）
+- [x] UI一貫性改善：出力されない項目はカッコ表記（[Past], [Simple] など）
+
 ### Core Features
 - [x] 統合限定詞ブロック（PRE / CENTRAL / POST の3スロット）
 - [x] 双方向制約チェック + 無効オプションに「×」マーク表示

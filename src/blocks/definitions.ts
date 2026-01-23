@@ -83,7 +83,7 @@ const ABSTRACT_OPTIONS: TimeChipOption[] = [
   { label: '[Past]', value: 'past', tense: 'past', aspect: 'inherit' },
   { label: '[Future]', value: 'future', tense: 'future', aspect: 'inherit' },
   { label: '[Current]', value: 'current', tense: 'present', aspect: 'inherit' },
-  { label: '[-ing]', value: 'progressive', tense: 'inherit', aspect: 'progressive' },
+  { label: '[Progressive]', value: 'progressive', tense: 'inherit', aspect: 'progressive' },
   { label: '[Perfect]', value: 'perfect', tense: 'inherit', aspect: 'perfect' },
   { label: '[Perf. Prog.]', value: 'perfectProgressive', tense: 'inherit', aspect: 'perfectProgressive' },
 ];
@@ -264,16 +264,16 @@ Blockly.Blocks['time_chip_abstract'] = {
 // TimeChip - Unified (統合: Tense × Aspect)
 // ============================================
 const TENSE_OPTIONS: [string, string][] = [
-  ['Past', 'past'],
-  ['Present', 'present'],
-  ['Future', 'future'],
+  ['[Past]', 'past'],
+  ['[Present]', 'present'],
+  ['[Future]', 'future'],
 ];
 
 const ASPECT_OPTIONS: [string, string][] = [
-  ['Simple', 'simple'],
-  ['Progressive', 'progressive'],
-  ['Perfect', 'perfect'],
-  ['Perf. Prog.', 'perfectProgressive'],
+  ['[Simple]', 'simple'],
+  ['[Progressive]', 'progressive'],
+  ['[Perfect]', 'perfect'],
+  ['[Perf. Prog.]', 'perfectProgressive'],
 ];
 
 Blockly.Blocks['time_chip_unified'] = {

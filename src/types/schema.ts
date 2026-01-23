@@ -87,7 +87,7 @@ export interface PronounEntry {
   person: 1 | 2 | 3;
   number: "singular" | "plural";
   gender?: "masculine" | "feminine" | "neuter";
-  type: "personal" | "indefinite";
+  type: "personal" | "indefinite" | "demonstrative";
   polaritySensitive?: boolean;  // someone/anyone など
   negativeForm?: string;        // nobody, nothing など
 }
@@ -170,7 +170,7 @@ export interface PronounHead {
   lemma: string;           // 代名詞の基本形（I, you, he など）
   person: 1 | 2 | 3;
   number: "singular" | "plural";
-  pronounType: "personal" | "indefinite";
+  pronounType: "personal" | "indefinite" | "demonstrative";
   polaritySensitive?: boolean;  // someone/anyone 系
 }
 

@@ -358,14 +358,18 @@ function createVerbCategoryBlock(category: VerbCategory) {
 // ============================================
 const personalPronouns = pronouns.filter(p => p.type === 'personal');
 const indefinitePronouns = pronouns.filter(p => p.type === 'indefinite');
+const demonstrativePronouns = pronouns.filter(p => p.type === 'demonstrative');
 
 Blockly.Blocks['pronoun_block'] = {
   init: function() {
     const personalOptions: [string, string][] = personalPronouns.map(p => [p.lemma, p.lemma]);
     const indefiniteOptions: [string, string][] = indefinitePronouns.map(p => [p.lemma, p.lemma]);
+    const demonstrativeOptions: [string, string][] = demonstrativePronouns.map(p => [p.lemma, p.lemma]);
     const allOptions: [string, string][] = [
       ["── Personal ──", "__label_personal__"],
       ...personalOptions,
+      ["── Demonstrative ──", "__label_demonstrative__"],
+      ...demonstrativeOptions,
       ["── Indefinite ──", "__label_indefinite__"],
       ...indefiniteOptions,
     ];
@@ -381,7 +385,7 @@ Blockly.Blocks['pronoun_block'] = {
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.person);
-    this.setTooltip("A pronoun (I, you, he, someone, etc.) - no determiner needed");
+    this.setTooltip("A pronoun (I, you, he, this, someone, etc.) - no determiner needed");
   }
 };
 

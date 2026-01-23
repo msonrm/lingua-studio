@@ -100,7 +100,7 @@
   - 同じ接続詞: フラット化 + Oxford comma ("A, B, and C")
   - 異なる接続詞: 相関接続詞 + カンマ ("A, and either B or C")
   - both...and / either...or で曖昧性を解消
-- [ ] 主語の数の一致（subject-verb agreement）
+- [x] 主語の数の一致（subject-verb agreement）✅ 実装済み
   - AND: "The cat and the dog **run**" (複数扱い)
   - OR: "The cat or the dog **runs**" (近接一致 / proximity agreement)
 - [ ] 否定とのスコープ相互作用（De Morgan）

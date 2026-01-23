@@ -525,11 +525,34 @@ function parseQuantifierBlock(block: Blockly.Block): NounPhraseNode | Coordinate
     ? { ...innerNP.head, number: grammaticalNumber as 'singular' | 'plural' }
     : innerNP.head;
 
-  // 数量詞を追加（出力がnullの場合は値を保存しない）
+  // 数量詞を新しい限定詞システムにマッピング
+  // 'a' → determiner (indefinite)
+  // 'no' → determiner (none)
+  // 'all' → preDeterminer
+  // その他 (one, two, many, few, some, etc.) → postDeterminer
+  let preDeterminer: string | undefined = innerNP.preDeterminer;
+  let determiner = innerNP.determiner;
+  let postDeterminer: string | undefined = innerNP.postDeterminer;
+
+  if (qtyOption?.output) {
+    if (qtyValue === 'a') {
+      determiner = { kind: 'indefinite', lexeme: 'a' };
+    } else if (qtyValue === 'no') {
+      determiner = { kind: 'none', lexeme: 'no' };
+    } else if (qtyValue === 'all') {
+      preDeterminer = 'all';
+    } else {
+      // one, two, three, many, some, few → postDeterminer
+      postDeterminer = qtyOption.output;
+    }
+  }
+
   return {
     ...innerNP,
     head: updatedHead,
-    quantifier: qtyOption?.output ?? undefined,
+    preDeterminer,
+    determiner,
+    postDeterminer,
   };
 }
 

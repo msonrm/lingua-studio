@@ -156,11 +156,6 @@ function renderNounPhraseToScript(np: NounPhraseNode): string {
     result = `${np.preDeterminer}(${result})`;
   }
 
-  // レガシー数量詞
-  if (np.quantifier) {
-    result = `${np.quantifier}(${result})`;
-  }
-
   // 前置詞句修飾
   if (np.prepModifier) {
     const objScript = np.prepModifier.object.type === 'coordinatedNounPhrase'

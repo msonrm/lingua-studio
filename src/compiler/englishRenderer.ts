@@ -55,13 +55,18 @@ function renderClause(clause: ClauseNode): string {
   const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
 
   // 動詞を活用（否定含む、頻度副詞を挿入位置で返す）
+  // 主語が NounPhraseNode か CoordinatedNounPhraseNode の場合のみ渡す
+  const subjectForConjugation = subjectSlot?.filler &&
+    (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
+    ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
+    : undefined;
   const verbForm = conjugateVerbWithAdverbs(
     verbPhrase.verb.lemma,
     tense,
     aspect,
     polarity,
     frequencyAdverbs,
-    subjectSlot?.filler as NounPhraseNode | undefined
+    subjectForConjugation
   );
 
   // その他の引数（目的語など）- 主語以外（isSubject = false）
@@ -93,7 +98,7 @@ function renderClause(clause: ClauseNode): string {
   if (verbPhrase.coordinatedWith) {
     const coordVP = verbPhrase.coordinatedWith.verbPhrase;
     const conjunction = verbPhrase.coordinatedWith.conjunction;
-    const coordVerbStr = renderCoordinatedVerbPhrase(coordVP, tense, aspect, polarity, subjectSlot?.filler as NounPhraseNode | undefined);
+    const coordVerbStr = renderCoordinatedVerbPhrase(coordVP, tense, aspect, polarity, subjectForConjugation);
     result += ` ${conjunction} ${coordVerbStr}`;
   }
 
@@ -107,7 +112,7 @@ function renderCoordinatedVerbPhrase(
   tense: 'past' | 'present' | 'future',
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
   polarity: 'affirmative' | 'negative',
-  leftSubject?: NounPhraseNode
+  leftSubject?: NounPhraseNode | CoordinatedNounPhraseNode
 ): string {
   const verbEntry = findVerb(vp.verb.lemma);
 
@@ -121,8 +126,11 @@ function renderCoordinatedVerbPhrase(
 
   // 右側の動詞に独自の主語があるかどうかを判定
   const hasOwnSubject = ownSubjectSlot?.filler != null;
+  // effectiveSubject: NounPhraseNode または CoordinatedNounPhraseNode のみ
   const effectiveSubject = hasOwnSubject
-    ? (ownSubjectSlot!.filler!.type === 'nounPhrase' ? ownSubjectSlot!.filler as NounPhraseNode : undefined)
+    ? (ownSubjectSlot!.filler!.type === 'nounPhrase' || ownSubjectSlot!.filler!.type === 'coordinatedNounPhrase'
+        ? ownSubjectSlot!.filler as NounPhraseNode | CoordinatedNounPhraseNode
+        : undefined)
     : leftSubject;
 
   // 副詞を種類別に分類
@@ -368,7 +376,7 @@ function conjugateVerbWithAdverbs(
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
   polarity: 'affirmative' | 'negative',
   frequencyAdverbs: AdverbNode[],
-  subject?: NounPhraseNode
+  subject?: NounPhraseNode | CoordinatedNounPhraseNode
 ): string {
   const verbEntry = findVerb(lemma);
   if (!verbEntry) return lemma;
@@ -486,7 +494,25 @@ function conjugateVerbWithAdverbs(
   return lemma;
 }
 
-function isThirdSingular(np: NounPhraseNode): boolean {
+function isThirdSingular(subject: NounPhraseNode | CoordinatedNounPhraseNode): boolean {
+  // 等位接続の場合
+  if (subject.type === 'coordinatedNounPhrase') {
+    // AND: 常に複数扱い → false
+    if (subject.conjunction === 'and') {
+      return false;
+    }
+    // OR: 近接一致（最後の要素に合わせる）
+    const lastConjunct = subject.conjuncts[subject.conjuncts.length - 1];
+    if (lastConjunct.type === 'coordinatedNounPhrase') {
+      return isThirdSingular(lastConjunct);
+    }
+    return isThirdSingularNP(lastConjunct);
+  }
+
+  return isThirdSingularNP(subject);
+}
+
+function isThirdSingularNP(np: NounPhraseNode): boolean {
   if (np.head.type === 'noun') {
     const nounHead = np.head as NounHead;
     return nounHead.number === 'singular';
@@ -507,7 +533,25 @@ type PersonNumber = {
   number: 'singular' | 'plural';
 };
 
-function getPersonNumber(np: NounPhraseNode): PersonNumber {
+function getPersonNumber(subject: NounPhraseNode | CoordinatedNounPhraseNode): PersonNumber {
+  // 等位接続の場合
+  if (subject.type === 'coordinatedNounPhrase') {
+    // AND: 常に複数扱い
+    if (subject.conjunction === 'and') {
+      return { person: 3, number: 'plural' };
+    }
+    // OR: 近接一致（最後の要素に合わせる）
+    const lastConjunct = subject.conjuncts[subject.conjuncts.length - 1];
+    if (lastConjunct.type === 'coordinatedNounPhrase') {
+      return getPersonNumber(lastConjunct);
+    }
+    return getPersonNumberNP(lastConjunct);
+  }
+
+  return getPersonNumberNP(subject);
+}
+
+function getPersonNumberNP(np: NounPhraseNode): PersonNumber {
   if (np.head.type === 'pronoun') {
     const pronounHead = np.head as PronounHead;
     return {

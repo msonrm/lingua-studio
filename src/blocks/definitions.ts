@@ -1052,19 +1052,19 @@ Blockly.Blocks['preposition_noun'] = {
 Blockly.Blocks['coordination_noun'] = {
   init: function() {
     this.appendValueInput("LEFT")
-        .setCheck(["noun", "adjective", "nounPhrase"])
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])  // 入れ子許可
         .appendField(new Blockly.FieldDropdown([
           ["AND", "and"],
           ["OR", "or"],
         ]), "CONJ_VALUE");
 
     this.appendValueInput("RIGHT")
-        .setCheck(["noun", "adjective", "nounPhrase"])
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])  // 入れ子許可
         .appendField("&");
 
-    this.setOutput(true, "coordinatedNounPhrase");  // 入れ子防止: nounPhraseとは別タイプ
+    this.setOutput(true, "coordinatedNounPhrase");
     this.setColour(COLORS.coordNoun);
-    this.setTooltip("Coordination (Noun): connects two noun phrases with AND/OR");
+    this.setTooltip("Coordination (Noun): connects two noun phrases with AND/OR (nesting supported)");
   }
 };
 

@@ -191,11 +191,14 @@ export interface PrepositionalPhraseNode {
 // ============================================
 export type Conjunction = "and" | "or";
 
-// NP等位接続（名詞句 AND/OR 名詞句）
+// 等位接続の要素型（入れ子対応）
+export type CoordinationConjunct = NounPhraseNode | CoordinatedNounPhraseNode;
+
+// NP等位接続（名詞句 AND/OR 名詞句）- 入れ子対応
 export interface CoordinatedNounPhraseNode {
   type: "coordinatedNounPhrase";
   conjunction: Conjunction;
-  conjuncts: NounPhraseNode[];
+  conjuncts: CoordinationConjunct[];  // 入れ子の等位接続も許可
 }
 
 // VP等位接続（動詞句 AND/OR 動詞句）

@@ -332,7 +332,7 @@ function createVerbCategoryBlock(category: VerbCategory) {
       verb.valency.forEach((slot: { role: string; label?: string; required: boolean }, index: number) => {
         const inputName = `ARG_${index}`;
         const label = slot.label || slot.role;
-        const checkType = slot.role === 'attribute' ? ['noun', 'nounPhrase', 'adjective'] : ['noun', 'nounPhrase'];
+        const checkType = slot.role === 'attribute' ? ['noun', 'nounPhrase', 'adjective', 'coordinatedNounPhrase'] : ['noun', 'nounPhrase', 'coordinatedNounPhrase'];
         const displayLabel = slot.required ? `${label}:` : `(${label}):`;
         this.appendValueInput(inputName)
             .setCheck(checkType)
@@ -1017,7 +1017,7 @@ Blockly.Blocks['preposition_verb'] = {
         .appendField(new Blockly.FieldDropdown(ALL_PREPOSITIONS), "PREP_VALUE");
 
     this.appendValueInput("OBJECT")
-        .setCheck(["noun", "adjective", "nounPhrase"])
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
         .appendField("object:");
 
     this.setPreviousStatement(true, "verb");
@@ -1037,7 +1037,7 @@ Blockly.Blocks['preposition_noun'] = {
         .appendField(new Blockly.FieldDropdown(ALL_PREPOSITIONS), "PREP_VALUE");
 
     this.appendValueInput("OBJECT")
-        .setCheck(["noun", "adjective", "nounPhrase"])
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
         .appendField("object:");
 
     this.setOutput(true, "nounPhrase");
@@ -1062,7 +1062,7 @@ Blockly.Blocks['coordination_noun'] = {
         .setCheck(["noun", "adjective", "nounPhrase"])
         .appendField("&");
 
-    this.setOutput(true, "nounPhrase");
+    this.setOutput(true, "coordinatedNounPhrase");  // 入れ子防止: nounPhraseとは別タイプ
     this.setColour(COLORS.coordNoun);
     this.setTooltip("Coordination (Noun): connects two noun phrases with AND/OR");
   }

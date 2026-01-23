@@ -16,13 +16,13 @@ const COLORS = {
   frequency: '#EF5350',  // さらに明るい赤
   manner: '#EF6C57',     // 赤オレンジ
 
-  // Verb カテゴリ別（意味論的分類）
+  // Verb カテゴリ別（赤系グラデーション - モンテッソーリ準拠）
   verbMotion: '#E74C3C',        // 移動: 鮮やかな赤
-  verbAction: '#C0392B',        // 動作: 暗めの赤
-  verbTransfer: '#D35400',      // 授受: オレンジ
-  verbCognition: '#8E44AD',     // 認知: 紫
-  verbCommunication: '#2980B9', // 伝達: 青
-  verbState: '#27AE60',         // 状態: 緑
+  verbAction: '#C0392B',        // 動作: 暗めの赤（クリムゾン）
+  verbTransfer: '#D35400',      // 授受: オレンジレッド
+  verbCognition: '#E91E63',     // 認知: ピンクレッド
+  verbCommunication: '#FF5722', // 伝達: ディープオレンジ
+  verbState: '#8D6E63',         // 状態: ブラウンレッド
 
   // Noun系（寒色・黒〜青系グラデーション）
   person: '#0d1321',     // ほぼ黒（モンテッソーリ）

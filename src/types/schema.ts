@@ -92,8 +92,18 @@ export interface PronounEntry {
   negativeForm?: string;        // nobody, nothing など
 }
 
+// 形容詞カテゴリ（Dixon's semantic types）
+export type AdjectiveCategory =
+  | "size"      // 寸法: big, small, tall, short
+  | "age"       // 年齢・新旧: old, young, new
+  | "color"     // 色: red, blue, green
+  | "physical"  // 物理的性質: hard, soft, hot, cold
+  | "quality"   // 価値・評価: good, bad, beautiful
+  | "emotion";  // 感情・性格: happy, sad, angry
+
 export interface AdjectiveEntry {
   lemma: string;
+  category: AdjectiveCategory;
   comparative?: string;
   superlative?: string;
 }

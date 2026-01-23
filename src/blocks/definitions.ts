@@ -1,6 +1,6 @@
 import * as Blockly from 'blockly';
 import { nouns, adjectives, adverbs, pronouns, findNoun, getVerbsByCategory } from '../data/dictionary';
-import type { VerbCategory } from '../types/schema';
+import type { VerbCategory, AdjectiveCategory } from '../types/schema';
 
 // ============================================
 // 色の定義（モンテッソーリベース）
@@ -432,19 +432,13 @@ Blockly.Blocks['object_block'] = {
 // ============================================
 const placeNouns = nouns.filter(n => n.category === 'place' && !n.proper);
 const placeProperNouns = nouns.filter(n => n.category === 'place' && n.proper);
-const placeAdverbs = [
-  { lemma: "here", value: "here" },
-  { lemma: "there", value: "there" },
-];
+// 場所副詞 (here, there) は一時削除 - 限定詞との相性問題のため
 
 Blockly.Blocks['place_block'] = {
   init: function() {
     const commonOptions: [string, string][] = placeNouns.map(n => [n.lemma, n.lemma]);
     const properOptions: [string, string][] = placeProperNouns.map(n => [n.lemma, n.lemma]);
-    const adverbOptions: [string, string][] = placeAdverbs.map(a => [a.lemma, a.value]);
     const nounOptions: [string, string][] = [
-      ["── Adverbs ──", "__label_adverbs__"],
-      ...adverbOptions,
       ["── Common ──", "__label_common__"],
       ...commonOptions,
       ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
@@ -455,13 +449,13 @@ Blockly.Blocks['place_block'] = {
         .appendField(new Blockly.FieldDropdown(nounOptions), "PLACE_VALUE");
 
     // デフォルト値を最初の実際の項目に設定
-    if (adverbOptions.length > 0) {
-      this.setFieldValue(adverbOptions[0][1], "PLACE_VALUE");
+    if (commonOptions.length > 0) {
+      this.setFieldValue(commonOptions[0][1], "PLACE_VALUE");
     }
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.place);
-    this.setTooltip("A place (park, school, Tokyo, here, etc.)");
+    this.setTooltip("A place (park, school, Tokyo, etc.)");
   }
 };
 
@@ -685,22 +679,40 @@ Blockly.Blocks['determiner_unified'] = {
 };
 
 // ============================================
-// 形容詞ラッパーブロック（名詞修飾用）
+// カテゴリ別形容詞ブロック
 // ============================================
-Blockly.Blocks['adjective_wrapper'] = {
-  init: function() {
-    const adjOptions: [string, string][] = adjectives.map(a => [a.lemma, a.lemma]);
-
-    this.appendValueInput("NOUN")
-        .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞のみ
-        .appendField("ADJ")
-        .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE");
-
-    this.setOutput(true, "adjective");  // 形容詞付き名詞として出力
-    this.setColour(COLORS.adjective);
-    this.setTooltip("Adjective: modifies a noun (place before DET)");
-  }
+const ADJECTIVE_CATEGORY_CONFIG: Record<AdjectiveCategory, { label: string; color: string }> = {
+  size: { label: 'SIZE', color: COLORS.adjective },
+  age: { label: 'AGE', color: COLORS.adjective },
+  color: { label: 'COLOR', color: COLORS.adjective },
+  physical: { label: 'PHYSICAL', color: COLORS.adjective },
+  quality: { label: 'QUALITY', color: COLORS.adjective },
+  emotion: { label: 'EMOTION', color: COLORS.adjective },
 };
+
+// カテゴリ別形容詞ブロック生成関数
+function createAdjectiveCategoryBlock(category: AdjectiveCategory) {
+  const config = ADJECTIVE_CATEGORY_CONFIG[category];
+  const categoryAdjs = adjectives.filter(a => a.category === category);
+
+  Blockly.Blocks[`adjective_${category}`] = {
+    init: function() {
+      const adjOptions: [string, string][] = categoryAdjs.map(a => [a.lemma, a.lemma]);
+
+      this.appendValueInput("NOUN")
+          .setCheck(["noun", "adjective"])
+          .appendField(config.label)
+          .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE");
+
+      this.setOutput(true, "adjective");
+      this.setColour(config.color);
+      this.setTooltip(`${config.label} adjective: modifies a noun`);
+    }
+  };
+}
+
+// 6カテゴリの形容詞ブロックを生成
+(['size', 'age', 'color', 'physical', 'quality', 'emotion'] as AdjectiveCategory[]).forEach(createAdjectiveCategoryBlock);
 
 // ============================================
 // 頻度副詞データ定義
@@ -844,46 +856,74 @@ Blockly.Blocks['preposition_noun'] = {
 };
 
 // ============================================
-// 等位接続ブロック（名詞用）- AND/OR (NOUN)
+// 等位接続ブロック（名詞用）- AND (NOUN)
 // ============================================
-Blockly.Blocks['coordination_noun'] = {
+Blockly.Blocks['coordination_noun_and'] = {
   init: function() {
     this.appendValueInput("LEFT")
-        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])  // 入れ子許可
-        .appendField(new Blockly.FieldDropdown([
-          ["AND", "and"],
-          ["OR", "or"],
-        ]), "CONJ_VALUE");
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
+        .appendField("AND");
 
     this.appendValueInput("RIGHT")
-        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])  // 入れ子許可
-        .appendField("&");
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"]);
 
     this.setOutput(true, "coordinatedNounPhrase");
     this.setColour(COLORS.coordNoun);
-    this.setTooltip("Coordination (Noun): connects two noun phrases with AND/OR (nesting supported)");
+    this.setTooltip("Coordination (Noun): connects two noun phrases with AND");
   }
 };
 
 // ============================================
-// 等位接続ブロック（動詞用）- AND/OR (VERB)
+// 等位接続ブロック（名詞用）- OR (NOUN)
 // ============================================
-Blockly.Blocks['coordination_verb'] = {
+Blockly.Blocks['coordination_noun_or'] = {
+  init: function() {
+    this.appendValueInput("LEFT")
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
+        .appendField("OR");
+
+    this.appendValueInput("RIGHT")
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"]);
+
+    this.setOutput(true, "coordinatedNounPhrase");
+    this.setColour(COLORS.coordNoun);
+    this.setTooltip("Coordination (Noun): connects two noun phrases with OR");
+  }
+};
+
+// ============================================
+// 等位接続ブロック（動詞用）- AND (VERB)
+// ============================================
+Blockly.Blocks['coordination_verb_and'] = {
   init: function() {
     this.appendStatementInput("LEFT")
         .setCheck("verb")
-        .appendField(new Blockly.FieldDropdown([
-          ["AND", "and"],
-          ["OR", "or"],
-        ]), "CONJ_VALUE");
+        .appendField("AND");
 
     this.appendStatementInput("RIGHT")
-        .setCheck("verb")
-        .appendField("&");
+        .setCheck("verb");
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.coordVerb);
-    this.setTooltip("Coordination (Verb): connects two verb phrases with AND/OR");
+    this.setTooltip("Coordination (Verb): connects two verb phrases with AND");
+  }
+};
+
+// ============================================
+// 等位接続ブロック（動詞用）- OR (VERB)
+// ============================================
+Blockly.Blocks['coordination_verb_or'] = {
+  init: function() {
+    this.appendStatementInput("LEFT")
+        .setCheck("verb")
+        .appendField("OR");
+
+    this.appendStatementInput("RIGHT")
+        .setCheck("verb");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.coordVerb);
+    this.setTooltip("Coordination (Verb): connects two verb phrases with OR");
   }
 };
 
@@ -956,7 +996,8 @@ export const toolbox = {
         { kind: "block", type: "manner_wrapper" },
         { kind: "block", type: "preposition_verb" },
         { kind: "label", text: "── Coordination ──" },
-        { kind: "block", type: "coordination_verb" },
+        { kind: "block", type: "coordination_verb_and" },
+        { kind: "block", type: "coordination_verb_or" },
       ]
     },
     {
@@ -1049,10 +1090,18 @@ export const toolbox = {
       colour: COLORS.determiner,
       contents: [
         { kind: "block", type: "determiner_unified" },
-        { kind: "block", type: "adjective_wrapper" },
+        { kind: "label", text: "── Adjectives ──" },
+        { kind: "block", type: "adjective_size" },
+        { kind: "block", type: "adjective_age" },
+        { kind: "block", type: "adjective_color" },
+        { kind: "block", type: "adjective_physical" },
+        { kind: "block", type: "adjective_quality" },
+        { kind: "block", type: "adjective_emotion" },
+        { kind: "label", text: "── Preposition ──" },
         { kind: "block", type: "preposition_noun" },
         { kind: "label", text: "── Coordination ──" },
-        { kind: "block", type: "coordination_noun" },
+        { kind: "block", type: "coordination_noun_and" },
+        { kind: "block", type: "coordination_noun_or" },
       ]
     },
   ]

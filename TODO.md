@@ -2,7 +2,10 @@
 
 ## Bugs
 
-（現在なし）
+- [ ] 場所副詞（here, there）を一時削除中
+  - 問題: 限定詞・前置詞が付けられてしまう（例: "I go to the here."）
+  - 対応: place_block から削除済み
+  - 将来: 独立ブロック化、または determiner で副詞選択時に制約して復活
 
 ## Future Enhancements
 
@@ -45,6 +48,10 @@
 - [x] 頻度副詞・様態副詞
 - [x] LinguaScriptレンダラー
 - [x] 複数SENTENCEブロックのサポート
+- [x] 初期キャンバスブロック（SENTENCE + MOTION + PRONOUN "I"）
+- [x] 等位接続ブロックをAND/OR別々に分離（coordination_noun_and, coordination_noun_or, coordination_verb_and, coordination_verb_or）
+- [x] 形容詞カテゴリ追加（Dixon's semantic types: size, age, color, physical, quality, emotion）
+- [x] 形容詞ブロックをカテゴリ別に分離（adjective_size, adjective_age, adjective_color, adjective_physical, adjective_quality, adjective_emotion）
 
 ### Bug Fixes
 - [x] "The a something runs." - レガシーquantifierフィールドを削除し、限定詞システムに統合

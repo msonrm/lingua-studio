@@ -56,7 +56,7 @@ export function BlocklyWorkspace({ onASTChange, onSentenceChange }: BlocklyWorks
 
     workspaceRef.current = workspace;
 
-    // 初期ブロックを配置（SENTENCE + MOTION verb）
+    // 初期ブロックを配置（SENTENCE + MOTION verb + PRONOUN "I"）
     const sentenceBlock = workspace.newBlock('time_frame');
     sentenceBlock.initSvg();
     sentenceBlock.render();
@@ -70,6 +70,17 @@ export function BlocklyWorkspace({ onASTChange, onSentenceChange }: BlocklyWorks
     const connection = sentenceBlock.getInput('ACTION')?.connection;
     if (connection) {
       connection.connect(verbBlock.previousConnection);
+    }
+
+    // PRONOUN "I" を作成してMOTION verbのARG_0（agent）に接続
+    const pronounBlock = workspace.newBlock('pronoun_block');
+    pronounBlock.setFieldValue('I', 'PRONOUN_VALUE');
+    pronounBlock.initSvg();
+    pronounBlock.render();
+
+    const agentConnection = verbBlock.getInput('ARG_0')?.connection;
+    if (agentConnection) {
+      agentConnection.connect(pronounBlock.outputConnection);
     }
 
     // 変更リスナーを追加

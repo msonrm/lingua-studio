@@ -13,7 +13,7 @@ import {
   Conjunction,
 } from '../types/schema';
 import { findVerb, findPronoun } from '../data/dictionary';
-import { TIME_CHIP_DATA, QUANTIFIER_DATA, DETERMINER_DATA } from '../blocks/definitions';
+import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks/definitions';
 
 // ============================================
 // BlocklyワークスペースからAST生成
@@ -351,59 +351,27 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode | Coordinate
     return parseDeterminerUnifiedBlock(block);
   }
 
-  // 限定詞ラッパーブロックの処理（レガシー）
-  if (blockType === 'determiner_block') {
-    return parseDeterminerBlock(block);
-  }
-
-  // 数量詞ラッパーブロックの処理（レガシー）
-  if (blockType === 'quantifier_block') {
-    return parseQuantifierBlock(block);
-  }
-
   // 形容詞ラッパーブロックの処理
   if (blockType === 'adjective_wrapper') {
     return parseAdjectiveWrapperBlock(block);
   }
 
-  // 新しい名詞ブロックの処理（カテゴリ別）
+  // 名詞ブロックの処理（カテゴリ別）
   const nounBlockTypes = [
     'pronoun_block', 'human_block', 'animal_block', 'object_block', 'place_block', 'abstract_block',
-    // レガシー互換
-    'person_block', 'thing_block',
   ];
   if (nounBlockTypes.includes(blockType)) {
     return parseNewNounBlock(block, blockType);
   }
 
-  // レガシーnoun_phraseブロックの処理
-  const determiner = block.getFieldValue('DETERMINER');
-  const noun = block.getFieldValue('NOUN');
-  const number = block.getFieldValue('NUMBER');
-
-  // 形容詞を取得
-  const adjectives: { lemma: string }[] = [];
-
-  const adj1Block = block.getInputTargetBlock('ADJ1');
-  if (adj1Block) {
-    adjectives.push({ lemma: adj1Block.getFieldValue('ADJECTIVE') });
-  }
-
-  const adj2Block = block.getInputTargetBlock('ADJ2');
-  if (adj2Block) {
-    adjectives.push({ lemma: adj2Block.getFieldValue('ADJECTIVE') });
-  }
-
+  // 不明なブロックタイプの場合はデフォルト値を返す
   return {
     type: 'nounPhrase',
-    determiner: determiner !== 'none'
-      ? { kind: determiner as 'definite' | 'indefinite', lexeme: determiner === 'definite' ? 'the' : 'a' }
-      : undefined,
-    adjectives,
+    adjectives: [],
     head: {
       type: 'noun',
-      lemma: noun,
-      number: number as 'singular' | 'plural',
+      lemma: 'thing',
+      number: 'singular',
     },
   };
 }
@@ -470,89 +438,6 @@ function parseDeterminerUnifiedBlock(block: Blockly.Block): NounPhraseNode | Coo
     preDeterminer: preOption?.output ?? undefined,
     determiner,
     postDeterminer: postOption?.output ?? undefined,
-  };
-}
-
-function parseDeterminerBlock(block: Blockly.Block): NounPhraseNode | CoordinatedNounPhraseNode {
-  const detValue = block.getFieldValue('DET_VALUE');
-  const nounBlock = block.getInputTargetBlock('NOUN');
-
-  // 内部の名詞ブロックを解析
-  const innerResult = nounBlock ? parseNounPhraseBlock(nounBlock) : {
-    type: 'nounPhrase' as const,
-    adjectives: [],
-    head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
-  };
-
-  // 等位接続の場合はそのまま返す
-  if (innerResult.type === 'coordinatedNounPhrase') {
-    return innerResult;
-  }
-
-  const innerNP = innerResult as NounPhraseNode;
-
-  // 限定詞を追加
-  return {
-    ...innerNP,
-    determiner: { kind: 'definite', lexeme: detValue },
-  };
-}
-
-function parseQuantifierBlock(block: Blockly.Block): NounPhraseNode | CoordinatedNounPhraseNode {
-  const qtyValue = block.getFieldValue('QTY_VALUE');
-  const nounBlock = block.getInputTargetBlock('NOUN');
-
-  // 数量詞データから数を取得
-  const qtyOption = QUANTIFIER_DATA.find(o => o.value === qtyValue);
-  const grammaticalNumber = qtyOption?.number === 'plural' ? 'plural' : 'singular';
-
-  // 内部の名詞ブロックを解析
-  const innerResult = nounBlock ? parseNounPhraseBlock(nounBlock) : {
-    type: 'nounPhrase' as const,
-    adjectives: [],
-    head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
-  };
-
-  // 等位接続の場合はそのまま返す
-  if (innerResult.type === 'coordinatedNounPhrase') {
-    return innerResult;
-  }
-
-  const innerNP = innerResult as NounPhraseNode;
-
-  // 数量詞で数を上書き
-  const updatedHead = innerNP.head.type === 'noun'
-    ? { ...innerNP.head, number: grammaticalNumber as 'singular' | 'plural' }
-    : innerNP.head;
-
-  // 数量詞を新しい限定詞システムにマッピング
-  // 'a' → determiner (indefinite)
-  // 'no' → determiner (none)
-  // 'all' → preDeterminer
-  // その他 (one, two, many, few, some, etc.) → postDeterminer
-  let preDeterminer: string | undefined = innerNP.preDeterminer;
-  let determiner = innerNP.determiner;
-  let postDeterminer: string | undefined = innerNP.postDeterminer;
-
-  if (qtyOption?.output) {
-    if (qtyValue === 'a') {
-      determiner = { kind: 'indefinite', lexeme: 'a' };
-    } else if (qtyValue === 'no') {
-      determiner = { kind: 'none', lexeme: 'no' };
-    } else if (qtyValue === 'all') {
-      preDeterminer = 'all';
-    } else {
-      // one, two, three, many, some, few → postDeterminer
-      postDeterminer = qtyOption.output;
-    }
-  }
-
-  return {
-    ...innerNP,
-    head: updatedHead,
-    preDeterminer,
-    determiner,
-    postDeterminer,
   };
 }
 
@@ -681,9 +566,6 @@ function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseN
     'object_block': 'OBJECT_VALUE',
     'place_block': 'PLACE_VALUE',
     'abstract_block': 'ABSTRACT_VALUE',
-    // レガシー互換
-    'person_block': 'PERSON_VALUE',
-    'thing_block': 'THING_VALUE',
   };
 
   const fieldName = fieldMap[blockType] || 'PLACE_VALUE';

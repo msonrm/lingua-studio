@@ -181,8 +181,8 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     };
   }
 
-  // 実際の動詞ブロックの処理
-  if (blockType === 'verb') {
+  // 実際の動詞ブロックの処理（verb, verb_motion, verb_action, etc.）
+  if (blockType === 'verb' || blockType.startsWith('verb_')) {
     const verbPhrase = parseVerbBlock(block);
     if (!verbPhrase) {
       return null;

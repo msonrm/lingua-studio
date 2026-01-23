@@ -14,14 +14,16 @@
 
 ブロックから生成される中間表現。LISP風の明示的な構文で、構造を正確に記述する。
 
+名詞・代名詞はLISPのquoteのようにアポストロフィ `'` で始まる。
+
 ```
-present(simple(run(the(cat))))
+present(simple(run(the('cat))))
 → "The cat runs."
 
-past(perfect(see('I, the(man))))
+past(perfect(see('I, the('man))))
 → "I had seen the man."
 
-present(simple(run(and(the(cat), the(dog)))))
+present(simple(run(and(the('cat), the('dog)))))
 → "The cat and the dog run."
 ```
 
@@ -29,12 +31,13 @@ present(simple(run(and(the(cat), the(dog)))))
 
 | 関数 | 説明 | 例 |
 |-----|------|-----|
+| `'noun` | 名詞（quote） | `'cat`, `'dog` |
 | `present`, `past`, `future` | 時制 | `past(...)` |
 | `simple`, `perfect`, `progressive` | 相 | `perfect(...)` |
-| `the`, `a` | 限定詞 | `the(cat)` |
+| `the`, `a` | 限定詞 | `the('cat)` |
 | `not` | 否定 | `not(run(...))` |
 | `and`, `or` | 等位接続 | `and(np1, np2)` |
-| `to`, `with`, `in`... | 前置詞 | `to(go(...), the(park))` |
+| `to`, `with`, `in`... | 前置詞 | `to(go(...), the('park))` |
 
 ## 技術スタック
 

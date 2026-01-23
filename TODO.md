@@ -11,10 +11,6 @@
 
 ### Grammar & Syntax
 - [ ] 代名詞選択時のNUMBER非表示（UX改善）
-- [ ] 指示代名詞 (this/that as pronouns, these/those)
-- [ ] 不定代名詞 + 形容詞対応 ("something good", "someone important")
-  - 現状: 代名詞に形容詞を付けてもコンパイル時に無視される
-  - 修正案: 不定代名詞の場合のみ形容詞を後置でレンダリング
 - [ ] 疑問文対応
 - [ ] Modal（法助動詞）wrapper (can, may, must, should)
 
@@ -36,6 +32,20 @@
 - [ ] 双方向同期（Blocks ↔ LinguaScript）
 
 ## Completed
+
+### Pronouns
+- [x] 指示代名詞 (this/that/these/those) を代名詞ブロックに追加
+- [x] 不定代名詞 + 形容詞対応 ("something good", "someone important")
+  - 不定代名詞の場合のみ形容詞を後置でレンダリング
+
+### Sentence / Time / Aspect
+- [x] Time/Aspect ブロックの言語学的レビューと修正
+  - Just now: `past + perfect` → `past + simple` に修正（"just now" は過去単純形と共起）
+  - Still: `progressive` → `inherit` に修正（状態動詞は単純形でも可）
+- [x] TIME ブロックに Today, At the moment を追加
+- [x] TENSE/ASPECT ブロックに [Progressive], [Perf. Prog.] を追加
+- [x] 統合 T/A ブロック追加（Tense × Aspect の2プルダウン方式）
+- [x] UI一貫性改善：出力されない項目はカッコ表記（[Past], [Simple] など）
 
 ### Core Features
 - [x] 統合限定詞ブロック（PRE / CENTRAL / POST の3スロット）

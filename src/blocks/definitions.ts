@@ -62,18 +62,20 @@ interface TimeChipOption {
 
 const CONCRETE_OPTIONS: TimeChipOption[] = [
   { label: 'Yesterday', value: 'yesterday', tense: 'past', aspect: 'simple' },
+  { label: 'Today', value: 'today', tense: 'present', aspect: 'simple' },
   { label: 'Tomorrow', value: 'tomorrow', tense: 'future', aspect: 'simple' },
   { label: 'Every day', value: 'every_day', tense: 'present', aspect: 'simple' },
   { label: 'Last Sunday', value: 'last_sunday', tense: 'past', aspect: 'simple' },
   { label: 'Right now', value: 'right_now', tense: 'present', aspect: 'progressive' },
+  { label: 'At the moment', value: 'at_the_moment', tense: 'present', aspect: 'progressive' },
   { label: 'Next week', value: 'next_week', tense: 'future', aspect: 'simple' },
 ];
 
 const ASPECTUAL_OPTIONS: TimeChipOption[] = [
   { label: 'Now', value: 'now', tense: 'present', aspect: 'progressive' },
-  { label: 'Just now', value: 'just_now', tense: 'past', aspect: 'perfect' },
+  { label: 'Just now', value: 'just_now', tense: 'past', aspect: 'simple' },
   { label: 'Already/Yet', value: 'completion', tense: 'inherit', aspect: 'perfect' },
-  { label: 'Still', value: 'still', tense: 'inherit', aspect: 'progressive' },
+  { label: 'Still', value: 'still', tense: 'inherit', aspect: 'inherit' },
   { label: 'Recently', value: 'recently', tense: 'past', aspect: 'perfect' },
 ];
 
@@ -81,8 +83,9 @@ const ABSTRACT_OPTIONS: TimeChipOption[] = [
   { label: '[Past]', value: 'past', tense: 'past', aspect: 'inherit' },
   { label: '[Future]', value: 'future', tense: 'future', aspect: 'inherit' },
   { label: '[Current]', value: 'current', tense: 'present', aspect: 'inherit' },
-  { label: '[-ing]', value: 'progressive', tense: 'inherit', aspect: 'progressive' },
+  { label: '[Progressive]', value: 'progressive', tense: 'inherit', aspect: 'progressive' },
   { label: '[Perfect]', value: 'perfect', tense: 'inherit', aspect: 'perfect' },
+  { label: '[Perf. Prog.]', value: 'perfectProgressive', tense: 'inherit', aspect: 'perfectProgressive' },
 ];
 
 // ============================================
@@ -258,6 +261,34 @@ Blockly.Blocks['time_chip_abstract'] = {
 };
 
 // ============================================
+// TimeChip - Unified (統合: Tense × Aspect)
+// ============================================
+const TENSE_OPTIONS: [string, string][] = [
+  ['[Past]', 'past'],
+  ['[Present]', 'present'],
+  ['[Future]', 'future'],
+];
+
+const ASPECT_OPTIONS: [string, string][] = [
+  ['[Simple]', 'simple'],
+  ['[Progressive]', 'progressive'],
+  ['[Perfect]', 'perfect'],
+  ['[Perf. Prog.]', 'perfectProgressive'],
+];
+
+Blockly.Blocks['time_chip_unified'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("T/A")
+        .appendField(new Blockly.FieldDropdown(TENSE_OPTIONS), "TENSE_VALUE")
+        .appendField(new Blockly.FieldDropdown(ASPECT_OPTIONS), "ASPECT_VALUE");
+    this.setOutput(true, "timeChip");
+    this.setColour(COLORS.timeChip);
+    this.setTooltip("Unified Tense/Aspect: select both independently");
+  }
+};
+
+// ============================================
 // カテゴリ別動詞ブロック
 // ============================================
 const VERB_CATEGORY_CONFIG: Record<VerbCategory, { label: string; color: string }> = {
@@ -327,14 +358,18 @@ function createVerbCategoryBlock(category: VerbCategory) {
 // ============================================
 const personalPronouns = pronouns.filter(p => p.type === 'personal');
 const indefinitePronouns = pronouns.filter(p => p.type === 'indefinite');
+const demonstrativePronouns = pronouns.filter(p => p.type === 'demonstrative');
 
 Blockly.Blocks['pronoun_block'] = {
   init: function() {
     const personalOptions: [string, string][] = personalPronouns.map(p => [p.lemma, p.lemma]);
     const indefiniteOptions: [string, string][] = indefinitePronouns.map(p => [p.lemma, p.lemma]);
+    const demonstrativeOptions: [string, string][] = demonstrativePronouns.map(p => [p.lemma, p.lemma]);
     const allOptions: [string, string][] = [
       ["── Personal ──", "__label_personal__"],
       ...personalOptions,
+      ["── Demonstrative ──", "__label_demonstrative__"],
+      ...demonstrativeOptions,
       ["── Indefinite ──", "__label_indefinite__"],
       ...indefiniteOptions,
     ];
@@ -350,7 +385,7 @@ Blockly.Blocks['pronoun_block'] = {
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.person);
-    this.setTooltip("A pronoun (I, you, he, someone, etc.) - no determiner needed");
+    this.setTooltip("A pronoun (I, you, he, this, someone, etc.) - no determiner needed");
   }
 };
 
@@ -965,6 +1000,7 @@ export const toolbox = {
         { kind: "block", type: "time_chip_aspectual" },
         { kind: "label", text: "── Tense/Aspect ──" },
         { kind: "block", type: "time_chip_abstract" },
+        { kind: "block", type: "time_chip_unified" },
       ]
     },
     {

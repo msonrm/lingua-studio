@@ -644,6 +644,35 @@ export const pronouns: PronounEntry[] = [
     gender: "neuter",
     type: "indefinite",
   },
+  // Demonstrative pronouns
+  {
+    lemma: "this",
+    objectForm: "this",
+    person: 3,
+    number: "singular",
+    type: "demonstrative",
+  },
+  {
+    lemma: "that",
+    objectForm: "that",
+    person: 3,
+    number: "singular",
+    type: "demonstrative",
+  },
+  {
+    lemma: "these",
+    objectForm: "these",
+    person: 3,
+    number: "plural",
+    type: "demonstrative",
+  },
+  {
+    lemma: "those",
+    objectForm: "those",
+    person: 3,
+    number: "plural",
+    type: "demonstrative",
+  },
 ];
 
 // ============================================

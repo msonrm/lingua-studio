@@ -261,7 +261,14 @@ function renderConjunct(
 function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarity: 'affirmative' | 'negative' = 'affirmative'): string {
   // 代名詞の処理
   if (np.head.type === 'pronoun') {
-    let result = renderPronoun(np.head as PronounHead, isSubject, polarity);
+    const pronounHead = np.head as PronounHead;
+    let result = renderPronoun(pronounHead, isSubject, polarity);
+    // 不定代名詞 + 形容詞: "something good", "someone important"
+    // 形容詞は後置される
+    if (pronounHead.pronounType === 'indefinite' && np.adjectives.length > 0) {
+      const adjs = np.adjectives.map(adj => adj.lemma).join(' ');
+      result += ' ' + adjs;
+    }
     // 前置詞句修飾（代名詞用）: "someone in the room"
     if (np.prepModifier) {
       result += ' ' + renderPrepositionalPhrase(np.prepModifier, polarity);

@@ -239,10 +239,12 @@ const TIME_CHIP_OUTPUT: Record<string, string | null> = {
   // Concrete - 時点指定（出力あり）
   '__placeholder__': null,
   'yesterday': 'yesterday',
+  'today': 'today',
   'tomorrow': 'tomorrow',
   'every_day': 'every day',
   'last_sunday': 'last Sunday',
   'right_now': 'right now',
+  'at_the_moment': 'at the moment',
   'next_week': 'next week',
   // Aspectual - 状態指定（出力あり）
   'now': 'now',
@@ -256,6 +258,7 @@ const TIME_CHIP_OUTPUT: Record<string, string | null> = {
   'current': null,
   'progressive': null,
   'perfect': null,
+  'perfectProgressive': null,
 };
 
 function parseTimeChip(block: Blockly.Block | null): {
@@ -271,6 +274,18 @@ function parseTimeChip(block: Blockly.Block | null): {
   }
 
   const blockType = block.type;
+
+  // 統合ブロック（2つのプルダウン）の処理
+  if (blockType === 'time_chip_unified') {
+    const tenseValue = block.getFieldValue('TENSE_VALUE') as 'past' | 'present' | 'future';
+    const aspectValue = block.getFieldValue('ASPECT_VALUE') as 'simple' | 'progressive' | 'perfect' | 'perfectProgressive';
+    return {
+      tense: tenseValue || 'present',
+      aspect: aspectValue || 'simple',
+      timeAdverbial: undefined,
+    };
+  }
+
   let value: string | null = null;
   let options: typeof TIME_CHIP_DATA.concrete | null = null;
 

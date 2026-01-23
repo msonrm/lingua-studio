@@ -838,38 +838,51 @@ Blockly.Blocks['preposition_noun'] = {
 };
 
 // ============================================
-// 等位接続ブロック（名詞用）- AND/OR (NOUN)
+// 等位接続ブロック（名詞用）- AND (NOUN)
 // ============================================
-Blockly.Blocks['coordination_noun'] = {
+Blockly.Blocks['coordination_noun_and'] = {
   init: function() {
     this.appendValueInput("LEFT")
-        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])  // 入れ子許可
-        .appendField(new Blockly.FieldDropdown([
-          ["AND", "and"],
-          ["OR", "or"],
-        ]), "CONJ_VALUE");
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
+        .appendField("AND");
 
     this.appendValueInput("RIGHT")
-        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])  // 入れ子許可
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
         .appendField("&");
 
     this.setOutput(true, "coordinatedNounPhrase");
     this.setColour(COLORS.coordNoun);
-    this.setTooltip("Coordination (Noun): connects two noun phrases with AND/OR (nesting supported)");
+    this.setTooltip("Coordination (Noun): connects two noun phrases with AND");
   }
 };
 
 // ============================================
-// 等位接続ブロック（動詞用）- AND/OR (VERB)
+// 等位接続ブロック（名詞用）- OR (NOUN)
 // ============================================
-Blockly.Blocks['coordination_verb'] = {
+Blockly.Blocks['coordination_noun_or'] = {
+  init: function() {
+    this.appendValueInput("LEFT")
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
+        .appendField("OR");
+
+    this.appendValueInput("RIGHT")
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
+        .appendField("&");
+
+    this.setOutput(true, "coordinatedNounPhrase");
+    this.setColour(COLORS.coordNoun);
+    this.setTooltip("Coordination (Noun): connects two noun phrases with OR");
+  }
+};
+
+// ============================================
+// 等位接続ブロック（動詞用）- AND (VERB)
+// ============================================
+Blockly.Blocks['coordination_verb_and'] = {
   init: function() {
     this.appendStatementInput("LEFT")
         .setCheck("verb")
-        .appendField(new Blockly.FieldDropdown([
-          ["AND", "and"],
-          ["OR", "or"],
-        ]), "CONJ_VALUE");
+        .appendField("AND");
 
     this.appendStatementInput("RIGHT")
         .setCheck("verb")
@@ -877,7 +890,26 @@ Blockly.Blocks['coordination_verb'] = {
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.coordVerb);
-    this.setTooltip("Coordination (Verb): connects two verb phrases with AND/OR");
+    this.setTooltip("Coordination (Verb): connects two verb phrases with AND");
+  }
+};
+
+// ============================================
+// 等位接続ブロック（動詞用）- OR (VERB)
+// ============================================
+Blockly.Blocks['coordination_verb_or'] = {
+  init: function() {
+    this.appendStatementInput("LEFT")
+        .setCheck("verb")
+        .appendField("OR");
+
+    this.appendStatementInput("RIGHT")
+        .setCheck("verb")
+        .appendField("&");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.coordVerb);
+    this.setTooltip("Coordination (Verb): connects two verb phrases with OR");
   }
 };
 
@@ -950,7 +982,8 @@ export const toolbox = {
         { kind: "block", type: "manner_wrapper" },
         { kind: "block", type: "preposition_verb" },
         { kind: "label", text: "── Coordination ──" },
-        { kind: "block", type: "coordination_verb" },
+        { kind: "block", type: "coordination_verb_and" },
+        { kind: "block", type: "coordination_verb_or" },
       ]
     },
     {
@@ -1046,7 +1079,8 @@ export const toolbox = {
         { kind: "block", type: "adjective_wrapper" },
         { kind: "block", type: "preposition_noun" },
         { kind: "label", text: "── Coordination ──" },
-        { kind: "block", type: "coordination_noun" },
+        { kind: "block", type: "coordination_noun_and" },
+        { kind: "block", type: "coordination_noun_or" },
       ]
     },
   ]

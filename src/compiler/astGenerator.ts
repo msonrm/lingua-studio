@@ -194,8 +194,8 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
   }
 
   // 等位接続ラッパー（動詞用）の処理
-  if (blockType === 'coordination_verb') {
-    const conjValue = block.getFieldValue('CONJ_VALUE') as Conjunction;
+  if (blockType === 'coordination_verb_and' || blockType === 'coordination_verb_or') {
+    const conjValue: Conjunction = blockType === 'coordination_verb_and' ? 'and' : 'or';
     const leftBlock = block.getInputTargetBlock('LEFT');
     const rightBlock = block.getInputTargetBlock('RIGHT');
     if (!leftBlock) {
@@ -337,8 +337,9 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode | Coordinate
   const blockType = block.type;
 
   // 等位接続ブロック（名詞用）の処理
-  if (blockType === 'coordination_noun') {
-    return parseCoordinationNounBlock(block);
+  if (blockType === 'coordination_noun_and' || blockType === 'coordination_noun_or') {
+    const conjValue: Conjunction = blockType === 'coordination_noun_and' ? 'and' : 'or';
+    return parseCoordinationNounBlock(block, conjValue);
   }
 
   // 前置詞ラッパー（名詞用）の処理
@@ -503,8 +504,7 @@ function parsePrepositionNounBlock(block: Blockly.Block): NounPhraseNode | Coord
   };
 }
 
-function parseCoordinationNounBlock(block: Blockly.Block): CoordinatedNounPhraseNode {
-  const conjValue = block.getFieldValue('CONJ_VALUE') as Conjunction;
+function parseCoordinationNounBlock(block: Blockly.Block, conjValue: Conjunction): CoordinatedNounPhraseNode {
   const leftBlock = block.getInputTargetBlock('LEFT');
   const rightBlock = block.getInputTargetBlock('RIGHT');
 

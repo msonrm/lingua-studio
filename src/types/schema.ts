@@ -128,11 +128,15 @@ export interface VerbPhraseNode {
   arguments: FilledArgumentSlot[];
   adverbs: AdverbNode[];
   prepositionalPhrases: PrepositionalPhraseNode[];  // 前置詞句 ("go TO THE PARK")
+  coordinatedWith?: {
+    conjunction: Conjunction;
+    verbPhrase: VerbPhraseNode;
+  };
 }
 
 export interface FilledArgumentSlot {
   role: SemanticRole;
-  filler: NounPhraseNode | AdjectivePhraseNode | null;
+  filler: NounPhraseNode | AdjectivePhraseNode | CoordinatedNounPhraseNode | null;
 }
 
 export interface NounPhraseNode {
@@ -179,5 +183,24 @@ export interface AdverbNode {
 export interface PrepositionalPhraseNode {
   type: "prepositionalPhrase";
   preposition: string;
-  object: NounPhraseNode;
+  object: NounPhraseNode | CoordinatedNounPhraseNode;
+}
+
+// ============================================
+// 等位接続ノード
+// ============================================
+export type Conjunction = "and" | "or";
+
+// NP等位接続（名詞句 AND/OR 名詞句）
+export interface CoordinatedNounPhraseNode {
+  type: "coordinatedNounPhrase";
+  conjunction: Conjunction;
+  conjuncts: NounPhraseNode[];
+}
+
+// VP等位接続（動詞句 AND/OR 動詞句）
+export interface CoordinatedVerbPhraseNode {
+  type: "coordinatedVerbPhrase";
+  conjunction: Conjunction;
+  conjuncts: VerbPhraseNode[];
 }

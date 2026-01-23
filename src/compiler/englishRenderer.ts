@@ -9,6 +9,8 @@ import {
   AdverbNode,
   SemanticRole,
   PrepositionalPhraseNode,
+  CoordinatedNounPhraseNode,
+  VerbPhraseNode,
 } from '../types/schema';
 import { findVerb, findNoun, findPronoun } from '../data/dictionary';
 
@@ -83,20 +85,112 @@ function renderClause(clause: ClauseNode): string {
   // 語順: Subject + Verb(+neg+freq) + Objects + PrepPhrases + Manner
   const parts = [subject, verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
 
-  return parts.join(' ');
+  let result = parts.join(' ');
+
+  // 動詞の等位接続を処理
+  if (verbPhrase.coordinatedWith) {
+    const coordVP = verbPhrase.coordinatedWith.verbPhrase;
+    const conjunction = verbPhrase.coordinatedWith.conjunction;
+    const coordVerbStr = renderCoordinatedVerbPhrase(coordVP, tense, aspect, polarity, subjectSlot?.filler as NounPhraseNode | undefined);
+    result += ` ${conjunction} ${coordVerbStr}`;
+  }
+
+  return result;
+}
+
+// 等位接続された動詞句をレンダリング（主語なし）
+function renderCoordinatedVerbPhrase(
+  vp: VerbPhraseNode,
+  tense: 'past' | 'present' | 'future',
+  aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
+  polarity: 'affirmative' | 'negative',
+  subject?: NounPhraseNode
+): string {
+  const verbEntry = findVerb(vp.verb.lemma);
+
+  // 副詞を種類別に分類
+  const frequencyAdverbs = vp.adverbs.filter(a => a.advType === 'frequency');
+  const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
+
+  // 動詞を活用
+  const verbForm = conjugateVerbWithAdverbs(
+    vp.verb.lemma,
+    tense,
+    aspect,
+    polarity,
+    frequencyAdverbs,
+    subject
+  );
+
+  // その他の引数（目的語など）
+  const otherArgs = vp.arguments
+    .filter(a => a.filler)
+    .map(a => {
+      const slotDef = verbEntry?.valency.find(v => v.role === a.role);
+      const preposition = slotDef?.preposition;
+      const rendered = renderFiller(a.filler!, false, polarity);
+      return preposition ? `${preposition} ${rendered}` : rendered;
+    })
+    .join(' ');
+
+  // 様態副詞は文末
+  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+
+  // 前置詞句（動詞修飾）
+  const prepPhrases = vp.prepositionalPhrases
+    .map(pp => renderPrepositionalPhrase(pp, polarity))
+    .join(' ');
+
+  const parts = [verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
+
+  let result = parts.join(' ');
+
+  // 再帰的に等位接続を処理
+  if (vp.coordinatedWith) {
+    const coordVPInner = vp.coordinatedWith.verbPhrase;
+    const conjunctionInner = vp.coordinatedWith.conjunction;
+    const coordVerbStr = renderCoordinatedVerbPhrase(coordVPInner, tense, aspect, polarity, subject);
+    result += ` ${conjunctionInner} ${coordVerbStr}`;
+  }
+
+  return result;
 }
 
 function renderFiller(
-  filler: NounPhraseNode | AdjectivePhraseNode,
+  filler: NounPhraseNode | AdjectivePhraseNode | CoordinatedNounPhraseNode,
   isSubject: boolean = false,
   polarity: 'affirmative' | 'negative' = 'affirmative'
 ): string {
   if (filler.type === 'nounPhrase') {
     return renderNounPhrase(filler as NounPhraseNode, isSubject, polarity);
+  } else if (filler.type === 'coordinatedNounPhrase') {
+    return renderCoordinatedNounPhrase(filler as CoordinatedNounPhraseNode, isSubject, polarity);
   } else if (filler.type === 'adjectivePhrase') {
     return (filler as AdjectivePhraseNode).head.lemma;
   }
   return '';
+}
+
+function renderCoordinatedNounPhrase(
+  coordNP: CoordinatedNounPhraseNode,
+  isSubject: boolean,
+  polarity: 'affirmative' | 'negative'
+): string {
+  const renderedConjuncts = coordNP.conjuncts.map(np =>
+    renderNounPhrase(np, isSubject, polarity)
+  );
+
+  if (renderedConjuncts.length === 0) return '';
+  if (renderedConjuncts.length === 1) return renderedConjuncts[0];
+
+  // 2つの場合: "A and B"
+  if (renderedConjuncts.length === 2) {
+    return `${renderedConjuncts[0]} ${coordNP.conjunction} ${renderedConjuncts[1]}`;
+  }
+
+  // 3つ以上: "A, B, and C"
+  const lastItem = renderedConjuncts.pop()!;
+  return `${renderedConjuncts.join(', ')}, ${coordNP.conjunction} ${lastItem}`;
 }
 
 function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarity: 'affirmative' | 'negative' = 'affirmative'): string {
@@ -179,7 +273,9 @@ function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarit
 }
 
 function renderPrepositionalPhrase(pp: PrepositionalPhraseNode, polarity: 'affirmative' | 'negative'): string {
-  const objectStr = renderNounPhrase(pp.object, false, polarity);
+  const objectStr = pp.object.type === 'coordinatedNounPhrase'
+    ? renderCoordinatedNounPhrase(pp.object as CoordinatedNounPhraseNode, false, polarity)
+    : renderNounPhrase(pp.object as NounPhraseNode, false, polarity);
   return `${pp.preposition} ${objectStr}`;
 }
 

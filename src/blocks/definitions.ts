@@ -39,6 +39,10 @@ const COLORS = {
   // Verb Modifier系の前置詞
   prepVerb: '#C0392B',   // 暗めの赤（動詞用前置詞）
 
+  // Coordination（等位接続）- 紫系（論理演算のイメージ）
+  coordNoun: '#6B5B95',   // ダスティパープル（名詞用）
+  coordVerb: '#9B4D8B',   // マゼンタ寄り紫（動詞用）
+
   // レガシー
   adverb: '#EF6C57',     // 赤オレンジ（様態副詞と同系）
 };
@@ -1043,6 +1047,50 @@ Blockly.Blocks['preposition_noun'] = {
 };
 
 // ============================================
+// 等位接続ブロック（名詞用）- AND/OR (NOUN)
+// ============================================
+Blockly.Blocks['coordination_noun'] = {
+  init: function() {
+    this.appendValueInput("LEFT")
+        .setCheck(["noun", "adjective", "nounPhrase"])
+        .appendField(new Blockly.FieldDropdown([
+          ["AND", "and"],
+          ["OR", "or"],
+        ]), "CONJ_VALUE");
+
+    this.appendValueInput("RIGHT")
+        .setCheck(["noun", "adjective", "nounPhrase"])
+        .appendField("&");
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.coordNoun);
+    this.setTooltip("Coordination (Noun): connects two noun phrases with AND/OR");
+  }
+};
+
+// ============================================
+// 等位接続ブロック（動詞用）- AND/OR (VERB)
+// ============================================
+Blockly.Blocks['coordination_verb'] = {
+  init: function() {
+    this.appendStatementInput("LEFT")
+        .setCheck("verb")
+        .appendField(new Blockly.FieldDropdown([
+          ["AND", "and"],
+          ["OR", "or"],
+        ]), "CONJ_VALUE");
+
+    this.appendStatementInput("RIGHT")
+        .setCheck("verb")
+        .appendField("&");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.coordVerb);
+    this.setTooltip("Coordination (Verb): connects two verb phrases with AND/OR");
+  }
+};
+
+// ============================================
 // オプションのエクスポート（コンパイラ用）
 // ============================================
 export const TIME_CHIP_DATA = {
@@ -1112,6 +1160,8 @@ export const toolbox = {
         { kind: "block", type: "frequency_wrapper" },
         { kind: "block", type: "manner_wrapper" },
         { kind: "block", type: "preposition_verb" },
+        { kind: "label", text: "── Coordination ──" },
+        { kind: "block", type: "coordination_verb" },
       ]
     },
     {
@@ -1206,6 +1256,8 @@ export const toolbox = {
         { kind: "block", type: "determiner_unified" },
         { kind: "block", type: "adjective_wrapper" },
         { kind: "block", type: "preposition_noun" },
+        { kind: "label", text: "── Coordination ──" },
+        { kind: "block", type: "coordination_noun" },
       ]
     },
   ]

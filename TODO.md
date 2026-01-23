@@ -90,6 +90,21 @@
 - [ ] Modal（法助動詞）wrapper (can, may, must, should)
   - TimeFrame の will は時制用、Modal の will は意思表明用
   - 能力 (can)、許可 (may)、義務 (must)、助言 (should)
+- [x] AND/OR 等位接続ブロック
+  - 名詞用: coordination_noun - 名詞句同士を接続して名詞句として出力
+  - 動詞用: coordination_verb - 動詞句同士を接続
+  - LinguaScript: `and(np1, np2)`, `or(vp1, vp2)`
+
+### Coordination Linguistic Challenges (Future)
+- [ ] 主語の数の一致（subject-verb agreement）
+  - AND: "The cat and the dog **run**" (複数扱い)
+  - OR: "The cat or the dog **runs**" (近接一致 / proximity agreement)
+- [ ] 否定とのスコープ相互作用（De Morgan）
+  - "I don't eat apples and oranges" の解釈曖昧性
+  - NOT(A AND B) vs (NOT A) AND B
+- [ ] 等位接続の構造的曖昧性
+  - "I saw the man with the telescope and the camera"
+  - PP attachment ambiguity with coordination
 
 ### UI & Localization
 - [ ] ブロックラベルの切り替え機能

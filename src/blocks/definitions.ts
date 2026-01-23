@@ -1,5 +1,6 @@
 import * as Blockly from 'blockly';
-import { verbs, nouns, adjectives, adverbs, pronouns, findNoun } from '../data/dictionary';
+import { verbs, nouns, adjectives, adverbs, pronouns, findNoun, getVerbsByCategory } from '../data/dictionary';
+import type { VerbCategory } from '../types/schema';
 
 // ============================================
 // 色の定義（モンテッソーリベース）
@@ -14,6 +15,14 @@ const COLORS = {
   negation: '#E53935',   // 明るい赤
   frequency: '#EF5350',  // さらに明るい赤
   manner: '#EF6C57',     // 赤オレンジ
+
+  // Verb カテゴリ別（意味論的分類）
+  verbMotion: '#E74C3C',        // 移動: 鮮やかな赤
+  verbAction: '#C0392B',        // 動作: 暗めの赤
+  verbTransfer: '#D35400',      // 授受: オレンジ
+  verbCognition: '#8E44AD',     // 認知: 紫
+  verbCommunication: '#2980B9', // 伝達: 青
+  verbState: '#27AE60',         // 状態: 緑
 
   // Noun系（寒色・黒〜青系グラデーション）
   person: '#0d1321',     // ほぼ黒（モンテッソーリ）
@@ -316,6 +325,71 @@ Blockly.Blocks['verb'] = {
     return verbLemma;
   }
 };
+
+// ============================================
+// カテゴリ別動詞ブロック
+// ============================================
+const VERB_CATEGORY_CONFIG: Record<VerbCategory, { label: string; color: string }> = {
+  motion: { label: 'Motion', color: COLORS.verbMotion },
+  action: { label: 'Action', color: COLORS.verbAction },
+  transfer: { label: 'Transfer', color: COLORS.verbTransfer },
+  cognition: { label: 'Cognition', color: COLORS.verbCognition },
+  communication: { label: 'Communication', color: COLORS.verbCommunication },
+  state: { label: 'State', color: COLORS.verbState },
+};
+
+// カテゴリ別動詞ブロック生成関数
+function createVerbCategoryBlock(category: VerbCategory) {
+  const config = VERB_CATEGORY_CONFIG[category];
+  const categoryVerbs = getVerbsByCategory(category);
+
+  Blockly.Blocks[`verb_${category}`] = {
+    init: function() {
+      const verbOptions: [string, string][] = categoryVerbs.map(v => [v.lemma, v.lemma]);
+
+      this.appendDummyInput()
+          .appendField(config.label)
+          .appendField(new Blockly.FieldDropdown(verbOptions, this.updateShape.bind(this)), "VERB");
+
+      this.setPreviousStatement(true, "verb");
+      this.setColour(config.color);
+      this.setTooltip(`${config.label} verb`);
+
+      // 初期形状を設定
+      if (categoryVerbs.length > 0) {
+        this.updateShape(categoryVerbs[0].lemma);
+      }
+    },
+
+    updateShape: function(verbLemma: string) {
+      const verb = categoryVerbs.find(v => v.lemma === verbLemma);
+      if (!verb) return verbLemma;
+
+      // 既存のスロットを削除（ARG_で始まるもの）
+      const existingInputs = this.inputList
+        .filter((input: Blockly.Input) => input.name.startsWith("ARG_"))
+        .map((input: Blockly.Input) => input.name);
+
+      existingInputs.forEach((name: string) => this.removeInput(name));
+
+      // 新しいスロットを追加
+      verb.valency.forEach((slot: { role: string; label?: string; required: boolean }, index: number) => {
+        const inputName = `ARG_${index}`;
+        const label = slot.label || slot.role;
+        const checkType = slot.role === 'attribute' ? ['noun', 'nounPhrase', 'adjective'] : ['noun', 'nounPhrase'];
+        const displayLabel = slot.required ? `${label}:` : `(${label}):`;
+        this.appendValueInput(inputName)
+            .setCheck(checkType)
+            .appendField(displayLabel);
+      });
+
+      return verbLemma;
+    }
+  };
+}
+
+// 6カテゴリの動詞ブロックを生成
+(['motion', 'action', 'transfer', 'cognition', 'communication', 'state'] as VerbCategory[]).forEach(createVerbCategoryBlock);
 
 // ============================================
 // 名詞句ブロック（レガシー）
@@ -1063,7 +1137,18 @@ export const toolbox = {
       name: "Verbs",
       colour: COLORS.action,
       contents: [
-        { kind: "block", type: "verb" },
+        { kind: "label", text: "── Motion ──" },
+        { kind: "block", type: "verb_motion" },
+        { kind: "label", text: "── Action ──" },
+        { kind: "block", type: "verb_action" },
+        { kind: "label", text: "── Transfer ──" },
+        { kind: "block", type: "verb_transfer" },
+        { kind: "label", text: "── Cognition ──" },
+        { kind: "block", type: "verb_cognition" },
+        { kind: "label", text: "── Communication ──" },
+        { kind: "block", type: "verb_communication" },
+        { kind: "label", text: "── State ──" },
+        { kind: "block", type: "verb_state" },
       ]
     },
     {

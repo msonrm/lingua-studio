@@ -24,6 +24,15 @@ export interface ArgumentSlot {
   label?: string;  // UI表示用のラベル（例: "what", "to whom"）
 }
 
+// 動詞カテゴリ（意味論的分類）
+export type VerbCategory =
+  | "motion"        // 移動: run, walk, go, come
+  | "action"        // 動作・創造: make, eat, build, break
+  | "transfer"      // 授受・移転: give, take, send, receive
+  | "cognition"     // 認知・知覚: think, know, see, hear
+  | "communication" // 伝達: say, tell, speak, ask
+  | "state";        // 状態・存在: be, have, exist, seem
+
 export interface VerbEntry {
   lemma: string;
   forms: {
@@ -35,6 +44,7 @@ export interface VerbEntry {
     irregular?: Record<string, string>;
   };
   type: "action" | "stative" | "copula";
+  category: VerbCategory;
   valency: ArgumentSlot[];
 }
 

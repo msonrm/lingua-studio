@@ -185,8 +185,9 @@ const DETERMINER_CONSTRAINTS = {
   } as Record<string, string[]>,
 
   // CENTRAL が選ばれた場合、POST で選べないもの
+  // 注意: "a few" は有効な英語表現なので 'few' は許可
   centralBlocksPost: {
-    'a': ['one', 'two', 'three', 'many', 'few', 'some', 'several', '__plural__'],
+    'a': ['one', 'two', 'three', 'many', 'some', 'several', '__plural__'],
     'this': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],
     'that': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],
   } as Record<string, string[]>,
@@ -204,12 +205,13 @@ const DETERMINER_CONSTRAINTS = {
   } as Record<string, string[]>,
 
   // POST が選ばれた場合、CENTRAL で選べないもの
+  // 注意: "a few" は有効な英語表現なので 'few' + 'a' は許可
   postBlocksCentral: {
     'one': ['a'],
     'two': ['a', 'this', 'that'],
     'three': ['a', 'this', 'that'],
     'many': ['a', 'this', 'that'],
-    'few': ['a', 'this', 'that'],
+    'few': ['this', 'that'],
     'some': ['a', 'this', 'that'],
     'several': ['a', 'this', 'that'],
     '__plural__': ['a', 'this', 'that'],

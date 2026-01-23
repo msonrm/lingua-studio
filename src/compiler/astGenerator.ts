@@ -9,6 +9,7 @@ import {
   PronounHead,
   PrepositionalPhraseNode,
   CoordinatedNounPhraseNode,
+  CoordinationConjunct,
   Conjunction,
 } from '../types/schema';
 import { findVerb, findPronoun } from '../data/dictionary';
@@ -610,26 +611,35 @@ function parseCoordinationNounBlock(block: Blockly.Block): CoordinatedNounPhrase
   const leftNP = leftBlock ? parseNounPhraseBlock(leftBlock) : defaultNP;
   const rightNP = rightBlock ? parseNounPhraseBlock(rightBlock) : defaultNP;
 
-  // Coordinated名詞句をフラット化（同じ接続詞の場合）
-  const conjuncts: NounPhraseNode[] = [];
+  // Coordinated名詞句を処理
+  // - 同じ接続詞の場合: フラット化 (A and (B and C) → A and B and C)
+  // - 異なる接続詞の場合: 入れ子を保持 (A and (B or C) → そのまま)
+  const conjuncts: CoordinationConjunct[] = [];
 
   // 左側の処理
-  if (leftNP.type === 'coordinatedNounPhrase' && leftNP.conjunction === conjValue) {
-    conjuncts.push(...leftNP.conjuncts);
-  } else if (leftNP.type === 'nounPhrase') {
-    conjuncts.push(leftNP);
+  if (leftNP.type === 'coordinatedNounPhrase') {
+    if (leftNP.conjunction === conjValue) {
+      // 同じ接続詞: フラット化
+      conjuncts.push(...leftNP.conjuncts);
+    } else {
+      // 異なる接続詞: 入れ子として保持
+      conjuncts.push(leftNP);
+    }
   } else {
-    // CoordinatedNounPhraseNodeだが接続詞が異なる場合は最初の要素だけ
-    conjuncts.push((leftNP as CoordinatedNounPhraseNode).conjuncts[0] || defaultNP);
+    conjuncts.push(leftNP);
   }
 
   // 右側の処理
-  if (rightNP.type === 'coordinatedNounPhrase' && rightNP.conjunction === conjValue) {
-    conjuncts.push(...rightNP.conjuncts);
-  } else if (rightNP.type === 'nounPhrase') {
-    conjuncts.push(rightNP);
+  if (rightNP.type === 'coordinatedNounPhrase') {
+    if (rightNP.conjunction === conjValue) {
+      // 同じ接続詞: フラット化
+      conjuncts.push(...rightNP.conjuncts);
+    } else {
+      // 異なる接続詞: 入れ子として保持
+      conjuncts.push(rightNP);
+    }
   } else {
-    conjuncts.push((rightNP as CoordinatedNounPhraseNode).conjuncts[0] || defaultNP);
+    conjuncts.push(rightNP);
   }
 
   return {

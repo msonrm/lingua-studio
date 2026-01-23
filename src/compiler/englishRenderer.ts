@@ -10,6 +10,8 @@ import {
   SemanticRole,
   PrepositionalPhraseNode,
   CoordinatedNounPhraseNode,
+  CoordinationConjunct,
+  Conjunction,
   VerbPhraseNode,
 } from '../types/schema';
 import { findVerb, findNoun, findPronoun } from '../data/dictionary';
@@ -196,21 +198,56 @@ function renderCoordinatedNounPhrase(
   isSubject: boolean,
   polarity: 'affirmative' | 'negative'
 ): string {
-  const renderedConjuncts = coordNP.conjuncts.map(np =>
-    renderNounPhrase(np, isSubject, polarity)
-  );
-
-  if (renderedConjuncts.length === 0) return '';
-  if (renderedConjuncts.length === 1) return renderedConjuncts[0];
-
-  // 2つの場合: "A and B"
-  if (renderedConjuncts.length === 2) {
-    return `${renderedConjuncts[0]} ${coordNP.conjunction} ${renderedConjuncts[1]}`;
+  if (coordNP.conjuncts.length === 0) return '';
+  if (coordNP.conjuncts.length === 1) {
+    return renderConjunct(coordNP.conjuncts[0], isSubject, polarity, coordNP.conjunction);
   }
 
-  // 3つ以上: "A, B, and C"
-  const lastItem = renderedConjuncts.pop()!;
-  return `${renderedConjuncts.join(', ')}, ${coordNP.conjunction} ${lastItem}`;
+  // 各要素をレンダリング（入れ子の場合は相関接続詞付き）
+  const renderedParts = coordNP.conjuncts.map(conjunct =>
+    renderConjunct(conjunct, isSubject, polarity, coordNP.conjunction)
+  );
+
+  // 2つの場合: "A and B" または "A, and either B or C"
+  if (renderedParts.length === 2) {
+    // 入れ子に異なる接続詞がある場合、外側の接続詞の前にカンマを入れる
+    const hasNestedDifferent = coordNP.conjuncts.some(
+      c => c.type === 'coordinatedNounPhrase' && c.conjunction !== coordNP.conjunction
+    );
+    const separator = hasNestedDifferent ? `, ${coordNP.conjunction} ` : ` ${coordNP.conjunction} `;
+    return `${renderedParts[0]}${separator}${renderedParts[1]}`;
+  }
+
+  // 3つ以上: "A, B, and C" (Oxford comma)
+  const lastItem = renderedParts.pop()!;
+  return `${renderedParts.join(', ')}, ${coordNP.conjunction} ${lastItem}`;
+}
+
+// 等位接続の要素をレンダリング（入れ子の場合は相関接続詞を使用）
+function renderConjunct(
+  conjunct: CoordinationConjunct,
+  isSubject: boolean,
+  polarity: 'affirmative' | 'negative',
+  parentConjunction: Conjunction
+): string {
+  if (conjunct.type === 'nounPhrase') {
+    return renderNounPhrase(conjunct, isSubject, polarity);
+  }
+
+  // 入れ子のCoordinatedNounPhraseNode
+  const nested = conjunct;
+
+  // 同じ接続詞の場合は通常レンダリング（フラット化はAST側で済み）
+  if (nested.conjunction === parentConjunction) {
+    return renderCoordinatedNounPhrase(nested, isSubject, polarity);
+  }
+
+  // 異なる接続詞の場合は相関接続詞を使用
+  // and → "both A and B"
+  // or → "either A or B"
+  const correlative = nested.conjunction === 'and' ? 'both' : 'either';
+  const innerRendered = renderCoordinatedNounPhrase(nested, isSubject, polarity);
+  return `${correlative} ${innerRendered}`;
 }
 
 function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarity: 'affirmative' | 'negative' = 'affirmative'): string {

@@ -96,11 +96,10 @@
   - LinguaScript: `and(np1, np2)`, `or(vp1, vp2)`
 
 ### Coordination Linguistic Challenges (Future)
-- [ ] 入れ子の等位接続（nested coordination）
-  - 現状: coordination_noun の入れ子を禁止（出力タイプを分離）
-  - 将来: "A and (B or C)" のような複合接続をサポート
-  - Schema変更: `conjuncts` を `(NounPhraseNode | CoordinatedNounPhraseNode)[]` に拡張
-  - レンダリング: 括弧付き出力 "A and (B or C)"
+- [x] 入れ子の等位接続（nested coordination）✅ 実装済み
+  - 同じ接続詞: フラット化 + Oxford comma ("A, B, and C")
+  - 異なる接続詞: 相関接続詞 + カンマ ("A, and either B or C")
+  - both...and / either...or で曖昧性を解消
 - [ ] 主語の数の一致（subject-verb agreement）
   - AND: "The cat and the dog **run**" (複数扱い)
   - OR: "The cat or the dog **runs**" (近接一致 / proximity agreement)

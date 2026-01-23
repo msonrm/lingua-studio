@@ -106,7 +106,13 @@ function renderFillerToScript(filler: NounPhraseNode | AdjectivePhraseNode | Coo
 }
 
 function renderCoordinatedNounPhraseToScript(coordNP: CoordinatedNounPhraseNode): string {
-  const conjuncts = coordNP.conjuncts.map(np => renderNounPhraseToScript(np));
+  const conjuncts = coordNP.conjuncts.map(conjunct => {
+    if (conjunct.type === 'coordinatedNounPhrase') {
+      // 入れ子の場合は再帰的にレンダリング
+      return renderCoordinatedNounPhraseToScript(conjunct);
+    }
+    return renderNounPhraseToScript(conjunct);
+  });
   return `${coordNP.conjunction}(${conjuncts.join(', ')})`;
 }
 

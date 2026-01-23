@@ -1,5 +1,5 @@
 import * as Blockly from 'blockly';
-import { verbs, nouns, adjectives, adverbs, pronouns, findNoun, getVerbsByCategory } from '../data/dictionary';
+import { nouns, adjectives, adverbs, pronouns, findNoun, getVerbsByCategory } from '../data/dictionary';
 import type { VerbCategory } from '../types/schema';
 
 // ============================================
@@ -279,63 +279,15 @@ Blockly.Blocks['time_chip_abstract'] = {
 };
 
 // ============================================
-// Action ブロック（動的スロット生成）
-// ============================================
-Blockly.Blocks['verb'] = {
-  init: function() {
-    const verbOptions: [string, string][] = verbs.map(v => [v.lemma, v.lemma]);
-
-    this.appendDummyInput()
-        .appendField("VERB")
-        .appendField(new Blockly.FieldDropdown(verbOptions, this.updateShape.bind(this)), "VERB");
-
-    this.setPreviousStatement(true, "verb");
-    this.setColour(COLORS.action);
-    this.setTooltip("Verb: the action or state");
-
-    // 初期形状を設定
-    this.updateShape(verbs[0]?.lemma || "run");
-  },
-
-  updateShape: function(verbLemma: string) {
-    const verb = verbs.find(v => v.lemma === verbLemma);
-    if (!verb) return verbLemma;
-
-    // 既存のスロットを削除（ARG_で始まるもの）
-    const existingInputs = this.inputList
-      .filter((input: Blockly.Input) => input.name.startsWith("ARG_"))
-      .map((input: Blockly.Input) => input.name);
-
-    existingInputs.forEach((name: string) => this.removeInput(name));
-
-    // 新しいスロットを追加
-    verb.valency.forEach((slot, index) => {
-      const inputName = `ARG_${index}`;
-      const label = slot.label || slot.role;
-      const checkType = slot.role === 'attribute' ? ['noun', 'nounPhrase', 'adjective'] : ['noun', 'nounPhrase'];
-      // 必須: "label:" / 任意: "(label):"
-      const displayLabel = slot.required ? `${label}:` : `(${label}):`;
-      this.appendValueInput(inputName)
-          .setCheck(checkType)
-          .appendField(displayLabel);
-    });
-
-    // 副詞は Verb Modifiers (FREQ, MANNER) で対応
-
-    return verbLemma;
-  }
-};
-
-// ============================================
 // カテゴリ別動詞ブロック
 // ============================================
 const VERB_CATEGORY_CONFIG: Record<VerbCategory, { label: string; color: string }> = {
-  motion: { label: 'Motion', color: COLORS.verbMotion },
-  action: { label: 'Action', color: COLORS.verbAction },
-  transfer: { label: 'Transfer', color: COLORS.verbTransfer },
-  cognition: { label: 'Cognition', color: COLORS.verbCognition },
-  communication: { label: 'Communication', color: COLORS.verbCommunication },
-  state: { label: 'State', color: COLORS.verbState },
+  motion: { label: 'MOTION', color: COLORS.verbMotion },
+  action: { label: 'ACTION', color: COLORS.verbAction },
+  transfer: { label: 'TRANSFER', color: COLORS.verbTransfer },
+  cognition: { label: 'COGNITION', color: COLORS.verbCognition },
+  communication: { label: 'COMMUNICATION', color: COLORS.verbCommunication },
+  state: { label: 'STATE', color: COLORS.verbState },
 };
 
 // カテゴリ別動詞ブロック生成関数

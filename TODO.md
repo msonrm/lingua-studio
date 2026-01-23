@@ -2,10 +2,10 @@
 
 ## Bugs
 
-- [ ] 場所副詞（here, there）に限定詞・前置詞が付けられてしまう
-  - 例: "I go to the here." が生成可能（不正）
-  - 原因: place_block に副詞と普通名詞が混在
-  - 修正案: here/there を独立ブロック化、または determiner で副詞選択時に制約
+- [ ] 場所副詞（here, there）を一時削除中
+  - 問題: 限定詞・前置詞が付けられてしまう（例: "I go to the here."）
+  - 対応: place_block から削除済み
+  - 将来: 独立ブロック化、または determiner で副詞選択時に制約して復活
 
 ## Future Enhancements
 

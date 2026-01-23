@@ -432,19 +432,13 @@ Blockly.Blocks['object_block'] = {
 // ============================================
 const placeNouns = nouns.filter(n => n.category === 'place' && !n.proper);
 const placeProperNouns = nouns.filter(n => n.category === 'place' && n.proper);
-const placeAdverbs = [
-  { lemma: "here", value: "here" },
-  { lemma: "there", value: "there" },
-];
+// 場所副詞 (here, there) は一時削除 - 限定詞との相性問題のため
 
 Blockly.Blocks['place_block'] = {
   init: function() {
     const commonOptions: [string, string][] = placeNouns.map(n => [n.lemma, n.lemma]);
     const properOptions: [string, string][] = placeProperNouns.map(n => [n.lemma, n.lemma]);
-    const adverbOptions: [string, string][] = placeAdverbs.map(a => [a.lemma, a.value]);
     const nounOptions: [string, string][] = [
-      ["── Adverbs ──", "__label_adverbs__"],
-      ...adverbOptions,
       ["── Common ──", "__label_common__"],
       ...commonOptions,
       ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
@@ -455,13 +449,13 @@ Blockly.Blocks['place_block'] = {
         .appendField(new Blockly.FieldDropdown(nounOptions), "PLACE_VALUE");
 
     // デフォルト値を最初の実際の項目に設定
-    if (adverbOptions.length > 0) {
-      this.setFieldValue(adverbOptions[0][1], "PLACE_VALUE");
+    if (commonOptions.length > 0) {
+      this.setFieldValue(commonOptions[0][1], "PLACE_VALUE");
     }
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.place);
-    this.setTooltip("A place (park, school, Tokyo, here, etc.)");
+    this.setTooltip("A place (park, school, Tokyo, etc.)");
   }
 };
 

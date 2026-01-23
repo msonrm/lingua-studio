@@ -766,38 +766,96 @@ export const nouns: NounEntry[] = [
 ];
 
 // ============================================
-// 形容詞辞書
+// 形容詞辞書（Dixon's semantic types）
 // ============================================
 export const adjectives: AdjectiveEntry[] = [
-  {
-    lemma: "colorless",
-  },
-  {
-    lemma: "green",
-  },
-  {
-    lemma: "big",
-    comparative: "bigger",
-    superlative: "biggest",
-  },
-  {
-    lemma: "small",
-    comparative: "smaller",
-    superlative: "smallest",
-  },
-  {
-    lemma: "quick",
-    comparative: "quicker",
-    superlative: "quickest",
-  },
-  {
-    lemma: "lazy",
-    comparative: "lazier",
-    superlative: "laziest",
-  },
-  {
-    lemma: "blue",
-  },
+  // ============================================
+  // Size（寸法）
+  // ============================================
+  { lemma: "big", category: "size", comparative: "bigger", superlative: "biggest" },
+  { lemma: "small", category: "size", comparative: "smaller", superlative: "smallest" },
+  { lemma: "large", category: "size", comparative: "larger", superlative: "largest" },
+  { lemma: "little", category: "size" },
+  { lemma: "tall", category: "size", comparative: "taller", superlative: "tallest" },
+  { lemma: "short", category: "size", comparative: "shorter", superlative: "shortest" },
+  { lemma: "long", category: "size", comparative: "longer", superlative: "longest" },
+  { lemma: "wide", category: "size", comparative: "wider", superlative: "widest" },
+  { lemma: "narrow", category: "size", comparative: "narrower", superlative: "narrowest" },
+  { lemma: "huge", category: "size" },
+  { lemma: "tiny", category: "size" },
+
+  // ============================================
+  // Age（年齢・新旧）
+  // ============================================
+  { lemma: "old", category: "age", comparative: "older", superlative: "oldest" },
+  { lemma: "young", category: "age", comparative: "younger", superlative: "youngest" },
+  { lemma: "new", category: "age", comparative: "newer", superlative: "newest" },
+  { lemma: "ancient", category: "age" },
+  { lemma: "modern", category: "age" },
+  { lemma: "fresh", category: "age", comparative: "fresher", superlative: "freshest" },
+
+  // ============================================
+  // Color（色）
+  // ============================================
+  { lemma: "red", category: "color" },
+  { lemma: "blue", category: "color" },
+  { lemma: "green", category: "color" },
+  { lemma: "yellow", category: "color" },
+  { lemma: "black", category: "color" },
+  { lemma: "white", category: "color" },
+  { lemma: "brown", category: "color" },
+  { lemma: "orange", category: "color" },
+  { lemma: "pink", category: "color" },
+  { lemma: "purple", category: "color" },
+  { lemma: "gray", category: "color" },
+  { lemma: "colorless", category: "color" },
+
+  // ============================================
+  // Physical（物理的性質）
+  // ============================================
+  { lemma: "hard", category: "physical", comparative: "harder", superlative: "hardest" },
+  { lemma: "soft", category: "physical", comparative: "softer", superlative: "softest" },
+  { lemma: "heavy", category: "physical", comparative: "heavier", superlative: "heaviest" },
+  { lemma: "light", category: "physical", comparative: "lighter", superlative: "lightest" },
+  { lemma: "hot", category: "physical", comparative: "hotter", superlative: "hottest" },
+  { lemma: "cold", category: "physical", comparative: "colder", superlative: "coldest" },
+  { lemma: "warm", category: "physical", comparative: "warmer", superlative: "warmest" },
+  { lemma: "wet", category: "physical", comparative: "wetter", superlative: "wettest" },
+  { lemma: "dry", category: "physical", comparative: "drier", superlative: "driest" },
+  { lemma: "rough", category: "physical", comparative: "rougher", superlative: "roughest" },
+  { lemma: "smooth", category: "physical", comparative: "smoother", superlative: "smoothest" },
+  { lemma: "quick", category: "physical", comparative: "quicker", superlative: "quickest" },
+  { lemma: "slow", category: "physical", comparative: "slower", superlative: "slowest" },
+  { lemma: "loud", category: "physical", comparative: "louder", superlative: "loudest" },
+  { lemma: "quiet", category: "physical", comparative: "quieter", superlative: "quietest" },
+
+  // ============================================
+  // Quality（価値・評価）
+  // ============================================
+  { lemma: "good", category: "quality", comparative: "better", superlative: "best" },
+  { lemma: "bad", category: "quality", comparative: "worse", superlative: "worst" },
+  { lemma: "nice", category: "quality", comparative: "nicer", superlative: "nicest" },
+  { lemma: "great", category: "quality" },
+  { lemma: "beautiful", category: "quality" },
+  { lemma: "ugly", category: "quality", comparative: "uglier", superlative: "ugliest" },
+  { lemma: "wonderful", category: "quality" },
+  { lemma: "terrible", category: "quality" },
+  { lemma: "important", category: "quality" },
+  { lemma: "perfect", category: "quality" },
+
+  // ============================================
+  // Emotion（感情・性格）
+  // ============================================
+  { lemma: "happy", category: "emotion", comparative: "happier", superlative: "happiest" },
+  { lemma: "sad", category: "emotion", comparative: "sadder", superlative: "saddest" },
+  { lemma: "angry", category: "emotion", comparative: "angrier", superlative: "angriest" },
+  { lemma: "tired", category: "emotion" },
+  { lemma: "excited", category: "emotion" },
+  { lemma: "scared", category: "emotion" },
+  { lemma: "brave", category: "emotion", comparative: "braver", superlative: "bravest" },
+  { lemma: "kind", category: "emotion", comparative: "kinder", superlative: "kindest" },
+  { lemma: "lazy", category: "emotion", comparative: "lazier", superlative: "laziest" },
+  { lemma: "clever", category: "emotion", comparative: "cleverer", superlative: "cleverest" },
 ];
 
 // ============================================
@@ -851,6 +909,10 @@ export const findPronoun = (lemma: string): PronounEntry | undefined =>
 // カテゴリ別に動詞を取得
 export const getVerbsByCategory = (category: VerbEntry['category']): VerbEntry[] =>
   verbs.filter(v => v.category === category);
+
+// カテゴリ別に形容詞を取得
+export const getAdjectivesByCategory = (category: AdjectiveEntry['category']): AdjectiveEntry[] =>
+  adjectives.filter(a => a.category === category);
 
 // ============================================
 // 限定詞設定ヘルパー

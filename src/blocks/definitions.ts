@@ -1,6 +1,6 @@
 import * as Blockly from 'blockly';
 import { nouns, adjectives, adverbs, pronouns, findNoun, getVerbsByCategory } from '../data/dictionary';
-import type { VerbCategory } from '../types/schema';
+import type { VerbCategory, AdjectiveCategory } from '../types/schema';
 
 // ============================================
 // 色の定義（モンテッソーリベース）
@@ -681,14 +681,46 @@ Blockly.Blocks['determiner_unified'] = {
 // ============================================
 // 形容詞ラッパーブロック（名詞修飾用）
 // ============================================
+// カテゴリ別形容詞オプション生成
+const ADJECTIVE_CATEGORY_LABELS: Record<AdjectiveCategory, string> = {
+  size: 'Size',
+  age: 'Age',
+  color: 'Color',
+  physical: 'Physical',
+  quality: 'Quality',
+  emotion: 'Emotion',
+};
+
+const ADJECTIVE_CATEGORY_ORDER: AdjectiveCategory[] = ['size', 'age', 'color', 'physical', 'quality', 'emotion'];
+
+function getAdjectiveOptions(): [string, string][] {
+  const options: [string, string][] = [];
+  for (const category of ADJECTIVE_CATEGORY_ORDER) {
+    const categoryAdjs = adjectives.filter(a => a.category === category);
+    if (categoryAdjs.length > 0) {
+      options.push([`── ${ADJECTIVE_CATEGORY_LABELS[category]} ──`, `__label_${category}__`]);
+      for (const adj of categoryAdjs) {
+        options.push([adj.lemma, adj.lemma]);
+      }
+    }
+  }
+  return options;
+}
+
 Blockly.Blocks['adjective_wrapper'] = {
   init: function() {
-    const adjOptions: [string, string][] = adjectives.map(a => [a.lemma, a.lemma]);
+    const adjOptions = getAdjectiveOptions();
 
     this.appendValueInput("NOUN")
         .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞のみ
         .appendField("ADJ")
         .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE");
+
+    // デフォルト値を最初の実際の形容詞に設定
+    const firstAdj = adjectives[0];
+    if (firstAdj) {
+      this.setFieldValue(firstAdj.lemma, "ADJ_VALUE");
+    }
 
     this.setOutput(true, "adjective");  // 形容詞付き名詞として出力
     this.setColour(COLORS.adjective);

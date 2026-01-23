@@ -98,33 +98,53 @@ function renderClause(clause: ClauseNode): string {
   return result;
 }
 
-// 等位接続された動詞句をレンダリング（主語なし）
+// 等位接続された動詞句をレンダリング
+// 右側の動詞に独自の主語がある場合は完全な節としてレンダリング
 function renderCoordinatedVerbPhrase(
   vp: VerbPhraseNode,
   tense: 'past' | 'present' | 'future',
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
   polarity: 'affirmative' | 'negative',
-  subject?: NounPhraseNode
+  leftSubject?: NounPhraseNode
 ): string {
   const verbEntry = findVerb(vp.verb.lemma);
+
+  // 主語となりうるロールを取得
+  const subjectRoles: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
+  let ownSubjectSlot: FilledArgumentSlot | undefined;
+  for (const role of subjectRoles) {
+    ownSubjectSlot = vp.arguments.find(a => a.role === role && a.filler);
+    if (ownSubjectSlot?.filler) break;
+  }
+
+  // 右側の動詞に独自の主語があるかどうかを判定
+  const hasOwnSubject = ownSubjectSlot?.filler != null;
+  const effectiveSubject = hasOwnSubject
+    ? (ownSubjectSlot!.filler!.type === 'nounPhrase' ? ownSubjectSlot!.filler as NounPhraseNode : undefined)
+    : leftSubject;
 
   // 副詞を種類別に分類
   const frequencyAdverbs = vp.adverbs.filter(a => a.advType === 'frequency');
   const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
 
-  // 動詞を活用
+  // 動詞を活用（effectiveSubject で人称・数を決定）
   const verbForm = conjugateVerbWithAdverbs(
     vp.verb.lemma,
     tense,
     aspect,
     polarity,
     frequencyAdverbs,
-    subject
+    effectiveSubject
   );
 
-  // その他の引数（目的語など）
+  // 主語をレンダリング（独自の主語がある場合のみ）
+  const subjectStr = hasOwnSubject && ownSubjectSlot?.filler
+    ? renderFiller(ownSubjectSlot.filler, true, polarity)
+    : '';
+
+  // その他の引数（目的語など）- 主語以外
   const otherArgs = vp.arguments
-    .filter(a => a.filler)
+    .filter(a => a !== ownSubjectSlot && a.filler)
     .map(a => {
       const slotDef = verbEntry?.valency.find(v => v.role === a.role);
       const preposition = slotDef?.preposition;
@@ -141,7 +161,7 @@ function renderCoordinatedVerbPhrase(
     .map(pp => renderPrepositionalPhrase(pp, polarity))
     .join(' ');
 
-  const parts = [verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
+  const parts = [subjectStr, verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
 
   let result = parts.join(' ');
 
@@ -149,7 +169,7 @@ function renderCoordinatedVerbPhrase(
   if (vp.coordinatedWith) {
     const coordVPInner = vp.coordinatedWith.verbPhrase;
     const conjunctionInner = vp.coordinatedWith.conjunction;
-    const coordVerbStr = renderCoordinatedVerbPhrase(coordVPInner, tense, aspect, polarity, subject);
+    const coordVerbStr = renderCoordinatedVerbPhrase(coordVPInner, tense, aspect, polarity, effectiveSubject);
     result += ` ${conjunctionInner} ${coordVerbStr}`;
   }
 

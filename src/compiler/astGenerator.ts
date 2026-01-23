@@ -352,8 +352,8 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode | Coordinate
     return parseDeterminerUnifiedBlock(block);
   }
 
-  // 形容詞ラッパーブロックの処理
-  if (blockType === 'adjective_wrapper') {
+  // 形容詞ラッパーブロックの処理（カテゴリ別: adjective_size, adjective_age, etc.）
+  if (blockType.startsWith('adjective_')) {
     return parseAdjectiveWrapperBlock(block);
   }
 

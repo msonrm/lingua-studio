@@ -679,54 +679,40 @@ Blockly.Blocks['determiner_unified'] = {
 };
 
 // ============================================
-// 形容詞ラッパーブロック（名詞修飾用）
+// カテゴリ別形容詞ブロック
 // ============================================
-// カテゴリ別形容詞オプション生成
-const ADJECTIVE_CATEGORY_LABELS: Record<AdjectiveCategory, string> = {
-  size: 'Size',
-  age: 'Age',
-  color: 'Color',
-  physical: 'Physical',
-  quality: 'Quality',
-  emotion: 'Emotion',
+const ADJECTIVE_CATEGORY_CONFIG: Record<AdjectiveCategory, { label: string; color: string }> = {
+  size: { label: 'SIZE', color: COLORS.adjective },
+  age: { label: 'AGE', color: COLORS.adjective },
+  color: { label: 'COLOR', color: COLORS.adjective },
+  physical: { label: 'PHYSICAL', color: COLORS.adjective },
+  quality: { label: 'QUALITY', color: COLORS.adjective },
+  emotion: { label: 'EMOTION', color: COLORS.adjective },
 };
 
-const ADJECTIVE_CATEGORY_ORDER: AdjectiveCategory[] = ['size', 'age', 'color', 'physical', 'quality', 'emotion'];
+// カテゴリ別形容詞ブロック生成関数
+function createAdjectiveCategoryBlock(category: AdjectiveCategory) {
+  const config = ADJECTIVE_CATEGORY_CONFIG[category];
+  const categoryAdjs = adjectives.filter(a => a.category === category);
 
-function getAdjectiveOptions(): [string, string][] {
-  const options: [string, string][] = [];
-  for (const category of ADJECTIVE_CATEGORY_ORDER) {
-    const categoryAdjs = adjectives.filter(a => a.category === category);
-    if (categoryAdjs.length > 0) {
-      options.push([`── ${ADJECTIVE_CATEGORY_LABELS[category]} ──`, `__label_${category}__`]);
-      for (const adj of categoryAdjs) {
-        options.push([adj.lemma, adj.lemma]);
-      }
+  Blockly.Blocks[`adjective_${category}`] = {
+    init: function() {
+      const adjOptions: [string, string][] = categoryAdjs.map(a => [a.lemma, a.lemma]);
+
+      this.appendValueInput("NOUN")
+          .setCheck(["noun", "adjective"])
+          .appendField(config.label)
+          .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE");
+
+      this.setOutput(true, "adjective");
+      this.setColour(config.color);
+      this.setTooltip(`${config.label} adjective: modifies a noun`);
     }
-  }
-  return options;
+  };
 }
 
-Blockly.Blocks['adjective_wrapper'] = {
-  init: function() {
-    const adjOptions = getAdjectiveOptions();
-
-    this.appendValueInput("NOUN")
-        .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞のみ
-        .appendField("ADJ")
-        .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE");
-
-    // デフォルト値を最初の実際の形容詞に設定
-    const firstAdj = adjectives[0];
-    if (firstAdj) {
-      this.setFieldValue(firstAdj.lemma, "ADJ_VALUE");
-    }
-
-    this.setOutput(true, "adjective");  // 形容詞付き名詞として出力
-    this.setColour(COLORS.adjective);
-    this.setTooltip("Adjective: modifies a noun (place before DET)");
-  }
-};
+// 6カテゴリの形容詞ブロックを生成
+(['size', 'age', 'color', 'physical', 'quality', 'emotion'] as AdjectiveCategory[]).forEach(createAdjectiveCategoryBlock);
 
 // ============================================
 // 頻度副詞データ定義
@@ -1104,7 +1090,14 @@ export const toolbox = {
       colour: COLORS.determiner,
       contents: [
         { kind: "block", type: "determiner_unified" },
-        { kind: "block", type: "adjective_wrapper" },
+        { kind: "label", text: "── Adjectives ──" },
+        { kind: "block", type: "adjective_size" },
+        { kind: "block", type: "adjective_age" },
+        { kind: "block", type: "adjective_color" },
+        { kind: "block", type: "adjective_physical" },
+        { kind: "block", type: "adjective_quality" },
+        { kind: "block", type: "adjective_emotion" },
+        { kind: "label", text: "── Preposition ──" },
         { kind: "block", type: "preposition_noun" },
         { kind: "label", text: "── Coordination ──" },
         { kind: "block", type: "coordination_noun_and" },

@@ -144,7 +144,6 @@ export interface NounPhraseNode {
   preDeterminer?: string;  // all, both, half
   determiner?: { kind: "definite" | "indefinite" | "none"; lexeme?: string };
   postDeterminer?: string;  // one, two, many, few, some, several
-  quantifier?: string;  // レガシー: a, one, two, many, some, few, all, no
   adjectives: { lemma: string }[];
   head: NounHead | PronounHead;
   prepModifier?: PrepositionalPhraseNode;  // 前置詞句修飾 ("the apple ON THE DESK")

@@ -291,16 +291,6 @@ function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarit
     parts.push(np.postDeterminer);
   }
 
-  // レガシー数量詞（a, one, two, many など）
-  if (np.quantifier) {
-    if (np.quantifier === 'a') {
-      // a/an の判定は後で行う
-      parts.push('INDEF');
-    } else {
-      parts.push(np.quantifier);
-    }
-  }
-
   // 形容詞
   np.adjectives.forEach(adj => {
     parts.push(adj.lemma);

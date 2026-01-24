@@ -109,9 +109,10 @@ verb(agent:'x, theme:'y, ...)
 | `agent` | 動作主 | I, she |
 | `theme` | 対象 | apple, book |
 | `recipient` | 受け手 | you, him |
-| `source` | 起点 | store, Tokyo |
-| `goal` | 着点 | station, home |
-| `instrument` | 道具 | knife, pen |
+| `source` | 起点 | from the store |
+| `goal` | 着点 | to the station |
+
+**注意**: `source`/`goal` は移動・授与動詞の必須項として使用する。任意の場所表現は `pp()` で表現する。
 
 ### 拡張役割
 
@@ -125,6 +126,18 @@ verb(agent:'x, theme:'y, ...)
 | `beneficiary` | 利益を受ける者 | 授与動詞 | I bought a gift for **you**. |
 | `possessor` | 所有者 | have, own等 | **I** have a car. |
 | `attribute` | 属性・状態 | コピュラ動詞（be） | She is **happy**. |
+
+### コピュラ動詞（be）の構造
+
+コピュラ動詞では、主語は `theme`（属性が述べられる対象）として扱う。
+
+```lisp
+be(theme:'she, attribute:'happy)
+;; → "She is happy."
+
+be(theme:'this, attribute:'my_book)
+;; → "This is my book."
+```
 
 ### theme vs patient の使い分け
 
@@ -172,6 +185,26 @@ time('just_now, sentence(perfect(eat(agent:'I, patient:'apple))))
 'recently, 'lately, 'soon               ;; 相対的
 ```
 
+### 時間副詞と時制・相の制約
+
+特定の時間副詞は特定の時制・相と共起する。コンパイラはこれを検証し、UIでは不適切な組み合わせを制限できる。
+
+| 時間副詞 | 推奨される時制・相 | 非文法的な組み合わせ |
+|---------|------------------|---------------------|
+| yesterday, last week | past + simple | ~~present perfect~~ |
+| just, already, yet | present + perfect | - |
+| now | present + progressive | - |
+| tomorrow | future | ~~past~~ |
+
+```lisp
+;; OK: 過去の具体時点 + 過去単純
+time('yesterday, sentence(past(simple(eat(...)))))
+
+;; NG: 過去の具体時点 + 現在完了（英語では非文法的）
+time('yesterday, sentence(present(perfect(eat(...)))))
+;; → コンパイラが警告または自動修正
+```
+
 ### 様態副詞（Manner Adverbs）
 
 動作の様態は `manner()` ラッパーで表現する。
@@ -212,7 +245,7 @@ pp('in, 'park, eat(agent:'I, patient:'apple))
 pp('to, 'station, run(agent:'I))
 ;; → "I run to the station."
 
-;; 道具（instrumentの代替表現）
+;; 道具
 pp('with, 'knife, cut(agent:'I, patient:'bread))
 ;; → "I cut the bread with a knife."
 
@@ -407,6 +440,21 @@ sentence(past(eat(agent:'I, theme:'apple)))
 sentence(past(simple(active(eat(agent:'I, theme:'apple)))))
 ```
 
+### 受動態での by 句生成
+
+受動態で `agent` が指定されている場合、コンパイラが自動的に by 句を生成する。
+
+```lisp
+;; ユーザー記述（agentなし）
+sentence(passive(eat(patient:'apple)))
+;; → "The apple was eaten."
+
+;; ユーザー記述（agentあり）
+sentence(passive(eat(agent:'I, patient:'apple)))
+;; → "The apple was eaten by me."
+;; （agentが自動的にby句に変換される）
+```
+
 ---
 
 ## 名詞句（比較級・最上級）
@@ -531,12 +579,27 @@ and(or('a, 'b), 'c)
 ;; 人称代名詞
 'I, 'you, 'he, 'she, 'it, 'we, 'they
 
+;; 所有代名詞（名詞句として使用）
+'mine, 'yours, 'his, 'hers, 'ours, 'theirs
+
 ;; 指示代名詞
 'this, 'that, 'these, 'those
 
 ;; 不定代名詞
 'someone, 'something, 'everyone, 'everything
 'anyone, 'anything, 'nobody, 'nothing
+```
+
+**注意**: 所有代名詞と所有限定詞（my, your 等）は異なる。
+- 所有限定詞: 名詞を修飾 → `noun(det:'my, head:'book)` → "my book"
+- 所有代名詞: 名詞句として使用 → `'mine` → "mine"
+
+```lisp
+;; "This book is mine."
+be(theme:'this_book, attribute:'mine)
+
+;; "Mine is bigger."
+be(theme:'mine, attribute:'bigger)
 ```
 
 ### 格変化
@@ -578,16 +641,20 @@ sentence(not(see(agent:'I, theme:'someone)))
 
 複数の形容詞がある場合、意味カテゴリに基づいて自動的に語順が決定される。
 
-### Dixon分類に基づく語順
+### 標準的な英語形容詞の語順
 
 | 順序 | カテゴリ | 例 |
 |------|---------|-----|
-| 1 | 評価・品質 (quality) | beautiful, nice, good |
+| 1 | 評価 (opinion) | beautiful, nice, lovely |
 | 2 | サイズ (size) | big, small, large |
-| 3 | 物理的性質 (physical) | heavy, soft, hard |
-| 4 | 年齢 (age) | old, new, young |
+| 3 | 年齢 (age) | old, new, young |
+| 4 | 形状 (shape) | round, square, flat |
 | 5 | 色 (color) | red, blue, green |
-| 6 | 感情 (emotion) | happy, sad, angry |
+| 6 | 起源 (origin) | Japanese, French |
+| 7 | 素材 (material) | wooden, metal, cotton |
+| 8 | 目的 (purpose) | sleeping (bag), running (shoes) |
+
+**注意**: この語順は目安であり、強制ではない。ユーザーが指定した順序を尊重しつつ、デフォルトではこの順序を適用する。
 
 ### 例
 
@@ -595,8 +662,11 @@ sentence(not(see(agent:'I, theme:'someone)))
 noun(adj:['big, 'red], head:'apple)
 ;; → "big red apple"（size → color の順）
 
-noun(adj:['old, 'beautiful, 'wooden], head:'table)
-;; → "beautiful old wooden table"（quality → age → physical の順）
+noun(adj:['beautiful, 'old, 'wooden], head:'table)
+;; → "beautiful old wooden table"（opinion → age → material の順）
+
+noun(adj:['small, 'Japanese, 'wooden], head:'box)
+;; → "small Japanese wooden box"（size → origin → material の順）
 ```
 
 ---
@@ -667,7 +737,7 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 
 ;; 意味役割（基本 + 拡張）
 <role>          ::= <basic-role> | <extended-role>
-<basic-role>    ::= "agent" | "theme" | "recipient" | "source" | "goal" | "instrument"
+<basic-role>    ::= "agent" | "theme" | "recipient" | "source" | "goal"
 <extended-role> ::= "patient" | "experiencer" | "stimulus"
                   | "beneficiary" | "possessor" | "attribute"
 
@@ -700,8 +770,9 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 <post-mod>      ::= "post:" ("than(" <value> ")" | "as(" <value> ", " <value> ")")
 
 ;; 代名詞
-<pronoun>       ::= <personal> | <demonstrative> | <indefinite>
+<pronoun>       ::= <personal> | <possessive-pron> | <demonstrative> | <indefinite>
 <personal>      ::= "'I" | "'you" | "'he" | "'she" | "'it" | "'we" | "'they"
+<possessive-pron> ::= "'mine" | "'yours" | "'his" | "'hers" | "'ours" | "'theirs"
 <demonstrative> ::= "'this" | "'that" | "'these" | "'those"
 <indefinite>    ::= "'someone" | "'something" | "'everyone" | "'everything"
                   | "'anyone" | "'anything" | "'nobody" | "'nothing"

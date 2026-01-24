@@ -27,12 +27,27 @@
 
 ### UI & Localization
 - [ ] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）
-- [ ] 日本語レンダラー
 - [ ] Grammar Console（文法判断のログ表示）
 - [ ] TimeChip 3連プルダウン化（教育的UX改善）
   - [Tense][Aspect][Time] の3スロット構成
   - Time で "Yesterday" を選択 → [Past][Simple][Yesterday] に自動設定
   - 非文法的な組み合わせに×印、自動修正機能
+
+### Multilingual & Language Parameters
+- [ ] 日本語レンダラー
+  - 日本語辞書 (dictionary-ja.ts)
+  - SOV語順、助詞選択、敬語処理
+- [ ] パラメータベースのレンダラー設計
+  - チョムスキー「原理とパラメータ」理論に基づく
+  - 語順パラメータ: SVO, SOV, VSO, VOS, OSV, OVS
+  - 主要部位置: head-initial / head-final
+  - Pro-drop: 主語省略可否
+  - Wh移動: 疑問詞の文頭移動
+  - 冠詞有無 / 格助詞使用
+  - 教育ツールとしての活用（同じASTから異なる語順で出力）
+- [ ] LinguaScriptパーサー（双方向変換の基盤）
+  - BNF文法に基づく実装
+  - AST ↔ LinguaScript の等価変換
 
 ### LinguaScript Editor
 - [ ] Monaco Editor 統合

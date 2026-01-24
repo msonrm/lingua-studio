@@ -103,7 +103,11 @@ function renderFillerToScript(filler: NounPhraseNode | AdjectivePhraseNode | Coo
   } else if (filler.type === 'coordinatedNounPhrase') {
     return renderCoordinatedNounPhraseToScript(filler as CoordinatedNounPhraseNode);
   } else if (filler.type === 'adjectivePhrase') {
-    return `'${(filler as AdjectivePhraseNode).head.lemma}`;
+    const ap = filler as AdjectivePhraseNode;
+    if (ap.degree) {
+      return `degree('${ap.degree.lemma}, '${ap.head.lemma})`;
+    }
+    return `'${ap.head.lemma}`;
   }
   return '?';
 }

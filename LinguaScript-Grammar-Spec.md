@@ -711,87 +711,216 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 
 ## BNF風の形式文法
 
+### 現行実装の文法
+
 ```bnf
-<utterance>     ::= <attitude>? <negA>? <modal>? <adjuncts>? <sentence>
+;; ============================================
+;; 文レベル（最外殻から内側へ）
+;; ============================================
 
-<attitude>      ::= "?" | "imperative"
-<negA>          ::= "not(" <modal>? <sentence> ")"
-<modal>         ::= "modal('" <modal-type> ", " <sentence> ")"
-<modal-type>    ::= "must" | "can" | "may" | "should" | "will" | "would" | "could" | "might"
+<utterance>     ::= <time-adv>? <attitude>? "sentence(" <clause> ")"
 
-<sentence>      ::= "sentence(" <tense>? <aspect>? <voice>? <negB>? <verb-expr> ")"
+<attitude>      ::= "imperative("    ;; 命令文
 
-<tense>         ::= "past(" | "present(" | "future("
-<aspect>        ::= "simple(" | "progressive(" | "perfect(" | "perfectProgressive("
-<voice>         ::= "passive(" | "causative("
-<negB>          ::= "not("
+<time-adv>      ::= "time('" <time-word> ", " <utterance-body> ")"
+<time-word>     ::= "yesterday" | "today" | "tomorrow" | "now" | "just_now"
+                  | "already" | "yet" | "still" | "recently" | "lately" | "soon"
 
-;; 動詞句（等位接続対応）
-<verb-expr>     ::= <adjuncts>? <verb-phrase> | <verb-coord>
-<verb-coord>    ::= "and(" <verb-expr> ("," <verb-expr>)+ ")"
-                  | "or(" <verb-expr> ("," <verb-expr>)+ ")"
-<verb-phrase>   ::= <verb> "(" <arguments> ")"
-<verb>          ::= "eat" | "give" | "run" | "see" | "like" | "have" | "be" | ...
+;; ============================================
+;; 節レベル（sentence内部）
+;; ============================================
+
+<clause>        ::= <tense> "(" <aspect> "(" <negation>? <verb-expr> ")" ")"
+
+<tense>         ::= "past" | "present" | "future"
+<aspect>        ::= "simple" | "progressive" | "perfect" | "perfectProgressive"
+<negation>      ::= "not("
+
+;; ============================================
+;; 動詞句（付加詞でラップ）
+;; ============================================
+
+<verb-expr>     ::= <verb-adjuncts>* <verb-core>
+<verb-adjuncts> ::= <frequency-adv> | <manner-adv> | <prep-phrase>
+
+<frequency-adv> ::= "frequency('" <freq-word> ", "
+<freq-word>     ::= "always" | "usually" | "often" | "sometimes" | "rarely" | "never"
+
+<manner-adv>    ::= "manner('" <manner-word> ", "
+<manner-word>   ::= "quickly" | "slowly" | "carefully" | "badly" | "well" | ...
+
+<prep-phrase>   ::= "pp('" <preposition> ", " <noun-expr> ", "
+<preposition>   ::= "in" | "on" | "at" | "to" | "from" | "with" | "by" | "for" | "about" | ...
+
+;; ============================================
+;; 動詞コア（等位接続対応）
+;; ============================================
+
+<verb-core>     ::= <verb-phrase> | <verb-coord>
+<verb-coord>    ::= "and(" <verb-expr> ", " <verb-expr> ")"
+                  | "or(" <verb-expr> ", " <verb-expr> ")"
+
+<verb-phrase>   ::= <verb-lemma> "(" <arguments>? ")"
+<verb-lemma>    ::= "eat" | "give" | "run" | "see" | "like" | "have" | "be" | ...
+
 <arguments>     ::= <argument> ("," <argument>)*
 <argument>      ::= <role> ":" <value>
 
-;; 意味役割（基本 + 拡張）
+;; ============================================
+;; 意味役割
+;; ============================================
+
 <role>          ::= <basic-role> | <extended-role>
 <basic-role>    ::= "agent" | "theme" | "recipient" | "source" | "goal"
 <extended-role> ::= "patient" | "experiencer" | "stimulus"
                   | "beneficiary" | "possessor" | "attribute"
 
-;; 付加詞（任意の修飾要素）
-<adjuncts>      ::= <adjunct>+
-<adjunct>       ::= <time-adv> | <manner-adv> | <frequency-adv> | <prep-phrase>
-<time-adv>      ::= "time('" <time-word> ", " <verb-expr> ")"
-<time-word>     ::= "yesterday" | "today" | "tomorrow" | "now" | "just_now" | ...
-<manner-adv>    ::= "manner('" <manner-word> ", " <verb-expr> ")"
-<manner-word>   ::= "quickly" | "slowly" | "carefully" | ...
-<frequency-adv> ::= "frequency('" <freq-word> ", " <verb-expr> ")"
-<freq-word>     ::= "always" | "usually" | "often" | "sometimes" | "rarely" | "never"
-<prep-phrase>   ::= "pp('" <preposition> ", " <noun-expr> ", " <verb-expr> ")"
-<preposition>   ::= "in" | "on" | "at" | "to" | "from" | "with" | "by" | "for" | "about" | ...
+;; ============================================
+;; 値（名詞句・形容詞句・疑問）
+;; ============================================
 
-<value>         ::= <noun-expr> | "?" | "?or(" <value> "," <value> ")"
+<value>         ::= <noun-expr> | <adj-expr> | <question>
+<question>      ::= "?" | "?or(" <value> ", " <value> ")"
 
+;; ============================================
 ;; 名詞句（等位接続対応）
+;; ============================================
+
 <noun-expr>     ::= <noun-phrase> | <noun-coord> | <pronoun>
-<noun-coord>    ::= "and(" <noun-expr> ("," <noun-expr>)+ ")"
-                  | "or(" <noun-expr> ("," <noun-expr>)+ ")"
 
-;; 名詞句（3層限定詞システム）
-<noun-phrase>   ::= "noun(" <np-args> ")"
-<np-args>       ::= (<pre-det>)? (<det>)? (<post-det>)? (<adj-list>)? "head:" <word> (<post-mod>)?
-<pre-det>       ::= "pre:" ("'all" | "'both" | "'half")
-<det>           ::= "det:" ("'the" | "'a" | "'this" | "'that" | "'my" | "'your" | ... | "'no")
-<post-det>      ::= "post:" ("'one" | "'two" | ... | "'many" | "'few" | "'some" | "'several" | "'[plural]" | "'[uncountable]")
-<adj-list>      ::= "adj:" "[" "'" <adjective> ("," "'" <adjective>)* "]"
-<post-mod>      ::= "post:" ("than(" <value> ")" | "as(" <value> ", " <value> ")")
+<noun-coord>    ::= "and(" <noun-expr> ", " <noun-expr> ("," <noun-expr>)* ")"
+                  | "or(" <noun-expr> ", " <noun-expr> ("," <noun-expr>)* ")"
 
-;; 代名詞
-<pronoun>       ::= <personal> | <possessive-pron> | <demonstrative> | <indefinite>
-<personal>      ::= "'I" | "'you" | "'he" | "'she" | "'it" | "'we" | "'they"
-<possessive-pron> ::= "'mine" | "'yours" | "'his" | "'hers" | "'ours" | "'theirs"
-<demonstrative> ::= "'this" | "'that" | "'these" | "'those"
-<indefinite>    ::= "'someone" | "'something" | "'everyone" | "'everything"
-                  | "'anyone" | "'anything" | "'nobody" | "'nothing"
+;; ============================================
+;; 名詞句（3層限定詞 + 形容詞 + ヘッド + 後置修飾）
+;; ============================================
+
+<noun-phrase>   ::= "noun(" <np-parts> ")"
+<np-parts>      ::= <pre-det>? <det>? <post-det>? <adj-part>? <head-part> <np-post-mod>?
+
+<pre-det>       ::= "pre:'" <pre-det-word>
+<pre-det-word>  ::= "all" | "both" | "half"
+
+<det>           ::= "det:'" <det-word>
+<det-word>      ::= "the" | "a" | "this" | "that" | "these" | "those"
+                  | "my" | "your" | "his" | "her" | "its" | "our" | "their" | "no"
+
+<post-det>      ::= "post:'" <post-det-word>
+<post-det-word> ::= "one" | "two" | "three" | "many" | "few" | "some" | "several"
+                  | "[plural]" | "[uncountable]"
+
+<adj-part>      ::= "adj:'" <adjective>                              ;; 単一形容詞
+                  | "adj:['" <adjective> ("," "'" <adjective>)* "]"  ;; 複数形容詞
+
+<head-part>     ::= "head:'" <noun-lemma>
+<noun-lemma>    ::= "apple" | "book" | "teacher" | "park" | ...
+
+<np-post-mod>   ::= "post:pp('" <preposition> ", " <noun-expr> ")"   ;; 前置詞句修飾
+                  | "post:than(" <noun-expr> ")"                     ;; 比較
+                  | "post:as('" <adjective> ", " <noun-expr> ")"     ;; 同等比較
+
+;; ============================================
+;; 代名詞（クォート付きリテラル）
+;; ============================================
+
+<pronoun>       ::= "'" <pronoun-word>
+<pronoun-word>  ::= <personal> | <possessive-pron> | <demonstrative-pron> | <indefinite-pron>
+
+<personal>      ::= "I" | "you" | "he" | "she" | "it" | "we" | "they"
+<possessive-pron> ::= "mine" | "yours" | "his" | "hers" | "ours" | "theirs"
+<demonstrative-pron> ::= "this" | "that" | "these" | "those"
+<indefinite-pron> ::= "someone" | "something" | "everyone" | "everything"
+                    | "anyone" | "anything" | "nobody" | "nothing"
+
+;; ============================================
+;; 形容詞句（attribute役割用）
+;; ============================================
+
+<adj-expr>      ::= "'" <adjective>                                  ;; 単純形容詞
+                  | "degree('" <degree-word> ", '" <adjective> ")"   ;; 程度修飾
+
+<degree-word>   ::= "very" | "extremely" | "quite" | "rather" | "fairly" | ...
+<adjective>     ::= "big" | "small" | "happy" | "sad" | "red" | "old" | ...
+```
+
+### 将来拡張（未実装）
+
+以下の構文は仕様として定義されているが、現行実装では未対応。
+
+```bnf
+;; 疑問文
+<attitude>      ::= "?("           ;; Yes/No疑問文・Wh疑問文
+
+;; モダリティ
+<modal>         ::= "modal('" <modal-type> ", " <sentence> ")"
+<modal-type>    ::= "must" | "can" | "may" | "should" | "will" | "would" | "could" | "might"
+
+;; モダリティの否定
+<neg-modal>     ::= "not(" <modal> ")"
+
+;; 態（受動態・使役）
+<voice>         ::= "passive(" | "causative("
 ```
 
 ---
 
 ## クイックリファレンス
 
+### 現行実装
+
 ```lisp
 ;; 基本構文
-sentence(<tense>(<aspect>(<voice>(<verb>(arg1, arg2, ...)))))
+sentence(<tense>(<aspect>(<verb>(role:'value, ...))))
 
-;; 最小形（省略あり）
-sentence(verb(agent:'x, theme:'y))
+;; 例: "I eat an apple."
+sentence(present(simple(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
 
+;; 過去形: "I ate an apple."
+sentence(past(simple(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
+
+;; 進行形: "I am eating an apple."
+sentence(present(progressive(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
+
+;; 完了形: "I have eaten an apple."
+sentence(present(perfect(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
+
+;; 否定: "I don't eat an apple."
+sentence(present(simple(not(eat(agent:'I, theme:noun(det:'a, head:'apple))))))
+
+;; 命令文: "Eat the apple!"
+imperative(sentence(present(simple(eat(theme:noun(det:'the, head:'apple))))))
+
+;; 時間副詞: "Yesterday, I ate an apple."
+time('yesterday, sentence(past(simple(eat(agent:'I, theme:noun(det:'a, head:'apple))))))
+
+;; 頻度副詞: "I always eat apples."
+sentence(present(simple(frequency('always, eat(agent:'I, theme:noun(post:'[plural], head:'apple))))))
+
+;; 様態副詞: "I quickly eat an apple."
+sentence(present(simple(manner('quickly, eat(agent:'I, theme:noun(det:'a, head:'apple))))))
+
+;; 前置詞句: "I eat an apple in the park."
+sentence(present(simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, theme:noun(det:'a, head:'apple))))))
+
+;; 等位接続（名詞）: "I and you"
+and('I, 'you)
+
+;; 等位接続（動詞）: "I eat and drink."
+sentence(present(simple(and(eat(agent:'I), drink(agent:'I)))))
+
+;; 名詞句: "all the three big red apples"
+noun(pre:'all, det:'the, post:'three, adj:['big, 'red], head:'apple)
+
+;; コピュラ: "She is very happy."
+sentence(present(simple(be(theme:'she, attribute:degree('very, 'happy)))))
+```
+
+### 将来拡張（未実装）
+
+```lisp
 ;; 疑問文
-?(sentence(...))           ;; Yes/No
-sentence(verb(theme:?))    ;; Wh（自動で?()補完）
+?(sentence(...))           ;; Yes/No疑問文
+sentence(verb(theme:?))    ;; Wh疑問文
 
 ;; モダリティ
 modal('must, sentence(...))
@@ -799,7 +928,6 @@ modal('must, sentence(...))
 ;; 受動態
 sentence(passive(verb(theme:'x)))
 
-;; 否定
-sentence(not(verb(...)))        ;; 動作の否定
-not(modal('must, sentence(...))) ;; モダリティの否定
+;; モダリティの否定
+not(modal('must, sentence(...)))
 ```

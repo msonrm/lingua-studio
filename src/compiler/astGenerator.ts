@@ -27,26 +27,65 @@ export function generateAST(workspace: Blockly.Workspace): SentenceNode | null {
 // 複数のSENTENCEブロックから複数のASTを生成
 export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[] {
   const sentences: SentenceNode[] = [];
+  const processedTimeFrames = new Set<string>();
 
-  // modal_wrapperブロックを処理
+  // imperative_wrapperブロックを処理（最外側）
+  const imperativeBlocks = workspace.getBlocksByType('imperative_wrapper', false);
+  for (const imperativeBlock of imperativeBlocks) {
+    // imperative内にmodal_wrapperがあるかチェック
+    const innerBlock = imperativeBlock.getInputTargetBlock('SENTENCE');
+    if (innerBlock) {
+      if (innerBlock.type === 'modal_wrapper') {
+        // imperative > modal > time_frame
+        const modalValue = innerBlock.getFieldValue('MODAL_VALUE') as ModalType;
+        const timeFrameBlock = innerBlock.getInputTargetBlock('SENTENCE');
+        if (timeFrameBlock && timeFrameBlock.type === 'time_frame') {
+          const ast = parseTimeFrameBlock(timeFrameBlock, modalValue, 'imperative');
+          if (ast) {
+            sentences.push(ast);
+            processedTimeFrames.add(timeFrameBlock.id);
+          }
+        }
+      } else if (innerBlock.type === 'time_frame') {
+        // imperative > time_frame
+        const ast = parseTimeFrameBlock(innerBlock, undefined, 'imperative');
+        if (ast) {
+          sentences.push(ast);
+          processedTimeFrames.add(innerBlock.id);
+        }
+      }
+    }
+  }
+
+  // modal_wrapperブロックを処理（imperative内は除く）
   const modalBlocks = workspace.getBlocksByType('modal_wrapper', false);
   for (const modalBlock of modalBlocks) {
+    // 親がimperative_wrapperの場合はスキップ（既に処理済み）
+    const parentBlock = modalBlock.getParent();
+    if (parentBlock && parentBlock.type === 'imperative_wrapper') {
+      continue;
+    }
     const modalValue = modalBlock.getFieldValue('MODAL_VALUE') as ModalType;
     const timeFrameBlock = modalBlock.getInputTargetBlock('SENTENCE');
     if (timeFrameBlock && timeFrameBlock.type === 'time_frame') {
       const ast = parseTimeFrameBlock(timeFrameBlock, modalValue);
       if (ast) {
         sentences.push(ast);
+        processedTimeFrames.add(timeFrameBlock.id);
       }
     }
   }
 
-  // modal_wrapperに接続されていないtime_frameブロックを処理
+  // ラッパーに接続されていないtime_frameブロックを処理
   const timeFrameBlocks = workspace.getBlocksByType('time_frame', false);
   for (const block of timeFrameBlocks) {
-    // 親がmodal_wrapperの場合はスキップ（既に処理済み）
+    // 既に処理済みの場合はスキップ
+    if (processedTimeFrames.has(block.id)) {
+      continue;
+    }
+    // 親がwrapperの場合はスキップ
     const parentBlock = block.getParent();
-    if (parentBlock && parentBlock.type === 'modal_wrapper') {
+    if (parentBlock && (parentBlock.type === 'modal_wrapper' || parentBlock.type === 'imperative_wrapper')) {
       continue;
     }
     const ast = parseTimeFrameBlock(block);
@@ -71,7 +110,11 @@ interface VerbChainResult {
   };
 }
 
-function parseTimeFrameBlock(block: Blockly.Block, modal?: ModalType): SentenceNode | null {
+function parseTimeFrameBlock(
+  block: Blockly.Block,
+  modal?: ModalType,
+  sentenceType: 'declarative' | 'imperative' = 'declarative'
+): SentenceNode | null {
   // TimeChipを取得してTense/Aspect/出力単語を決定
   const timeChipBlock = block.getInputTargetBlock('TIME_CHIP');
   const { tense, aspect, timeAdverbial } = parseTimeChip(timeChipBlock);
@@ -118,7 +161,7 @@ function parseTimeFrameBlock(block: Blockly.Block, modal?: ModalType): SentenceN
   return {
     type: 'sentence',
     clause,
-    sentenceType: 'declarative',
+    sentenceType,
     timeAdverbial,
   };
 }

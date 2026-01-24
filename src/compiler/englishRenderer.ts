@@ -24,15 +24,19 @@ const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'the
 // AST → 英文レンダラー
 // ============================================
 export function renderToEnglish(ast: SentenceNode): string {
-  const clause = renderClause(ast.clause);
+  // 命令文の場合は別処理
+  const clause = ast.sentenceType === 'imperative'
+    ? renderImperativeClause(ast.clause)
+    : renderClause(ast.clause);
 
   // 時間副詞を文末に追加
   const timeAdverbial = ast.timeAdverbial;
   const fullSentence = timeAdverbial ? `${clause} ${timeAdverbial}` : clause;
 
-  // 文頭を大文字に、末尾にピリオド
+  // 文頭を大文字に、末尾は命令文なら感嘆符、それ以外はピリオド
   const capitalized = fullSentence.charAt(0).toUpperCase() + fullSentence.slice(1);
-  return capitalized + '.';
+  const punctuation = ast.sentenceType === 'imperative' ? '!' : '.';
+  return capitalized + punctuation;
 }
 
 function renderClause(clause: ClauseNode): string {
@@ -106,6 +110,68 @@ function renderClause(clause: ClauseNode): string {
   }
 
   return result;
+}
+
+// 命令文の節をレンダリング（主語省略、動詞原形）
+function renderImperativeClause(clause: ClauseNode): string {
+  const { verbPhrase, polarity, modal } = clause;
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
+
+  // 副詞を種類別に分類
+  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
+  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
+
+  // 動詞形を決定（命令文は原形）
+  let verbForm: string;
+  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
+
+  if (modal) {
+    // modal付き命令文は珍しいが対応（例: "Do please eat"のような丁寧表現）
+    const baseForm = verbEntry?.forms.base || verbPhrase.verb.lemma;
+    if (polarity === 'negative') {
+      verbForm = freqStr
+        ? `${modal} not ${freqStr} ${baseForm}`
+        : `${modal} not ${baseForm}`;
+    } else {
+      verbForm = freqStr
+        ? `${modal} ${freqStr} ${baseForm}`
+        : `${modal} ${baseForm}`;
+    }
+  } else if (polarity === 'negative') {
+    // 否定命令: "Don't eat" / "Do not eat"
+    const baseForm = verbEntry?.forms.base || verbPhrase.verb.lemma;
+    verbForm = freqStr
+      ? `do not ${freqStr} ${baseForm}`
+      : `do not ${baseForm}`;
+  } else {
+    // 肯定命令: 原形のみ
+    const baseForm = verbEntry?.forms.base || verbPhrase.verb.lemma;
+    verbForm = freqStr ? `${freqStr} ${baseForm}` : baseForm;
+  }
+
+  // その他の引数（目的語など）- 主語は除外
+  const subjectRoles: SemanticRole[] = ['agent', 'experiencer', 'possessor'];
+  const otherArgs = verbPhrase.arguments
+    .filter(a => !subjectRoles.includes(a.role) && a.filler)
+    .map(a => {
+      const slotDef = verbEntry?.valency.find(v => v.role === a.role);
+      const preposition = slotDef?.preposition;
+      const rendered = renderFiller(a.filler!, false, polarity);
+      return preposition ? `${preposition} ${rendered}` : rendered;
+    })
+    .join(' ');
+
+  // 様態副詞は文末
+  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+
+  // 前置詞句（動詞修飾）
+  const prepPhrases = verbPhrase.prepositionalPhrases
+    .map(pp => renderPrepositionalPhrase(pp, polarity))
+    .join(' ');
+
+  // 語順: Verb + Objects + PrepPhrases + Manner（主語なし）
+  const parts = [verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
+  return parts.join(' ');
 }
 
 // 等位接続された動詞句をレンダリング

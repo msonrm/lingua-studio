@@ -244,6 +244,20 @@ Blockly.Blocks['modal_wrapper'] = {
 };
 
 // ============================================
+// Imperative ラッパーブロック（命令文）
+// ============================================
+Blockly.Blocks['imperative_wrapper'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("IMPERATIVE");
+    this.appendStatementInput("SENTENCE")
+        .setCheck("sentence");
+    this.setColour(COLORS.imperative);
+    this.setTooltip("Imperative: creates a command (e.g., 'Eat the apple!')");
+  }
+};
+
+// ============================================
 // TimeChip - Concrete (時点指定)
 // ============================================
 Blockly.Blocks['time_chip_concrete'] = {
@@ -1051,6 +1065,8 @@ export const toolbox = {
         { kind: "block", type: "time_frame" },
         { kind: "label", text: "── Modal ──" },
         { kind: "block", type: "modal_wrapper" },
+        { kind: "label", text: "── Imperative ──" },
+        { kind: "block", type: "imperative_wrapper" },
         { kind: "label", text: "── Time ──" },
         { kind: "block", type: "time_chip_concrete" },
         { kind: "label", text: "── Aspect ──" },

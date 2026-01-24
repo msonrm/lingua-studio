@@ -18,8 +18,6 @@
   - agent が指定されている場合は by 句を自動生成
   - 仕様: `sentence(passive(eat(agent:'I, patient:'apple)))` → "The apple was eaten by me."
 - [ ] Causative（使役態）wrapper
-- [ ] 所有代名詞ブロック (mine, yours, his, hers, ours, theirs)
-  - 述語位置・主語位置で使用可能
 
 ### Coordination
 - [ ] 否定とのスコープ相互作用（De Morgan）
@@ -82,6 +80,9 @@
 - [x] 指示代名詞 (this/that/these/those) を代名詞ブロックに追加
 - [x] 不定代名詞 + 形容詞対応 ("something good", "someone important")
   - 不定代名詞の場合のみ形容詞を後置でレンダリング
+- [x] 所有代名詞ブロック (mine, yours, his, hers, ours, theirs)
+  - 専用ブロック（possessive_pronoun_block）として実装
+  - 述語位置・主語位置で使用可能
 
 ### Sentence / Time / Aspect
 - [x] Time/Aspect ブロックの言語学的レビューと修正

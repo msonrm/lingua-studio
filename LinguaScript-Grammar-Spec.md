@@ -100,6 +100,8 @@ verb(agent:'x, theme:'y, ...)
 
 ## 意味役割（Semantic Roles）
 
+### 基本役割
+
 | 役割 | 説明 | 例 |
 |------|------|-----|
 | `agent` | 動作主 | I, she |
@@ -112,6 +114,31 @@ verb(agent:'x, theme:'y, ...)
 | `time` | 時間 | yesterday, now |
 | `manner` | 様態 | quickly |
 | `reason` | 理由 | because... |
+
+### 拡張役割
+
+動詞の種類によっては、追加の意味役割を使用する。
+
+| 役割 | 説明 | 使用する動詞 | 例 |
+|------|------|-------------|-----|
+| `patient` | 状態変化を被る対象 | 動作動詞（eat, break等） | I eat **an apple**. |
+| `experiencer` | 心理状態の主体 | 心理動詞（like, know等） | **I** like apples. |
+| `stimulus` | 心理状態の原因 | 心理動詞（like, know等） | I like **apples**. |
+| `beneficiary` | 利益を受ける者 | 授与動詞 | I bought a gift for **you**. |
+| `possessor` | 所有者 | have, own等 | **I** have a car. |
+| `attribute` | 属性・状態 | コピュラ動詞（be） | She is **happy**. |
+
+### theme vs patient の使い分け
+
+```lisp
+;; theme: 移動・変化を伴わない対象（giveのもの、seeの目撃対象）
+give(agent:'I, theme:'book, recipient:'you)
+see(agent:'I, theme:'bird)
+
+;; patient: 動作の影響を直接受ける対象（eatの食べられるもの）
+eat(agent:'I, patient:'apple)
+break(agent:'I, patient:'window)
+```
 
 ### agentの必須/任意
 
@@ -308,6 +335,178 @@ noun(det:'a, head:'apple, post:as('big, 'that_one))
 
 ---
 
+## 限定詞システム（Determiner System）
+
+英語の限定詞は3層構造で表現する。
+
+### 構造
+
+```lisp
+noun(pre:'all, det:'the, post:'three, head:'apples)
+;; → "all the three apples"
+```
+
+### 限定詞の3層
+
+| 層 | 名前 | 要素 |
+|----|------|------|
+| pre | 前置限定詞 | all, both, half |
+| det | 中央限定詞 | the, this, that, a/an, my, your, his, her, its, our, their, no |
+| post | 後置限定詞 | one, two, three, many, few, some, several, [plural], [uncountable] |
+
+### 制約
+
+```lisp
+;; 固有名詞は限定詞なし
+noun(head:'Tokyo)
+
+;; 不可算名詞は一部の後置限定詞のみ
+noun(det:'the, head:'water)           ;; OK
+noun(post:'three, head:'water)        ;; NG
+
+;; 相互排他的な組み合わせ
+noun(det:'a, post:'[plural])          ;; NG（a + 複数は矛盾）
+noun(pre:'all, det:'a)                ;; NG（all + a は矛盾）
+```
+
+### 例
+
+```lisp
+noun(det:'the, head:'apple)
+;; → "the apple"
+
+noun(det:'a, head:'apple)
+;; → "an apple"（母音の前は自動で an）
+
+noun(pre:'all, det:'my, head:'friends)
+;; → "all my friends"
+
+noun(post:'[plural], head:'apple)
+;; → "apples"（限定詞なしの複数形）
+```
+
+---
+
+## 等位接続（Coordination）
+
+名詞句と動詞句の等位接続をサポートする。
+
+### 名詞句の等位接続
+
+```lisp
+;; "I and you"
+and('I, 'you)
+
+;; "an apple or an orange"
+or(noun(det:'a, head:'apple), noun(det:'a, head:'orange))
+
+;; 3項以上の場合はフラット化
+and('I, 'you, 'he)
+;; → "I, you, and he"
+```
+
+### 動詞句の等位接続
+
+```lisp
+;; "I eat and drink."
+sentence(and(eat(agent:'I), drink(agent:'I)))
+
+;; "I run or walk."
+sentence(or(run(agent:'I), walk(agent:'I)))
+```
+
+### ネスト時の処理
+
+```lisp
+;; 同じ接続詞はフラット化
+and(and('a, 'b), 'c) → and('a, 'b, 'c)
+;; → "a, b, and c"
+
+;; 異なる接続詞は構造を保持
+and(or('a, 'b), 'c)
+;; → "a or b, and c"
+```
+
+---
+
+## 代名詞と極性感応（Pronouns & Polarity）
+
+### 代名詞の種類
+
+```lisp
+;; 人称代名詞
+'I, 'you, 'he, 'she, 'it, 'we, 'they
+
+;; 指示代名詞
+'this, 'that, 'these, 'those
+
+;; 不定代名詞
+'someone, 'something, 'everyone, 'everything
+'anyone, 'anything, 'nobody, 'nothing
+```
+
+### 格変化
+
+主語位置と目的語位置で自動的に格が変化する。
+
+```lisp
+see(agent:'I, theme:'he)
+;; → "I see him."（heは目的語なのでhimに変化）
+
+see(agent:'he, theme:'I)
+;; → "He sees me."（Iは目的語なのでmeに変化）
+```
+
+### 極性感応代名詞
+
+否定文では不定代名詞が自動的に適切な形に変換される。
+
+| 肯定文 | 否定文 |
+|--------|--------|
+| someone | nobody |
+| something | nothing |
+| somewhere | nowhere |
+
+```lisp
+;; 肯定文
+sentence(see(agent:'I, theme:'someone))
+;; → "I see someone."
+
+;; 否定文
+sentence(not(see(agent:'I, theme:'someone)))
+;; → "I see nobody."（自動変換）
+;; または "I don't see anyone."（文脈による）
+```
+
+---
+
+## 形容詞の語順（Adjective Ordering）
+
+複数の形容詞がある場合、意味カテゴリに基づいて自動的に語順が決定される。
+
+### Dixon分類に基づく語順
+
+| 順序 | カテゴリ | 例 |
+|------|---------|-----|
+| 1 | 評価・品質 (quality) | beautiful, nice, good |
+| 2 | サイズ (size) | big, small, large |
+| 3 | 物理的性質 (physical) | heavy, soft, hard |
+| 4 | 年齢 (age) | old, new, young |
+| 5 | 色 (color) | red, blue, green |
+| 6 | 感情 (emotion) | happy, sad, angry |
+
+### 例
+
+```lisp
+noun(adj:['big, 'red], head:'apple)
+;; → "big red apple"（size → color の順）
+
+noun(adj:['old, 'beautiful, 'wooden], head:'table)
+;; → "beautiful old wooden table"（quality → age → physical の順）
+```
+
+---
+
 ## 設計思想
 
 - チョムスキー生成文法を教育向けに簡略化
@@ -322,9 +521,9 @@ noun(det:'a, head:'apple, post:as('big, 'that_one))
 
 ### スコープ外
 
-- 接続詞（and, but, because 等）による複文
+- 接続詞（but, because 等）による複文
 - 関係節（the man who ate 等）
-- 単文のみを対象とする
+- 単文のみを対象とする（ただし単文内の等位接続 and/or はサポート）
 
 ---
 
@@ -356,23 +555,51 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 <modal>         ::= "modal('" <modal-type> ", " <sentence> ")"
 <modal-type>    ::= "must" | "can" | "may" | "should" | "will" | "would" | "could" | "might"
 
-<sentence>      ::= "sentence(" <tense>? <aspect>? <voice>? <negB>? <verb-phrase> ")"
+<sentence>      ::= "sentence(" <tense>? <aspect>? <voice>? <negB>? <verb-expr> ")"
 
 <tense>         ::= "past(" | "present(" | "future("
 <aspect>        ::= "simple(" | "progressive(" | "perfect(" | "perfectProgressive("
 <voice>         ::= "passive(" | "causative("
 <negB>          ::= "not("
 
+;; 動詞句（等位接続対応）
+<verb-expr>     ::= <verb-phrase> | <verb-coord>
+<verb-coord>    ::= "and(" <verb-expr> ("," <verb-expr>)+ ")"
+                  | "or(" <verb-expr> ("," <verb-expr>)+ ")"
 <verb-phrase>   ::= <verb> "(" <arguments> ")"
-<verb>          ::= "eat" | "give" | "run" | "see" | ...
+<verb>          ::= "eat" | "give" | "run" | "see" | "like" | "have" | "be" | ...
 <arguments>     ::= <argument> ("," <argument>)*
 <argument>      ::= <role> ":" <value>
-<role>          ::= "agent" | "theme" | "recipient" | "source" | "goal" | "instrument" | "location" | "time" | "manner" | "reason"
-<value>         ::= "'" <word> | "?" | "?or(" <value> "," <value> ")"
 
+;; 意味役割（基本 + 拡張）
+<role>          ::= <basic-role> | <extended-role>
+<basic-role>    ::= "agent" | "theme" | "recipient" | "source" | "goal"
+                  | "instrument" | "location" | "time" | "manner" | "reason"
+<extended-role> ::= "patient" | "experiencer" | "stimulus"
+                  | "beneficiary" | "possessor" | "attribute"
+
+<value>         ::= <noun-expr> | "?" | "?or(" <value> "," <value> ")"
+
+;; 名詞句（等位接続対応）
+<noun-expr>     ::= <noun-phrase> | <noun-coord> | <pronoun>
+<noun-coord>    ::= "and(" <noun-expr> ("," <noun-expr>)+ ")"
+                  | "or(" <noun-expr> ("," <noun-expr>)+ ")"
+
+;; 名詞句（3層限定詞システム）
 <noun-phrase>   ::= "noun(" <np-args> ")"
-<np-args>       ::= "det:" <value>? ", " "adj:" <value>? ", " "head:" <value> (", " "post:" <post-mod>)?
-<post-mod>      ::= "than(" <value> ")" | "as(" <value> ", " <value> ")"
+<np-args>       ::= (<pre-det>)? (<det>)? (<post-det>)? (<adj-list>)? "head:" <word> (<post-mod>)?
+<pre-det>       ::= "pre:" ("'all" | "'both" | "'half")
+<det>           ::= "det:" ("'the" | "'a" | "'this" | "'that" | "'my" | "'your" | ... | "'no")
+<post-det>      ::= "post:" ("'one" | "'two" | ... | "'many" | "'few" | "'some" | "'several" | "'[plural]" | "'[uncountable]")
+<adj-list>      ::= "adj:" "[" "'" <adjective> ("," "'" <adjective>)* "]"
+<post-mod>      ::= "post:" ("than(" <value> ")" | "as(" <value> ", " <value> ")")
+
+;; 代名詞
+<pronoun>       ::= <personal> | <demonstrative> | <indefinite>
+<personal>      ::= "'I" | "'you" | "'he" | "'she" | "'it" | "'we" | "'they"
+<demonstrative> ::= "'this" | "'that" | "'these" | "'those"
+<indefinite>    ::= "'someone" | "'something" | "'everyone" | "'everything"
+                  | "'anyone" | "'anything" | "'nobody" | "'nothing"
 ```
 
 ---

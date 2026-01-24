@@ -141,8 +141,9 @@ export interface ClauseNode {
   verbPhrase: VerbPhraseNode;
   tense: "past" | "present" | "future";
   aspect: "simple" | "progressive" | "perfect" | "perfectProgressive";
-  polarity: "affirmative" | "negative";
+  polarity: "affirmative" | "negative";        // 動詞否定: "I do NOT run"
   modal?: ModalType;
+  modalPolarity?: "affirmative" | "negative";  // モダリティ否定: "I need NOT run"
 }
 
 export interface VerbPhraseNode {

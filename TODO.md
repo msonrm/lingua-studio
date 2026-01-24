@@ -16,9 +16,6 @@
   - agent が指定されている場合は by 句を自動生成
   - 仕様: `sentence(passive(eat(agent:'I, patient:'apple)))` → "The apple was eaten by me."
 - [ ] Causative（使役態）wrapper
-- [ ] NOT() wrapper 拡張
-  - modalの外側に配置可能にする（モダリティ否定）
-  - 配置位置でスコープを判定
 
 ### Modality & Register
 - [ ] Register パラメータ（formal/casual）
@@ -98,6 +95,11 @@
   - 否定: "Do not eat!"
   - LinguaScript: `imperative(sentence(...))`
 - [x] Sentence Modifier カテゴリとして Toolbox 分離
+- [x] NOT（モダリティ否定）wrapper
+  - 動詞否定（negation_wrapper）とは別ブロックとして実装
+  - negation_sentence_wrapper: modal の外側に配置してモダリティ否定
+  - 義務の否定 → "don't have to" / "didn't have to"（義務なし＝しなくてよい）
+  - LinguaScript: `not(modal('obligation, sentence(...)))`
 
 ### Grammar Spec Review (2026-01)
 - [x] 仕様書とコードベースの比較・精査

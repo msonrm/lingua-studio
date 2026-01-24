@@ -40,7 +40,7 @@ export function renderToEnglish(ast: SentenceNode): string {
 }
 
 function renderClause(clause: ClauseNode): string {
-  const { verbPhrase, tense, aspect, polarity, modal } = clause;
+  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
 
   // 主語を取得（agent, experiencer, possessor, theme の順で探す）
   let subjectSlot: FilledArgumentSlot | undefined;
@@ -73,7 +73,8 @@ function renderClause(clause: ClauseNode): string {
     polarity,
     frequencyAdverbs,
     subjectForConjugation,
-    modal
+    modal,
+    modalPolarity
   );
 
   // その他の引数（目的語など）- 主語以外（isSubject = false）
@@ -445,7 +446,8 @@ function conjugateVerbWithAdverbs(
   polarity: 'affirmative' | 'negative',
   frequencyAdverbs: AdverbNode[],
   subject?: NounPhraseNode | CoordinatedNounPhraseNode,
-  modal?: ModalType
+  modal?: ModalType,
+  modalPolarity?: 'affirmative' | 'negative'
 ): string {
   const verbEntry = findVerb(lemma);
   if (!verbEntry) return lemma;
@@ -458,7 +460,7 @@ function conjugateVerbWithAdverbs(
 
   // モダリティがある場合の処理
   if (modal) {
-    return conjugateWithModal(lemma, tense, aspect, polarity, frequencyAdverbs, modal, verbEntry);
+    return conjugateWithModal(lemma, tense, aspect, polarity, frequencyAdverbs, modal, verbEntry, modalPolarity);
   }
 
   // 不規則動詞（be動詞など）の活用形を取得
@@ -609,11 +611,21 @@ function conjugateWithModal(
   polarity: 'affirmative' | 'negative',
   frequencyAdverbs: AdverbNode[],
   modal: ModalType,
-  verbEntry: { forms: { base: string; pp: string; ing: string } }
+  verbEntry: { forms: { base: string; pp: string; ing: string } },
+  modalPolarity?: 'affirmative' | 'negative'
 ): string {
-  const isNegative = polarity === 'negative';
+  const isVerbNegative = polarity === 'negative';
+  const isModalNegative = modalPolarity === 'negative';
   const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
-  const notPart = isNegative ? 'not' : '';
+
+  // モダリティ否定（NOT modal）の特殊処理
+  // 義務の否定 → don't have to / didn't have to
+  if (isModalNegative && modal === 'obligation') {
+    return conjugateNegatedObligation(tense, aspect, isVerbNegative, freqStr, verbEntry);
+  }
+
+  // 否定パート: モダリティ否定が優先、なければ動詞否定
+  const notPart = isModalNegative ? 'not' : (isVerbNegative ? 'not' : '');
 
   const modalForm = getModalEnglishForm(modal, tense);
 
@@ -665,6 +677,40 @@ function conjugateWithModal(
   }
 
   return aux ? `${aux} ${verbEntry.forms.base}` : verbEntry.forms.base;
+}
+
+// 義務の否定: don't have to / didn't have to（義務なし＝しなくてよい）
+function conjugateNegatedObligation(
+  tense: 'past' | 'present' | 'future',
+  aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
+  isVerbNegative: boolean,
+  freqStr: string,
+  verbEntry: { forms: { base: string; pp: string; ing: string } }
+): string {
+  // 動詞否定も同時にある場合は二重否定となるが、ここではモダリティ否定を優先
+  const notPart = isVerbNegative ? 'not' : '';
+
+  // 時制に応じた "don't have to" / "didn't have to"
+  const haveToForm = tense === 'past' ? "didn't have to" : "don't have to";
+
+  if (aspect === 'simple') {
+    const parts = [haveToForm, notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
+    return parts.join(' ');
+  }
+  if (aspect === 'progressive') {
+    const parts = [haveToForm, notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
+    return parts.join(' ');
+  }
+  if (aspect === 'perfect') {
+    const parts = [haveToForm, notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
+    return parts.join(' ');
+  }
+  if (aspect === 'perfectProgressive') {
+    const parts = [haveToForm, notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
+    return parts.join(' ');
+  }
+
+  return `${haveToForm} ${verbEntry.forms.base}`;
 }
 
 function isThirdSingular(subject: NounPhraseNode | CoordinatedNounPhraseNode): boolean {

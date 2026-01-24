@@ -24,18 +24,27 @@ export function generateAST(workspace: Blockly.Workspace): SentenceNode | null {
   return sentences.length > 0 ? sentences[0] : null;
 }
 
+// モダリティ情報を保持するインターフェース
+interface ModalInfo {
+  modal?: ModalType;
+  modalPolarity: 'affirmative' | 'negative';
+}
+
 // 複数のSENTENCEブロックから複数のASTを生成
 export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[] {
   const sentences: SentenceNode[] = [];
   const processedTimeFrames = new Set<string>();
 
   // imperative_wrapperブロックを処理
-  // Note: imperativeとmodalは排他（Blocklyの接続制約で相互に接続不可）
   const imperativeBlocks = workspace.getBlocksByType('imperative_wrapper', false);
   for (const imperativeBlock of imperativeBlocks) {
-    const timeFrameBlock = imperativeBlock.getInputTargetBlock('SENTENCE');
-    if (timeFrameBlock && timeFrameBlock.type === 'time_frame') {
-      const ast = parseTimeFrameBlock(timeFrameBlock, undefined, 'imperative');
+    const innerBlock = imperativeBlock.getInputTargetBlock('SENTENCE');
+    if (!innerBlock) continue;
+
+    // negation_sentence_wrapper > modal_wrapper > time_frame のチェーン
+    const { timeFrameBlock, modalInfo } = findTimeFrameFromSentenceChain(innerBlock);
+    if (timeFrameBlock) {
+      const ast = parseTimeFrameBlock(timeFrameBlock, modalInfo.modal, 'imperative', modalInfo.modalPolarity);
       if (ast) {
         sentences.push(ast);
         processedTimeFrames.add(timeFrameBlock.id);
@@ -43,13 +52,45 @@ export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[
     }
   }
 
-  // modal_wrapperブロックを処理
+  // negation_sentence_wrapperブロックを処理（imperativeに接続されていないもの）
+  const negationSentenceBlocks = workspace.getBlocksByType('negation_sentence_wrapper', false);
+  for (const negationBlock of negationSentenceBlocks) {
+    // 親がimperative_wrapperの場合はスキップ（既に処理済み）
+    const parentBlock = negationBlock.getParent();
+    if (parentBlock && parentBlock.type === 'imperative_wrapper') {
+      continue;
+    }
+
+    const modalBlock = negationBlock.getInputTargetBlock('MODAL');
+    if (modalBlock && modalBlock.type === 'modal_wrapper') {
+      const modalValue = modalBlock.getFieldValue('MODAL_VALUE') as ModalType;
+      const timeFrameBlock = modalBlock.getInputTargetBlock('SENTENCE');
+      if (timeFrameBlock && timeFrameBlock.type === 'time_frame') {
+        const ast = parseTimeFrameBlock(timeFrameBlock, modalValue, 'declarative', 'negative');
+        if (ast) {
+          sentences.push(ast);
+          processedTimeFrames.add(timeFrameBlock.id);
+        }
+      }
+    }
+  }
+
+  // modal_wrapperブロックを処理（negation_sentence_wrapperに接続されていないもの）
   const modalBlocks = workspace.getBlocksByType('modal_wrapper', false);
   for (const modalBlock of modalBlocks) {
+    // 親がnegation_sentence_wrapperまたはimperative_wrapperの場合はスキップ
+    const parentBlock = modalBlock.getParent();
+    if (parentBlock && (
+      parentBlock.type === 'negation_sentence_wrapper' ||
+      parentBlock.type === 'imperative_wrapper'
+    )) {
+      continue;
+    }
+
     const modalValue = modalBlock.getFieldValue('MODAL_VALUE') as ModalType;
     const timeFrameBlock = modalBlock.getInputTargetBlock('SENTENCE');
     if (timeFrameBlock && timeFrameBlock.type === 'time_frame') {
-      const ast = parseTimeFrameBlock(timeFrameBlock, modalValue);
+      const ast = parseTimeFrameBlock(timeFrameBlock, modalValue, 'declarative', 'affirmative');
       if (ast) {
         sentences.push(ast);
         processedTimeFrames.add(timeFrameBlock.id);
@@ -66,16 +107,53 @@ export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[
     }
     // 親がwrapperの場合はスキップ（重複防止）
     const parentBlock = block.getParent();
-    if (parentBlock && (parentBlock.type === 'modal_wrapper' || parentBlock.type === 'imperative_wrapper')) {
+    if (parentBlock && (
+      parentBlock.type === 'modal_wrapper' ||
+      parentBlock.type === 'imperative_wrapper' ||
+      parentBlock.type === 'negation_sentence_wrapper'
+    )) {
       continue;
     }
-    const ast = parseTimeFrameBlock(block);
+    const ast = parseTimeFrameBlock(block, undefined, 'declarative', 'affirmative');
     if (ast) {
       sentences.push(ast);
     }
   }
 
   return sentences;
+}
+
+// SENTENCEチェーンからtime_frameとモダリティ情報を取得
+// チェーン: negation_sentence_wrapper? > modal_wrapper? > time_frame
+function findTimeFrameFromSentenceChain(block: Blockly.Block): { timeFrameBlock: Blockly.Block | null; modalInfo: ModalInfo } {
+  let currentBlock: Blockly.Block | null = block;
+  let modalPolarity: 'affirmative' | 'negative' = 'affirmative';
+  let modal: ModalType | undefined = undefined;
+
+  // negation_sentence_wrapper のチェック
+  if (currentBlock.type === 'negation_sentence_wrapper') {
+    modalPolarity = 'negative';
+    currentBlock = currentBlock.getInputTargetBlock('MODAL');
+  }
+
+  // modal_wrapper のチェック
+  if (currentBlock && currentBlock.type === 'modal_wrapper') {
+    modal = currentBlock.getFieldValue('MODAL_VALUE') as ModalType;
+    currentBlock = currentBlock.getInputTargetBlock('SENTENCE');
+  }
+
+  // time_frame のチェック
+  if (currentBlock && currentBlock.type === 'time_frame') {
+    return {
+      timeFrameBlock: currentBlock,
+      modalInfo: { modal, modalPolarity },
+    };
+  }
+
+  return {
+    timeFrameBlock: null,
+    modalInfo: { modal, modalPolarity },
+  };
 }
 
 // 動詞ラッパーチェーンの解析結果
@@ -94,7 +172,8 @@ interface VerbChainResult {
 function parseTimeFrameBlock(
   block: Blockly.Block,
   modal?: ModalType,
-  sentenceType: 'declarative' | 'imperative' = 'declarative'
+  sentenceType: 'declarative' | 'imperative' = 'declarative',
+  modalPolarity: 'affirmative' | 'negative' = 'affirmative'
 ): SentenceNode | null {
   // TimeChipを取得してTense/Aspect/出力単語を決定
   const timeChipBlock = block.getInputTargetBlock('TIME_CHIP');
@@ -137,6 +216,7 @@ function parseTimeFrameBlock(
     aspect,
     polarity: verbChain.polarity,
     modal,  // モダリティを追加
+    modalPolarity: modal ? modalPolarity : undefined,  // モダリティ否定を追加（modalがある場合のみ）
   };
 
   return {

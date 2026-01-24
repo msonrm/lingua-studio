@@ -18,9 +18,14 @@ export function renderToLinguaScript(ast: SentenceNode): string {
   // sentence() ラッパーで包む（仕様: 命題のルート）
   result = `sentence(${result})`;
 
-  // モダリティがある場合は modal() でラップ（仕様: modal('must, sentence(...))）
+  // モダリティがある場合は modal() でラップ（仕様: modal('ability, sentence(...))）
   if (ast.clause.modal) {
     result = `modal('${ast.clause.modal}, ${result})`;
+
+    // モダリティ否定の場合は not() でラップ（仕様: not(modal('ability, ...))）
+    if (ast.clause.modalPolarity === 'negative') {
+      result = `not(${result})`;
+    }
   }
 
   // 命令文の場合は imperative() でラップ

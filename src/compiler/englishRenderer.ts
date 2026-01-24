@@ -13,6 +13,7 @@ import {
   CoordinationConjunct,
   Conjunction,
   VerbPhraseNode,
+  ModalType,
 } from '../types/schema';
 import { findVerb, findNoun, findPronoun } from '../data/dictionary';
 
@@ -35,7 +36,7 @@ export function renderToEnglish(ast: SentenceNode): string {
 }
 
 function renderClause(clause: ClauseNode): string {
-  const { verbPhrase, tense, aspect, polarity } = clause;
+  const { verbPhrase, tense, aspect, polarity, modal } = clause;
 
   // 主語を取得（agent, experiencer, possessor, theme の順で探す）
   let subjectSlot: FilledArgumentSlot | undefined;
@@ -67,7 +68,8 @@ function renderClause(clause: ClauseNode): string {
     aspect,
     polarity,
     frequencyAdverbs,
-    subjectForConjugation
+    subjectForConjugation,
+    modal
   );
 
   // その他の引数（目的語など）- 主語以外（isSubject = false）
@@ -374,7 +376,8 @@ function conjugateVerbWithAdverbs(
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
   polarity: 'affirmative' | 'negative',
   frequencyAdverbs: AdverbNode[],
-  subject?: NounPhraseNode | CoordinatedNounPhraseNode
+  subject?: NounPhraseNode | CoordinatedNounPhraseNode,
+  modal?: ModalType
 ): string {
   const verbEntry = findVerb(lemma);
   if (!verbEntry) return lemma;
@@ -384,6 +387,11 @@ function conjugateVerbWithAdverbs(
   const isThirdPersonSingular = subject ? isThirdSingular(subject) : true;
   const personNumber = subject ? getPersonNumber(subject) : { person: 3 as const, number: 'singular' as const };
   const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
+
+  // モダリティがある場合の処理
+  if (modal) {
+    return conjugateWithModal(lemma, aspect, polarity, frequencyAdverbs, modal, verbEntry);
+  }
 
   // 不規則動詞（be動詞など）の活用形を取得
   const getIrregularForm = (t: 'past' | 'present'): string | undefined => {
@@ -491,6 +499,47 @@ function conjugateVerbWithAdverbs(
   }
 
   return lemma;
+}
+
+// モダリティ付きの動詞活用
+// modal + (not) + (aspect markers) + verb
+function conjugateWithModal(
+  _lemma: string,  // 将来の拡張用（不規則動詞の処理など）
+  aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
+  polarity: 'affirmative' | 'negative',
+  frequencyAdverbs: AdverbNode[],
+  modal: ModalType,
+  verbEntry: { forms: { base: string; pp: string; ing: string } }
+): string {
+  const isNegative = polarity === 'negative';
+  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
+  const notPart = isNegative ? 'not' : '';
+
+  // Simple: modal (+ not) + (freq) + base
+  if (aspect === 'simple') {
+    const parts = [modal, notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
+    return parts.join(' ');
+  }
+
+  // Progressive: modal (+ not) + (freq) + be + ing
+  if (aspect === 'progressive') {
+    const parts = [modal, notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
+    return parts.join(' ');
+  }
+
+  // Perfect: modal (+ not) + (freq) + have + pp
+  if (aspect === 'perfect') {
+    const parts = [modal, notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
+    return parts.join(' ');
+  }
+
+  // Perfect Progressive: modal (+ not) + (freq) + have been + ing
+  if (aspect === 'perfectProgressive') {
+    const parts = [modal, notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
+    return parts.join(' ');
+  }
+
+  return `${modal} ${verbEntry.forms.base}`;
 }
 
 function isThirdSingular(subject: NounPhraseNode | CoordinatedNounPhraseNode): boolean {

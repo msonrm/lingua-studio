@@ -125,12 +125,15 @@ export interface SentenceNode {
   timeAdverbial?: string;  // TimeChipから生成される時間副詞（Yesterday, Now など）
 }
 
+export type ModalType = "can" | "could" | "may" | "might" | "must" | "should" | "will" | "would";
+
 export interface ClauseNode {
   type: "clause";
   verbPhrase: VerbPhraseNode;
   tense: "past" | "present" | "future";
   aspect: "simple" | "progressive" | "perfect" | "perfectProgressive";
   polarity: "affirmative" | "negative";
+  modal?: ModalType;
 }
 
 export interface VerbPhraseNode {

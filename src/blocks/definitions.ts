@@ -43,6 +43,10 @@ const COLORS = {
   coordNoun: '#6B5B95',   // ダスティパープル（名詞用）
   coordVerb: '#9B4D8B',   // マゼンタ寄り紫（動詞用）
 
+  // Sentence Wrapper系（紫系グラデーション - 外側ほど濃い）
+  imperative: '#4A148C',  // 濃紫（最外側）
+  modal: '#9C27B0',       // 薄紫（内側）
+
   // レガシー
   adverb: '#EF6C57',     // 赤オレンジ（様態副詞と同系）
 };
@@ -207,8 +211,35 @@ Blockly.Blocks['time_frame'] = {
     this.appendStatementInput("ACTION")
         .setCheck("verb")
         .appendField("predicate:");
+    this.setPreviousStatement(true, "sentence");  // modal_wrapperに接続可能
     this.setColour(COLORS.timeFrame);
     this.setTooltip("The root of a sentence, specifying tense and aspect");
+  }
+};
+
+// ============================================
+// Modal ラッパーブロック（法助動詞）
+// ============================================
+Blockly.Blocks['modal_wrapper'] = {
+  init: function() {
+    const modalOptions: [string, string][] = [
+      ['can (ability)', 'can'],
+      ['could (past ability)', 'could'],
+      ['may (permission)', 'may'],
+      ['might (possibility)', 'might'],
+      ['must (obligation)', 'must'],
+      ['should (advice)', 'should'],
+      ['will (volition)', 'will'],
+      ['would (hypothetical)', 'would'],
+    ];
+
+    this.appendDummyInput()
+        .appendField("MODAL")
+        .appendField(new Blockly.FieldDropdown(modalOptions), "MODAL_VALUE");
+    this.appendStatementInput("SENTENCE")
+        .setCheck("sentence");
+    this.setColour(COLORS.modal);
+    this.setTooltip("Modal: adds modality (can, must, should, etc.) to the sentence");
   }
 };
 
@@ -1018,6 +1049,8 @@ export const toolbox = {
       contents: [
         { kind: "label", text: "── Sentence ──" },
         { kind: "block", type: "time_frame" },
+        { kind: "label", text: "── Modal ──" },
+        { kind: "block", type: "modal_wrapper" },
         { kind: "label", text: "── Time ──" },
         { kind: "block", type: "time_chip_concrete" },
         { kind: "label", text: "── Aspect ──" },

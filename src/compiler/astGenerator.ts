@@ -11,6 +11,7 @@ import {
   CoordinatedNounPhraseNode,
   CoordinationConjunct,
   Conjunction,
+  ModalType,
 } from '../types/schema';
 import { findVerb, findPronoun } from '../data/dictionary';
 import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks/definitions';
@@ -25,14 +26,29 @@ export function generateAST(workspace: Blockly.Workspace): SentenceNode | null {
 
 // 複数のSENTENCEブロックから複数のASTを生成
 export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[] {
-  const timeFrameBlocks = workspace.getBlocksByType('time_frame', false);
+  const sentences: SentenceNode[] = [];
 
-  if (timeFrameBlocks.length === 0) {
-    return [];
+  // modal_wrapperブロックを処理
+  const modalBlocks = workspace.getBlocksByType('modal_wrapper', false);
+  for (const modalBlock of modalBlocks) {
+    const modalValue = modalBlock.getFieldValue('MODAL_VALUE') as ModalType;
+    const timeFrameBlock = modalBlock.getInputTargetBlock('SENTENCE');
+    if (timeFrameBlock && timeFrameBlock.type === 'time_frame') {
+      const ast = parseTimeFrameBlock(timeFrameBlock, modalValue);
+      if (ast) {
+        sentences.push(ast);
+      }
+    }
   }
 
-  const sentences: SentenceNode[] = [];
+  // modal_wrapperに接続されていないtime_frameブロックを処理
+  const timeFrameBlocks = workspace.getBlocksByType('time_frame', false);
   for (const block of timeFrameBlocks) {
+    // 親がmodal_wrapperの場合はスキップ（既に処理済み）
+    const parentBlock = block.getParent();
+    if (parentBlock && parentBlock.type === 'modal_wrapper') {
+      continue;
+    }
     const ast = parseTimeFrameBlock(block);
     if (ast) {
       sentences.push(ast);
@@ -55,7 +71,7 @@ interface VerbChainResult {
   };
 }
 
-function parseTimeFrameBlock(block: Blockly.Block): SentenceNode | null {
+function parseTimeFrameBlock(block: Blockly.Block, modal?: ModalType): SentenceNode | null {
   // TimeChipを取得してTense/Aspect/出力単語を決定
   const timeChipBlock = block.getInputTargetBlock('TIME_CHIP');
   const { tense, aspect, timeAdverbial } = parseTimeChip(timeChipBlock);
@@ -96,6 +112,7 @@ function parseTimeFrameBlock(block: Blockly.Block): SentenceNode | null {
     tense,
     aspect,
     polarity: verbChain.polarity,
+    modal,  // モダリティを追加
   };
 
   return {

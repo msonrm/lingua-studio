@@ -18,6 +18,11 @@ export function renderToLinguaScript(ast: SentenceNode): string {
   // sentence() ラッパーで包む（仕様: 命題のルート）
   result = `sentence(${result})`;
 
+  // モダリティがある場合は modal() でラップ（仕様: modal('must, sentence(...))）
+  if (ast.clause.modal) {
+    result = `modal('${ast.clause.modal}, ${result})`;
+  }
+
   // 命令文の場合は imperative() でラップ
   if (ast.sentenceType === 'imperative') {
     result = `imperative(${result})`;

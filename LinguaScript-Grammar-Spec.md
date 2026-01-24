@@ -100,18 +100,56 @@ verb(agent:'x, theme:'y, ...)
 
 ## 意味役割（Semantic Roles）
 
+### 基本役割
+
+動詞の必須引数（項）として機能する意味役割。
+
 | 役割 | 説明 | 例 |
 |------|------|-----|
 | `agent` | 動作主 | I, she |
 | `theme` | 対象 | apple, book |
 | `recipient` | 受け手 | you, him |
-| `source` | 起点 | store, Tokyo |
-| `goal` | 着点 | station, home |
-| `instrument` | 道具 | knife, pen |
-| `location` | 場所 | park, room |
-| `time` | 時間 | yesterday, now |
-| `manner` | 様態 | quickly |
-| `reason` | 理由 | because... |
+| `source` | 起点 | from the store |
+| `goal` | 着点 | to the station |
+
+**注意**: `source`/`goal` は移動・授与動詞の必須項として使用する。任意の場所表現は `pp()` で表現する。
+
+### 拡張役割
+
+動詞の種類によっては、追加の意味役割を使用する。
+
+| 役割 | 説明 | 使用する動詞 | 例 |
+|------|------|-------------|-----|
+| `patient` | 状態変化を被る対象 | 動作動詞（eat, break等） | I eat **an apple**. |
+| `experiencer` | 心理状態の主体 | 心理動詞（like, know等） | **I** like apples. |
+| `stimulus` | 心理状態の原因 | 心理動詞（like, know等） | I like **apples**. |
+| `beneficiary` | 利益を受ける者 | 授与動詞 | I bought a gift for **you**. |
+| `possessor` | 所有者 | have, own等 | **I** have a car. |
+| `attribute` | 属性・状態 | コピュラ動詞（be） | She is **happy**. |
+
+### コピュラ動詞（be）の構造
+
+コピュラ動詞では、主語は `theme`（属性が述べられる対象）として扱う。
+
+```lisp
+be(theme:'she, attribute:'happy)
+;; → "She is happy."
+
+be(theme:'this, attribute:'my_book)
+;; → "This is my book."
+```
+
+### theme vs patient の使い分け
+
+```lisp
+;; theme: 移動・変化を伴わない対象（giveのもの、seeの目撃対象）
+give(agent:'I, theme:'book, recipient:'you)
+see(agent:'I, theme:'bird)
+
+;; patient: 動作の影響を直接受ける対象（eatの食べられるもの）
+eat(agent:'I, patient:'apple)
+break(agent:'I, patient:'window)
+```
 
 ### agentの必須/任意
 
@@ -120,6 +158,113 @@ verb(agent:'x, theme:'y, ...)
 | 能動態 | 必須 | I eat an apple. |
 | 受動態 | 任意 | The apple was eaten. / The apple was eaten by me. |
 | 命令文 | 省略 | Eat the apple!（暗黙の'you） |
+
+---
+
+## 付加詞（Adjuncts）
+
+場所・時間・様態・理由などは、動詞の必須引数（項）ではなく、任意の修飾要素（付加詞）として扱う。
+これらは意味役割ではなく、別の構文機構で表現する。
+
+### 時間副詞（Time Adverbials）
+
+時間表現は `time()` ラッパーまたは時間副詞で表現する。
+
+```lisp
+;; 具体的な時間
+time('yesterday, sentence(eat(agent:'I, patient:'apple)))
+;; → "Yesterday, I ate an apple."
+
+;; 相的時間（アスペクトに関連）
+time('just_now, sentence(perfect(eat(agent:'I, patient:'apple))))
+;; → "I have just eaten an apple."
+
+;; 時間副詞の種類
+'yesterday, 'today, 'tomorrow           ;; 具体的
+'now, 'just_now, 'already, 'yet, 'still ;; 相的
+'recently, 'lately, 'soon               ;; 相対的
+```
+
+### 時間副詞と時制・相の制約
+
+特定の時間副詞は特定の時制・相と共起する。コンパイラはこれを検証し、UIでは不適切な組み合わせを制限できる。
+
+| 時間副詞 | 推奨される時制・相 | 非文法的な組み合わせ |
+|---------|------------------|---------------------|
+| yesterday, last week | past + simple | ~~present perfect~~ |
+| just, already, yet | present + perfect | - |
+| now | present + progressive | - |
+| tomorrow | future | ~~past~~ |
+
+```lisp
+;; OK: 過去の具体時点 + 過去単純
+time('yesterday, sentence(past(simple(eat(...)))))
+
+;; NG: 過去の具体時点 + 現在完了（英語では非文法的）
+time('yesterday, sentence(present(perfect(eat(...)))))
+;; → コンパイラが警告または自動修正
+```
+
+### 様態副詞（Manner Adverbs）
+
+動作の様態は `manner()` ラッパーで表現する。
+
+```lisp
+manner('quickly, eat(agent:'I, patient:'apple))
+;; → "I quickly eat an apple." / "I eat an apple quickly."
+
+manner('carefully, open(agent:'she, patient:'door))
+;; → "She carefully opens the door."
+```
+
+### 頻度副詞（Frequency Adverbs）
+
+頻度は `frequency()` ラッパーで表現する。
+
+```lisp
+frequency('always, eat(agent:'I, patient:'apple))
+;; → "I always eat an apple."
+
+frequency('never, drink(agent:'he, patient:'coffee))
+;; → "He never drinks coffee."
+
+;; 頻度副詞の種類（高→低）
+'always, 'usually, 'often, 'sometimes, 'rarely, 'never
+```
+
+### 前置詞句（Prepositional Phrases）
+
+場所・方向・関係などは前置詞句で表現する。
+
+```lisp
+;; 場所
+pp('in, 'park, eat(agent:'I, patient:'apple))
+;; → "I eat an apple in the park."
+
+;; 方向
+pp('to, 'station, run(agent:'I))
+;; → "I run to the station."
+
+;; 道具
+pp('with, 'knife, cut(agent:'I, patient:'bread))
+;; → "I cut the bread with a knife."
+
+;; 前置詞の種類
+'in, 'on, 'at           ;; 場所
+'to, 'from, 'into       ;; 方向
+'with, 'by, 'for        ;; 手段・関係
+'about, 'of             ;; 関連
+```
+
+### 付加詞の語順
+
+付加詞は文の様々な位置に置ける。コンパイラが適切な位置を決定する。
+
+```lisp
+;; 複数の付加詞
+time('yesterday, manner('quickly, pp('in, 'park, eat(agent:'I, patient:'apple))))
+;; → "Yesterday, I quickly ate an apple in the park."
+```
 
 ---
 
@@ -139,15 +284,24 @@ verb(agent:'x, theme:'y, ...)
 
 ### 疑問プレースホルダー `?`
 
+#### 意味役割への疑問
+
 | 空欄の位置 | 疑問詞 | 例 |
 |-----------|--------|-----|
 | `agent:?` | Who | Who ate the apple? |
-| `theme:?` | What | What did you eat? |
+| `theme:?` / `patient:?` | What | What did you eat? |
 | `recipient:?` | Whom / To whom | Whom did you give the book to? |
-| `location:?` | Where | Where did you eat? |
-| `time:?` | When | When did you eat? |
-| `manner:?` | How | How did you do it? |
-| `reason:?` | Why | Why did you eat? |
+| `goal:?` | Where (着点) | Where did you go? |
+| `source:?` | Where (起点) | Where did you come from? |
+
+#### 付加詞への疑問
+
+| 構文 | 疑問詞 | 例 |
+|------|--------|-----|
+| `pp(?where, ...)` | Where | Where did you eat? |
+| `time(?, ...)` | When | When did you eat? |
+| `manner(?, ...)` | How | How did you do it? |
+| `pp(?why, ...)` | Why | Why did you eat? |
 
 ### 記法ルール
 
@@ -286,6 +440,21 @@ sentence(past(eat(agent:'I, theme:'apple)))
 sentence(past(simple(active(eat(agent:'I, theme:'apple)))))
 ```
 
+### 受動態での by 句生成
+
+受動態で `agent` が指定されている場合、コンパイラが自動的に by 句を生成する。
+
+```lisp
+;; ユーザー記述（agentなし）
+sentence(passive(eat(patient:'apple)))
+;; → "The apple was eaten."
+
+;; ユーザー記述（agentあり）
+sentence(passive(eat(agent:'I, patient:'apple)))
+;; → "The apple was eaten by me."
+;; （agentが自動的にby句に変換される）
+```
+
 ---
 
 ## 名詞句（比較級・最上級）
@@ -308,6 +477,200 @@ noun(det:'a, head:'apple, post:as('big, 'that_one))
 
 ---
 
+## 限定詞システム（Determiner System）
+
+英語の限定詞は3層構造で表現する。
+
+### 構造
+
+```lisp
+noun(pre:'all, det:'the, post:'three, head:'apples)
+;; → "all the three apples"
+```
+
+### 限定詞の3層
+
+| 層 | 名前 | 要素 |
+|----|------|------|
+| pre | 前置限定詞 | all, both, half |
+| det | 中央限定詞 | the, this, that, a/an, my, your, his, her, its, our, their, no |
+| post | 後置限定詞 | one, two, three, many, few, some, several, [plural], [uncountable] |
+
+### 制約
+
+```lisp
+;; 固有名詞は限定詞なし
+noun(head:'Tokyo)
+
+;; 不可算名詞は一部の後置限定詞のみ
+noun(det:'the, head:'water)           ;; OK
+noun(post:'three, head:'water)        ;; NG
+
+;; 相互排他的な組み合わせ
+noun(det:'a, post:'[plural])          ;; NG（a + 複数は矛盾）
+noun(pre:'all, det:'a)                ;; NG（all + a は矛盾）
+```
+
+### 例
+
+```lisp
+noun(det:'the, head:'apple)
+;; → "the apple"
+
+noun(det:'a, head:'apple)
+;; → "an apple"（母音の前は自動で an）
+
+noun(pre:'all, det:'my, head:'friends)
+;; → "all my friends"
+
+noun(post:'[plural], head:'apple)
+;; → "apples"（限定詞なしの複数形）
+```
+
+---
+
+## 等位接続（Coordination）
+
+名詞句と動詞句の等位接続をサポートする。
+
+### 名詞句の等位接続
+
+```lisp
+;; "I and you"
+and('I, 'you)
+
+;; "an apple or an orange"
+or(noun(det:'a, head:'apple), noun(det:'a, head:'orange))
+
+;; 3項以上の場合はフラット化
+and('I, 'you, 'he)
+;; → "I, you, and he"
+```
+
+### 動詞句の等位接続
+
+```lisp
+;; "I eat and drink."
+sentence(and(eat(agent:'I), drink(agent:'I)))
+
+;; "I run or walk."
+sentence(or(run(agent:'I), walk(agent:'I)))
+```
+
+### ネスト時の処理
+
+```lisp
+;; 同じ接続詞はフラット化
+and(and('a, 'b), 'c) → and('a, 'b, 'c)
+;; → "a, b, and c"
+
+;; 異なる接続詞は構造を保持
+and(or('a, 'b), 'c)
+;; → "a or b, and c"
+```
+
+---
+
+## 代名詞と極性感応（Pronouns & Polarity）
+
+### 代名詞の種類
+
+```lisp
+;; 人称代名詞
+'I, 'you, 'he, 'she, 'it, 'we, 'they
+
+;; 所有代名詞（名詞句として使用）
+'mine, 'yours, 'his, 'hers, 'ours, 'theirs
+
+;; 指示代名詞
+'this, 'that, 'these, 'those
+
+;; 不定代名詞
+'someone, 'something, 'everyone, 'everything
+'anyone, 'anything, 'nobody, 'nothing
+```
+
+**注意**: 所有代名詞と所有限定詞（my, your 等）は異なる。
+- 所有限定詞: 名詞を修飾 → `noun(det:'my, head:'book)` → "my book"
+- 所有代名詞: 名詞句として使用 → `'mine` → "mine"
+
+```lisp
+;; "This book is mine."
+be(theme:'this_book, attribute:'mine)
+
+;; "Mine is bigger."
+be(theme:'mine, attribute:'bigger)
+```
+
+### 格変化
+
+主語位置と目的語位置で自動的に格が変化する。
+
+```lisp
+see(agent:'I, theme:'he)
+;; → "I see him."（heは目的語なのでhimに変化）
+
+see(agent:'he, theme:'I)
+;; → "He sees me."（Iは目的語なのでmeに変化）
+```
+
+### 極性感応代名詞
+
+否定文では不定代名詞が自動的に適切な形に変換される。
+
+| 肯定文 | 否定文 |
+|--------|--------|
+| someone | nobody |
+| something | nothing |
+| somewhere | nowhere |
+
+```lisp
+;; 肯定文
+sentence(see(agent:'I, theme:'someone))
+;; → "I see someone."
+
+;; 否定文
+sentence(not(see(agent:'I, theme:'someone)))
+;; → "I see nobody."（自動変換）
+;; または "I don't see anyone."（文脈による）
+```
+
+---
+
+## 形容詞の語順（Adjective Ordering）
+
+複数の形容詞がある場合、意味カテゴリに基づいて自動的に語順が決定される。
+
+### 標準的な英語形容詞の語順
+
+| 順序 | カテゴリ | 例 |
+|------|---------|-----|
+| 1 | 評価 (opinion) | beautiful, nice, lovely |
+| 2 | サイズ (size) | big, small, large |
+| 3 | 年齢 (age) | old, new, young |
+| 4 | 形状 (shape) | round, square, flat |
+| 5 | 色 (color) | red, blue, green |
+| 6 | 起源 (origin) | Japanese, French |
+| 7 | 素材 (material) | wooden, metal, cotton |
+| 8 | 目的 (purpose) | sleeping (bag), running (shoes) |
+
+**注意**: この語順は目安であり、強制ではない。ユーザーが指定した順序を尊重しつつ、デフォルトではこの順序を適用する。
+
+### 例
+
+```lisp
+noun(adj:['big, 'red], head:'apple)
+;; → "big red apple"（size → color の順）
+
+noun(adj:['beautiful, 'old, 'wooden], head:'table)
+;; → "beautiful old wooden table"（opinion → age → material の順）
+
+noun(adj:['small, 'Japanese, 'wooden], head:'box)
+;; → "small Japanese wooden box"（size → origin → material の順）
+```
+
+---
+
 ## 設計思想
 
 - チョムスキー生成文法を教育向けに簡略化
@@ -322,9 +685,9 @@ noun(det:'a, head:'apple, post:as('big, 'that_one))
 
 ### スコープ外
 
-- 接続詞（and, but, because 等）による複文
+- 接続詞（but, because 等）による複文
 - 関係節（the man who ate 等）
-- 単文のみを対象とする
+- 単文のみを対象とする（ただし単文内の等位接続 and/or はサポート）
 
 ---
 
@@ -349,30 +712,70 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 ## BNF風の形式文法
 
 ```bnf
-<utterance>     ::= <attitude>? <negA>? <modal>? <sentence>
+<utterance>     ::= <attitude>? <negA>? <modal>? <adjuncts>? <sentence>
 
 <attitude>      ::= "?" | "imperative"
 <negA>          ::= "not(" <modal>? <sentence> ")"
 <modal>         ::= "modal('" <modal-type> ", " <sentence> ")"
 <modal-type>    ::= "must" | "can" | "may" | "should" | "will" | "would" | "could" | "might"
 
-<sentence>      ::= "sentence(" <tense>? <aspect>? <voice>? <negB>? <verb-phrase> ")"
+<sentence>      ::= "sentence(" <tense>? <aspect>? <voice>? <negB>? <verb-expr> ")"
 
 <tense>         ::= "past(" | "present(" | "future("
 <aspect>        ::= "simple(" | "progressive(" | "perfect(" | "perfectProgressive("
 <voice>         ::= "passive(" | "causative("
 <negB>          ::= "not("
 
+;; 動詞句（等位接続対応）
+<verb-expr>     ::= <adjuncts>? <verb-phrase> | <verb-coord>
+<verb-coord>    ::= "and(" <verb-expr> ("," <verb-expr>)+ ")"
+                  | "or(" <verb-expr> ("," <verb-expr>)+ ")"
 <verb-phrase>   ::= <verb> "(" <arguments> ")"
-<verb>          ::= "eat" | "give" | "run" | "see" | ...
+<verb>          ::= "eat" | "give" | "run" | "see" | "like" | "have" | "be" | ...
 <arguments>     ::= <argument> ("," <argument>)*
 <argument>      ::= <role> ":" <value>
-<role>          ::= "agent" | "theme" | "recipient" | "source" | "goal" | "instrument" | "location" | "time" | "manner" | "reason"
-<value>         ::= "'" <word> | "?" | "?or(" <value> "," <value> ")"
 
+;; 意味役割（基本 + 拡張）
+<role>          ::= <basic-role> | <extended-role>
+<basic-role>    ::= "agent" | "theme" | "recipient" | "source" | "goal"
+<extended-role> ::= "patient" | "experiencer" | "stimulus"
+                  | "beneficiary" | "possessor" | "attribute"
+
+;; 付加詞（任意の修飾要素）
+<adjuncts>      ::= <adjunct>+
+<adjunct>       ::= <time-adv> | <manner-adv> | <frequency-adv> | <prep-phrase>
+<time-adv>      ::= "time('" <time-word> ", " <verb-expr> ")"
+<time-word>     ::= "yesterday" | "today" | "tomorrow" | "now" | "just_now" | ...
+<manner-adv>    ::= "manner('" <manner-word> ", " <verb-expr> ")"
+<manner-word>   ::= "quickly" | "slowly" | "carefully" | ...
+<frequency-adv> ::= "frequency('" <freq-word> ", " <verb-expr> ")"
+<freq-word>     ::= "always" | "usually" | "often" | "sometimes" | "rarely" | "never"
+<prep-phrase>   ::= "pp('" <preposition> ", " <noun-expr> ", " <verb-expr> ")"
+<preposition>   ::= "in" | "on" | "at" | "to" | "from" | "with" | "by" | "for" | "about" | ...
+
+<value>         ::= <noun-expr> | "?" | "?or(" <value> "," <value> ")"
+
+;; 名詞句（等位接続対応）
+<noun-expr>     ::= <noun-phrase> | <noun-coord> | <pronoun>
+<noun-coord>    ::= "and(" <noun-expr> ("," <noun-expr>)+ ")"
+                  | "or(" <noun-expr> ("," <noun-expr>)+ ")"
+
+;; 名詞句（3層限定詞システム）
 <noun-phrase>   ::= "noun(" <np-args> ")"
-<np-args>       ::= "det:" <value>? ", " "adj:" <value>? ", " "head:" <value> (", " "post:" <post-mod>)?
-<post-mod>      ::= "than(" <value> ")" | "as(" <value> ", " <value> ")"
+<np-args>       ::= (<pre-det>)? (<det>)? (<post-det>)? (<adj-list>)? "head:" <word> (<post-mod>)?
+<pre-det>       ::= "pre:" ("'all" | "'both" | "'half")
+<det>           ::= "det:" ("'the" | "'a" | "'this" | "'that" | "'my" | "'your" | ... | "'no")
+<post-det>      ::= "post:" ("'one" | "'two" | ... | "'many" | "'few" | "'some" | "'several" | "'[plural]" | "'[uncountable]")
+<adj-list>      ::= "adj:" "[" "'" <adjective> ("," "'" <adjective>)* "]"
+<post-mod>      ::= "post:" ("than(" <value> ")" | "as(" <value> ", " <value> ")")
+
+;; 代名詞
+<pronoun>       ::= <personal> | <possessive-pron> | <demonstrative> | <indefinite>
+<personal>      ::= "'I" | "'you" | "'he" | "'she" | "'it" | "'we" | "'they"
+<possessive-pron> ::= "'mine" | "'yours" | "'his" | "'hers" | "'ours" | "'theirs"
+<demonstrative> ::= "'this" | "'that" | "'these" | "'those"
+<indefinite>    ::= "'someone" | "'something" | "'everyone" | "'everything"
+                  | "'anyone" | "'anything" | "'nobody" | "'nothing"
 ```
 
 ---

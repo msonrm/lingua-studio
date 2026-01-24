@@ -673,6 +673,57 @@ export const pronouns: PronounEntry[] = [
     number: "plural",
     type: "demonstrative",
   },
+  // Possessive pronouns (mine, yours, etc.)
+  {
+    lemma: "mine",
+    objectForm: "mine",
+    person: 1,
+    number: "singular",
+    type: "possessive",
+    correspondingPersonal: "I",
+  },
+  {
+    lemma: "yours",
+    objectForm: "yours",
+    person: 2,
+    number: "singular",  // also works for plural "you"
+    type: "possessive",
+    correspondingPersonal: "you",
+  },
+  {
+    lemma: "his",
+    objectForm: "his",
+    person: 3,
+    number: "singular",
+    gender: "masculine",
+    type: "possessive",
+    correspondingPersonal: "he",
+  },
+  {
+    lemma: "hers",
+    objectForm: "hers",
+    person: 3,
+    number: "singular",
+    gender: "feminine",
+    type: "possessive",
+    correspondingPersonal: "she",
+  },
+  {
+    lemma: "ours",
+    objectForm: "ours",
+    person: 1,
+    number: "plural",
+    type: "possessive",
+    correspondingPersonal: "we",
+  },
+  {
+    lemma: "theirs",
+    objectForm: "theirs",
+    person: 3,
+    number: "plural",
+    type: "possessive",
+    correspondingPersonal: "they",
+  },
 ];
 
 // ============================================

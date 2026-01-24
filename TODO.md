@@ -11,9 +11,13 @@
 
 ### Grammar & Syntax
 - [ ] 代名詞選択時のNUMBER非表示（UX改善）
-- [ ] 疑問文対応
-- [ ] Modal（法助動詞）wrapper (can, may, must, should)
+- [ ] 疑問文対応（Yes/No疑問文、Wh疑問文）
+- [ ] Modal（法助動詞）wrapper (can, may, must, should, will, would, could, might)
 - [ ] Imperative（命令文）wrapper
+- [ ] Passive（受動態）wrapper
+  - agent が指定されている場合は by 句を自動生成
+  - 仕様: `sentence(passive(eat(agent:'I, patient:'apple)))` → "The apple was eaten by me."
+- [ ] Causative（使役態）wrapper
 
 ### Coordination
 - [ ] 否定とのスコープ相互作用（De Morgan）
@@ -25,6 +29,10 @@
 - [ ] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）
 - [ ] 日本語レンダラー
 - [ ] Grammar Console（文法判断のログ表示）
+- [ ] TimeChip 3連プルダウン化（教育的UX改善）
+  - [Tense][Aspect][Time] の3スロット構成
+  - Time で "Yesterday" を選択 → [Past][Simple][Yesterday] に自動設定
+  - 非文法的な組み合わせに×印、自動修正機能
 
 ### LinguaScript Editor
 - [ ] Monaco Editor 統合
@@ -32,7 +40,37 @@
 - [ ] 辞書連携オートコンプリート
 - [ ] 双方向同期（Blocks ↔ LinguaScript）
 
+### Deferred（設計検討が必要）
+- [ ] Why疑問文の構文設計
+  - 現状: `pp(?why, ...)` は不自然
+  - 検討: `reason()` ラッパーの導入
+  - 理由節（because...）との統一的な扱いが必要
+- [ ] 否定 + 頻度副詞 "never" の二重否定検出
+  - `not(frequency('never, ...))` は論理的に二重否定
+  - 警告表示 or 禁止の実装が必要
+  - 難易度: 高（スコープ解析が必要）
+
+### Out of Scope（単文スコープ外）
+- 関係節 (the man who ate...)
+- 複文接続 (but, because による文の接続)
+- 従属節 (if, when, although...)
+
 ## Completed
+
+### Grammar Spec Review (2026-01)
+- [x] 仕様書とコードベースの比較・精査
+- [x] 拡張意味役割の追加 (patient, experiencer, stimulus, beneficiary, possessor, attribute)
+- [x] 等位接続の仕様追加 (and/or for NP & VP)
+- [x] 限定詞3層システムの仕様化 (pre/det/post)
+- [x] 極性感応代名詞の仕様化 (someone ↔ nobody)
+- [x] 形容詞語順の標準分類採用 (opinion→size→age→shape→color→origin→material→purpose)
+- [x] location/time/manner を付加詞として再定義（意味役割から分離）
+- [x] instrument を pp('with, ...) に統一
+- [x] goal/source の使い分け基準明記
+- [x] コピュラ動詞の構造明記 (theme + attribute)
+- [x] 時制・相と時間副詞の制約テーブル追加
+- [x] 所有代名詞の仕様追加 (mine, yours, his, hers, ours, theirs)
+- [x] BNF文法の更新
 
 ### Verb / Subject
 - [x] 主語がない場合のデフォルト値として "someone" を使用
@@ -42,6 +80,9 @@
 - [x] 指示代名詞 (this/that/these/those) を代名詞ブロックに追加
 - [x] 不定代名詞 + 形容詞対応 ("something good", "someone important")
   - 不定代名詞の場合のみ形容詞を後置でレンダリング
+- [x] 所有代名詞ブロック (mine, yours, his, hers, ours, theirs)
+  - 専用ブロック（possessive_pronoun_block）として実装
+  - 述語位置・主語位置で使用可能
 
 ### Sentence / Time / Aspect
 - [x] Time/Aspect ブロックの言語学的レビューと修正

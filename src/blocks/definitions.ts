@@ -390,6 +390,30 @@ Blockly.Blocks['pronoun_block'] = {
 };
 
 // ============================================
+// 所有代名詞ブロック（mine, yours, etc.）
+// ============================================
+const possessivePronouns = pronouns.filter(p => p.type === 'possessive');
+
+Blockly.Blocks['possessive_pronoun_block'] = {
+  init: function() {
+    const options: [string, string][] = possessivePronouns.map(p => [p.lemma, p.lemma]);
+
+    this.appendDummyInput()
+        .appendField("POSSESSIVE")
+        .appendField(new Blockly.FieldDropdown(options), "POSSESSIVE_VALUE");
+
+    // デフォルト値を設定
+    if (options.length > 0) {
+      this.setFieldValue(options[0][1], "POSSESSIVE_VALUE");
+    }
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.thing);  // オブジェクト色（モノを指すため）
+    this.setTooltip("A possessive pronoun (mine, yours, his, hers, ours, theirs) - refers to a possessed thing");
+  }
+};
+
+// ============================================
 // 人間ブロック (human)
 // ============================================
 const humanNouns = nouns.filter(n => n.category === 'human' && !n.proper);
@@ -1043,6 +1067,7 @@ export const toolbox = {
       contents: [
         { kind: "label", text: "── Pronouns ──" },
         { kind: "block", type: "pronoun_block" },
+        { kind: "block", type: "possessive_pronoun_block" },
         { kind: "label", text: "── People ──" },
         {
           kind: "block",

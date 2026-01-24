@@ -374,7 +374,7 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode | Coordinate
 
   // 名詞ブロックの処理（カテゴリ別）
   const nounBlockTypes = [
-    'pronoun_block', 'human_block', 'animal_block', 'object_block', 'place_block', 'abstract_block',
+    'pronoun_block', 'possessive_pronoun_block', 'human_block', 'animal_block', 'object_block', 'place_block', 'abstract_block',
   ];
   if (nounBlockTypes.includes(blockType)) {
     return parseNewNounBlock(block, blockType);
@@ -576,6 +576,7 @@ function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseN
   // ブロックタイプに応じたフィールド名のマッピング
   const fieldMap: Record<string, string> = {
     'pronoun_block': 'PRONOUN_VALUE',
+    'possessive_pronoun_block': 'POSSESSIVE_VALUE',
     'human_block': 'HUMAN_VALUE',
     'animal_block': 'ANIMAL_VALUE',
     'object_block': 'OBJECT_VALUE',

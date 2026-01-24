@@ -125,7 +125,16 @@ export interface SentenceNode {
   timeAdverbial?: string;  // TimeChipから生成される時間副詞（Yesterday, Now など）
 }
 
-export type ModalType = "can" | "could" | "may" | "might" | "must" | "should" | "will" | "would";
+// モダリティ概念（言語非依存の意味カテゴリ）
+export type ModalType =
+  | "ability"      // 能力: can/could
+  | "permission"   // 許可: may/could
+  | "possibility"  // 可能性: might
+  | "obligation"   // 義務: must/had to
+  | "certainty"    // 確信: must
+  | "advice"       // 助言: should
+  | "volition"     // 意志: will/was going to
+  | "prediction";  // 予測: will/would
 
 export interface ClauseNode {
   type: "clause";

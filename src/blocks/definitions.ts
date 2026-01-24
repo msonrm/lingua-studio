@@ -219,18 +219,19 @@ Blockly.Blocks['time_frame'] = {
 
 // ============================================
 // Modal ラッパーブロック（法助動詞）
+// 言語非依存の意味概念として定義
 // ============================================
 Blockly.Blocks['modal_wrapper'] = {
   init: function() {
     const modalOptions: [string, string][] = [
-      ['can (ability)', 'can'],
-      ['could (past ability)', 'could'],
-      ['may (permission)', 'may'],
-      ['might (possibility)', 'might'],
-      ['must (obligation)', 'must'],
-      ['should (advice)', 'should'],
-      ['will (volition)', 'will'],
-      ['would (hypothetical)', 'would'],
+      ['Ability (can)', 'ability'],
+      ['Permission (may)', 'permission'],
+      ['Possibility (might)', 'possibility'],
+      ['Obligation (must)', 'obligation'],
+      ['Certainty (must)', 'certainty'],
+      ['Advice (should)', 'advice'],
+      ['Volition (will)', 'volition'],
+      ['Prediction (will)', 'prediction'],
     ];
 
     this.appendDummyInput()
@@ -239,7 +240,7 @@ Blockly.Blocks['modal_wrapper'] = {
     this.appendStatementInput("SENTENCE")
         .setCheck("sentence");
     this.setColour(COLORS.modal);
-    this.setTooltip("Modal: adds modality (can, must, should, etc.) to the sentence");
+    this.setTooltip("Modal: adds modality (ability, permission, obligation, etc.) to the sentence");
   }
 };
 
@@ -1061,12 +1062,7 @@ export const toolbox = {
       name: "Sentence",
       colour: COLORS.timeFrame,
       contents: [
-        { kind: "label", text: "── Sentence ──" },
         { kind: "block", type: "time_frame" },
-        { kind: "label", text: "── Modal ──" },
-        { kind: "block", type: "modal_wrapper" },
-        { kind: "label", text: "── Imperative ──" },
-        { kind: "block", type: "imperative_wrapper" },
         { kind: "label", text: "── Time ──" },
         { kind: "block", type: "time_chip_concrete" },
         { kind: "label", text: "── Aspect ──" },
@@ -1074,6 +1070,17 @@ export const toolbox = {
         { kind: "label", text: "── Tense/Aspect ──" },
         { kind: "block", type: "time_chip_abstract" },
         { kind: "block", type: "time_chip_unified" },
+      ]
+    },
+    {
+      kind: "category",
+      name: "Sentence Modifier",
+      colour: COLORS.modal,
+      contents: [
+        { kind: "label", text: "── Modal ──" },
+        { kind: "block", type: "modal_wrapper" },
+        { kind: "label", text: "── Imperative ──" },
+        { kind: "block", type: "imperative_wrapper" },
       ]
     },
     {

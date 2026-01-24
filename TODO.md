@@ -12,12 +12,24 @@
 ### Grammar & Syntax
 - [ ] 代名詞選択時のNUMBER非表示（UX改善）
 - [ ] 疑問文対応（Yes/No疑問文、Wh疑問文）
-- [ ] Modal（法助動詞）wrapper (can, may, must, should, will, would, could, might)
-- [ ] Imperative（命令文）wrapper
 - [ ] Passive（受動態）wrapper
   - agent が指定されている場合は by 句を自動生成
   - 仕様: `sentence(passive(eat(agent:'I, patient:'apple)))` → "The apple was eaten by me."
 - [ ] Causative（使役態）wrapper
+- [ ] NOT() wrapper 拡張
+  - modalの外側に配置可能にする（モダリティ否定）
+  - 配置位置でスコープを判定
+
+### Modality & Register
+- [ ] Register パラメータ（formal/casual）
+  - ビルドconfig として設定
+  - Permission: may (formal) / can (casual)
+  - デフォルト: formal
+- [ ] Evidentiality（証拠性）- 日本語レンダラー向け
+  - 伝聞: 「〜そうだ」「〜らしい」
+  - 様態: 「〜ようだ」
+- [ ] Desiderative（願望）- 日本語レンダラー向け
+  - 「〜たい」
 
 ### Coordination
 - [ ] 否定とのスコープ相互作用（De Morgan）
@@ -71,6 +83,21 @@
 - 従属節 (if, when, although...)
 
 ## Completed
+
+### Sentence Modifier (2026-01)
+- [x] Modal（法助動詞）wrapper
+  - 8概念の言語非依存設計（UG: 原理とパラメータ）
+  - Ability, Permission, Possibility, Obligation, Certainty, Advice, Volition, Prediction
+  - 時制連動: 過去時制で適切な英語形式に変換
+    - ability + past → could
+    - volition + past → was going to
+    - obligation + past → had to
+  - LinguaScript: `modal('ability, sentence(...))`
+- [x] Imperative（命令文）wrapper
+  - 主語省略 + 動詞原形
+  - 否定: "Do not eat!"
+  - LinguaScript: `imperative(sentence(...))`
+- [x] Sentence Modifier カテゴリとして Toolbox 分離
 
 ### Grammar Spec Review (2026-01)
 - [x] 仕様書とコードベースの比較・精査

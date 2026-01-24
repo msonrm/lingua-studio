@@ -126,16 +126,18 @@ function renderImperativeClause(clause: ClauseNode): string {
   const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
 
   if (modal) {
-    // modal付き命令文は珍しいが対応（例: "Do please eat"のような丁寧表現）
+    // modal付き命令文は珍しいが対応
+    const modalForm = getModalEnglishForm(modal, 'present');
+    const aux = modalForm.auxiliary || modal;
     const baseForm = verbEntry?.forms.base || verbPhrase.verb.lemma;
     if (polarity === 'negative') {
       verbForm = freqStr
-        ? `${modal} not ${freqStr} ${baseForm}`
-        : `${modal} not ${baseForm}`;
+        ? `${aux} not ${freqStr} ${baseForm}`
+        : `${aux} not ${baseForm}`;
     } else {
       verbForm = freqStr
-        ? `${modal} ${freqStr} ${baseForm}`
-        : `${modal} ${baseForm}`;
+        ? `${aux} ${freqStr} ${baseForm}`
+        : `${aux} ${baseForm}`;
     }
   } else if (polarity === 'negative') {
     // 否定命令: "Don't eat" / "Do not eat"
@@ -456,7 +458,7 @@ function conjugateVerbWithAdverbs(
 
   // モダリティがある場合の処理
   if (modal) {
-    return conjugateWithModal(lemma, aspect, polarity, frequencyAdverbs, modal, verbEntry);
+    return conjugateWithModal(lemma, tense, aspect, polarity, frequencyAdverbs, modal, verbEntry);
   }
 
   // 不規則動詞（be動詞など）の活用形を取得
@@ -567,10 +569,42 @@ function conjugateVerbWithAdverbs(
   return lemma;
 }
 
-// モダリティ付きの動詞活用
+// モダル概念から英語の実現形式を取得（時制連動）
+function getModalEnglishForm(
+  modal: ModalType,
+  tense: 'past' | 'present' | 'future'
+): { auxiliary?: string; usePeriPhrastic?: 'was going to' | 'had to' } {
+  // 現在/未来は同じ形式、過去のみ変化
+  if (tense === 'past') {
+    switch (modal) {
+      case 'ability':    return { auxiliary: 'could' };
+      case 'permission': return { auxiliary: 'could' };
+      case 'possibility': return { auxiliary: 'might' };
+      case 'obligation': return { usePeriPhrastic: 'had to' };  // 迂言形式
+      case 'certainty':  return { auxiliary: 'must' };  // must have で過去推量
+      case 'advice':     return { auxiliary: 'should' };
+      case 'volition':   return { usePeriPhrastic: 'was going to' };  // 迂言形式
+      case 'prediction': return { auxiliary: 'would' };
+    }
+  }
+  // 現在/未来
+  switch (modal) {
+    case 'ability':    return { auxiliary: 'can' };
+    case 'permission': return { auxiliary: 'may' };
+    case 'possibility': return { auxiliary: 'might' };
+    case 'obligation': return { auxiliary: 'must' };
+    case 'certainty':  return { auxiliary: 'must' };
+    case 'advice':     return { auxiliary: 'should' };
+    case 'volition':   return { auxiliary: 'will' };
+    case 'prediction': return { auxiliary: 'will' };
+  }
+}
+
+// モダリティ付きの動詞活用（時制連動）
 // modal + (not) + (aspect markers) + verb
 function conjugateWithModal(
   _lemma: string,  // 将来の拡張用（不規則動詞の処理など）
+  tense: 'past' | 'present' | 'future',
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
   polarity: 'affirmative' | 'negative',
   frequencyAdverbs: AdverbNode[],
@@ -581,31 +615,56 @@ function conjugateWithModal(
   const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
   const notPart = isNegative ? 'not' : '';
 
+  const modalForm = getModalEnglishForm(modal, tense);
+
+  // 迂言形式（was going to, had to）の場合
+  if (modalForm.usePeriPhrastic) {
+    const peri = modalForm.usePeriPhrastic;
+    if (aspect === 'simple') {
+      const parts = [peri, notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
+      return parts.join(' ');
+    }
+    if (aspect === 'progressive') {
+      const parts = [peri, notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
+      return parts.join(' ');
+    }
+    if (aspect === 'perfect') {
+      const parts = [peri, notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
+      return parts.join(' ');
+    }
+    if (aspect === 'perfectProgressive') {
+      const parts = [peri, notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
+      return parts.join(' ');
+    }
+  }
+
+  const aux = modalForm.auxiliary || '';
+
   // Simple: modal (+ not) + (freq) + base
   if (aspect === 'simple') {
-    const parts = [modal, notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
+    const parts = [aux, notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
     return parts.join(' ');
   }
 
   // Progressive: modal (+ not) + (freq) + be + ing
   if (aspect === 'progressive') {
-    const parts = [modal, notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
+    const parts = [aux, notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
     return parts.join(' ');
   }
 
   // Perfect: modal (+ not) + (freq) + have + pp
   if (aspect === 'perfect') {
-    const parts = [modal, notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
+    const parts = [aux, notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
     return parts.join(' ');
   }
 
   // Perfect Progressive: modal (+ not) + (freq) + have been + ing
   if (aspect === 'perfectProgressive') {
-    const parts = [modal, notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
+    const parts = [aux, notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
     return parts.join(' ');
   }
 
-  return `${modal} ${verbEntry.forms.base}`;
+  return aux ? `${aux} ${verbEntry.forms.base}` : verbEntry.forms.base;
 }
 
 function isThirdSingular(subject: NounPhraseNode | CoordinatedNounPhraseNode): boolean {

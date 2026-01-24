@@ -13,6 +13,7 @@
 - [ ] 代名詞選択時のNUMBER非表示（UX改善）
 - [ ] 疑問文対応
 - [ ] Modal（法助動詞）wrapper (can, may, must, should)
+- [ ] Imperative（命令文）wrapper
 
 ### Coordination
 - [ ] 否定とのスコープ相互作用（De Morgan）
@@ -32,6 +33,10 @@
 - [ ] 双方向同期（Blocks ↔ LinguaScript）
 
 ## Completed
+
+### Verb / Subject
+- [x] 主語がない場合のデフォルト値として "someone" を使用
+  - 命令文は英語のローカルルールのため、命令文ラッパーで別途対応予定
 
 ### Pronouns
 - [x] 指示代名詞 (this/that/these/those) を代名詞ブロックに追加

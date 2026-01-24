@@ -45,7 +45,8 @@ function renderClause(clause: ClauseNode): string {
   }
 
   // 主語をレンダリング（isSubject = true）
-  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : '';
+  // 主語がない場合は "someone" をデフォルト値として使用（命令文は別途ラッパーで対応予定）
+  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : 'someone';
 
   // 動詞エントリを取得して前置詞情報を参照
   const verbEntry = findVerb(verbPhrase.verb.lemma);
@@ -379,7 +380,8 @@ function conjugateVerbWithAdverbs(
   if (!verbEntry) return lemma;
 
   const isNegative = polarity === 'negative';
-  const isThirdPersonSingular = subject && isThirdSingular(subject);
+  // 主語がない場合は "someone"（3人称単数）として扱う
+  const isThirdPersonSingular = subject ? isThirdSingular(subject) : true;
   const personNumber = subject ? getPersonNumber(subject) : { person: 3 as const, number: 'singular' as const };
   const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
 

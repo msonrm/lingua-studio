@@ -29,42 +29,23 @@ export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[
   const sentences: SentenceNode[] = [];
   const processedTimeFrames = new Set<string>();
 
-  // imperative_wrapperブロックを処理（最外側）
+  // imperative_wrapperブロックを処理
+  // Note: imperativeとmodalは排他（Blocklyの接続制約で相互に接続不可）
   const imperativeBlocks = workspace.getBlocksByType('imperative_wrapper', false);
   for (const imperativeBlock of imperativeBlocks) {
-    // imperative内にmodal_wrapperがあるかチェック
-    const innerBlock = imperativeBlock.getInputTargetBlock('SENTENCE');
-    if (innerBlock) {
-      if (innerBlock.type === 'modal_wrapper') {
-        // imperative > modal > time_frame
-        const modalValue = innerBlock.getFieldValue('MODAL_VALUE') as ModalType;
-        const timeFrameBlock = innerBlock.getInputTargetBlock('SENTENCE');
-        if (timeFrameBlock && timeFrameBlock.type === 'time_frame') {
-          const ast = parseTimeFrameBlock(timeFrameBlock, modalValue, 'imperative');
-          if (ast) {
-            sentences.push(ast);
-            processedTimeFrames.add(timeFrameBlock.id);
-          }
-        }
-      } else if (innerBlock.type === 'time_frame') {
-        // imperative > time_frame
-        const ast = parseTimeFrameBlock(innerBlock, undefined, 'imperative');
-        if (ast) {
-          sentences.push(ast);
-          processedTimeFrames.add(innerBlock.id);
-        }
+    const timeFrameBlock = imperativeBlock.getInputTargetBlock('SENTENCE');
+    if (timeFrameBlock && timeFrameBlock.type === 'time_frame') {
+      const ast = parseTimeFrameBlock(timeFrameBlock, undefined, 'imperative');
+      if (ast) {
+        sentences.push(ast);
+        processedTimeFrames.add(timeFrameBlock.id);
       }
     }
   }
 
-  // modal_wrapperブロックを処理（imperative内は除く）
+  // modal_wrapperブロックを処理
   const modalBlocks = workspace.getBlocksByType('modal_wrapper', false);
   for (const modalBlock of modalBlocks) {
-    // 親がimperative_wrapperの場合はスキップ（既に処理済み）
-    const parentBlock = modalBlock.getParent();
-    if (parentBlock && parentBlock.type === 'imperative_wrapper') {
-      continue;
-    }
     const modalValue = modalBlock.getFieldValue('MODAL_VALUE') as ModalType;
     const timeFrameBlock = modalBlock.getInputTargetBlock('SENTENCE');
     if (timeFrameBlock && timeFrameBlock.type === 'time_frame') {
@@ -83,7 +64,7 @@ export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[
     if (processedTimeFrames.has(block.id)) {
       continue;
     }
-    // 親がwrapperの場合はスキップ
+    // 親がwrapperの場合はスキップ（重複防止）
     const parentBlock = block.getParent();
     if (parentBlock && (parentBlock.type === 'modal_wrapper' || parentBlock.type === 'imperative_wrapper')) {
       continue;

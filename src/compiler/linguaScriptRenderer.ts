@@ -13,14 +13,22 @@ import {
 // AST → LinguaScript レンダラー
 // ============================================
 export function renderToLinguaScript(ast: SentenceNode): string {
-  const clauseScript = renderClauseToScript(ast.clause);
+  let result = renderClauseToScript(ast.clause);
 
-  // 時間副詞がある場合は別途表示（コメントとして）
-  if (ast.timeAdverbial) {
-    return `${clauseScript}  // ${ast.timeAdverbial}`;
+  // sentence() ラッパーで包む（仕様: 命題のルート）
+  result = `sentence(${result})`;
+
+  // 命令文の場合は imperative() でラップ
+  if (ast.sentenceType === 'imperative') {
+    result = `imperative(${result})`;
   }
 
-  return clauseScript;
+  // 時間副詞がある場合は time() ラッパーで包む
+  if (ast.timeAdverbial) {
+    result = `time('${ast.timeAdverbial.toLowerCase()}, ${result})`;
+  }
+
+  return result;
 }
 
 function renderClauseToScript(clause: ClauseNode): string {
@@ -47,42 +55,37 @@ function renderClauseToScript(clause: ClauseNode): string {
 function getAspectWrapper(
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive'
 ): string {
-  const aspectMap: Record<string, string> = {
-    'simple': 'simple',
-    'progressive': 'progressive',
-    'perfect': 'perfect',
-    'perfectProgressive': 'perfect_progressive',
-  };
-
-  return aspectMap[aspect];
+  // 仕様書に合わせてキャメルケースを維持
+  return aspect;
 }
 
 function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
+  // 意味役割の名前付き引数形式（仕様: verb(agent:'x, theme:'y, ...)）
   const args = vp.arguments
     .filter(arg => arg.filler !== null)
-    .map(arg => renderFillerToScript(arg.filler!))
+    .map(arg => `${arg.role}:${renderFillerToScript(arg.filler!)}`)
     .join(', ');
 
   let result = args ? `${vp.verb.lemma}(${args})` : `${vp.verb.lemma}()`;
 
-  // 副詞をラップ（頻度副詞）
+  // 副詞をラップ（頻度副詞）- 仕様: frequency('always, verb(...))
   const freqAdverbs = vp.adverbs.filter(a => a.advType === 'frequency');
   for (const adv of freqAdverbs) {
-    result = `${adv.lemma}(${result})`;
+    result = `frequency('${adv.lemma}, ${result})`;
   }
 
-  // 副詞をラップ（様態副詞）
+  // 副詞をラップ（様態副詞）- 仕様: manner('quickly, verb(...))
   const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
   for (const adv of mannerAdverbs) {
-    result = `${adv.lemma}(${result})`;
+    result = `manner('${adv.lemma}, ${result})`;
   }
 
-  // 前置詞句をラップ
+  // 前置詞句をラップ - 仕様: pp('in, 'park, verb(...))
   for (const pp of vp.prepositionalPhrases) {
     const objScript = pp.object.type === 'coordinatedNounPhrase'
       ? renderCoordinatedNounPhraseToScript(pp.object as CoordinatedNounPhraseNode)
       : renderNounPhraseToScript(pp.object as NounPhraseNode);
-    result = `${pp.preposition}(${result}, ${objScript})`;
+    result = `pp('${pp.preposition}, ${objScript}, ${result})`;
   }
 
   // 等位接続をラップ
@@ -117,52 +120,56 @@ function renderCoordinatedNounPhraseToScript(coordNP: CoordinatedNounPhraseNode)
 }
 
 function renderNounPhraseToScript(np: NounPhraseNode): string {
-  // 名詞/代名詞のヘッドをレンダリング
-  let result: string;
-
+  // 代名詞の場合はシンプルに返す
   if (np.head.type === 'pronoun') {
     const pronounHead = np.head as PronounHead;
-    result = `'${pronounHead.lemma}`;
-  } else {
-    const nounHead = np.head as NounHead;
-    // 複数形の場合はマーク
-    if (nounHead.number === 'plural') {
-      result = `plural('${nounHead.lemma})`;
-    } else {
-      result = `'${nounHead.lemma}`;
-    }
+    return `'${pronounHead.lemma}`;
   }
 
-  // 形容詞をラップ（内側から外側へ）
-  for (const adj of [...np.adjectives].reverse()) {
-    result = `${adj.lemma}(${result})`;
+  // 名詞句: noun(pre:'all, det:'the, post:'three, adj:['big, 'red], head:'apple)
+  const nounHead = np.head as NounHead;
+  const parts: string[] = [];
+
+  // 前置限定詞
+  if (np.preDeterminer) {
+    parts.push(`pre:'${np.preDeterminer}`);
   }
 
-  // 限定詞をラップ
-  if (np.postDeterminer) {
-    result = `${np.postDeterminer}(${result})`;
-  }
-
+  // 中央限定詞
   if (np.determiner?.lexeme) {
     const det = np.determiner.lexeme;
-    if (det === 'a' || det === 'an') {
-      result = `a(${result})`;
+    // a/an は 'a に統一
+    parts.push(`det:'${det === 'an' ? 'a' : det}`);
+  }
+
+  // 後置限定詞（複数形マーカー含む）
+  if (np.postDeterminer) {
+    parts.push(`post:'${np.postDeterminer}`);
+  } else if (nounHead.number === 'plural' && !np.determiner?.lexeme && !np.preDeterminer) {
+    // 限定詞なしの複数形
+    parts.push(`post:'[plural]`);
+  }
+
+  // 形容詞
+  if (np.adjectives.length > 0) {
+    if (np.adjectives.length === 1) {
+      parts.push(`adj:'${np.adjectives[0].lemma}`);
     } else {
-      result = `${det}(${result})`;
+      const adjList = np.adjectives.map(adj => `'${adj.lemma}`).join(', ');
+      parts.push(`adj:[${adjList}]`);
     }
   }
 
-  if (np.preDeterminer) {
-    result = `${np.preDeterminer}(${result})`;
-  }
+  // 名詞ヘッド
+  parts.push(`head:'${nounHead.lemma}`);
 
-  // 前置詞句修飾
+  // 前置詞句修飾（後置修飾）
   if (np.prepModifier) {
     const objScript = np.prepModifier.object.type === 'coordinatedNounPhrase'
       ? renderCoordinatedNounPhraseToScript(np.prepModifier.object as CoordinatedNounPhraseNode)
       : renderNounPhraseToScript(np.prepModifier.object as NounPhraseNode);
-    result = `${np.prepModifier.preposition}(${result}, ${objScript})`;
+    parts.push(`post:pp('${np.prepModifier.preposition}, ${objScript})`);
   }
 
-  return result;
+  return `noun(${parts.join(', ')})`;
 }

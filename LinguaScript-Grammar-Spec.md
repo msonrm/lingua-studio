@@ -102,6 +102,8 @@ verb(agent:'x, theme:'y, ...)
 
 ### 基本役割
 
+動詞の必須引数（項）として機能する意味役割。
+
 | 役割 | 説明 | 例 |
 |------|------|-----|
 | `agent` | 動作主 | I, she |
@@ -110,10 +112,6 @@ verb(agent:'x, theme:'y, ...)
 | `source` | 起点 | store, Tokyo |
 | `goal` | 着点 | station, home |
 | `instrument` | 道具 | knife, pen |
-| `location` | 場所 | park, room |
-| `time` | 時間 | yesterday, now |
-| `manner` | 様態 | quickly |
-| `reason` | 理由 | because... |
 
 ### 拡張役割
 
@@ -150,6 +148,93 @@ break(agent:'I, patient:'window)
 
 ---
 
+## 付加詞（Adjuncts）
+
+場所・時間・様態・理由などは、動詞の必須引数（項）ではなく、任意の修飾要素（付加詞）として扱う。
+これらは意味役割ではなく、別の構文機構で表現する。
+
+### 時間副詞（Time Adverbials）
+
+時間表現は `time()` ラッパーまたは時間副詞で表現する。
+
+```lisp
+;; 具体的な時間
+time('yesterday, sentence(eat(agent:'I, patient:'apple)))
+;; → "Yesterday, I ate an apple."
+
+;; 相的時間（アスペクトに関連）
+time('just_now, sentence(perfect(eat(agent:'I, patient:'apple))))
+;; → "I have just eaten an apple."
+
+;; 時間副詞の種類
+'yesterday, 'today, 'tomorrow           ;; 具体的
+'now, 'just_now, 'already, 'yet, 'still ;; 相的
+'recently, 'lately, 'soon               ;; 相対的
+```
+
+### 様態副詞（Manner Adverbs）
+
+動作の様態は `manner()` ラッパーで表現する。
+
+```lisp
+manner('quickly, eat(agent:'I, patient:'apple))
+;; → "I quickly eat an apple." / "I eat an apple quickly."
+
+manner('carefully, open(agent:'she, patient:'door))
+;; → "She carefully opens the door."
+```
+
+### 頻度副詞（Frequency Adverbs）
+
+頻度は `frequency()` ラッパーで表現する。
+
+```lisp
+frequency('always, eat(agent:'I, patient:'apple))
+;; → "I always eat an apple."
+
+frequency('never, drink(agent:'he, patient:'coffee))
+;; → "He never drinks coffee."
+
+;; 頻度副詞の種類（高→低）
+'always, 'usually, 'often, 'sometimes, 'rarely, 'never
+```
+
+### 前置詞句（Prepositional Phrases）
+
+場所・方向・関係などは前置詞句で表現する。
+
+```lisp
+;; 場所
+pp('in, 'park, eat(agent:'I, patient:'apple))
+;; → "I eat an apple in the park."
+
+;; 方向
+pp('to, 'station, run(agent:'I))
+;; → "I run to the station."
+
+;; 道具（instrumentの代替表現）
+pp('with, 'knife, cut(agent:'I, patient:'bread))
+;; → "I cut the bread with a knife."
+
+;; 前置詞の種類
+'in, 'on, 'at           ;; 場所
+'to, 'from, 'into       ;; 方向
+'with, 'by, 'for        ;; 手段・関係
+'about, 'of             ;; 関連
+```
+
+### 付加詞の語順
+
+付加詞は文の様々な位置に置ける。コンパイラが適切な位置を決定する。
+
+```lisp
+;; 複数の付加詞
+time('yesterday, manner('quickly, pp('in, 'park, eat(agent:'I, patient:'apple))))
+;; → "Yesterday, I quickly ate an apple in the park."
+```
+
+---
+
 ## 疑問文
 
 ### Yes/No疑問文 vs Wh疑問文
@@ -166,15 +251,24 @@ break(agent:'I, patient:'window)
 
 ### 疑問プレースホルダー `?`
 
+#### 意味役割への疑問
+
 | 空欄の位置 | 疑問詞 | 例 |
 |-----------|--------|-----|
 | `agent:?` | Who | Who ate the apple? |
-| `theme:?` | What | What did you eat? |
+| `theme:?` / `patient:?` | What | What did you eat? |
 | `recipient:?` | Whom / To whom | Whom did you give the book to? |
-| `location:?` | Where | Where did you eat? |
-| `time:?` | When | When did you eat? |
-| `manner:?` | How | How did you do it? |
-| `reason:?` | Why | Why did you eat? |
+| `goal:?` | Where (着点) | Where did you go? |
+| `source:?` | Where (起点) | Where did you come from? |
+
+#### 付加詞への疑問
+
+| 構文 | 疑問詞 | 例 |
+|------|--------|-----|
+| `pp(?where, ...)` | Where | Where did you eat? |
+| `time(?, ...)` | When | When did you eat? |
+| `manner(?, ...)` | How | How did you do it? |
+| `pp(?why, ...)` | Why | Why did you eat? |
 
 ### 記法ルール
 
@@ -548,7 +642,7 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 ## BNF風の形式文法
 
 ```bnf
-<utterance>     ::= <attitude>? <negA>? <modal>? <sentence>
+<utterance>     ::= <attitude>? <negA>? <modal>? <adjuncts>? <sentence>
 
 <attitude>      ::= "?" | "imperative"
 <negA>          ::= "not(" <modal>? <sentence> ")"
@@ -563,7 +657,7 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 <negB>          ::= "not("
 
 ;; 動詞句（等位接続対応）
-<verb-expr>     ::= <verb-phrase> | <verb-coord>
+<verb-expr>     ::= <adjuncts>? <verb-phrase> | <verb-coord>
 <verb-coord>    ::= "and(" <verb-expr> ("," <verb-expr>)+ ")"
                   | "or(" <verb-expr> ("," <verb-expr>)+ ")"
 <verb-phrase>   ::= <verb> "(" <arguments> ")"
@@ -573,10 +667,21 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 
 ;; 意味役割（基本 + 拡張）
 <role>          ::= <basic-role> | <extended-role>
-<basic-role>    ::= "agent" | "theme" | "recipient" | "source" | "goal"
-                  | "instrument" | "location" | "time" | "manner" | "reason"
+<basic-role>    ::= "agent" | "theme" | "recipient" | "source" | "goal" | "instrument"
 <extended-role> ::= "patient" | "experiencer" | "stimulus"
                   | "beneficiary" | "possessor" | "attribute"
+
+;; 付加詞（任意の修飾要素）
+<adjuncts>      ::= <adjunct>+
+<adjunct>       ::= <time-adv> | <manner-adv> | <frequency-adv> | <prep-phrase>
+<time-adv>      ::= "time('" <time-word> ", " <verb-expr> ")"
+<time-word>     ::= "yesterday" | "today" | "tomorrow" | "now" | "just_now" | ...
+<manner-adv>    ::= "manner('" <manner-word> ", " <verb-expr> ")"
+<manner-word>   ::= "quickly" | "slowly" | "carefully" | ...
+<frequency-adv> ::= "frequency('" <freq-word> ", " <verb-expr> ")"
+<freq-word>     ::= "always" | "usually" | "often" | "sometimes" | "rarely" | "never"
+<prep-phrase>   ::= "pp('" <preposition> ", " <noun-expr> ", " <verb-expr> ")"
+<preposition>   ::= "in" | "on" | "at" | "to" | "from" | "with" | "by" | "for" | "about" | ...
 
 <value>         ::= <noun-expr> | "?" | "?or(" <value> "," <value> ")"
 

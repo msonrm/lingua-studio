@@ -46,6 +46,16 @@
 - [x] 言語切り替え時のワークスペース状態保持
   - Blockly.serialization を使用した状態保存・復元
 - [ ] Grammar Console（文法判断のログ表示）
+  - 必須引数の欠落警告
+    - `⚠️ Missing required argument: patient (for verb 'cut')`
+    - 出力に `___` を表示（例: "I cut ___."）
+    - agent の欠落も同様に扱う（現在の someone 補完をやめる）
+  - 変換ログの表示
+    - Subject-verb agreement: `run → runs` (3rd person singular)
+    - Tense inflection: `eat → ate` (past tense)
+    - Article selection: `a → an` (before vowel)
+    - Pronoun case: `I → me` (object position)
+  - アーキテクチャ: レンダラーが `RenderResult { output, transformations, warnings }` を返す形に拡張
 - [ ] TimeChip 3連プルダウン化（教育的UX改善）
   - [Tense][Aspect][Time] の3スロット構成
   - Time で "Yesterday" を選択 → [Past][Simple][Yesterday] に自動設定

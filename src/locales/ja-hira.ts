@@ -207,6 +207,7 @@ export const jaHira: LocaleData = {
     // Tabs
     TAB_BLOCKS: 'ブロック',
     TAB_LINGUASCRIPT: 'LinguaScript',
+    TAB_AST: 'AST',
     TAB_COMING_SOON: 'もうすこしまってね',
 
     // Panels

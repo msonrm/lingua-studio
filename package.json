@@ -17,7 +17,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/prismjs": "^1.26.5",
     "blockly": "^12.3.1",
+    "prismjs": "^1.30.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

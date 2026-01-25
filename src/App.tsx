@@ -1,5 +1,7 @@
-import { useState, useMemo, useCallback } from 'react';
-import { BlocklyWorkspace } from './components/BlocklyWorkspace';
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { BlocklyWorkspace, BlocklyWorkspaceHandle } from './components/BlocklyWorkspace';
+import { LinguaScriptBar } from './components/LinguaScriptBar';
+import { LinguaScriptView } from './components/LinguaScriptView';
 import { SentenceNode } from './types/schema';
 import { renderToLinguaScript } from './compiler/linguaScriptRenderer';
 import {
@@ -13,21 +15,27 @@ import {
 } from './locales';
 import './App.css';
 
-type EditorMode = 'blocks' | 'linguascript';
+type EditorMode = 'blocks' | 'linguascript' | 'ast';
 
 function App() {
   const [asts, setASTs] = useState<SentenceNode[]>([]);
   const [sentences, setSentences] = useState<string[]>([]);
   const [editorMode, setEditorMode] = useState<EditorMode>('blocks');
-  const [showAST, setShowAST] = useState(false);
   const [localeCode, setLocaleCode] = useState<LocaleCode>(getStoredLocale());
   const [workspaceKey, setWorkspaceKey] = useState(0);
+  const [showSidePanel, setShowSidePanel] = useState(false);
+  const [workspaceState, setWorkspaceState] = useState<object | null>(null);
+  const workspaceRef = useRef<BlocklyWorkspaceHandle>(null);
 
   // 現在のロケールデータ
   const currentLocale = useMemo(() => getLocale(localeCode), [localeCode]);
 
   // ロケール切り替え
   const handleLocaleChange = useCallback((code: LocaleCode) => {
+    // 現在のワークスペース状態を保存
+    const state = workspaceRef.current?.saveState() ?? null;
+    setWorkspaceState(state);
+
     setStoredLocale(code);
     applyBlocklyLocale(code);
     setLocaleCode(code);
@@ -73,10 +81,14 @@ function App() {
               <button
                 className={`mode-tab ${editorMode === 'linguascript' ? 'active' : ''}`}
                 onClick={() => setEditorMode('linguascript')}
-                disabled
-                title={t.TAB_COMING_SOON}
               >
                 {t.TAB_LINGUASCRIPT}
+              </button>
+              <button
+                className={`mode-tab ${editorMode === 'ast' ? 'active' : ''}`}
+                onClick={() => setEditorMode('ast')}
+              >
+                {t.TAB_AST}
               </button>
             </div>
           </div>
@@ -90,30 +102,64 @@ function App() {
                 <option key={code} value={code}>{locale.name}</option>
               ))}
             </select>
-            <label className="ast-toggle">
-              <input
-                type="checkbox"
-                checked={showAST}
-                onChange={(e) => setShowAST(e.target.checked)}
-              />
-              {t.SHOW_AST}
-            </label>
+            <button
+              className={`side-panel-toggle ${showSidePanel ? 'active' : ''}`}
+              onClick={() => setShowSidePanel(!showSidePanel)}
+              title="Toggle Side Panel"
+            >
+              <span className="toggle-icon">{showSidePanel ? '»' : '«'}</span>
+            </button>
           </div>
         </header>
 
+        {/* LinguaScript Bar - URL-like always-visible display */}
+        <LinguaScriptBar
+          code={linguaScripts.join('; ')}
+          placeholder={t.PLACEHOLDER_LINGUASCRIPT}
+        />
+
         <main className="main">
-          <div className="workspace-area">
-            {editorMode === 'blocks' ? (
-              <div className="workspace-container">
-                <BlocklyWorkspace
-                  key={workspaceKey}
-                  onASTChange={setASTs}
-                  onSentenceChange={setSentences}
+          <div className="editor-area">
+            {/* Main Editor - switches based on mode */}
+            <div className="main-editor">
+              {editorMode === 'blocks' && (
+                <div className="workspace-container">
+                  <BlocklyWorkspace
+                    ref={workspaceRef}
+                    key={workspaceKey}
+                    onASTChange={setASTs}
+                    onSentenceChange={setSentences}
+                    initialState={workspaceState}
+                  />
+                </div>
+              )}
+              {editorMode === 'linguascript' && (
+                <LinguaScriptView
+                  code={linguaScripts.join('; ')}
+                  placeholder={t.PLACEHOLDER_LINGUASCRIPT}
                 />
-              </div>
-            ) : (
-              <div className="linguascript-editor">
-                <p className="coming-soon">LinguaScript Editor - {t.TAB_COMING_SOON}</p>
+              )}
+              {editorMode === 'ast' && (
+                <div className="ast-view">
+                  <pre className="ast-code">
+                    {asts.length > 0
+                      ? JSON.stringify(asts.length === 1 ? asts[0] : asts, null, 2)
+                      : t.PLACEHOLDER_AST
+                    }
+                  </pre>
+                </div>
+              )}
+            </div>
+
+            {/* Side Panel */}
+            {showSidePanel && (
+              <div className="side-panel">
+                <div className="side-panel-header">
+                  <h3>Options</h3>
+                </div>
+                <div className="side-panel-content">
+                  <p className="coming-soon">Build options coming soon...</p>
+                </div>
               </div>
             )}
           </div>
@@ -129,16 +175,6 @@ function App() {
                   }
                 </div>
               </div>
-
-              <div className="output-section">
-                <h2>{t.PANEL_LINGUASCRIPT}</h2>
-                <pre className="linguascript-output">
-                  {linguaScripts.length > 0
-                    ? linguaScripts.join('\n')
-                    : t.PLACEHOLDER_LINGUASCRIPT
-                  }
-                </pre>
-              </div>
             </div>
 
             <div className="console-panel">
@@ -151,20 +187,6 @@ function App() {
                 </div>
               </div>
             </div>
-
-            {showAST && (
-              <div className="ast-panel">
-                <div className="output-section">
-                  <h2>{t.PANEL_AST}</h2>
-                  <pre className="ast-output">
-                    {asts.length > 0
-                      ? JSON.stringify(asts.length === 1 ? asts[0] : asts, null, 2)
-                      : t.PLACEHOLDER_AST
-                    }
-                  </pre>
-                </div>
-              </div>
-            )}
           </div>
         </main>
       </div>

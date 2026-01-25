@@ -9,8 +9,9 @@
   - [x] 選択疑問: `?which('tea, 'coffee)`
   - [x] 副詞疑問詞プレースホルダー: `?where`, `?when`, `?how`
     - Questionカテゴリ + 各副詞カテゴリに二重配置
-    - LinguaScript: `question(sentence(past+simple(locative(?where, run(agent:'I)))))` → "Where did I run?"
-  - 仕様: `question(sentence(past+simple(eat(agent:?who, theme:'apple))))` → "Who ate the apple?"
+    - Wh語検出による疑問文自動判定（`question()`不要）
+    - LinguaScript: `sentence(past+simple(locative(?where, run(agent:'I))))` → "Where did I run?"
+  - 仕様: `sentence(past+simple(eat(agent:?who, theme:'apple)))` → "Who ate the apple?"
 - [ ] Passive（受動態）wrapper
   - agent が指定されている場合は by 句を自動生成
   - 仕様: `sentence(passive(eat(agent:'I, patient:'apple)))` → "The apple was eaten by me."

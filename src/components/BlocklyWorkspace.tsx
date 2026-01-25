@@ -55,6 +55,7 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
 
     // ブロック変更イベントを処理
     const handleBlockChange = useCallback((event: Blockly.Events.Abstract) => {
+      // フィールド値の変更（プルダウン等）
       if (event.type === Blockly.Events.BLOCK_CHANGE) {
         const changeEvent = event as Blockly.Events.BlockChange;
         if (changeEvent.element === 'field' && changeEvent.name) {
@@ -68,6 +69,52 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
               field: fieldName,
               from: oldValue,
               to: newValue,
+            });
+          }
+        }
+      }
+
+      // ブロックの接続/切断
+      if (event.type === Blockly.Events.BLOCK_MOVE) {
+        const moveEvent = event as Blockly.Events.BlockMove;
+        // 親が変わった（接続/切断された）
+        if (moveEvent.oldParentId !== moveEvent.newParentId) {
+          const block = workspaceRef.current?.getBlockById(moveEvent.blockId || '');
+          const blockType = block?.type || 'block';
+
+          // ブロックタイプを読みやすい名前に変換
+          const getBlockLabel = (type: string): string => {
+            const labels: Record<string, string> = {
+              'pronoun_block': 'Subject',
+              'noun_block': 'Noun',
+              'verb_motion': 'Verb',
+              'verb_action': 'Verb',
+              'verb_transfer': 'Verb',
+              'verb_cognition': 'Verb',
+              'verb_communication': 'Verb',
+              'verb_state': 'Verb',
+              'adjective_block': 'Adjective',
+              'preposition_verb': 'Preposition',
+              'preposition_noun': 'Preposition',
+            };
+            return labels[type] || type;
+          };
+
+          const label = getBlockLabel(blockType);
+
+          if (moveEvent.oldParentId && !moveEvent.newParentId) {
+            // 切断された
+            pendingChangesRef.current.push({
+              field: label,
+              from: 'connected',
+              to: 'disconnected',
+            });
+          } else if (!moveEvent.oldParentId && moveEvent.newParentId) {
+            // 接続された
+            pendingChangesRef.current.push({
+              field: label,
+              from: 'disconnected',
+              to: 'connected',
             });
           }
         }
@@ -93,13 +140,12 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       onSentenceChange(sentences);
       onLogsChange(allLogs);
 
-      // Send pending block changes and clear
+      // Send pending block changes and clear (only update if there are changes)
       if (pendingChangesRef.current.length > 0) {
         onBlockChanges([...pendingChangesRef.current]);
         pendingChangesRef.current = [];
-      } else {
-        onBlockChanges([]);
       }
+      // Note: Don't clear blockChanges when empty - keep showing last change
     }, [onASTChange, onSentenceChange, onLogsChange, onBlockChanges, ui.ERROR_INCOMPLETE]);
 
     useEffect(() => {

@@ -261,15 +261,15 @@ break(agent:'I, patient:'window)
 
 ### 時間副詞（Time Adverbials）
 
-時間表現は `time()` ラッパーまたは時間副詞で表現する。
+時間表現は `time()` ラッパーで表現する。他の副詞ラッパー（manner, frequency, locative）と同じく動詞句を修飾する。
 
 ```lisp
 ;; 具体的な時間
-time('yesterday, sentence(eat(agent:'I, patient:'apple)))
+sentence(past+simple(time('yesterday, eat(agent:'I, patient:'apple))))
 ;; → "Yesterday, I ate an apple."
 
 ;; 相的時間（アスペクトに関連）
-time('just_now, sentence(perfect(eat(agent:'I, patient:'apple))))
+sentence(present+perfect(time('just_now, eat(agent:'I, patient:'apple))))
 ;; → "I have just eaten an apple."
 
 ;; 時間副詞の種類
@@ -291,10 +291,10 @@ time('just_now, sentence(perfect(eat(agent:'I, patient:'apple))))
 
 ```lisp
 ;; OK: 過去の具体時点 + 過去単純
-time('yesterday, sentence(past+simple(eat(...))))
+sentence(past+simple(time('yesterday, eat(...))))
 
 ;; NG: 過去の具体時点 + 現在完了（英語では非文法的）
-time('yesterday, sentence(present+perfect(eat(...))))
+sentence(present+perfect(time('yesterday, eat(...))))
 ;; → コンパイラが警告または自動修正
 ```
 

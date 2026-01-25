@@ -1022,15 +1022,15 @@ export const adjectives: AdjectiveEntry[] = [
 // ============================================
 export const adverbs: AdverbEntry[] = [
   {
-    lemma: "furiously",
-    type: "manner",
-  },
-  {
     lemma: "quickly",
     type: "manner",
   },
   {
     lemma: "slowly",
+    type: "manner",
+  },
+  {
+    lemma: "furiously",
     type: "manner",
   },
   {

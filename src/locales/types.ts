@@ -92,6 +92,11 @@ export interface BlocklyMessages {
   GROUP_NAMES: string;
   GROUP_INTERROGATIVE: string;
 
+  // Preposition group labels
+  GROUP_LOCATION: string;
+  GROUP_DIRECTION: string;
+  GROUP_RELATION: string;
+
   // Determiner
   DETERMINER_LABEL: string;
   DETERMINER_TOOLTIP: string;

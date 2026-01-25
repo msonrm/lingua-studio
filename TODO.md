@@ -34,6 +34,11 @@
 - [ ] 等位接続の構造的曖昧性
   - "I saw the man with the telescope and the camera"
 
+### Vocabulary
+- [ ] LOCATION副詞に「home」と同ジャンルの単語を追加
+  - 現在 home は一時的に除外
+  - 検討候補: home, abroad, indoors, outdoors, upstairs, downstairs 等
+
 ### UI & Localization
 - [x] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）
   - i18nシステム実装済み（en, ja, ja-hira）
@@ -41,6 +46,16 @@
 - [x] 言語切り替え時のワークスペース状態保持
   - Blockly.serialization を使用した状態保存・復元
 - [ ] Grammar Console（文法判断のログ表示）
+  - 必須引数の欠落警告
+    - `⚠️ Missing required argument: patient (for verb 'cut')`
+    - ~~出力に `___` を表示（例: "I cut ___."）~~ ✅ 実装済み
+    - ~~agent の欠落も同様に扱う（現在の someone 補完をやめる）~~ ✅ 実装済み
+  - 変換ログの表示
+    - Subject-verb agreement: `run → runs` (3rd person singular)
+    - Tense inflection: `eat → ate` (past tense)
+    - Article selection: `a → an` (before vowel)
+    - Pronoun case: `I → me` (object position)
+  - アーキテクチャ: レンダラーが `RenderResult { output, transformations, warnings }` を返す形に拡張
 - [ ] TimeChip 3連プルダウン化（教育的UX改善）
   - [Tense][Aspect][Time] の3スロット構成
   - Time で "Yesterday" を選択 → [Past][Simple][Yesterday] に自動設定
@@ -267,3 +282,25 @@
 
 ### Cleanup
 - [x] レガシーブロック削除（quantifier_block, determiner_block, noun_phrase, person_block, thing_block, adjective, adverb）
+
+### Dropdown UX Improvements (2026-01)
+- [x] ドロップダウンのグループヘッダーを選択不可に
+  - `labelValidator` 関数で `__label_*` 値を拒否
+  - 対象: pronoun, human, place, manner, locative, time_adverb, preposition
+- [x] 動詞修飾副詞のプルダウン改善
+  - MANNER: Common を上に、Interrogative を下に
+  - MANNER: デフォルト値を `quickly` に（`?how` から変更）
+  - MANNER: 順序を quickly/slowly/furiously に
+  - LOCATION: デフォルト値を `here` に
+  - LOCATION: `home` を一時除外（Vocabulary TODO参照）
+  - TIME: デフォルト値を `yesterday` に
+  - TIME: 順序を yesterday/today/tomorrow 先頭に
+- [x] 前置詞プルダウンにグループヘッダー追加
+  - Location (in, on, at, under, behind)
+  - Direction (to, from, into)
+  - Relation (with, of, for, about)
+- [x] 欠損引数の表示を `___` マーカーに統一
+  - 主語欠損: `someone` → `___`
+  - 必須引数欠損: `___` を表示（例: "I cut ___."）
+  - PP/等位接続の欠損: `something`/`thing` → `___`
+  - Grammar Console 対応の準備完了

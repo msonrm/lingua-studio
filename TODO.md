@@ -35,7 +35,9 @@
   - "I saw the man with the telescope and the camera"
 
 ### UI & Localization
-- [ ] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）
+- [x] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）
+  - i18nシステム実装済み（en, ja, ja-hira）
+  - Blockly.Msg + React Context による切り替え
 - [ ] Grammar Console（文法判断のログ表示）
 - [ ] TimeChip 3連プルダウン化（教育的UX改善）
   - [Tense][Aspect][Time] の3スロット構成
@@ -57,6 +59,12 @@
 - [ ] LinguaScriptパーサー（双方向変換の基盤）
   - BNF文法に基づく実装
   - AST ↔ LinguaScript の等価変換
+
+### LinguaScript Syntax Enhancement
+- [ ] メタ値プレフィックス: `@plural`, `@none` （出力されない制御値を明示）
+- [ ] 組み合わせ演算子: `Past + Perfect` （両方適用を明示）
+- [ ] 意味注釈: `must:obligation` vs `must:certainty` （多言語翻訳・逆変換時に必要）
+- [ ] フィールド必須/任意マーカー: `*field` / `field?` （手書き入力・バリデータ実装時に必要）
 
 ### LinguaScript Editor
 - [ ] Monaco Editor 統合

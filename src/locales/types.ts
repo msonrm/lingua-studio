@@ -26,6 +26,10 @@ export interface BlocklyMessages {
   IMPERATIVE_LABEL: string;
   IMPERATIVE_TOOLTIP: string;
 
+  // Question wrapper
+  QUESTION_LABEL: string;
+  QUESTION_TOOLTIP: string;
+
   // Negation sentence wrapper
   NEGATION_MODAL_LABEL: string;
   NEGATION_MODAL_TOOLTIP: string;
@@ -160,6 +164,7 @@ export interface BlocklyMessages {
   SECTION_TIME: string;
   SECTION_ASPECT: string;
   SECTION_TENSE_ASPECT: string;
+  SECTION_QUESTION: string;
   SECTION_IMPERATIVE: string;
   SECTION_MODAL_NEGATION: string;
   SECTION_MODAL: string;

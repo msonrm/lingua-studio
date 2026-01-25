@@ -122,7 +122,7 @@ export interface AdverbEntry {
 export interface SentenceNode {
   type: "sentence";
   clause: ClauseNode;
-  sentenceType: "declarative" | "imperative";
+  sentenceType: "declarative" | "imperative" | "interrogative";
   timeAdverbial?: string;  // TimeChipから生成される時間副詞（Yesterday, Now など）
 }
 

@@ -4,6 +4,10 @@
 
 ### Grammar & Syntax
 - [ ] 疑問文対応（Yes/No疑問文、Wh疑問文）
+  - `question()` ラッパー（`?()` から変更：可読性・検索性向上）
+  - 明示的疑問詞プレースホルダー: `?who`, `?what`, `?where`, `?when`, `?how`, `?why`, `?whom`
+  - 選択疑問: `?which('tea, 'coffee)`
+  - 仕様: `question(sentence(past+simple(eat(agent:?who, theme:'apple))))` → "Who ate the apple?"
 - [ ] Passive（受動態）wrapper
   - agent が指定されている場合は by 句を自動生成
   - 仕様: `sentence(passive(eat(agent:'I, patient:'apple)))` → "The apple was eaten by me."
@@ -81,8 +85,9 @@
 
 ### Deferred（設計検討が必要）
 - [ ] Why疑問文の構文設計
-  - 現状: `pp(?why, ...)` は不自然
-  - 検討: `reason()` ラッパーの導入
+  - 現行案: `pp(?why, ...)` は前置詞句として不自然
+  - 代替案1: `reason(?why, ...)` ラッパーの導入
+  - 代替案2: 付加詞として `?why` を単独で使用
   - 理由節（because...）との統一的な扱いが必要
 - [ ] 否定 + 頻度副詞 "never" の二重否定検出
   - `not(frequency('never, ...))` は論理的に二重否定

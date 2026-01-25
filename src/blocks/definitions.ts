@@ -271,6 +271,20 @@ Blockly.Blocks['imperative_wrapper'] = {
 };
 
 // ============================================
+// Question ラッパーブロック（疑問文）
+// ============================================
+Blockly.Blocks['question_wrapper'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField(msg('QUESTION_LABEL', 'QUESTION'));
+    this.appendStatementInput("SENTENCE")
+        .setCheck("sentence");
+    this.setColour(COLORS.imperative);  // 同じ紫系（態度層）
+    this.setTooltip(msg('QUESTION_TOOLTIP', "Question: creates a question (e.g., 'Do you like apples?')"));
+  }
+};
+
+// ============================================
 // Negation（文レベル）ラッパーブロック（モダリティ否定）
 // ============================================
 Blockly.Blocks['negation_sentence_wrapper'] = {
@@ -1138,6 +1152,8 @@ export function createToolbox() {
         name: msg('TOOLBOX_SENTENCE_MODIFIER', 'Sentence Modifier'),
         colour: COLORS.modal,
         contents: [
+          { kind: "label", text: msg('SECTION_QUESTION', '── Question ──') },
+          { kind: "block", type: "question_wrapper" },
           { kind: "label", text: msg('SECTION_IMPERATIVE', '── Imperative ──') },
           { kind: "block", type: "imperative_wrapper" },
           { kind: "label", text: msg('SECTION_MODAL_NEGATION', '── Modal Negation ──') },

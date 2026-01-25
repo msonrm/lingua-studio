@@ -26,6 +26,10 @@ export const ja: LocaleData = {
     IMPERATIVE_LABEL: '命令文',
     IMPERATIVE_TOOLTIP: '命令文: 命令を作成（例: "Eat the apple!"）',
 
+    // Question wrapper
+    QUESTION_LABEL: '疑問文',
+    QUESTION_TOOLTIP: '疑問文: 疑問を作成（例: "Do you like apples?"）',
+
     // Negation sentence wrapper
     NEGATION_MODAL_LABEL: 'NOT (モダリティ)',
     NEGATION_MODAL_TOOLTIP: 'モダリティの否定（例: "しなくてもよい"）',
@@ -160,6 +164,7 @@ export const ja: LocaleData = {
     SECTION_TIME: '── 時間 ──',
     SECTION_ASPECT: '── 相 ──',
     SECTION_TENSE_ASPECT: '── 時制/相 ──',
+    SECTION_QUESTION: '── 疑問文 ──',
     SECTION_IMPERATIVE: '── 命令文 ──',
     SECTION_MODAL_NEGATION: '── モダリティ否定 ──',
     SECTION_MODAL: '── モダリティ ──',

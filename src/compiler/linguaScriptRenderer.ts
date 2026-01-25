@@ -57,6 +57,11 @@ export function renderToLinguaScript(ast: SentenceNode): string {
     result = `imperative(${result})`;
   }
 
+  // 疑問文の場合は question() でラップ
+  if (ast.sentenceType === 'interrogative') {
+    result = `question(${result})`;
+  }
+
   return result;
 }
 

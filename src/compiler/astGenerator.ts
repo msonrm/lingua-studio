@@ -35,6 +35,23 @@ export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[
   const sentences: SentenceNode[] = [];
   const processedTimeFrames = new Set<string>();
 
+  // question_wrapperブロックを処理
+  const questionBlocks = workspace.getBlocksByType('question_wrapper', false);
+  for (const questionBlock of questionBlocks) {
+    const innerBlock = questionBlock.getInputTargetBlock('SENTENCE');
+    if (!innerBlock) continue;
+
+    // negation_sentence_wrapper > modal_wrapper > time_frame のチェーン
+    const { timeFrameBlock, modalInfo } = findTimeFrameFromSentenceChain(innerBlock);
+    if (timeFrameBlock) {
+      const ast = parseTimeFrameBlock(timeFrameBlock, modalInfo.modal, 'interrogative', modalInfo.modalPolarity);
+      if (ast) {
+        sentences.push(ast);
+        processedTimeFrames.add(timeFrameBlock.id);
+      }
+    }
+  }
+
   // imperative_wrapperブロックを処理
   const imperativeBlocks = workspace.getBlocksByType('imperative_wrapper', false);
   for (const imperativeBlock of imperativeBlocks) {
@@ -52,12 +69,12 @@ export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[
     }
   }
 
-  // negation_sentence_wrapperブロックを処理（imperativeに接続されていないもの）
+  // negation_sentence_wrapperブロックを処理（question/imperativeに接続されていないもの）
   const negationSentenceBlocks = workspace.getBlocksByType('negation_sentence_wrapper', false);
   for (const negationBlock of negationSentenceBlocks) {
-    // 親がimperative_wrapperの場合はスキップ（既に処理済み）
+    // 親がquestion_wrapperまたはimperative_wrapperの場合はスキップ（既に処理済み）
     const parentBlock = negationBlock.getParent();
-    if (parentBlock && parentBlock.type === 'imperative_wrapper') {
+    if (parentBlock && (parentBlock.type === 'imperative_wrapper' || parentBlock.type === 'question_wrapper')) {
       continue;
     }
 
@@ -78,11 +95,12 @@ export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[
   // modal_wrapperブロックを処理（negation_sentence_wrapperに接続されていないもの）
   const modalBlocks = workspace.getBlocksByType('modal_wrapper', false);
   for (const modalBlock of modalBlocks) {
-    // 親がnegation_sentence_wrapperまたはimperative_wrapperの場合はスキップ
+    // 親がnegation_sentence_wrapper、imperative_wrapper、question_wrapperの場合はスキップ
     const parentBlock = modalBlock.getParent();
     if (parentBlock && (
       parentBlock.type === 'negation_sentence_wrapper' ||
-      parentBlock.type === 'imperative_wrapper'
+      parentBlock.type === 'imperative_wrapper' ||
+      parentBlock.type === 'question_wrapper'
     )) {
       continue;
     }
@@ -110,7 +128,8 @@ export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[
     if (parentBlock && (
       parentBlock.type === 'modal_wrapper' ||
       parentBlock.type === 'imperative_wrapper' ||
-      parentBlock.type === 'negation_sentence_wrapper'
+      parentBlock.type === 'negation_sentence_wrapper' ||
+      parentBlock.type === 'question_wrapper'
     )) {
       continue;
     }
@@ -173,7 +192,7 @@ interface VerbChainResult {
 function parseTimeFrameBlock(
   block: Blockly.Block,
   modal?: ModalType,
-  sentenceType: 'declarative' | 'imperative' = 'declarative',
+  sentenceType: 'declarative' | 'imperative' | 'interrogative' = 'declarative',
   modalPolarity: 'affirmative' | 'negative' = 'affirmative'
 ): SentenceNode | null {
   // TimeChipを取得してTense/Aspect/出力単語を決定

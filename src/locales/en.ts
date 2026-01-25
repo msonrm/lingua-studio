@@ -26,6 +26,10 @@ export const en: LocaleData = {
     IMPERATIVE_LABEL: 'IMPERATIVE',
     IMPERATIVE_TOOLTIP: "Imperative: creates a command (e.g., 'Eat the apple!')",
 
+    // Question wrapper
+    QUESTION_LABEL: 'QUESTION',
+    QUESTION_TOOLTIP: "Question: creates a question (e.g., 'Do you like apples?')",
+
     // Negation sentence wrapper
     NEGATION_MODAL_LABEL: 'NOT (modal)',
     NEGATION_MODAL_TOOLTIP: "Negates the modality (e.g., 'need not', 'don't have to')",
@@ -160,6 +164,7 @@ export const en: LocaleData = {
     SECTION_TIME: '── Time ──',
     SECTION_ASPECT: '── Aspect ──',
     SECTION_TENSE_ASPECT: '── Tense/Aspect ──',
+    SECTION_QUESTION: '── Question ──',
     SECTION_IMPERATIVE: '── Imperative ──',
     SECTION_MODAL_NEGATION: '── Modal Negation ──',
     SECTION_MODAL: '── Modal ──',

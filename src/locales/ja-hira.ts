@@ -26,6 +26,10 @@ export const jaHira: LocaleData = {
     IMPERATIVE_LABEL: 'めいれい',
     IMPERATIVE_TOOLTIP: '「〜しなさい！」というぶんをつくる',
 
+    // Question wrapper
+    QUESTION_LABEL: 'しつもん',
+    QUESTION_TOOLTIP: '「〜ですか？」というぶんをつくる',
+
     // Negation sentence wrapper
     NEGATION_MODAL_LABEL: '〜なくてもいい',
     NEGATION_MODAL_TOOLTIP: '「しなくてもいい」「できないかも」などをつくる',
@@ -160,6 +164,7 @@ export const jaHira: LocaleData = {
     SECTION_TIME: '── いつ？ ──',
     SECTION_ASPECT: '── どんなようす？ ──',
     SECTION_TENSE_ASPECT: '── いつ？どんなようす？ ──',
+    SECTION_QUESTION: '── しつもん ──',
     SECTION_IMPERATIVE: '── めいれい ──',
     SECTION_MODAL_NEGATION: '── 〜なくてもいい ──',
     SECTION_MODAL: '── できる・しなきゃ ──',

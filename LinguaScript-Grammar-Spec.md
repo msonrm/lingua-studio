@@ -81,7 +81,7 @@ modal(volition:was_going_to, ...) ;; 過去: was going to
 | 記法 | 意味 |
 |------|------|
 | 省略 | 平叙文（デフォルト） |
-| `?()` | 疑問文 |
+| `question()` | 疑問文 |
 | `imperative()` | 命令文 |
 
 ### 2. 否定A（モダリティの否定・省略可）
@@ -399,54 +399,95 @@ time('yesterday, manner('quickly, pp('in, 'park, eat(agent:'I, patient:'apple)))
 ### Yes/No疑問文 vs Wh疑問文
 
 ```lisp
-;; Yes/No疑問文: 空欄なし
-?(sentence(past(simple(eat(agent:'you, theme:'apple)))))
-;; → Did you eat the apple?
+;; Yes/No疑問文: 疑問詞プレースホルダーなし
+question(sentence(past+simple(eat(agent:'you, theme:'apple))))
+;; → "Did you eat the apple?"
 
-;; Wh疑問文: 空欄あり
-?(sentence(past(simple(eat(agent:'you, theme:?)))))
-;; → What did you eat?
+;; Wh疑問文: 疑問詞プレースホルダーあり
+question(sentence(past+simple(eat(agent:'you, theme:?what))))
+;; → "What did you eat?"
 ```
 
-### 疑問プレースホルダー `?`
+### 疑問詞プレースホルダー
+
+疑問詞は明示的なプレースホルダー（`?who`, `?what`, `?where` など）で指定する。
+これにより、出力される疑問詞が一目瞭然となり、AI/人間ともに理解しやすい構文となる。
 
 #### 意味役割への疑問
 
 | 空欄の位置 | 疑問詞 | 例 |
 |-----------|--------|-----|
-| `agent:?` | Who | Who ate the apple? |
-| `theme:?` / `patient:?` | What | What did you eat? |
-| `recipient:?` | Whom / To whom | Whom did you give the book to? |
-| `goal:?` | Where (着点) | Where did you go? |
-| `source:?` | Where (起点) | Where did you come from? |
+| `agent:?who` | Who | Who ate the apple? |
+| `theme:?what` / `patient:?what` | What | What did you eat? |
+| `recipient:?whom` | Whom / To whom | Whom did you give the book to? |
+| `goal:?where` | Where (着点) | Where did you go? |
+| `source:?where` | Where (起点) | Where did you come from? |
+
+```lisp
+;; 主語への疑問
+question(sentence(past+simple(eat(agent:?who, theme:'apple))))
+;; → "Who ate the apple?"
+
+;; 目的語への疑問
+question(sentence(past+simple(eat(agent:'you, theme:?what))))
+;; → "What did you eat?"
+
+;; 着点への疑問
+question(sentence(past+simple(go(agent:'you, goal:?where))))
+;; → "Where did you go?"
+```
 
 #### 付加詞への疑問
 
 | 構文 | 疑問詞 | 例 |
 |------|--------|-----|
+| `time(?when, ...)` | When | When did you eat? |
+| `manner(?how, ...)` | How | How did you do it? |
 | `pp(?where, ...)` | Where | Where did you eat? |
-| `time(?, ...)` | When | When did you eat? |
-| `manner(?, ...)` | How | How did you do it? |
 | `pp(?why, ...)` | Why | Why did you eat? |
 
-### 記法ルール
-
 ```lisp
-;; クォートあり = 具体的な語彙
-theme:'apple    // "apple" という単語
+;; 時間への疑問
+question(time(?when, sentence(past+simple(arrive(agent:'they)))))
+;; → "When did they arrive?"
 
-;; クォートなし = 特殊プレースホルダー
-theme:?                    // 疑問（What?）
-theme:?or('tea, 'coffee)   // 選択疑問（Which, tea or coffee?）
+;; 様態への疑問
+question(sentence(past+simple(manner(?how, fix(agent:'you, theme:'car)))))
+;; → "How did you fix the car?"
 ```
 
-### `?()` と `?` の関係
+### 選択疑問
 
-| `?()` | `?` | 結果 |
-|-------|-----|------|
+選択肢を提示する疑問文は `?which()` を使用する。
+
+```lisp
+question(sentence(present+simple(want(agent:'you, theme:?which('tea, 'coffee)))))
+;; → "Which do you want, tea or coffee?"
+
+question(sentence(future+simple(go(agent:'we, goal:?which('beach, 'mountain)))))
+;; → "Which will we go to, the beach or the mountain?"
+```
+
+### 疑問詞一覧
+
+| プレースホルダー | 出力 | 用途 |
+|-----------------|------|------|
+| `?who` | Who | 人（主語・目的語） |
+| `?whom` | Whom | 人（目的語、フォーマル） |
+| `?what` | What | 物・事 |
+| `?where` | Where | 場所 |
+| `?when` | When | 時間 |
+| `?how` | How | 様態・方法 |
+| `?why` | Why | 理由 |
+| `?which(A, B)` | Which | 選択 |
+
+### `question()` と疑問詞の関係
+
+| `question()` | 疑問詞 | 結果 |
+|--------------|--------|------|
 | あり | なし | Yes/No疑問文 |
 | あり | あり | Wh疑問文 |
-| なし | あり | → `?()` を自動補完 |
+| なし | あり | → `question()` を自動補完 |
 | なし | なし | 平叙文 |
 
 ---
@@ -1030,7 +1071,11 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
 
 ```bnf
 ;; 疑問文
-<attitude>      ::= "?("           ;; Yes/No疑問文・Wh疑問文
+<attitude>      ::= "question("    ;; Yes/No疑問文・Wh疑問文
+
+;; 疑問詞プレースホルダー
+<question>      ::= "?who" | "?whom" | "?what" | "?where" | "?when" | "?how" | "?why"
+                  | "?which(" <value> ", " <value> ")"
 
 ;; 態（受動態・使役）
 <voice>         ::= "passive(" | "causative("
@@ -1125,9 +1170,24 @@ time('yesterday, not(modal(obligation:had_to, sentence(past+simple(eat(...))))))
 ### 将来拡張（未実装）
 
 ```lisp
-;; 疑問文
-?(sentence(...))           ;; Yes/No疑問文
-sentence(verb(theme:?))    ;; Wh疑問文
+;; Yes/No疑問文
+question(sentence(present+simple(like(agent:'you, theme:'coffee))))
+;; → "Do you like coffee?"
+
+;; Wh疑問文（意味役割）
+question(sentence(past+simple(eat(agent:?who, theme:'apple))))
+;; → "Who ate the apple?"
+
+question(sentence(past+simple(eat(agent:'you, theme:?what))))
+;; → "What did you eat?"
+
+;; Wh疑問文（付加詞）
+question(time(?when, sentence(past+simple(arrive(agent:'they)))))
+;; → "When did they arrive?"
+
+;; 選択疑問
+question(sentence(present+simple(want(agent:'you, theme:?which('tea, 'coffee)))))
+;; → "Which do you want, tea or coffee?"
 
 ;; 受動態
 sentence(passive(verb(theme:'x)))

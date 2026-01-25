@@ -995,7 +995,8 @@ function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarit
     const firstChar = after.charAt(0).toLowerCase();
     const article = ['a', 'e', 'i', 'o', 'u'].includes(firstChar) ? 'an' : 'a';
     if (article === 'an') {
-      logCollector.log('article', 'a', 'an', `before vowel '${firstChar}'`);
+      logCollector.log('article', 'a', 'an',
+        `Next sound: vowel "${firstChar}"`, 'a → an');
     }
     result = before + article + ' ' + after;
   }
@@ -1073,7 +1074,8 @@ function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirma
     return pronoun.lemma;
   } else {
     if (pronoun.lemma !== pronoun.objectForm) {
-      logCollector.log('case', pronoun.lemma, pronoun.objectForm, 'object position');
+      logCollector.log('case', pronoun.lemma, pronoun.objectForm,
+        'Position: object', 'objective case');
     }
     return pronoun.objectForm;
   }
@@ -1152,15 +1154,18 @@ function conjugateVerbWithAdverbs(
       switch (tense) {
         case 'past':
           doForm = 'did';
-          logCollector.log('do-support', lemma, `did not ${verbEntry.forms.base}`, 'past negative');
+          logCollector.log('do-support', lemma, `did not ${verbEntry.forms.base}`,
+            'Negation + past', 'did + not + base');
           break;
         case 'present':
           doForm = isThirdPersonSingular ? 'does' : 'do';
-          logCollector.log('do-support', lemma, `${doForm} not ${verbEntry.forms.base}`, 'present negative');
+          logCollector.log('do-support', lemma, `${doForm} not ${verbEntry.forms.base}`,
+            `Negation + present`, `${doForm} + not + base`);
           break;
         case 'future':
           // will not [freq] base
-          logCollector.log('negation', lemma, `will not ${verbEntry.forms.base}`, 'future negative');
+          logCollector.log('negation', lemma, `will not ${verbEntry.forms.base}`,
+            'Negation + future', 'will + not + base');
           return freqStr
             ? `will not ${freqStr} ${verbEntry.forms.base}`
             : `will not ${verbEntry.forms.base}`;
@@ -1174,7 +1179,7 @@ function conjugateVerbWithAdverbs(
         case 'past': {
           const pastForm = getIrregularForm('past') || verbEntry.forms.past;
           if (pastForm !== lemma) {
-            logCollector.log('tense', lemma, pastForm, 'past');
+            logCollector.log('tense', lemma, pastForm, 'Tense: past', '-ed');
           }
           return freqStr ? `${freqStr} ${pastForm}` : pastForm;
         }
@@ -1182,7 +1187,8 @@ function conjugateVerbWithAdverbs(
           const presentForm = getIrregularForm('present') ||
             (isThirdPersonSingular ? verbEntry.forms.s : verbEntry.forms.base);
           if (isThirdPersonSingular && presentForm !== verbEntry.forms.base) {
-            logCollector.log('agreement', verbEntry.forms.base, presentForm, '3rd person singular');
+            logCollector.log('agreement', verbEntry.forms.base, presentForm,
+              `Subject ${getSubjectDescription(subject)} is 3sg`, '+s');
           }
           return freqStr ? `${freqStr} ${presentForm}` : presentForm;
         }
@@ -1590,6 +1596,26 @@ type PersonNumber = {
   person: 1 | 2 | 3;
   number: 'singular' | 'plural';
 };
+
+// 主語の簡易説明を取得（ログ用）
+function getSubjectDescription(subject?: NounPhraseNode | CoordinatedNounPhraseNode): string {
+  if (!subject) return 'subject (default)';
+
+  if (subject.type === 'coordinatedNounPhrase') {
+    return `"${subject.conjuncts.length} items with ${subject.conjunction}"`;
+  }
+
+  const np = subject as NounPhraseNode;
+  if (np.head.type === 'pronoun') {
+    const pronounHead = np.head as PronounHead;
+    return `"${pronounHead.lemma}"`;
+  }
+  if (np.head.type === 'noun') {
+    const nounHead = np.head as NounHead;
+    return `"${nounHead.lemma}"`;
+  }
+  return 'subject';
+}
 
 function getPersonNumber(subject: NounPhraseNode | CoordinatedNounPhraseNode): PersonNumber {
   // 等位接続の場合

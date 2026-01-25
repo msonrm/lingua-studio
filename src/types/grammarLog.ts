@@ -18,7 +18,8 @@ export interface TransformLog {
   type: TransformType;
   from: string;
   to: string;
-  reason?: string;  // e.g., "3sg", "past", "before vowel"
+  trigger?: string;  // What caused this: "subject 'he'", "tense: past", etc.
+  rule?: string;     // The rule applied: "3rd person singular", "past tense", etc.
 }
 
 export interface RenderResult {
@@ -31,9 +32,9 @@ export interface RenderResult {
 export class GrammarLogCollector {
   private logs: TransformLog[] = [];
 
-  log(type: TransformType, from: string, to: string, reason?: string): void {
+  log(type: TransformType, from: string, to: string, trigger?: string, rule?: string): void {
     if (from !== to) {  // Only log actual changes
-      this.logs.push({ type, from, to, reason });
+      this.logs.push({ type, from, to, trigger, rule });
     }
   }
 
@@ -49,30 +50,30 @@ export class GrammarLogCollector {
 // English formatter (hardcoded for now, i18n later)
 export function formatLogEnglish(log: TransformLog): string {
   const arrow = '→';
-  const reasonPart = log.reason ? ` (${log.reason})` : '';
+
+  // Format: [Trigger] → [Rule] → [Result]
+  // Example: Subject "he" → 3rd person singular → run + -s → runs
 
   switch (log.type) {
     case 'agreement':
-      return `Agreement: ${log.from} ${arrow} ${log.to}${reasonPart}`;
+      // Subject "he" → 3sg → run → runs
+      return `${log.trigger} ${arrow} ${log.rule} ${arrow} ${log.from} ${arrow} ${log.to}`;
     case 'tense':
-      return `Tense: ${log.from} ${arrow} ${log.to}${reasonPart}`;
-    case 'aspect':
-      return `Aspect: ${log.from} ${arrow} ${log.to}${reasonPart}`;
+      // Tense: past → eat → ate
+      return `Tense: ${log.rule} ${arrow} ${log.from} ${arrow} ${log.to}`;
     case 'case':
-      return `Case: ${log.from} ${arrow} ${log.to}${reasonPart}`;
+      // Position: object → I → me
+      return `${log.trigger} ${arrow} ${log.from} ${arrow} ${log.to}`;
     case 'article':
-      return `Article: ${log.from} ${arrow} ${log.to}${reasonPart}`;
+      // Next word starts with "a" → a → an
+      return `${log.trigger} ${arrow} ${log.from} ${arrow} ${log.to}`;
     case 'do-support':
-      return `Do-support: ${log.from} ${arrow} ${log.to}${reasonPart}`;
-    case 'modal':
-      return `Modal: ${log.from} ${arrow} ${log.to}${reasonPart}`;
+      // Negation + present → do + not + base form
+      return `${log.trigger} ${arrow} ${log.from} ${arrow} ${log.to}`;
     case 'negation':
-      return `Negation: ${log.from} ${arrow} ${log.to}${reasonPart}`;
-    case 'wh-movement':
-      return `Wh-movement: ${log.from} ${arrow} ${log.to}${reasonPart}`;
-    case 'inversion':
-      return `Inversion: ${log.from} ${arrow} ${log.to}${reasonPart}`;
+      return `${log.trigger} ${arrow} ${log.from} ${arrow} ${log.to}`;
     default:
-      return `${log.type}: ${log.from} ${arrow} ${log.to}${reasonPart}`;
+      const parts = [log.trigger, log.rule, `${log.from} ${arrow} ${log.to}`].filter(Boolean);
+      return parts.join(` ${arrow} `);
   }
 }

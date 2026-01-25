@@ -207,6 +207,7 @@ export const en: LocaleData = {
     // Tabs
     TAB_BLOCKS: 'Blocks',
     TAB_LINGUASCRIPT: 'LinguaScript',
+    TAB_AST: 'AST',
     TAB_COMING_SOON: 'Coming soon',
 
     // Panels

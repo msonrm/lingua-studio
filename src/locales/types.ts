@@ -209,6 +209,7 @@ export interface UIMessages {
   // Tabs
   TAB_BLOCKS: string;
   TAB_LINGUASCRIPT: string;
+  TAB_AST: string;
   TAB_COMING_SOON: string;
 
   // Panels

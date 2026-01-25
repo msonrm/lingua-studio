@@ -40,16 +40,23 @@ not(modal('must, ...))  ;; → 「〜とは限らない」
 
 ### 3. 判断 modal（省略可）
 
+言語非依存の意味概念として8つのモダリティを定義する。
+
 ```lisp
-modal('must, ...)
-modal('can, ...)
-modal('may, ...)
-modal('should, ...)
-modal('will, ...)
-modal('would, ...)
-modal('could, ...)
-modal('might, ...)
+modal('ability, ...)      ;; 能力: can/could
+modal('permission, ...)   ;; 許可: may/could
+modal('possibility, ...)  ;; 可能性: might
+modal('obligation, ...)   ;; 義務: must/had to
+modal('certainty, ...)    ;; 確信: must
+modal('advice, ...)       ;; 助言: should
+modal('volition, ...)     ;; 意志: will/was going to
+modal('prediction, ...)   ;; 予測: will/would
 ```
+
+時制との連動により、適切な英語形式に変換される:
+- ability + past → could
+- volition + past → was going to
+- obligation + past → had to
 
 ### 4. sentence()（必須）
 
@@ -843,6 +850,21 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 <adjective>     ::= "big" | "small" | "happy" | "sad" | "red" | "old" | ...
 ```
 
+### 現行実装（モダリティ）
+
+```bnf
+;; モダリティ（言語非依存の意味概念）
+<modal>         ::= "modal('" <modal-type> ", " <sentence> ")"
+<modal-type>    ::= "ability" | "permission" | "possibility" | "obligation"
+                  | "certainty" | "advice" | "volition" | "prediction"
+
+;; モダリティの否定
+<neg-modal>     ::= "not(" <modal> ")"
+
+;; 命令文
+<attitude>      ::= "imperative("
+```
+
 ### 将来拡張（未実装）
 
 以下の構文は仕様として定義されているが、現行実装では未対応。
@@ -850,13 +872,6 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 ```bnf
 ;; 疑問文
 <attitude>      ::= "?("           ;; Yes/No疑問文・Wh疑問文
-
-;; モダリティ
-<modal>         ::= "modal('" <modal-type> ", " <sentence> ")"
-<modal-type>    ::= "must" | "can" | "may" | "should" | "will" | "would" | "could" | "might"
-
-;; モダリティの否定
-<neg-modal>     ::= "not(" <modal> ")"
 
 ;; 態（受動態・使役）
 <voice>         ::= "passive(" | "causative("
@@ -913,6 +928,39 @@ noun(pre:'all, det:'the, post:'three, adj:['big, 'red], head:'apple)
 
 ;; コピュラ: "She is very happy."
 sentence(present(simple(be(theme:'she, attribute:degree('very, 'happy)))))
+
+;; モダリティ: "I can run."
+modal('ability, sentence(present(simple(run(agent:'I)))))
+
+;; モダリティ + 過去: "I could run."
+modal('ability, sentence(past(simple(run(agent:'I)))))
+
+;; モダリティの否定: "I don't have to run."
+not(modal('obligation, sentence(present(simple(run(agent:'I))))))
+```
+
+### 現行実装（モダリティ）
+
+```lisp
+;; モダリティ（言語非依存の意味概念）
+modal('ability, sentence(...))      ;; "I can run."
+modal('obligation, sentence(...))   ;; "I must run."
+modal('volition, sentence(...))     ;; "I will run."（意志）
+
+;; 時制連動
+sentence(past(simple(modal('ability, eat(...)))))
+;; → "I could eat."
+
+sentence(past(simple(modal('volition, eat(...)))))
+;; → "I was going to eat."
+
+;; モダリティの否定（義務なし）
+not(modal('obligation, sentence(...)))
+;; → "I don't have to run."（しなくてもよい）
+
+;; 過去時制でのモダリティ否定
+time('yesterday, not(modal('obligation, sentence(past(simple(eat(...)))))))
+;; → "Yesterday, I didn't have to eat."
 ```
 
 ### 将来拡張（未実装）
@@ -922,12 +970,6 @@ sentence(present(simple(be(theme:'she, attribute:degree('very, 'happy)))))
 ?(sentence(...))           ;; Yes/No疑問文
 sentence(verb(theme:?))    ;; Wh疑問文
 
-;; モダリティ
-modal('must, sentence(...))
-
 ;; 受動態
 sentence(passive(verb(theme:'x)))
-
-;; モダリティの否定
-not(modal('must, sentence(...)))
 ```

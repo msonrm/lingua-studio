@@ -98,6 +98,11 @@ function findInterrogativeAdverbInClause(clause: ClauseNode): WhAdverbInfo | nul
   return null;
 }
 
+// Wh副詞の?プレフィックスを除去（in-situ表示用）
+function stripWhPrefix(lemma: string): string {
+  return lemma.startsWith('?') ? lemma.slice(1) : lemma;
+}
+
 // ============================================
 // AST → 英文レンダラー
 // ============================================
@@ -187,14 +192,14 @@ function renderClause(clause: ClauseNode): string {
     })
     .join(' ');
 
-  // 様態副詞は文末
-  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
   // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
 
-  // 時間副詞
-  const timeStr = timeAdverbs.map(a => a.lemma).join(' ');
+  // 時間副詞（Wh副詞は?を除去）
+  const timeStr = timeAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
   // 前置詞句（動詞修飾）
   const prepPhrases = verbPhrase.prepositionalPhrases
@@ -287,11 +292,11 @@ function renderInterrogativeClause(clause: ClauseNode): string {
     })
     .join(' ');
 
-  // 様態副詞は文末
-  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
-  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere、Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
 
   // 前置詞句（動詞修飾）
   const prepPhrases = verbPhrase.prepositionalPhrases
@@ -324,10 +329,10 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
   const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
   const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place');
 
-  // 様態副詞は文末
-  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
-  // 場所副詞は最後
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
+  // 場所副詞は最後（Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
   // 前置詞句（動詞修飾）
   const prepPhrases = verbPhrase.prepositionalPhrases
     .map(pp => renderPrepositionalPhrase(pp, polarity))
@@ -461,12 +466,12 @@ function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo):
     })
     .join(' ');
 
-  // 様態副詞は文末
-  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
-  // 場所副詞
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
-  // 時間副詞
-  const timeStr = timeAdverbs.map(a => a.lemma).join(' ');
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
+  // 場所副詞（Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
+  // 時間副詞（Wh副詞は?を除去）
+  const timeStr = timeAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
   // 前置詞句（動詞修飾）
   const prepPhrases = verbPhrase.prepositionalPhrases
@@ -542,11 +547,11 @@ function renderImperativeClause(clause: ClauseNode): string {
     })
     .join(' ');
 
-  // 様態副詞は文末
-  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
-  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere、Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
 
   // 前置詞句（動詞修飾）
   const prepPhrases = verbPhrase.prepositionalPhrases
@@ -604,11 +609,11 @@ function renderImperativeCoordinatedVP(
     })
     .join(' ');
 
-  // 様態副詞は文末
-  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
-  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere、Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
 
   // 前置詞句（動詞修飾）
   const prepPhrases = vp.prepositionalPhrases
@@ -693,11 +698,11 @@ function renderCoordinatedVerbPhrase(
     })
     .join(' ');
 
-  // 様態副詞は文末
-  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
-  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere、Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
 
   // 前置詞句（動詞修飾）
   const prepPhrases = vp.prepositionalPhrases

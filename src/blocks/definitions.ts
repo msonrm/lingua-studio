@@ -1191,13 +1191,19 @@ export function createToolbox() {
       },
       {
         kind: "category",
-        name: msg('TOOLBOX_SENTENCE_MODIFIER', 'Sentence Modifier'),
-        colour: COLORS.modal,
+        name: msg('TOOLBOX_QUESTION', 'Question'),
+        colour: COLORS.imperative,
         contents: [
-          { kind: "label", text: msg('SECTION_QUESTION', '── Question ──') },
           { kind: "block", type: "question_wrapper" },
           { kind: "block", type: "wh_placeholder_block" },
           { kind: "block", type: "choice_question_block" },
+        ]
+      },
+      {
+        kind: "category",
+        name: msg('TOOLBOX_SENTENCE_MODIFIER', 'Sentence Modifier'),
+        colour: COLORS.modal,
+        contents: [
           { kind: "label", text: msg('SECTION_IMPERATIVE', '── Imperative ──') },
           { kind: "block", type: "imperative_wrapper" },
           { kind: "label", text: msg('SECTION_MODAL_NEGATION', '── Modal Negation ──') },

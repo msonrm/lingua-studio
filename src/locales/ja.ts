@@ -163,6 +163,7 @@ export const ja: LocaleData = {
 
     // Toolbox categories
     TOOLBOX_SENTENCE: '文',
+    TOOLBOX_QUESTION: '疑問文',
     TOOLBOX_SENTENCE_MODIFIER: '文修飾',
     TOOLBOX_VERBS: '動詞',
     TOOLBOX_VERB_MODIFIERS: '動詞修飾',

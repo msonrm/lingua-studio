@@ -163,6 +163,7 @@ export const jaHira: LocaleData = {
 
     // Toolbox categories
     TOOLBOX_SENTENCE: 'ぶん',
+    TOOLBOX_QUESTION: 'しつもん',
     TOOLBOX_SENTENCE_MODIFIER: 'できる・しなきゃ',
     TOOLBOX_VERBS: 'うごきのことば',
     TOOLBOX_VERB_MODIFIERS: 'うごきをかざる',

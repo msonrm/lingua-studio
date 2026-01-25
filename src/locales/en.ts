@@ -163,6 +163,7 @@ export const en: LocaleData = {
 
     // Toolbox categories
     TOOLBOX_SENTENCE: 'Sentence',
+    TOOLBOX_QUESTION: 'Question',
     TOOLBOX_SENTENCE_MODIFIER: 'Sentence Modifier',
     TOOLBOX_VERBS: 'Verbs',
     TOOLBOX_VERB_MODIFIERS: 'Verb Modifiers',

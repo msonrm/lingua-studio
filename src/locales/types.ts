@@ -163,6 +163,7 @@ export interface BlocklyMessages {
 
   // Toolbox categories
   TOOLBOX_SENTENCE: string;
+  TOOLBOX_QUESTION: string;
   TOOLBOX_SENTENCE_MODIFIER: string;
   TOOLBOX_VERBS: string;
   TOOLBOX_VERB_MODIFIERS: string;

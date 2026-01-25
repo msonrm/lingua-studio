@@ -112,6 +112,7 @@ export interface AdjectiveEntry {
 export interface AdverbEntry {
   lemma: string;
   type: "manner" | "frequency" | "degree" | "time" | "place";
+  polaritySensitive?: boolean;  // somewhere/anywhere 系
 }
 
 // ============================================
@@ -198,6 +199,7 @@ export interface AdverbNode {
   type: "adverb";
   lemma: string;
   advType: "manner" | "frequency" | "degree" | "time" | "place";
+  polaritySensitive?: boolean;  // somewhere/anywhere 系
 }
 
 // ============================================

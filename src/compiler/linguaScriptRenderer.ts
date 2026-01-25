@@ -34,7 +34,7 @@ function getModalSurfaceForm(modal: ModalType, tense: Tense): string {
 // AST → LinguaScript レンダラー
 // ============================================
 export function renderToLinguaScript(ast: SentenceNode): string {
-  let result = renderClauseToScript(ast.clause);
+  let result = renderClauseToScript(ast.clause, ast.timeAdverbial);
 
   // sentence() ラッパーで包む（仕様: 命題のルート）
   result = `sentence(${result})`;
@@ -57,19 +57,19 @@ export function renderToLinguaScript(ast: SentenceNode): string {
     result = `imperative(${result})`;
   }
 
-  // 時間副詞がある場合は time() ラッパーで包む
-  if (ast.timeAdverbial) {
-    result = `time('${ast.timeAdverbial.toLowerCase()}, ${result})`;
-  }
-
   return result;
 }
 
-function renderClauseToScript(clause: ClauseNode): string {
+function renderClauseToScript(clause: ClauseNode, timeAdverbial?: string): string {
   const { verbPhrase, tense, aspect, polarity } = clause;
 
   // 動詞句をレンダリング
   let result = renderVerbPhraseToScript(verbPhrase);
+
+  // 時間副詞をラップ（他の副詞と同階層、not の前）
+  if (timeAdverbial) {
+    result = `time('${timeAdverbial.toLowerCase()}, ${result})`;
+  }
 
   // 否定をラップ
   if (polarity === 'negative') {
@@ -109,6 +109,12 @@ function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
   const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
   for (const adv of mannerAdverbs) {
     result = `manner('${adv.lemma}, ${result})`;
+  }
+
+  // 副詞をラップ（場所副詞）- 仕様: locative('here, verb(...))
+  const locativeAdverbs = vp.adverbs.filter(a => a.advType === 'place');
+  for (const adv of locativeAdverbs) {
+    result = `locative('${adv.lemma}, ${result})`;
   }
 
   // 前置詞句をラップ - 仕様: pp('in, 'park, verb(...))

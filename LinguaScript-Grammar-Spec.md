@@ -261,15 +261,15 @@ break(agent:'I, patient:'window)
 
 ### 時間副詞（Time Adverbials）
 
-時間表現は `time()` ラッパーまたは時間副詞で表現する。
+時間表現は `time()` ラッパーで表現する。他の副詞ラッパー（manner, frequency, locative）と同じく動詞句を修飾する。
 
 ```lisp
 ;; 具体的な時間
-time('yesterday, sentence(eat(agent:'I, patient:'apple)))
+sentence(past+simple(time('yesterday, eat(agent:'I, patient:'apple))))
 ;; → "Yesterday, I ate an apple."
 
 ;; 相的時間（アスペクトに関連）
-time('just_now, sentence(perfect(eat(agent:'I, patient:'apple))))
+sentence(present+perfect(time('just_now, eat(agent:'I, patient:'apple))))
 ;; → "I have just eaten an apple."
 
 ;; 時間副詞の種類
@@ -291,10 +291,10 @@ time('just_now, sentence(perfect(eat(agent:'I, patient:'apple))))
 
 ```lisp
 ;; OK: 過去の具体時点 + 過去単純
-time('yesterday, sentence(past+simple(eat(...))))
+sentence(past+simple(time('yesterday, eat(...))))
 
 ;; NG: 過去の具体時点 + 現在完了（英語では非文法的）
-time('yesterday, sentence(present+perfect(eat(...))))
+sentence(present+perfect(time('yesterday, eat(...))))
 ;; → コンパイラが警告または自動修正
 ```
 
@@ -323,6 +323,39 @@ frequency('never, drink(agent:'he, patient:'coffee))
 
 ;; 頻度副詞の種類（高→低）
 'always, 'usually, 'often, 'sometimes, 'rarely, 'never
+```
+
+### 場所副詞（Locative Adverbs）
+
+場所は `locative()` ラッパーで表現する。前置詞句とは異なり、単独で場所を示す副詞。
+
+```lisp
+locative('here, eat(agent:'I, patient:'apple))
+;; → "I eat an apple here."
+
+locative('there, go(agent:'she))
+;; → "She goes there."
+
+locative('home, go(agent:'I))
+;; → "I go home."
+
+;; 場所副詞の種類
+'here, 'there              ;; 基本（直示的）
+'somewhere, 'anywhere      ;; 不定（極性感応）
+'everywhere, 'nowhere      ;; 全称・否定
+'home                      ;; 特殊（方向も含む）
+```
+
+#### 極性感応（Polarity Sensitivity）
+
+`somewhere` は否定文で `anywhere` に自動変換される。
+
+```lisp
+locative('somewhere, eat(agent:'I, patient:'apple))
+;; → "I eat an apple somewhere."
+
+not(locative('somewhere, eat(agent:'I, patient:'apple)))
+;; → "I don't eat an apple anywhere."
 ```
 
 ### 前置詞句（Prepositional Phrases）

@@ -1029,6 +1029,37 @@ export const adverbs: AdverbEntry[] = [
     lemma: "very",
     type: "degree",
   },
+  // 場所副詞（locative adverbs）
+  {
+    lemma: "here",
+    type: "place",
+  },
+  {
+    lemma: "there",
+    type: "place",
+  },
+  {
+    lemma: "somewhere",
+    type: "place",
+    polaritySensitive: true,  // 肯定文で使用
+  },
+  {
+    lemma: "anywhere",
+    type: "place",
+    polaritySensitive: true,  // 否定文・疑問文で使用
+  },
+  {
+    lemma: "everywhere",
+    type: "place",
+  },
+  {
+    lemma: "nowhere",
+    type: "place",
+  },
+  {
+    lemma: "home",
+    type: "place",
+  },
 ];
 
 // ============================================

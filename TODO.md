@@ -1,16 +1,8 @@
 # TODO
 
-## Bugs
-
-- [ ] 場所副詞（here, there）を一時削除中
-  - 問題: 限定詞・前置詞が付けられてしまう（例: "I go to the here."）
-  - 対応: place_block から削除済み
-  - 将来: 独立ブロック化、または determiner で副詞選択時に制約して復活
-
 ## Future Enhancements
 
 ### Grammar & Syntax
-- [ ] 代名詞選択時のNUMBER非表示（UX改善）
 - [ ] 疑問文対応（Yes/No疑問文、Wh疑問文）
 - [ ] Passive（受動態）wrapper
   - agent が指定されている場合は by 句を自動生成
@@ -103,6 +95,17 @@
 - 従属節 (if, when, although...)
 
 ## Completed
+
+### Locative Adverbs (2026-01)
+- [x] 場所副詞（here, there, somewhere, anywhere, everywhere, nowhere, home）を実装
+  - 動詞ラッパー `locative_wrapper` として実装
+  - 極性感応: somewhere ↔ anywhere（否定文で自動切り替え）
+  - 語順: 場所副詞は文末に配置
+  - LinguaScript: `locative('here, verb(...))`
+- [x] LinguaScript: `time()` を `sentence()` 内側に移動
+  - 変更前: `time('yesterday, sentence(past+simple(eat(...))))`
+  - 変更後: `sentence(past+simple(time('yesterday, eat(...))))`
+  - 理由: 他の副詞ラッパー（manner, frequency, locative）と一貫性を持たせるため
 
 ### Renderer Bug Fixes (2026-01)
 - [x] LinguaScript: 代名詞 + prepModifier が出力されない問題を修正

@@ -101,6 +101,8 @@ export interface BlocklyMessages {
   FREQUENCY_TOOLTIP: string;
   MANNER_LABEL: string;
   MANNER_TOOLTIP: string;
+  LOCATIVE_LABEL: string;
+  LOCATIVE_TOOLTIP: string;
 
   // Prepositions
   PP_LABEL: string;

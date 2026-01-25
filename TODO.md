@@ -102,6 +102,10 @@
   - 極性感応: somewhere ↔ anywhere（否定文で自動切り替え）
   - 語順: 場所副詞は文末に配置
   - LinguaScript: `locative('here, verb(...))`
+- [x] LinguaScript: `time()` を `sentence()` 内側に移動
+  - 変更前: `time('yesterday, sentence(past+simple(eat(...))))`
+  - 変更後: `sentence(past+simple(time('yesterday, eat(...))))`
+  - 理由: 他の副詞ラッパー（manner, frequency, locative）と一貫性を持たせるため
 
 ### Renderer Bug Fixes (2026-01)
 - [x] LinguaScript: 代名詞 + prepModifier が出力されない問題を修正

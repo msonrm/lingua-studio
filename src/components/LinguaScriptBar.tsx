@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import Prism from '../lib/prism-linguascript';
+import { useState, useCallback } from 'react';
 import './LinguaScriptBar.css';
 
 interface LinguaScriptBarProps {
@@ -9,18 +8,6 @@ interface LinguaScriptBarProps {
 
 export function LinguaScriptBar({ code, placeholder = '// Build a sentence...' }: LinguaScriptBarProps) {
   const [copied, setCopied] = useState(false);
-  const codeRef = useRef<HTMLElement>(null);
-
-  // シンタックスハイライトを適用
-  useEffect(() => {
-    if (codeRef.current && code) {
-      codeRef.current.innerHTML = Prism.highlight(
-        code,
-        Prism.languages.linguascript,
-        'linguascript'
-      );
-    }
-  }, [code]);
 
   // クリップボードにコピー
   const handleCopy = useCallback(async () => {
@@ -48,9 +35,9 @@ export function LinguaScriptBar({ code, placeholder = '// Build a sentence...' }
       </button>
       <div className="code-container">
         {isEmpty ? (
-          <span className="placeholder-text">{placeholder}</span>
+          <span className="bar-placeholder">{placeholder}</span>
         ) : (
-          <code ref={codeRef} className="language-linguascript">{code}</code>
+          <code className="bar-code">{code}</code>
         )}
       </div>
     </div>

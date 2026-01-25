@@ -4,7 +4,7 @@ import { LinguaScriptBar } from './components/LinguaScriptBar';
 import { LinguaScriptView } from './components/LinguaScriptView';
 import { SentenceNode } from './types/schema';
 import { renderToLinguaScript } from './compiler/linguaScriptRenderer';
-import { TransformLog, formatLogEnglish } from './types/grammarLog';
+import { TransformLog, BlockChange, formatLogEnglish } from './types/grammarLog';
 import {
   LocaleContext,
   LocaleCode,
@@ -22,6 +22,7 @@ function App() {
   const [asts, setASTs] = useState<SentenceNode[]>([]);
   const [sentences, setSentences] = useState<string[]>([]);
   const [grammarLogs, setGrammarLogs] = useState<TransformLog[]>([]);
+  const [blockChanges, setBlockChanges] = useState<BlockChange[]>([]);
   const [editorMode, setEditorMode] = useState<EditorMode>('blocks');
   const [localeCode, setLocaleCode] = useState<LocaleCode>(getStoredLocale());
   const [workspaceKey, setWorkspaceKey] = useState(0);
@@ -132,6 +133,7 @@ function App() {
                     onASTChange={setASTs}
                     onSentenceChange={setSentences}
                     onLogsChange={setGrammarLogs}
+                    onBlockChanges={setBlockChanges}
                     initialState={workspaceState}
                   />
                 </div>
@@ -181,14 +183,27 @@ function App() {
             </div>
 
             <div className="console-panel">
-              <div className="output-section">
-                <h2>{t.PANEL_GRAMMAR_CONSOLE}</h2>
-                <div className="console-output">
+              <div className="output-section console-section-changes">
+                <h3>Your Changes</h3>
+                <div className="console-output console-changes">
+                  {blockChanges.length > 0
+                    ? blockChanges.map((change, i) => (
+                        <div key={i} className="block-change">
+                          {change.field}: {change.from} → {change.to}
+                        </div>
+                      ))
+                    : <span className="console-placeholder">Make a change to see it here</span>
+                  }
+                </div>
+              </div>
+              <div className="output-section console-section-rules">
+                <h3>Applied Rules</h3>
+                <div className="console-output console-rules">
                   {grammarLogs.length > 0
                     ? grammarLogs.map((log, i) => (
                         <div key={i} className="grammar-log">{formatLogEnglish(log)}</div>
                       ))
-                    : <p className="console-placeholder">{t.PLACEHOLDER_GRAMMAR}</p>
+                    : <span className="console-placeholder">Grammar transformations will appear here</span>
                   }
                 </div>
               </div>

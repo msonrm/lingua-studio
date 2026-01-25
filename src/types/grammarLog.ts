@@ -2,6 +2,14 @@
 // Grammar Console Log Types
 // ============================================
 
+// User's block changes (what they modified)
+export interface BlockChange {
+  field: string;      // e.g., "Subject", "Verb", "Tense"
+  from: string;       // Previous value
+  to: string;         // New value
+}
+
+// Applied grammar transformations
 export type TransformType =
   | 'agreement'      // Subject-verb agreement (run → runs)
   | 'tense'          // Tense inflection (eat → ate)

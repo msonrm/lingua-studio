@@ -4,7 +4,7 @@ import '../blocks/definitions';
 import { createToolbox } from '../blocks/definitions';
 import { generateMultipleAST } from '../compiler/astGenerator';
 import { renderToEnglishWithLogs } from '../compiler/englishRenderer';
-import { TransformLog } from '../types/grammarLog';
+import { TransformLog, BlockChange } from '../types/grammarLog';
 import { SentenceNode } from '../types/schema';
 import { useLocale } from '../locales';
 
@@ -12,6 +12,7 @@ interface BlocklyWorkspaceProps {
   onASTChange: (asts: SentenceNode[]) => void;
   onSentenceChange: (sentences: string[]) => void;
   onLogsChange: (logs: TransformLog[]) => void;
+  onBlockChanges: (changes: BlockChange[]) => void;
   initialState?: object | null;
 }
 
@@ -20,9 +21,10 @@ export interface BlocklyWorkspaceHandle {
 }
 
 export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorkspaceProps>(
-  function BlocklyWorkspace({ onASTChange, onSentenceChange, onLogsChange, initialState }, ref) {
+  function BlocklyWorkspace({ onASTChange, onSentenceChange, onLogsChange, onBlockChanges, initialState }, ref) {
     const blocklyDiv = useRef<HTMLDivElement>(null);
     const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
+    const pendingChangesRef = useRef<BlockChange[]>([]);
     const { ui } = useLocale();
 
     // 親コンポーネントから状態を保存できるようにする
@@ -32,6 +34,45 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
         return Blockly.serialization.workspaces.save(workspaceRef.current);
       },
     }));
+
+    // フィールド名を人間が読みやすい形式に変換
+    const getReadableFieldName = (fieldName: string): string => {
+      // Common field name mappings
+      const fieldMappings: Record<string, string> = {
+        'PRONOUN_VALUE': 'Subject',
+        'TENSE': 'Tense',
+        'ASPECT': 'Aspect',
+        'VERB': 'Verb',
+        'PREP_VALUE': 'Preposition',
+        'MANNER_VALUE': 'Manner',
+        'LOCATIVE_VALUE': 'Location',
+        'TIME_ADVERB': 'Time',
+        'CENTRAL_DET': 'Determiner',
+        'ADJ_VALUE': 'Adjective',
+      };
+      return fieldMappings[fieldName] || fieldName;
+    };
+
+    // ブロック変更イベントを処理
+    const handleBlockChange = useCallback((event: Blockly.Events.Abstract) => {
+      if (event.type === Blockly.Events.BLOCK_CHANGE) {
+        const changeEvent = event as Blockly.Events.BlockChange;
+        if (changeEvent.element === 'field' && changeEvent.name) {
+          const fieldName = getReadableFieldName(changeEvent.name);
+          const oldValue = String(changeEvent.oldValue || '');
+          const newValue = String(changeEvent.newValue || '');
+
+          // Skip label values and unchanged values
+          if (oldValue !== newValue && !oldValue.startsWith('__label_')) {
+            pendingChangesRef.current.push({
+              field: fieldName,
+              from: oldValue,
+              to: newValue,
+            });
+          }
+        }
+      }
+    }, []);
 
     const handleWorkspaceChange = useCallback(() => {
       if (!workspaceRef.current) return;
@@ -51,7 +92,15 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       });
       onSentenceChange(sentences);
       onLogsChange(allLogs);
-    }, [onASTChange, onSentenceChange, onLogsChange, ui.ERROR_INCOMPLETE]);
+
+      // Send pending block changes and clear
+      if (pendingChangesRef.current.length > 0) {
+        onBlockChanges([...pendingChangesRef.current]);
+        pendingChangesRef.current = [];
+      } else {
+        onBlockChanges([]);
+      }
+    }, [onASTChange, onSentenceChange, onLogsChange, onBlockChanges, ui.ERROR_INCOMPLETE]);
 
     useEffect(() => {
       if (!blocklyDiv.current) return;
@@ -114,6 +163,7 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       }
 
       // 変更リスナーを追加
+      workspace.addChangeListener(handleBlockChange);
       workspace.addChangeListener(handleWorkspaceChange);
 
       // 初期状態を反映させるため、最初に一度呼び出す
@@ -122,7 +172,7 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       return () => {
         workspace.dispose();
       };
-    }, [handleWorkspaceChange, initialState]);
+    }, [handleWorkspaceChange, handleBlockChange, initialState]);
 
     return (
       <div

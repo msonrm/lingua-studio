@@ -21,6 +21,7 @@ function App() {
   const [editorMode, setEditorMode] = useState<EditorMode>('blocks');
   const [localeCode, setLocaleCode] = useState<LocaleCode>(getStoredLocale());
   const [workspaceKey, setWorkspaceKey] = useState(0);
+  const [showSidePanel, setShowSidePanel] = useState(false);
 
   // 現在のロケールデータ
   const currentLocale = useMemo(() => getLocale(localeCode), [localeCode]);
@@ -93,6 +94,13 @@ function App() {
                 <option key={code} value={code}>{locale.name}</option>
               ))}
             </select>
+            <button
+              className={`side-panel-toggle ${showSidePanel ? 'active' : ''}`}
+              onClick={() => setShowSidePanel(!showSidePanel)}
+              title="Toggle Side Panel"
+            >
+              <span className="toggle-icon">{showSidePanel ? '»' : '«'}</span>
+            </button>
           </div>
         </header>
 
@@ -131,10 +139,17 @@ function App() {
               )}
             </div>
 
-            {/* Side Panel - reserved for future use */}
-            {/* <div className="side-panel">
-              <p>Build options will go here</p>
-            </div> */}
+            {/* Side Panel */}
+            {showSidePanel && (
+              <div className="side-panel">
+                <div className="side-panel-header">
+                  <h3>Options</h3>
+                </div>
+                <div className="side-panel-content">
+                  <p className="coming-soon">Build options coming soon...</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="bottom-panel">

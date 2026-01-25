@@ -115,6 +115,32 @@ body {
   color: #fff;
 }
 
+.side-panel-toggle {
+  padding: 0.375rem 0.625rem;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  background: #16213e;
+  color: #888;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.side-panel-toggle:hover {
+  border-color: #e94560;
+  color: #fff;
+}
+
+.side-panel-toggle.active {
+  background: #0f3460;
+  border-color: #e94560;
+  color: #e94560;
+}
+
+.toggle-icon {
+  font-weight: bold;
+}
+
 
 /* ============================================
    Main Layout
@@ -180,12 +206,38 @@ body {
   margin: 0;
 }
 
-/* Side Panel (future use) */
+/* Side Panel */
 .side-panel {
   width: 300px;
   background: #16213e;
   border-left: 1px solid #0f3460;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-panel-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #0f3460;
+}
+
+.side-panel-header h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #e94560;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.side-panel-content {
+  flex: 1;
   padding: 1rem;
+  overflow: auto;
+}
+
+.coming-soon {
+  color: #666;
+  font-style: italic;
+  font-size: 0.875rem;
 }
 
 /* ============================================

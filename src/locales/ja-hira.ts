@@ -124,6 +124,18 @@ export const jaHira: LocaleData = {
     VERB_COMMUNICATION: 'はなす・つたえる',
     VERB_STATE: 'ある・いる',
 
+    // Semantic role labels
+    ROLE_AGENT: 'だれが',
+    ROLE_PATIENT: 'なにを',
+    ROLE_THEME: 'なにが',
+    ROLE_EXPERIENCER: 'だれが',
+    ROLE_STIMULUS: 'なにが',
+    ROLE_RECIPIENT: 'だれに',
+    ROLE_POSSESSOR: 'だれが',
+    ROLE_ATTRIBUTE: 'どんな',
+    ROLE_PLACE: 'どこ',
+    ROLE_SUBJECT: 'なにが',
+
     // Adjective categories
     ADJ_SIZE: 'おおきい・ちいさい',
     ADJ_AGE: 'あたらしい・ふるい',

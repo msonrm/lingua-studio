@@ -155,9 +155,16 @@ function renderCoordinatedNounPhraseToScript(coordNP: CoordinatedNounPhraseNode)
 }
 
 function renderNounPhraseToScript(np: NounPhraseNode): string {
-  // 代名詞の場合はシンプルに返す
+  // 代名詞の場合
   if (np.head.type === 'pronoun') {
     const pronounHead = np.head as PronounHead;
+    // 前置詞句修飾がある場合（例: "someone in the room"）
+    if (np.prepModifier) {
+      const objScript = np.prepModifier.object.type === 'coordinatedNounPhrase'
+        ? renderCoordinatedNounPhraseToScript(np.prepModifier.object as CoordinatedNounPhraseNode)
+        : renderNounPhraseToScript(np.prepModifier.object as NounPhraseNode);
+      return `pronoun('${pronounHead.lemma}, post:pp('${np.prepModifier.preposition}, ${objScript}))`;
+    }
     return `'${pronounHead.lemma}`;
   }
 

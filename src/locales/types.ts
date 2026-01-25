@@ -123,6 +123,11 @@ export interface BlocklyMessages {
   COORD_VERB_AND_TOOLTIP: string;
   COORD_VERB_OR_TOOLTIP: string;
 
+  // Choice question
+  CHOICE_QUESTION_LABEL: string;
+  CHOICE_QUESTION_OR: string;
+  CHOICE_QUESTION_TOOLTIP: string;
+
   // Verb categories
   VERB_MOTION: string;
   VERB_ACTION: string;

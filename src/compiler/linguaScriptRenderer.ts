@@ -162,6 +162,12 @@ function renderCoordinatedNounPhraseToScript(coordNP: CoordinatedNounPhraseNode)
     }
     return renderNounPhraseToScript(conjunct);
   });
+
+  // 選択疑問の場合は ?which(...) 形式で出力
+  if (coordNP.isChoiceQuestion) {
+    return `?which(${conjuncts.join(', ')})`;
+  }
+
   return `${coordNP.conjunction}(${conjuncts.join(', ')})`;
 }
 

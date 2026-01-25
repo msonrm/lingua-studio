@@ -123,6 +123,11 @@ export const jaHira: LocaleData = {
     COORD_VERB_AND_TOOLTIP: 'うごきを「と」でつなぐ',
     COORD_VERB_OR_TOOLTIP: 'うごきを「か」でつなぐ',
 
+    // Choice question
+    CHOICE_QUESTION_LABEL: 'どっち？',
+    CHOICE_QUESTION_OR: 'それとも',
+    CHOICE_QUESTION_TOOLTIP: 'どっちがいい？（おちゃかこーひーか？）',
+
     // Verb categories
     VERB_MOTION: 'うごく',
     VERB_ACTION: 'する',

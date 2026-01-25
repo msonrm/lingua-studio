@@ -520,6 +520,11 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode | Coordinate
     return parseCoordinationNounBlock(block, conjValue);
   }
 
+  // 選択疑問ブロックの処理
+  if (blockType === 'choice_question_block') {
+    return parseCoordinationNounBlock(block, 'or', true);
+  }
+
   // 前置詞ラッパー（名詞用）の処理
   if (blockType === 'preposition_noun') {
     return parsePrepositionNounBlock(block);
@@ -682,7 +687,7 @@ function parsePrepositionNounBlock(block: Blockly.Block): NounPhraseNode | Coord
   };
 }
 
-function parseCoordinationNounBlock(block: Blockly.Block, conjValue: Conjunction): CoordinatedNounPhraseNode {
+function parseCoordinationNounBlock(block: Blockly.Block, conjValue: Conjunction, isChoiceQuestion: boolean = false): CoordinatedNounPhraseNode {
   const leftBlock = block.getInputTargetBlock('LEFT');
   const rightBlock = block.getInputTargetBlock('RIGHT');
 
@@ -728,11 +733,18 @@ function parseCoordinationNounBlock(block: Blockly.Block, conjValue: Conjunction
     conjuncts.push(rightNP);
   }
 
-  return {
+  const result: CoordinatedNounPhraseNode = {
     type: 'coordinatedNounPhrase',
     conjunction: conjValue,
     conjuncts,
   };
+
+  // 選択疑問の場合はフラグを設定
+  if (isChoiceQuestion) {
+    result.isChoiceQuestion = true;
+  }
+
+  return result;
 }
 
 function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseNode {

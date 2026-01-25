@@ -1075,6 +1075,25 @@ Blockly.Blocks['coordination_noun_or'] = {
 };
 
 // ============================================
+// 選択疑問ブロック (?which)
+// ============================================
+Blockly.Blocks['choice_question_block'] = {
+  init: function() {
+    this.appendValueInput("LEFT")
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
+        .appendField(msg('CHOICE_QUESTION_LABEL', '?which'));
+
+    this.appendValueInput("RIGHT")
+        .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
+        .appendField(msg('CHOICE_QUESTION_OR', 'or'));
+
+    this.setOutput(true, "coordinatedNounPhrase");
+    this.setColour(COLORS.coordNoun);
+    this.setTooltip(msg('CHOICE_QUESTION_TOOLTIP', 'Choice Question: asks which option (e.g., "tea or coffee?")'));
+  }
+};
+
+// ============================================
 // 等位接続ブロック（動詞用）- AND (VERB)
 // ============================================
 Blockly.Blocks['coordination_verb_and'] = {
@@ -1303,6 +1322,7 @@ export function createToolbox() {
           { kind: "label", text: msg('SECTION_COORDINATION', '── Coordination ──') },
           { kind: "block", type: "coordination_noun_and" },
           { kind: "block", type: "coordination_noun_or" },
+          { kind: "block", type: "choice_question_block" },
         ]
       },
     ]

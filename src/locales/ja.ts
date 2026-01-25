@@ -123,6 +123,11 @@ export const ja: LocaleData = {
     COORD_VERB_AND_TOOLTIP: '等位接続（動詞）: ANDで2つの動詞句を接続',
     COORD_VERB_OR_TOOLTIP: '等位接続（動詞）: ORで2つの動詞句を接続',
 
+    // Choice question
+    CHOICE_QUESTION_LABEL: '?which',
+    CHOICE_QUESTION_OR: 'それとも',
+    CHOICE_QUESTION_TOOLTIP: '選択疑問: どちらかを尋ねる（例: 紅茶かコーヒーか？）',
+
     // Verb categories
     VERB_MOTION: '移動',
     VERB_ACTION: '動作',

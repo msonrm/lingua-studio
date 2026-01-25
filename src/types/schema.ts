@@ -224,6 +224,7 @@ export interface CoordinatedNounPhraseNode {
   type: "coordinatedNounPhrase";
   conjunction: Conjunction;
   conjuncts: CoordinationConjunct[];  // 入れ子の等位接続も許可
+  isChoiceQuestion?: boolean;  // 選択疑問: ?which('tea, 'coffee)
 }
 
 // VP等位接続（動詞句 AND/OR 動詞句）

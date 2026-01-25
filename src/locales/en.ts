@@ -123,6 +123,11 @@ export const en: LocaleData = {
     COORD_VERB_AND_TOOLTIP: 'Coordination (Verb): connects two verb phrases with AND',
     COORD_VERB_OR_TOOLTIP: 'Coordination (Verb): connects two verb phrases with OR',
 
+    // Choice question
+    CHOICE_QUESTION_LABEL: '?which',
+    CHOICE_QUESTION_OR: 'or',
+    CHOICE_QUESTION_TOOLTIP: 'Choice Question: asks which option (e.g., "tea or coffee?")',
+
     // Verb categories
     VERB_MOTION: 'MOTION',
     VERB_ACTION: 'ACTION',

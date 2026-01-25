@@ -38,6 +38,8 @@
 - [x] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）
   - i18nシステム実装済み（en, ja, ja-hira）
   - Blockly.Msg + React Context による切り替え
+- [x] 言語切り替え時のワークスペース状態保持
+  - Blockly.serialization を使用した状態保存・復元
 - [ ] Grammar Console（文法判断のログ表示）
 - [ ] TimeChip 3連プルダウン化（教育的UX改善）
   - [Tense][Aspect][Time] の3スロット構成
@@ -82,8 +84,11 @@
 - [ ] フィールド必須/任意マーカー: `*field` / `field?` （手書き入力・バリデータ実装時に必要）
 
 ### LinguaScript Editor
-- [ ] Monaco Editor 統合
-- [ ] シンタックスハイライト
+- [x] シンタックスハイライト（読み取り専用ビューア）
+  - Prism.js によるカスタム言語定義
+  - Solarized Light テーマ
+  - 行番号表示、インデント付きフォーマット
+- [ ] Monaco Editor 統合（編集可能化）
 - [ ] 辞書連携オートコンプリート
 - [ ] 双方向同期（Blocks ↔ LinguaScript）
 
@@ -113,6 +118,22 @@
 - 従属節 (if, when, although...)
 
 ## Completed
+
+### Screen Layout Refactor (2026-01)
+- [x] 3タブ構成: Blocks / LinguaScript / AST
+  - メインエディタ領域でタブ切り替え
+  - AST toggle を削除し、タブに統合
+- [x] LinguaScript Bar（ヘッダー下に常時表示）
+  - 黒背景・白文字のシンプル表示
+  - コピーボタンで生成AIへの貼り付けを容易に
+- [x] LinguaScript View（メインエディタ）
+  - Prism.js シンタックスハイライト
+  - 括弧に応じたインデント付きフォーマット
+  - 行番号表示
+- [x] サイドパネル（開閉可能）
+  - 将来のビルドオプション用にスペース確保
+- [x] Bottom Panel 簡素化
+  - Output + Grammar Console のみに整理
 
 ### Question Implementation (2026-01)
 - [x] `question()` ラッパー実装（Yes/No疑問文）

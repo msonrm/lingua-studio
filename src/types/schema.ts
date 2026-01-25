@@ -125,12 +125,25 @@ export interface SentenceNode {
   timeAdverbial?: string;  // TimeChipから生成される時間副詞（Yesterday, Now など）
 }
 
+// モダリティ概念（言語非依存の意味カテゴリ）
+export type ModalType =
+  | "ability"      // 能力: can/could
+  | "permission"   // 許可: may/could
+  | "possibility"  // 可能性: might
+  | "obligation"   // 義務: must/had to
+  | "certainty"    // 確信: must
+  | "advice"       // 助言: should
+  | "volition"     // 意志: will/was going to
+  | "prediction";  // 予測: will/would
+
 export interface ClauseNode {
   type: "clause";
   verbPhrase: VerbPhraseNode;
   tense: "past" | "present" | "future";
   aspect: "simple" | "progressive" | "perfect" | "perfectProgressive";
-  polarity: "affirmative" | "negative";
+  polarity: "affirmative" | "negative";        // 動詞否定: "I do NOT run"
+  modal?: ModalType;
+  modalPolarity?: "affirmative" | "negative";  // モダリティ否定: "I need NOT run"
 }
 
 export interface VerbPhraseNode {

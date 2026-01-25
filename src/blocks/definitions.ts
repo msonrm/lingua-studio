@@ -43,6 +43,10 @@ const COLORS = {
   coordNoun: '#6B5B95',   // ダスティパープル（名詞用）
   coordVerb: '#9B4D8B',   // マゼンタ寄り紫（動詞用）
 
+  // Sentence Wrapper系（紫系グラデーション - 外側ほど濃い）
+  imperative: '#4A148C',  // 濃紫（最外側）
+  modal: '#9C27B0',       // 薄紫（内側）
+
   // レガシー
   adverb: '#EF6C57',     // 赤オレンジ（様態副詞と同系）
 };
@@ -207,8 +211,66 @@ Blockly.Blocks['time_frame'] = {
     this.appendStatementInput("ACTION")
         .setCheck("verb")
         .appendField("predicate:");
+    this.setPreviousStatement(true, "sentence");  // modal_wrapperに接続可能
     this.setColour(COLORS.timeFrame);
     this.setTooltip("The root of a sentence, specifying tense and aspect");
+  }
+};
+
+// ============================================
+// Modal ラッパーブロック（法助動詞）
+// 言語非依存の意味概念として定義
+// ============================================
+Blockly.Blocks['modal_wrapper'] = {
+  init: function() {
+    const modalOptions: [string, string][] = [
+      ['Ability (can)', 'ability'],
+      ['Permission (may)', 'permission'],
+      ['Possibility (might)', 'possibility'],
+      ['Obligation (must)', 'obligation'],
+      ['Certainty (must)', 'certainty'],
+      ['Advice (should)', 'advice'],
+      ['Volition (will)', 'volition'],
+      ['Prediction (will)', 'prediction'],
+    ];
+
+    this.appendDummyInput()
+        .appendField("MODAL")
+        .appendField(new Blockly.FieldDropdown(modalOptions), "MODAL_VALUE");
+    this.appendStatementInput("SENTENCE")
+        .setCheck("sentence");
+    this.setPreviousStatement(true, ["modal", "sentence"]);  // negation_sentence_wrapper / imperative_wrapper に接続可能
+    this.setColour(COLORS.modal);
+    this.setTooltip("Modal: adds modality (ability, permission, obligation, etc.) to the sentence");
+  }
+};
+
+// ============================================
+// Imperative ラッパーブロック（命令文）
+// ============================================
+Blockly.Blocks['imperative_wrapper'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("IMPERATIVE");
+    this.appendStatementInput("SENTENCE")
+        .setCheck("sentence");
+    this.setColour(COLORS.imperative);
+    this.setTooltip("Imperative: creates a command (e.g., 'Eat the apple!')");
+  }
+};
+
+// ============================================
+// Negation（文レベル）ラッパーブロック（モダリティ否定）
+// ============================================
+Blockly.Blocks['negation_sentence_wrapper'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("NOT (modal)");
+    this.appendStatementInput("MODAL")
+        .setCheck("modal");
+    this.setPreviousStatement(true, "sentence");  // imperative_wrapper / modal_wrapper に接続可能
+    this.setColour(COLORS.imperative);  // 紫系（sentence modifier）
+    this.setTooltip("Negates the modality (e.g., 'need not', 'don't have to')");
   }
 };
 
@@ -1016,7 +1078,6 @@ export const toolbox = {
       name: "Sentence",
       colour: COLORS.timeFrame,
       contents: [
-        { kind: "label", text: "── Sentence ──" },
         { kind: "block", type: "time_frame" },
         { kind: "label", text: "── Time ──" },
         { kind: "block", type: "time_chip_concrete" },
@@ -1025,6 +1086,19 @@ export const toolbox = {
         { kind: "label", text: "── Tense/Aspect ──" },
         { kind: "block", type: "time_chip_abstract" },
         { kind: "block", type: "time_chip_unified" },
+      ]
+    },
+    {
+      kind: "category",
+      name: "Sentence Modifier",
+      colour: COLORS.modal,
+      contents: [
+        { kind: "label", text: "── Imperative ──" },
+        { kind: "block", type: "imperative_wrapper" },
+        { kind: "label", text: "── Modal Negation ──" },
+        { kind: "block", type: "negation_sentence_wrapper" },
+        { kind: "label", text: "── Modal ──" },
+        { kind: "block", type: "modal_wrapper" },
       ]
     },
     {

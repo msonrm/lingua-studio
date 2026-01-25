@@ -90,6 +90,7 @@ export const jaHira: LocaleData = {
     GROUP_INDEFINITE: '── だれか・なにか ──',
     GROUP_COMMON: '── ふつうのなまえ ──',
     GROUP_NAMES: '── ひとのなまえ ──',
+    GROUP_INTERROGATIVE: '── しつもんのことば ──',
 
     // Determiner
     DETERMINER_LABEL: 'どの？いくつ？',

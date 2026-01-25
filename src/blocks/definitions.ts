@@ -452,12 +452,14 @@ function createVerbCategoryBlock(category: VerbCategory) {
 const personalPronouns = pronouns.filter(p => p.type === 'personal');
 const indefinitePronouns = pronouns.filter(p => p.type === 'indefinite');
 const demonstrativePronouns = pronouns.filter(p => p.type === 'demonstrative');
+const interrogativePronouns = pronouns.filter(p => p.type === 'interrogative');
 
 Blockly.Blocks['pronoun_block'] = {
   init: function() {
     const personalOptions: [string, string][] = personalPronouns.map(p => [p.lemma, p.lemma]);
     const indefiniteOptions: [string, string][] = indefinitePronouns.map(p => [p.lemma, p.lemma]);
     const demonstrativeOptions: [string, string][] = demonstrativePronouns.map(p => [p.lemma, p.lemma]);
+    const interrogativeOptions: [string, string][] = interrogativePronouns.map(p => [p.lemma, p.lemma]);
 
     const getAllOptions = (): [string, string][] => [
       [msg('GROUP_PERSONAL', '── Personal ──'), "__label_personal__"],
@@ -466,6 +468,8 @@ Blockly.Blocks['pronoun_block'] = {
       ...demonstrativeOptions,
       [msg('GROUP_INDEFINITE', '── Indefinite ──'), "__label_indefinite__"],
       ...indefiniteOptions,
+      [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), "__label_interrogative__"],
+      ...interrogativeOptions,
     ];
 
     this.appendDummyInput()

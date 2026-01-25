@@ -90,6 +90,7 @@ export interface BlocklyMessages {
   GROUP_INDEFINITE: string;
   GROUP_COMMON: string;
   GROUP_NAMES: string;
+  GROUP_INTERROGATIVE: string;
 
   // Determiner
   DETERMINER_LABEL: string;

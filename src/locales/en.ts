@@ -90,6 +90,7 @@ export const en: LocaleData = {
     GROUP_INDEFINITE: '── Indefinite ──',
     GROUP_COMMON: '── Common ──',
     GROUP_NAMES: '── Names ──',
+    GROUP_INTERROGATIVE: '── Interrogative ──',
 
     // Determiner
     DETERMINER_LABEL: 'DET',

@@ -736,6 +736,22 @@ export const pronouns: PronounEntry[] = [
     number: "plural",
     type: "demonstrative",
   },
+  // Interrogative pronouns (question words)
+  {
+    lemma: "?who",
+    objectForm: "?whom",
+    person: 3,
+    number: "singular",
+    type: "interrogative",
+  },
+  {
+    lemma: "?what",
+    objectForm: "?what",
+    person: 3,
+    number: "singular",
+    gender: "neuter",
+    type: "interrogative",
+  },
   // Possessive pronouns (mine, yours, etc.)
   {
     lemma: "mine",

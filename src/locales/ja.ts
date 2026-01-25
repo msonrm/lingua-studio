@@ -90,6 +90,7 @@ export const ja: LocaleData = {
     GROUP_INDEFINITE: '── 不定 ──',
     GROUP_COMMON: '── 普通名詞 ──',
     GROUP_NAMES: '── 固有名詞 ──',
+    GROUP_INTERROGATIVE: '── 疑問詞 ──',
 
     // Determiner
     DETERMINER_LABEL: '限定詞',

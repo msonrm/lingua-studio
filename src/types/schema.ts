@@ -87,7 +87,7 @@ export interface PronounEntry {
   person: 1 | 2 | 3;
   number: "singular" | "plural";
   gender?: "masculine" | "feminine" | "neuter";
-  type: "personal" | "indefinite" | "demonstrative" | "possessive";
+  type: "personal" | "indefinite" | "demonstrative" | "possessive" | "interrogative";
   polaritySensitive?: boolean;  // someone/anyone など
   negativeForm?: string;        // nobody, nothing など
   correspondingPersonal?: string;  // 所有代名詞の対応する人称代名詞 (mine → I)
@@ -185,7 +185,7 @@ export interface PronounHead {
   lemma: string;           // 代名詞の基本形（I, you, he など）
   person: 1 | 2 | 3;
   number: "singular" | "plural";
-  pronounType: "personal" | "indefinite" | "demonstrative" | "possessive";
+  pronounType: "personal" | "indefinite" | "demonstrative" | "possessive" | "interrogative";
   polaritySensitive?: boolean;  // someone/anyone 系
 }
 

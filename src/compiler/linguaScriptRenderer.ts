@@ -169,6 +169,13 @@ function renderNounPhraseToScript(np: NounPhraseNode): string {
   // 代名詞の場合
   if (np.head.type === 'pronoun') {
     const pronounHead = np.head as PronounHead;
+
+    // 疑問詞の場合: ?who, ?what（クォートなし）
+    if (pronounHead.pronounType === 'interrogative') {
+      // 疑問詞は修飾を持たない（仕様）
+      return pronounHead.lemma;  // ?who, ?what as-is
+    }
+
     const parts: string[] = [`'${pronounHead.lemma}`];
 
     // 形容詞（不定代名詞 + 形容詞: "something beautiful"）

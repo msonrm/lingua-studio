@@ -37,7 +37,7 @@ export const en: LocaleData = {
     TIME_CHIP_ASPECTUAL_TOOLTIP: 'Aspectual marker (progressive, perfect, etc.)',
     TIME_CHIP_ABSTRACT_LABEL: 'TENSE/ASPECT',
     TIME_CHIP_ABSTRACT_TOOLTIP: 'Tense/aspect modifier (affects verb conjugation)',
-    TIME_CHIP_UNIFIED_LABEL: 'T/A',
+    TIME_CHIP_UNIFIED_LABEL: 'Tense/Aspect',
     TIME_CHIP_UNIFIED_TOOLTIP: 'Unified Tense/Aspect: select both independently',
 
     // Time options

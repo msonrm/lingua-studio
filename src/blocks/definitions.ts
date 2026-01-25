@@ -3,6 +3,17 @@ import { nouns, adjectives, adverbs, pronouns, findNoun, getVerbsByCategory } fr
 import type { VerbCategory, AdjectiveCategory } from '../types/schema';
 
 // ============================================
+// ドロップダウンラベル用バリデーター
+// ラベル行（__label_で始まる値）の選択を防ぐ
+// ============================================
+const labelValidator = (newValue: string): string | null => {
+  if (newValue.startsWith('__label_')) {
+    return null;  // 選択を拒否
+  }
+  return newValue;
+};
+
+// ============================================
 // 色の定義（モンテッソーリベース）
 // ============================================
 const COLORS = {
@@ -472,9 +483,12 @@ Blockly.Blocks['pronoun_block'] = {
       ...interrogativeOptions,
     ];
 
+    const dropdown = new Blockly.FieldDropdown(getAllOptions);
+    dropdown.setValidator(labelValidator);
+
     this.appendDummyInput()
         .appendField(msg('PRONOUN_LABEL', 'PRONOUN'))
-        .appendField(new Blockly.FieldDropdown(getAllOptions), "PRONOUN_VALUE");
+        .appendField(dropdown, "PRONOUN_VALUE");
 
     // デフォルト値を最初の実際の項目に設定
     if (personalOptions.length > 0) {
@@ -528,9 +542,12 @@ Blockly.Blocks['human_block'] = {
       ...(properOptions.length > 0 ? [[msg('GROUP_NAMES', '── Names ──'), "__label_proper__"] as [string, string], ...properOptions] : []),
     ];
 
+    const dropdown = new Blockly.FieldDropdown(getNounOptions);
+    dropdown.setValidator(labelValidator);
+
     this.appendDummyInput()
         .appendField(msg('HUMAN_LABEL', 'HUMAN'))
-        .appendField(new Blockly.FieldDropdown(getNounOptions), "HUMAN_VALUE");
+        .appendField(dropdown, "HUMAN_VALUE");
 
     // デフォルト値を最初の実際の項目に設定
     if (commonOptions.length > 0) {
@@ -603,9 +620,12 @@ Blockly.Blocks['place_block'] = {
       ...(properOptions.length > 0 ? [[msg('GROUP_NAMES', '── Names ──'), "__label_proper__"] as [string, string], ...properOptions] : []),
     ];
 
+    const dropdown = new Blockly.FieldDropdown(getNounOptions);
+    dropdown.setValidator(labelValidator);
+
     this.appendDummyInput()
         .appendField(msg('PLACE_LABEL', 'PLACE'))
-        .appendField(new Blockly.FieldDropdown(getNounOptions), "PLACE_VALUE");
+        .appendField(dropdown, "PLACE_VALUE");
 
     // デフォルト値を最初の実際の項目に設定
     if (commonOptions.length > 0) {
@@ -937,10 +957,13 @@ Blockly.Blocks['manner_wrapper'] = {
       ['?how', '?how'],
     ];
 
+    const dropdown = new Blockly.FieldDropdown(getOptions);
+    dropdown.setValidator(labelValidator);
+
     this.appendStatementInput("VERB")
         .setCheck("verb")
         .appendField(msg('MANNER_LABEL', 'MANNER'))
-        .appendField(new Blockly.FieldDropdown(getOptions), "MANNER_VALUE");
+        .appendField(dropdown, "MANNER_VALUE");
 
     // デフォルト値を設定（最初の実際の値）
     this.setFieldValue('quickly', 'MANNER_VALUE');
@@ -969,10 +992,13 @@ Blockly.Blocks['locative_wrapper'] = {
       ['?where', '?where'],
     ];
 
+    const dropdown = new Blockly.FieldDropdown(getOptions);
+    dropdown.setValidator(labelValidator);
+
     this.appendStatementInput("VERB")
         .setCheck("verb")
         .appendField(msg('LOCATIVE_LABEL', 'LOCATION'))
-        .appendField(new Blockly.FieldDropdown(getOptions), "LOCATIVE_VALUE");
+        .appendField(dropdown, "LOCATIVE_VALUE");
 
     // デフォルト値を設定（最初の実際の値）
     this.setFieldValue('here', 'LOCATIVE_VALUE');
@@ -1010,10 +1036,13 @@ Blockly.Blocks['time_adverb_wrapper'] = {
       ['?when', '?when'],
     ];
 
+    const dropdown = new Blockly.FieldDropdown(getOptions);
+    dropdown.setValidator(labelValidator);
+
     this.appendStatementInput("VERB")
         .setCheck("verb")
         .appendField(msg('TIME_ADVERB_LABEL', 'TIME'))
-        .appendField(new Blockly.FieldDropdown(getOptions), "TIME_ADVERB_VALUE");
+        .appendField(dropdown, "TIME_ADVERB_VALUE");
 
     // デフォルト値を設定
     this.setFieldValue('yesterday', 'TIME_ADVERB_VALUE');

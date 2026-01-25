@@ -11,16 +11,18 @@
 | 記法 | 意味 | 例 |
 |------|------|-----|
 | `'word` | リテラル（出力される語彙） | `'apple`, `'the`, `'quickly` |
-| `@meta` | メタ値（出力されない制御値） | `@plural`, `@uncountable` |
+| `symbol` | メタ値（クォートなし = 出力されない制御値） | `plural`, `uncountable` |
 
 ```lisp
-;; リテラル: 実際に出力される
+;; リテラル: 実際に出力される（クォート付き）
 noun(det:'the, head:'apple)   ;; → "the apple"
 
-;; メタ値: 出力されないが意味を持つ
-noun(post:@plural, head:'apple)   ;; → "apples"（@pluralは出力されない）
-noun(post:@uncountable, head:'water)   ;; → "water"（量を指定しない）
+;; メタ値: 出力されないが意味を持つ（クォートなし）
+noun(post:plural, head:'apple)   ;; → "apples"（pluralは出力されない）
+noun(post:uncountable, head:'water)   ;; → "water"（量を指定しない）
 ```
+
+**Lisp慣習**: クォート付き `'x` は引用（リテラル）、クォートなし `x` はシンボル（評価される値）。
 
 ### 組み合わせ演算子
 
@@ -564,7 +566,7 @@ noun(pre:'all, det:'the, post:'three, head:'apples)
 |----|------|------|
 | pre | 前置限定詞 | all, both, half |
 | det | 中央限定詞 | the, this, that, a/an, my, your, his, her, its, our, their, no |
-| post | 後置限定詞 | one, two, three, many, few, some, several, @plural, @uncountable |
+| post | 後置限定詞 | one, two, three, many, few, some, several, plural, uncountable |
 
 ### 制約
 
@@ -577,7 +579,7 @@ noun(det:'the, head:'water)           ;; OK
 noun(post:'three, head:'water)        ;; NG
 
 ;; 相互排他的な組み合わせ
-noun(det:'a, post:@plural)            ;; NG（a + 複数は矛盾）
+noun(det:'a, post:plural)            ;; NG（a + 複数は矛盾）
 noun(pre:'all, det:'a)                ;; NG（all + a は矛盾）
 ```
 
@@ -593,10 +595,10 @@ noun(det:'a, head:'apple)
 noun(pre:'all, det:'my, head:'friends)
 ;; → "all my friends"
 
-noun(post:@plural, head:'apple)
-;; → "apples"（限定詞なしの複数形、@pluralは出力されない）
+noun(post:plural, head:'apple)
+;; → "apples"（限定詞なしの複数形、pluralは出力されない）
 
-noun(post:@uncountable, head:'water)
+noun(post:uncountable, head:'water)
 ;; → "water"（不可算名詞のマーク）
 ```
 
@@ -879,7 +881,7 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
 <det-word>      ::= "the" | "a" | "this" | "that" | "these" | "those"
                   | "my" | "your" | "his" | "her" | "its" | "our" | "their" | "no"
 
-<post-det>      ::= "post:'" <post-det-word> | "post:@" <meta-value>
+<post-det>      ::= "post:'" <post-det-word> | "post:" <meta-value>
 <post-det-word> ::= "one" | "two" | "three" | "many" | "few" | "some" | "several"
 <meta-value>    ::= "plural" | "uncountable"
 
@@ -979,7 +981,7 @@ imperative(sentence(present+simple(eat(theme:noun(det:'the, head:'apple)))))
 time('yesterday, sentence(past+simple(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
 
 ;; 頻度副詞: "I always eat apples."
-sentence(present+simple(frequency('always, eat(agent:'I, theme:noun(post:@plural, head:'apple)))))
+sentence(present+simple(frequency('always, eat(agent:'I, theme:noun(post:plural, head:'apple)))))
 
 ;; 様態副詞: "I quickly eat an apple."
 sentence(present+simple(manner('quickly, eat(agent:'I, theme:noun(det:'a, head:'apple)))))

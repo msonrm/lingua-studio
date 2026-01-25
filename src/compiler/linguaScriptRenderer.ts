@@ -179,18 +179,18 @@ function renderNounPhraseToScript(np: NounPhraseNode): string {
 
   // 後置限定詞（複数形マーカー含む）
   if (np.postDeterminer) {
-    // メタ値は @prefix 記法に変換
+    // メタ値はクォートなし（Lisp慣習: 非リテラル）、リテラルはクォート付き
     const postDet = np.postDeterminer;
     if (postDet === '[plural]' || postDet === '__plural__') {
-      parts.push(`post:@plural`);
+      parts.push(`post:plural`);
     } else if (postDet === '[uncountable]' || postDet === '__uncountable__') {
-      parts.push(`post:@uncountable`);
+      parts.push(`post:uncountable`);
     } else {
       parts.push(`post:'${postDet}`);
     }
   } else if (nounHead.number === 'plural' && !np.determiner?.lexeme && !np.preDeterminer) {
     // 限定詞なしの複数形
-    parts.push(`post:@plural`);
+    parts.push(`post:plural`);
   }
 
   // 形容詞

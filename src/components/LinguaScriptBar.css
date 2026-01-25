@@ -124,3 +124,22 @@
   color: #93a1a1;
   font-style: italic;
 }
+
+/* ============================================
+   LinguaScript View - Main Editor (indented)
+   ============================================ */
+.linguascript-view-container {
+  flex: 1;
+  background: #fdf6e3; /* Solarized Light background */
+  padding: 1.5rem;
+  overflow: auto;
+}
+
+.linguascript-view-code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #657b83;
+  margin: 0;
+  white-space: pre;
+}

@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { BlocklyWorkspace } from './components/BlocklyWorkspace';
 import { LinguaScriptBar } from './components/LinguaScriptBar';
+import { LinguaScriptView } from './components/LinguaScriptView';
 import { SentenceNode } from './types/schema';
 import { renderToLinguaScript } from './compiler/linguaScriptRenderer';
 import {
@@ -125,14 +126,10 @@ function App() {
                 </div>
               )}
               {editorMode === 'linguascript' && (
-                <div className="linguascript-view">
-                  <pre className="linguascript-code">
-                    {linguaScripts.length > 0
-                      ? linguaScripts.join('\n')
-                      : t.PLACEHOLDER_LINGUASCRIPT
-                    }
-                  </pre>
-                </div>
+                <LinguaScriptView
+                  code={linguaScripts.join('; ')}
+                  placeholder={t.PLACEHOLDER_LINGUASCRIPT}
+                />
               )}
               {editorMode === 'ast' && (
                 <div className="ast-view">

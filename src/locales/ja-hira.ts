@@ -26,6 +26,10 @@ export const jaHira: LocaleData = {
     IMPERATIVE_LABEL: 'めいれい',
     IMPERATIVE_TOOLTIP: '「〜しなさい！」というぶんをつくる',
 
+    // Question wrapper
+    QUESTION_LABEL: 'しつもん',
+    QUESTION_TOOLTIP: '「〜ですか？」というぶんをつくる',
+
     // Negation sentence wrapper
     NEGATION_MODAL_LABEL: '〜なくてもいい',
     NEGATION_MODAL_TOOLTIP: '「しなくてもいい」「できないかも」などをつくる',
@@ -86,6 +90,7 @@ export const jaHira: LocaleData = {
     GROUP_INDEFINITE: '── だれか・なにか ──',
     GROUP_COMMON: '── ふつうのなまえ ──',
     GROUP_NAMES: '── ひとのなまえ ──',
+    GROUP_INTERROGATIVE: '── しつもんのことば ──',
 
     // Determiner
     DETERMINER_LABEL: 'どの？いくつ？',
@@ -103,6 +108,8 @@ export const jaHira: LocaleData = {
     MANNER_TOOLTIP: 'はやく、ゆっくり、じょうずに など',
     LOCATIVE_LABEL: 'どこで？',
     LOCATIVE_TOOLTIP: 'ここ、そこ、どこかで など',
+    TIME_ADVERB_LABEL: 'いつ？',
+    TIME_ADVERB_TOOLTIP: 'いつ？（きょう、きのう、いつ？など）',
 
     // Prepositions
     PP_LABEL: 'どこ？だれと？',
@@ -117,6 +124,15 @@ export const jaHira: LocaleData = {
     COORD_NOUN_OR_TOOLTIP: 'なまえを「か」でつなぐ',
     COORD_VERB_AND_TOOLTIP: 'うごきを「と」でつなぐ',
     COORD_VERB_OR_TOOLTIP: 'うごきを「か」でつなぐ',
+
+    // Choice question
+    CHOICE_QUESTION_LABEL: 'どっち？',
+    CHOICE_QUESTION_OR: 'それとも',
+    CHOICE_QUESTION_TOOLTIP: 'どっちがいい？（おちゃかこーひーか？）',
+
+    // Wh-placeholder
+    WH_PLACEHOLDER_TOOLTIP: 'だれ？なに？（しつもんのことば）',
+    WH_ADVERB_TOOLTIP: 'どこ？いつ？どうやって？（しつもんのことば）',
 
     // Verb categories
     VERB_MOTION: 'うごく',
@@ -150,6 +166,7 @@ export const jaHira: LocaleData = {
 
     // Toolbox categories
     TOOLBOX_SENTENCE: 'ぶん',
+    TOOLBOX_QUESTION: 'しつもん',
     TOOLBOX_SENTENCE_MODIFIER: 'できる・しなきゃ',
     TOOLBOX_VERBS: 'うごきのことば',
     TOOLBOX_VERB_MODIFIERS: 'うごきをかざる',
@@ -160,6 +177,7 @@ export const jaHira: LocaleData = {
     SECTION_TIME: '── いつ？ ──',
     SECTION_ASPECT: '── どんなようす？ ──',
     SECTION_TENSE_ASPECT: '── いつ？どんなようす？ ──',
+    SECTION_QUESTION: '── しつもん ──',
     SECTION_IMPERATIVE: '── めいれい ──',
     SECTION_MODAL_NEGATION: '── 〜なくてもいい ──',
     SECTION_MODAL: '── できる・しなきゃ ──',
@@ -178,6 +196,8 @@ export const jaHira: LocaleData = {
     SECTION_ABSTRACT: '── かんがえ・きもち ──',
     SECTION_ADJECTIVES: '── どんなことば ──',
     SECTION_PREPOSITION: '── どこ？だれと？ ──',
+    SECTION_WH_NOUNS: '── だれ？なに？ ──',
+    SECTION_WH_ADVERBS: '── どこ？いつ？どうやって？ ──',
   },
   ui: {
     // Header

@@ -736,6 +736,22 @@ export const pronouns: PronounEntry[] = [
     number: "plural",
     type: "demonstrative",
   },
+  // Interrogative pronouns (question words)
+  {
+    lemma: "?who",
+    objectForm: "?whom",
+    person: 3,
+    number: "singular",
+    type: "interrogative",
+  },
+  {
+    lemma: "?what",
+    objectForm: "?what",
+    person: 3,
+    number: "singular",
+    gender: "neuter",
+    type: "interrogative",
+  },
   // Possessive pronouns (mine, yours, etc.)
   {
     lemma: "mine",
@@ -1059,6 +1075,19 @@ export const adverbs: AdverbEntry[] = [
   {
     lemma: "home",
     type: "place",
+  },
+  // 疑問副詞（interrogative adverbs）
+  {
+    lemma: "?where",
+    type: "place",
+  },
+  {
+    lemma: "?when",
+    type: "time",
+  },
+  {
+    lemma: "?how",
+    type: "manner",
   },
 ];
 

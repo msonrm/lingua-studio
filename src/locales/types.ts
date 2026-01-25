@@ -26,6 +26,10 @@ export interface BlocklyMessages {
   IMPERATIVE_LABEL: string;
   IMPERATIVE_TOOLTIP: string;
 
+  // Question wrapper
+  QUESTION_LABEL: string;
+  QUESTION_TOOLTIP: string;
+
   // Negation sentence wrapper
   NEGATION_MODAL_LABEL: string;
   NEGATION_MODAL_TOOLTIP: string;
@@ -86,6 +90,7 @@ export interface BlocklyMessages {
   GROUP_INDEFINITE: string;
   GROUP_COMMON: string;
   GROUP_NAMES: string;
+  GROUP_INTERROGATIVE: string;
 
   // Determiner
   DETERMINER_LABEL: string;
@@ -103,6 +108,8 @@ export interface BlocklyMessages {
   MANNER_TOOLTIP: string;
   LOCATIVE_LABEL: string;
   LOCATIVE_TOOLTIP: string;
+  TIME_ADVERB_LABEL: string;
+  TIME_ADVERB_TOOLTIP: string;
 
   // Prepositions
   PP_LABEL: string;
@@ -117,6 +124,15 @@ export interface BlocklyMessages {
   COORD_NOUN_OR_TOOLTIP: string;
   COORD_VERB_AND_TOOLTIP: string;
   COORD_VERB_OR_TOOLTIP: string;
+
+  // Choice question
+  CHOICE_QUESTION_LABEL: string;
+  CHOICE_QUESTION_OR: string;
+  CHOICE_QUESTION_TOOLTIP: string;
+
+  // Wh-placeholder
+  WH_PLACEHOLDER_TOOLTIP: string;
+  WH_ADVERB_TOOLTIP: string;
 
   // Verb categories
   VERB_MOTION: string;
@@ -150,6 +166,7 @@ export interface BlocklyMessages {
 
   // Toolbox categories
   TOOLBOX_SENTENCE: string;
+  TOOLBOX_QUESTION: string;
   TOOLBOX_SENTENCE_MODIFIER: string;
   TOOLBOX_VERBS: string;
   TOOLBOX_VERB_MODIFIERS: string;
@@ -160,6 +177,7 @@ export interface BlocklyMessages {
   SECTION_TIME: string;
   SECTION_ASPECT: string;
   SECTION_TENSE_ASPECT: string;
+  SECTION_QUESTION: string;
   SECTION_IMPERATIVE: string;
   SECTION_MODAL_NEGATION: string;
   SECTION_MODAL: string;
@@ -178,6 +196,8 @@ export interface BlocklyMessages {
   SECTION_ABSTRACT: string;
   SECTION_ADJECTIVES: string;
   SECTION_PREPOSITION: string;
+  SECTION_WH_NOUNS: string;
+  SECTION_WH_ADVERBS: string;
 }
 
 // React UI message keys

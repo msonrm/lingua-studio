@@ -26,6 +26,10 @@ export const en: LocaleData = {
     IMPERATIVE_LABEL: 'IMPERATIVE',
     IMPERATIVE_TOOLTIP: "Imperative: creates a command (e.g., 'Eat the apple!')",
 
+    // Question wrapper
+    QUESTION_LABEL: 'QUESTION',
+    QUESTION_TOOLTIP: "Question: creates a question (e.g., 'Do you like apples?')",
+
     // Negation sentence wrapper
     NEGATION_MODAL_LABEL: 'NOT (modal)',
     NEGATION_MODAL_TOOLTIP: "Negates the modality (e.g., 'need not', 'don't have to')",
@@ -86,6 +90,7 @@ export const en: LocaleData = {
     GROUP_INDEFINITE: '── Indefinite ──',
     GROUP_COMMON: '── Common ──',
     GROUP_NAMES: '── Names ──',
+    GROUP_INTERROGATIVE: '── Interrogative ──',
 
     // Determiner
     DETERMINER_LABEL: 'DET',
@@ -103,6 +108,8 @@ export const en: LocaleData = {
     MANNER_TOOLTIP: 'Manner: how the action is performed',
     LOCATIVE_LABEL: 'LOCATION',
     LOCATIVE_TOOLTIP: 'Location: where the action occurs',
+    TIME_ADVERB_LABEL: 'TIME',
+    TIME_ADVERB_TOOLTIP: 'Time: when the action occurs',
 
     // Prepositions
     PP_LABEL: 'PP',
@@ -117,6 +124,15 @@ export const en: LocaleData = {
     COORD_NOUN_OR_TOOLTIP: 'Coordination (Noun): connects two noun phrases with OR',
     COORD_VERB_AND_TOOLTIP: 'Coordination (Verb): connects two verb phrases with AND',
     COORD_VERB_OR_TOOLTIP: 'Coordination (Verb): connects two verb phrases with OR',
+
+    // Choice question
+    CHOICE_QUESTION_LABEL: '?which',
+    CHOICE_QUESTION_OR: 'or',
+    CHOICE_QUESTION_TOOLTIP: 'Choice Question: asks which option (e.g., "tea or coffee?")',
+
+    // Wh-placeholder
+    WH_PLACEHOLDER_TOOLTIP: 'Wh-question word: who (person) or what (thing)',
+    WH_ADVERB_TOOLTIP: 'Wh-adverb: where (place), when (time), or how (manner)',
 
     // Verb categories
     VERB_MOTION: 'MOTION',
@@ -150,6 +166,7 @@ export const en: LocaleData = {
 
     // Toolbox categories
     TOOLBOX_SENTENCE: 'Sentence',
+    TOOLBOX_QUESTION: 'Question',
     TOOLBOX_SENTENCE_MODIFIER: 'Sentence Modifier',
     TOOLBOX_VERBS: 'Verbs',
     TOOLBOX_VERB_MODIFIERS: 'Verb Modifiers',
@@ -160,6 +177,7 @@ export const en: LocaleData = {
     SECTION_TIME: '── Time ──',
     SECTION_ASPECT: '── Aspect ──',
     SECTION_TENSE_ASPECT: '── Tense/Aspect ──',
+    SECTION_QUESTION: '── Question ──',
     SECTION_IMPERATIVE: '── Imperative ──',
     SECTION_MODAL_NEGATION: '── Modal Negation ──',
     SECTION_MODAL: '── Modal ──',
@@ -178,6 +196,8 @@ export const en: LocaleData = {
     SECTION_ABSTRACT: '── Abstract ──',
     SECTION_ADJECTIVES: '── Adjectives ──',
     SECTION_PREPOSITION: '── Preposition ──',
+    SECTION_WH_NOUNS: '── Wh-Nouns ──',
+    SECTION_WH_ADVERBS: '── Wh-Adverbs ──',
   },
   ui: {
     // Header

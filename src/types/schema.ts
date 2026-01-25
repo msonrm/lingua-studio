@@ -87,7 +87,7 @@ export interface PronounEntry {
   person: 1 | 2 | 3;
   number: "singular" | "plural";
   gender?: "masculine" | "feminine" | "neuter";
-  type: "personal" | "indefinite" | "demonstrative" | "possessive";
+  type: "personal" | "indefinite" | "demonstrative" | "possessive" | "interrogative";
   polaritySensitive?: boolean;  // someone/anyone など
   negativeForm?: string;        // nobody, nothing など
   correspondingPersonal?: string;  // 所有代名詞の対応する人称代名詞 (mine → I)
@@ -122,7 +122,7 @@ export interface AdverbEntry {
 export interface SentenceNode {
   type: "sentence";
   clause: ClauseNode;
-  sentenceType: "declarative" | "imperative";
+  sentenceType: "declarative" | "imperative" | "interrogative";
   timeAdverbial?: string;  // TimeChipから生成される時間副詞（Yesterday, Now など）
 }
 
@@ -185,7 +185,7 @@ export interface PronounHead {
   lemma: string;           // 代名詞の基本形（I, you, he など）
   person: 1 | 2 | 3;
   number: "singular" | "plural";
-  pronounType: "personal" | "indefinite" | "demonstrative" | "possessive";
+  pronounType: "personal" | "indefinite" | "demonstrative" | "possessive" | "interrogative";
   polaritySensitive?: boolean;  // someone/anyone 系
 }
 
@@ -224,6 +224,7 @@ export interface CoordinatedNounPhraseNode {
   type: "coordinatedNounPhrase";
   conjunction: Conjunction;
   conjuncts: CoordinationConjunct[];  // 入れ子の等位接続も許可
+  isChoiceQuestion?: boolean;  // 選択疑問: ?which('tea, 'coffee)
 }
 
 // VP等位接続（動詞句 AND/OR 動詞句）

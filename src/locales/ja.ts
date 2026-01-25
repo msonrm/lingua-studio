@@ -26,6 +26,10 @@ export const ja: LocaleData = {
     IMPERATIVE_LABEL: '命令文',
     IMPERATIVE_TOOLTIP: '命令文: 命令を作成（例: "Eat the apple!"）',
 
+    // Question wrapper
+    QUESTION_LABEL: '疑問文',
+    QUESTION_TOOLTIP: '疑問文: 疑問を作成（例: "Do you like apples?"）',
+
     // Negation sentence wrapper
     NEGATION_MODAL_LABEL: 'NOT (モダリティ)',
     NEGATION_MODAL_TOOLTIP: 'モダリティの否定（例: "しなくてもよい"）',
@@ -86,6 +90,7 @@ export const ja: LocaleData = {
     GROUP_INDEFINITE: '── 不定 ──',
     GROUP_COMMON: '── 普通名詞 ──',
     GROUP_NAMES: '── 固有名詞 ──',
+    GROUP_INTERROGATIVE: '── 疑問詞 ──',
 
     // Determiner
     DETERMINER_LABEL: '限定詞',
@@ -103,6 +108,8 @@ export const ja: LocaleData = {
     MANNER_TOOLTIP: '様態: 動作がどのように行われるか',
     LOCATIVE_LABEL: '場所',
     LOCATIVE_TOOLTIP: '場所: 動作がどこで起こるか',
+    TIME_ADVERB_LABEL: '時間',
+    TIME_ADVERB_TOOLTIP: '時間: 動作がいつ起こるか',
 
     // Prepositions
     PP_LABEL: '前置詞句',
@@ -117,6 +124,15 @@ export const ja: LocaleData = {
     COORD_NOUN_OR_TOOLTIP: '等位接続（名詞）: ORで2つの名詞句を接続',
     COORD_VERB_AND_TOOLTIP: '等位接続（動詞）: ANDで2つの動詞句を接続',
     COORD_VERB_OR_TOOLTIP: '等位接続（動詞）: ORで2つの動詞句を接続',
+
+    // Choice question
+    CHOICE_QUESTION_LABEL: '?which',
+    CHOICE_QUESTION_OR: 'それとも',
+    CHOICE_QUESTION_TOOLTIP: '選択疑問: どちらかを尋ねる（例: 紅茶かコーヒーか？）',
+
+    // Wh-placeholder
+    WH_PLACEHOLDER_TOOLTIP: '疑問詞: who（人）または what（もの）',
+    WH_ADVERB_TOOLTIP: '疑問副詞: where（場所）、when（時間）、how（方法）',
 
     // Verb categories
     VERB_MOTION: '移動',
@@ -150,6 +166,7 @@ export const ja: LocaleData = {
 
     // Toolbox categories
     TOOLBOX_SENTENCE: '文',
+    TOOLBOX_QUESTION: '疑問文',
     TOOLBOX_SENTENCE_MODIFIER: '文修飾',
     TOOLBOX_VERBS: '動詞',
     TOOLBOX_VERB_MODIFIERS: '動詞修飾',
@@ -160,6 +177,7 @@ export const ja: LocaleData = {
     SECTION_TIME: '── 時間 ──',
     SECTION_ASPECT: '── 相 ──',
     SECTION_TENSE_ASPECT: '── 時制/相 ──',
+    SECTION_QUESTION: '── 疑問文 ──',
     SECTION_IMPERATIVE: '── 命令文 ──',
     SECTION_MODAL_NEGATION: '── モダリティ否定 ──',
     SECTION_MODAL: '── モダリティ ──',
@@ -178,6 +196,8 @@ export const ja: LocaleData = {
     SECTION_ABSTRACT: '── 抽象概念 ──',
     SECTION_ADJECTIVES: '── 形容詞 ──',
     SECTION_PREPOSITION: '── 前置詞 ──',
+    SECTION_WH_NOUNS: '── 疑問代名詞 ──',
+    SECTION_WH_ADVERBS: '── 疑問副詞 ──',
   },
   ui: {
     // Header

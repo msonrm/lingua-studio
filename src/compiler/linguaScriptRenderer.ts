@@ -57,6 +57,11 @@ export function renderToLinguaScript(ast: SentenceNode): string {
     result = `imperative(${result})`;
   }
 
+  // 疑問文の場合は question() でラップ
+  if (ast.sentenceType === 'interrogative') {
+    result = `question(${result})`;
+  }
+
   return result;
 }
 
@@ -105,16 +110,28 @@ function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
     result = `frequency('${adv.lemma}, ${result})`;
   }
 
-  // 副詞をラップ（様態副詞）- 仕様: manner('quickly, verb(...))
+  // 副詞をラップ（様態副詞）- 仕様: manner('quickly, verb(...)) / manner(?how, verb(...))
   const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
   for (const adv of mannerAdverbs) {
-    result = `manner('${adv.lemma}, ${result})`;
+    // 疑問副詞はクォートなし
+    const advValue = adv.lemma.startsWith('?') ? adv.lemma : `'${adv.lemma}`;
+    result = `manner(${advValue}, ${result})`;
   }
 
-  // 副詞をラップ（場所副詞）- 仕様: locative('here, verb(...))
+  // 副詞をラップ（場所副詞）- 仕様: locative('here, verb(...)) / locative(?where, verb(...))
   const locativeAdverbs = vp.adverbs.filter(a => a.advType === 'place');
   for (const adv of locativeAdverbs) {
-    result = `locative('${adv.lemma}, ${result})`;
+    // 疑問副詞はクォートなし
+    const advValue = adv.lemma.startsWith('?') ? adv.lemma : `'${adv.lemma}`;
+    result = `locative(${advValue}, ${result})`;
+  }
+
+  // 副詞をラップ（時間副詞）- 仕様: time('today, verb(...)) / time(?when, verb(...))
+  const timeAdverbs = vp.adverbs.filter(a => a.advType === 'time');
+  for (const adv of timeAdverbs) {
+    // 疑問副詞はクォートなし
+    const advValue = adv.lemma.startsWith('?') ? adv.lemma : `'${adv.lemma}`;
+    result = `time(${advValue}, ${result})`;
   }
 
   // 前置詞句をラップ - 仕様: pp('in, 'park, verb(...))
@@ -157,6 +174,12 @@ function renderCoordinatedNounPhraseToScript(coordNP: CoordinatedNounPhraseNode)
     }
     return renderNounPhraseToScript(conjunct);
   });
+
+  // 選択疑問の場合は ?which(...) 形式で出力
+  if (coordNP.isChoiceQuestion) {
+    return `?which(${conjuncts.join(', ')})`;
+  }
+
   return `${coordNP.conjunction}(${conjuncts.join(', ')})`;
 }
 
@@ -164,6 +187,13 @@ function renderNounPhraseToScript(np: NounPhraseNode): string {
   // 代名詞の場合
   if (np.head.type === 'pronoun') {
     const pronounHead = np.head as PronounHead;
+
+    // 疑問詞の場合: ?who, ?what（クォートなし）
+    if (pronounHead.pronounType === 'interrogative') {
+      // 疑問詞は修飾を持たない（仕様）
+      return pronounHead.lemma;  // ?who, ?what as-is
+    }
+
     const parts: string[] = [`'${pronounHead.lemma}`];
 
     // 形容詞（不定代名詞 + 形容詞: "something beautiful"）

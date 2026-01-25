@@ -81,7 +81,7 @@ modal(volition:was_going_to, ...) ;; 過去: was going to
 | 記法 | 意味 |
 |------|------|
 | 省略 | 平叙文（デフォルト） |
-| `?()` | 疑問文 |
+| `question()` | 疑問文 |
 | `imperative()` | 命令文 |
 
 ### 2. 否定A（モダリティの否定・省略可）
@@ -262,6 +262,7 @@ break(agent:'I, patient:'window)
 ### 時間副詞（Time Adverbials）
 
 時間表現は `time()` ラッパーで表現する。他の副詞ラッパー（manner, frequency, locative）と同じく動詞句を修飾する。
+`time()` は `sentence()` の内側に配置する（他の副詞ラッパーと一貫性を保つため）。
 
 ```lisp
 ;; 具体的な時間
@@ -272,10 +273,15 @@ sentence(past+simple(time('yesterday, eat(agent:'I, patient:'apple))))
 sentence(present+perfect(time('just_now, eat(agent:'I, patient:'apple))))
 ;; → "I have just eaten an apple."
 
+;; 時間への疑問（Wh副詞）
+sentence(past+simple(time(?when, arrive(agent:'they))))
+;; → "When did they arrive?"
+
 ;; 時間副詞の種類
 'yesterday, 'today, 'tomorrow           ;; 具体的
 'now, 'just_now, 'already, 'yet, 'still ;; 相的
 'recently, 'lately, 'soon               ;; 相対的
+?when                                   ;; 疑問
 ```
 
 ### 時間副詞と時制・相の制約
@@ -308,6 +314,10 @@ manner('quickly, eat(agent:'I, patient:'apple))
 
 manner('carefully, open(agent:'she, patient:'door))
 ;; → "She carefully opens the door."
+
+;; 様態への疑問（Wh副詞）
+sentence(past+simple(manner(?how, fix(agent:'you, theme:'car))))
+;; → "How did you fix the car?"
 ```
 
 ### 頻度副詞（Frequency Adverbs）
@@ -339,11 +349,16 @@ locative('there, go(agent:'she))
 locative('home, go(agent:'I))
 ;; → "I go home."
 
+;; 場所への疑問（Wh副詞）
+sentence(past+simple(locative(?where, run(agent:'I))))
+;; → "Where did I run?"
+
 ;; 場所副詞の種類
 'here, 'there              ;; 基本（直示的）
 'somewhere, 'anywhere      ;; 不定（極性感応）
 'everywhere, 'nowhere      ;; 全称・否定
 'home                      ;; 特殊（方向も含む）
+?where                     ;; 疑問
 ```
 
 #### 極性感応（Polarity Sensitivity）
@@ -399,55 +414,129 @@ time('yesterday, manner('quickly, pp('in, 'park, eat(agent:'I, patient:'apple)))
 ### Yes/No疑問文 vs Wh疑問文
 
 ```lisp
-;; Yes/No疑問文: 空欄なし
-?(sentence(past(simple(eat(agent:'you, theme:'apple)))))
-;; → Did you eat the apple?
+;; Yes/No疑問文: 疑問詞プレースホルダーなし
+question(sentence(past+simple(eat(agent:'you, theme:'apple))))
+;; → "Did you eat the apple?"
 
-;; Wh疑問文: 空欄あり
-?(sentence(past(simple(eat(agent:'you, theme:?)))))
-;; → What did you eat?
+;; Wh疑問文: 疑問詞プレースホルダーあり
+question(sentence(past+simple(eat(agent:'you, theme:?what))))
+;; → "What did you eat?"
 ```
 
-### 疑問プレースホルダー `?`
+### 疑問詞プレースホルダー
+
+疑問詞は明示的なプレースホルダー（`?who`, `?what`, `?where` など）で指定する。
+これにより、出力される疑問詞が一目瞭然となり、AI/人間ともに理解しやすい構文となる。
 
 #### 意味役割への疑問
 
 | 空欄の位置 | 疑問詞 | 例 |
 |-----------|--------|-----|
-| `agent:?` | Who | Who ate the apple? |
-| `theme:?` / `patient:?` | What | What did you eat? |
-| `recipient:?` | Whom / To whom | Whom did you give the book to? |
-| `goal:?` | Where (着点) | Where did you go? |
-| `source:?` | Where (起点) | Where did you come from? |
+| `agent:?who` | Who | Who ate the apple? |
+| `theme:?what` / `patient:?what` | What | What did you eat? |
+| `recipient:?whom` | Whom / To whom | Whom did you give the book to? |
+| `goal:?where` | Where (着点) | Where did you go? |
+| `source:?where` | Where (起点) | Where did you come from? |
+
+```lisp
+;; 主語への疑問
+question(sentence(past+simple(eat(agent:?who, theme:'apple))))
+;; → "Who ate the apple?"
+
+;; 目的語への疑問
+question(sentence(past+simple(eat(agent:'you, theme:?what))))
+;; → "What did you eat?"
+
+;; 着点への疑問
+question(sentence(past+simple(go(agent:'you, goal:?where))))
+;; → "Where did you go?"
+```
 
 #### 付加詞への疑問
 
 | 構文 | 疑問詞 | 例 |
 |------|--------|-----|
-| `pp(?where, ...)` | Where | Where did you eat? |
-| `time(?, ...)` | When | When did you eat? |
-| `manner(?, ...)` | How | How did you do it? |
-| `pp(?why, ...)` | Why | Why did you eat? |
-
-### 記法ルール
+| `time(?when, ...)` | When | When did you eat? |
+| `manner(?how, ...)` | How | How did you do it? |
+| `locative(?where, ...)` | Where | Where did you run? |
 
 ```lisp
-;; クォートあり = 具体的な語彙
-theme:'apple    // "apple" という単語
+;; 場所への疑問
+sentence(past+simple(locative(?where, run(agent:'I))))
+;; → "Where did I run?"
 
-;; クォートなし = 特殊プレースホルダー
-theme:?                    // 疑問（What?）
-theme:?or('tea, 'coffee)   // 選択疑問（Which, tea or coffee?）
+;; 時間への疑問
+sentence(past+simple(time(?when, arrive(agent:'they))))
+;; → "When did they arrive?"
+
+;; 様態への疑問
+sentence(past+simple(manner(?how, fix(agent:'you, theme:'car))))
+;; → "How did you fix the car?"
 ```
 
-### `?()` と `?` の関係
+**注意**: Wh副詞が存在する場合、`question()` ラッパーは省略可能（自動検出される）。
 
-| `?()` | `?` | 結果 |
-|-------|-----|------|
+### 選択疑問
+
+選択肢を提示する疑問文は `?which()` を使用する。
+
+```lisp
+question(sentence(present+simple(want(agent:'you, theme:?which('tea, 'coffee)))))
+;; → "Which do you want, tea or coffee?"
+
+question(sentence(future+simple(go(agent:'we, goal:?which('beach, 'mountain)))))
+;; → "Which will we go to, the beach or the mountain?"
+```
+
+### 疑問詞一覧
+
+| プレースホルダー | 出力 | 用途 |
+|-----------------|------|------|
+| `?who` | Who | 人（主語・目的語） |
+| `?whom` | Whom | 人（目的語、フォーマル） |
+| `?what` | What | 物・事 |
+| `?where` | Where | 場所 |
+| `?when` | When | 時間 |
+| `?how` | How | 様態・方法 |
+| `?why` | Why | 理由 |
+| `?which(A, B)` | Which | 選択 |
+
+### `question()` と疑問詞の関係
+
+| `question()` | 疑問詞 | 結果 |
+|--------------|--------|------|
 | あり | なし | Yes/No疑問文 |
 | あり | あり | Wh疑問文 |
-| なし | あり | → `?()` を自動補完 |
+| なし | あり | Wh疑問文（自動検出） |
 | なし | なし | 平叙文 |
+
+**疑問詞自動検出**: Wh疑問詞（`?who`, `?what`, `?where`, `?when`, `?how`）が文中に存在する場合、`question()` ラッパーがなくても自動的に疑問文として処理される。
+
+```lisp
+;; 明示的な question() ラッパー
+question(sentence(past+simple(run(agent:?who))))
+;; → "Who ran?"
+
+;; question() なしでも同じ結果（自動検出）
+sentence(past+simple(run(agent:?who)))
+;; → "Who ran?"
+```
+
+### 複数Wh疑問詞の処理
+
+英語では複数のWh疑問詞がある場合、最初の1つだけが文頭に移動し、残りは元の位置（in-situ）に留まる。
+
+```lisp
+sentence(present+simple(locative(?where, run(agent:?who))))
+;; → "Who runs where?"
+;; （?who が文頭に移動、?where は in-situ）
+
+sentence(past+simple(give(agent:?who, theme:?what, recipient:'you)))
+;; → "Who gave you what?"
+;; （?who が文頭に移動、?what は in-situ）
+```
+
+**注意**: in-situ の Wh 語は `?` プレフィックスなしで出力される。
 
 ---
 
@@ -871,13 +960,9 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
 ;; 文レベル（最外殻から内側へ）
 ;; ============================================
 
-<utterance>     ::= <time-adv>? <attitude>? "sentence(" <clause> ")"
+<utterance>     ::= <attitude>? "sentence(" <clause> ")"
 
-<attitude>      ::= "imperative("    ;; 命令文
-
-<time-adv>      ::= "time('" <time-word> ", " <utterance-body> ")"
-<time-word>     ::= "yesterday" | "today" | "tomorrow" | "now" | "just_now"
-                  | "already" | "yet" | "still" | "recently" | "lately" | "soon"
+<attitude>      ::= "imperative(" | "question("    ;; 命令文・疑問文
 
 ;; ============================================
 ;; 節レベル（sentence内部）
@@ -895,13 +980,18 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
 ;; ============================================
 
 <verb-expr>     ::= <verb-adjuncts>* <verb-core>
-<verb-adjuncts> ::= <frequency-adv> | <manner-adv> | <prep-phrase>
+<verb-adjuncts> ::= <frequency-adv> | <manner-adv> | <locative-adv> | <time-adv-wrap> | <prep-phrase>
 
 <frequency-adv> ::= "frequency('" <freq-word> ", "
 <freq-word>     ::= "always" | "usually" | "often" | "sometimes" | "rarely" | "never"
 
-<manner-adv>    ::= "manner('" <manner-word> ", "
+<manner-adv>    ::= "manner('" <manner-word> ", " | "manner(?how, "
 <manner-word>   ::= "quickly" | "slowly" | "carefully" | "badly" | "well" | ...
+
+<locative-adv>  ::= "locative('" <locative-word> ", " | "locative(?where, "
+<locative-word> ::= "here" | "there" | "somewhere" | "anywhere" | "everywhere" | "nowhere" | "home"
+
+<time-adv-wrap> ::= "time('" <time-word> ", " | "time(?when, "
 
 <prep-phrase>   ::= "pp('" <preposition> ", " <noun-expr> ", "
 <preposition>   ::= "in" | "on" | "at" | "to" | "from" | "with" | "by" | "for" | "about" | ...
@@ -1024,16 +1114,35 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
 <attitude>      ::= "imperative("
 ```
 
+### 現行実装（疑問文）
+
+```bnf
+;; 疑問文ラッパー
+<attitude>      ::= "question("    ;; Yes/No疑問文・Wh疑問文
+
+;; 疑問詞プレースホルダー（名詞句位置）
+<wh-noun>       ::= "?who" | "?whom" | "?what"
+                  | "?which(" <value> ", " <value> ")"
+
+;; 疑問詞プレースホルダー（副詞位置）
+<wh-adverb>     ::= "?where" | "?when" | "?how"
+
+;; Wh副詞は各ラッパーで使用
+<locative-adv>  ::= "locative('" <locative-word> ", " | "locative(" <wh-adverb> ", "
+<manner-adv>    ::= "manner('" <manner-word> ", " | "manner(" <wh-adverb> ", "
+<time-adv>      ::= "time('" <time-word> ", " | "time(" <wh-adverb> ", "
+```
+
 ### 将来拡張（未実装）
 
 以下の構文は仕様として定義されているが、現行実装では未対応。
 
 ```bnf
-;; 疑問文
-<attitude>      ::= "?("           ;; Yes/No疑問文・Wh疑問文
-
 ;; 態（受動態・使役）
 <voice>         ::= "passive(" | "causative("
+
+;; Why疑問詞（設計検討中）
+<wh-adverb>     ::= "?why"    ;; reason節との統一的扱いが必要
 ```
 
 ---
@@ -1065,7 +1174,7 @@ sentence(present+simple(not(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
 imperative(sentence(present+simple(eat(theme:noun(det:'the, head:'apple)))))
 
 ;; 時間副詞: "Yesterday, I ate an apple."
-time('yesterday, sentence(past+simple(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
+sentence(past+simple(time('yesterday, eat(agent:'I, theme:noun(det:'a, head:'apple)))))
 
 ;; 頻度副詞: "I always eat apples."
 sentence(present+simple(frequency('always, eat(agent:'I, theme:noun(post:plural, head:'apple)))))
@@ -1122,13 +1231,49 @@ time('yesterday, not(modal(obligation:had_to, sentence(past+simple(eat(...))))))
 ;; → "Yesterday, I didn't have to eat."
 ```
 
+### 現行実装（疑問文）
+
+```lisp
+;; Yes/No疑問文
+question(sentence(present+simple(like(agent:'you, theme:'coffee))))
+;; → "Do you like coffee?"
+
+;; Wh疑問文（意味役割）
+question(sentence(past+simple(eat(agent:?who, theme:'apple))))
+;; → "Who ate the apple?"
+
+question(sentence(past+simple(eat(agent:'you, theme:?what))))
+;; → "What did you eat?"
+
+;; Wh疑問文（question()省略可 - 自動検出）
+sentence(past+simple(eat(agent:?who, theme:'apple)))
+;; → "Who ate the apple?"
+
+;; Wh疑問文（副詞疑問詞）
+sentence(past+simple(locative(?where, run(agent:'I))))
+;; → "Where did I run?"
+
+sentence(past+simple(manner(?how, fix(agent:'you, theme:'car))))
+;; → "How did you fix the car?"
+
+sentence(past+simple(time(?when, arrive(agent:'they))))
+;; → "When did they arrive?"
+
+;; 複数Wh疑問詞（最初のみ文頭、残りはin-situ）
+sentence(present+simple(locative(?where, run(agent:?who))))
+;; → "Who runs where?"
+
+;; 選択疑問
+question(sentence(present+simple(want(agent:'you, theme:?which('tea, 'coffee)))))
+;; → "Which do you want, tea or coffee?"
+```
+
 ### 将来拡張（未実装）
 
 ```lisp
-;; 疑問文
-?(sentence(...))           ;; Yes/No疑問文
-sentence(verb(theme:?))    ;; Wh疑問文
-
 ;; 受動態
 sentence(passive(verb(theme:'x)))
+
+;; Why疑問詞（設計検討中）
+;; sentence(reason(?why, ...))
 ```

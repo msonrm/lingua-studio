@@ -21,21 +21,122 @@ import { findVerb, findNoun, findPronoun } from '../data/dictionary';
 const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
 
 // ============================================
+// Wh疑問詞検出ヘルパー
+// ============================================
+interface WhWordInfo {
+  whWord: string;           // 疑問詞（who, what など）
+  role: SemanticRole;       // 意味役割
+  isSubject: boolean;       // 主語位置かどうか
+  slot: FilledArgumentSlot; // 元のスロット
+}
+
+// Wh副詞情報
+interface WhAdverbInfo {
+  whWord: string;           // 疑問副詞（where, when, how）
+  advType: 'place' | 'time' | 'manner';
+  adverb: AdverbNode;       // 元の副詞ノード
+}
+
+// NounPhraseNodeから疑問詞を検出
+function findInterrogativeInNounPhrase(np: NounPhraseNode): string | null {
+  if (np.head.type === 'pronoun') {
+    const head = np.head as PronounHead;
+    if (head.pronounType === 'interrogative') {
+      // ?who → who, ?what → what
+      return head.lemma.replace(/^\?/, '');
+    }
+  }
+  return null;
+}
+
+// ClauseNodeから疑問詞情報を検出
+function findInterrogativeInClause(clause: ClauseNode): WhWordInfo | null {
+  const { verbPhrase } = clause;
+
+  // 主語ロールを先にチェック
+  for (const role of SUBJECT_ROLES) {
+    const slot = verbPhrase.arguments.find(a => a.role === role);
+    if (slot?.filler && slot.filler.type === 'nounPhrase') {
+      const whWord = findInterrogativeInNounPhrase(slot.filler as NounPhraseNode);
+      if (whWord) {
+        return { whWord, role, isSubject: true, slot };
+      }
+    }
+  }
+
+  // その他の引数をチェック（目的語など）
+  for (const slot of verbPhrase.arguments) {
+    if (!slot.filler) continue;
+    if (SUBJECT_ROLES.includes(slot.role)) continue; // 既にチェック済み
+
+    if (slot.filler.type === 'nounPhrase') {
+      const whWord = findInterrogativeInNounPhrase(slot.filler as NounPhraseNode);
+      if (whWord) {
+        return { whWord, role: slot.role, isSubject: false, slot };
+      }
+    }
+  }
+
+  return null;
+}
+
+// ClauseNodeから疑問副詞を検出
+function findInterrogativeAdverbInClause(clause: ClauseNode): WhAdverbInfo | null {
+  const { verbPhrase } = clause;
+
+  for (const adverb of verbPhrase.adverbs) {
+    if (adverb.lemma.startsWith('?')) {
+      const whWord = adverb.lemma.slice(1); // ?where → where
+      return {
+        whWord,
+        advType: adverb.advType as 'place' | 'time' | 'manner',
+        adverb,
+      };
+    }
+  }
+
+  return null;
+}
+
+// Wh副詞の?プレフィックスを除去（in-situ表示用）
+function stripWhPrefix(lemma: string): string {
+  return lemma.startsWith('?') ? lemma.slice(1) : lemma;
+}
+
+// ============================================
 // AST → 英文レンダラー
 // ============================================
 export function renderToEnglish(ast: SentenceNode): string {
-  // 命令文の場合は別処理
-  const clause = ast.sentenceType === 'imperative'
-    ? renderImperativeClause(ast.clause)
-    : renderClause(ast.clause);
+  let clause: string;
+
+  switch (ast.sentenceType) {
+    case 'imperative':
+      clause = renderImperativeClause(ast.clause);
+      break;
+    case 'interrogative':
+      clause = renderInterrogativeClause(ast.clause);
+      break;
+    default:
+      clause = renderClause(ast.clause);
+  }
 
   // 時間副詞を文末に追加
   const timeAdverbial = ast.timeAdverbial;
   const fullSentence = timeAdverbial ? `${clause} ${timeAdverbial}` : clause;
 
-  // 文頭を大文字に、末尾は命令文なら感嘆符、それ以外はピリオド
+  // 文頭を大文字に、末尾は文タイプに応じた句読点
   const capitalized = fullSentence.charAt(0).toUpperCase() + fullSentence.slice(1);
-  const punctuation = ast.sentenceType === 'imperative' ? '!' : '.';
+  let punctuation: string;
+  switch (ast.sentenceType) {
+    case 'imperative':
+      punctuation = '!';
+      break;
+    case 'interrogative':
+      punctuation = '?';
+      break;
+    default:
+      punctuation = '.';
+  }
   return capitalized + punctuation;
 }
 
@@ -60,6 +161,7 @@ function renderClause(clause: ClauseNode): string {
   const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
   const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
   const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place');
+  const timeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'time');
 
   // 動詞を活用（否定含む、頻度副詞を挿入位置で返す）
   // 主語が NounPhraseNode か CoordinatedNounPhraseNode の場合のみ渡す
@@ -90,19 +192,295 @@ function renderClause(clause: ClauseNode): string {
     })
     .join(' ');
 
-  // 様態副詞は文末
-  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
   // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
+
+  // 時間副詞（Wh副詞は?を除去）
+  const timeStr = timeAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
   // 前置詞句（動詞修飾）
   const prepPhrases = verbPhrase.prepositionalPhrases
     .map(pp => renderPrepositionalPhrase(pp, polarity))
     .join(' ');
 
-  // 語順: Subject + Verb(+neg+freq) + Objects + PrepPhrases + Manner + Location
-  const parts = [subject, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
+  // 語順: Subject + Verb(+neg+freq) + Objects + PrepPhrases + Manner + Location + Time
+  const parts = [subject, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr, timeStr].filter(p => p.length > 0);
+
+  let result = parts.join(' ');
+
+  // 動詞の等位接続を処理
+  if (verbPhrase.coordinatedWith) {
+    const coordVP = verbPhrase.coordinatedWith.verbPhrase;
+    const conjunction = verbPhrase.coordinatedWith.conjunction;
+    const coordVerbStr = renderCoordinatedVerbPhrase(coordVP, tense, aspect, polarity, subjectForConjugation, modal, modalPolarity);
+    result += ` ${conjunction} ${coordVerbStr}`;
+  }
+
+  return result;
+}
+
+// 疑問文の節をレンダリング（Yes/No疑問文 または Wh疑問文）
+function renderInterrogativeClause(clause: ClauseNode): string {
+  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
+
+  // Wh疑問詞（名詞）を検出
+  const whInfo = findInterrogativeInClause(clause);
+
+  // Wh疑問文（名詞）の場合は専用レンダリング
+  if (whInfo) {
+    return renderWhQuestion(clause, whInfo);
+  }
+
+  // Wh疑問副詞を検出
+  const whAdverbInfo = findInterrogativeAdverbInClause(clause);
+
+  // Wh副詞疑問文の場合は専用レンダリング
+  if (whAdverbInfo) {
+    return renderWhAdverbQuestion(clause, whAdverbInfo);
+  }
+
+  // Yes/No疑問文の場合
+
+  // 主語を取得（agent, experiencer, possessor, theme の順で探す）
+  let subjectSlot: FilledArgumentSlot | undefined;
+  for (const role of SUBJECT_ROLES) {
+    subjectSlot = verbPhrase.arguments.find(a => a.role === role);
+    if (subjectSlot?.filler) break;
+  }
+
+  // 主語をレンダリング（isSubject = true）
+  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : 'someone';
+
+  // 動詞エントリを取得して前置詞情報を参照
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
+
+  // 副詞を種類別に分類
+  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
+  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
+  const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place');
+
+  // 主語が NounPhraseNode か CoordinatedNounPhraseNode の場合のみ渡す
+  const subjectForConjugation = subjectSlot?.filler &&
+    (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
+    ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
+    : undefined;
+
+  // 疑問文用の動詞活用（助動詞と本動詞を分離して返す）
+  const { auxiliary, mainVerb } = conjugateVerbForQuestion(
+    verbPhrase.verb.lemma,
+    tense,
+    aspect,
+    polarity,
+    frequencyAdverbs,
+    subjectForConjugation,
+    modal,
+    modalPolarity
+  );
+
+  // その他の引数（目的語など）- 主語以外（isSubject = false）
+  const otherArgs = verbPhrase.arguments
+    .filter(a => a !== subjectSlot && a.filler)
+    .map(a => {
+      // 前置詞を辞書から取得
+      const slotDef = verbEntry?.valency.find(v => v.role === a.role);
+      const preposition = slotDef?.preposition;
+      const rendered = renderFiller(a.filler!, false, polarity);  // 目的語は isSubject = false
+      return preposition ? `${preposition} ${rendered}` : rendered;
+    })
+    .join(' ');
+
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
+
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere、Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
+
+  // 前置詞句（動詞修飾）
+  const prepPhrases = verbPhrase.prepositionalPhrases
+    .map(pp => renderPrepositionalPhrase(pp, polarity))
+    .join(' ');
+
+  // 語順: Auxiliary + Subject + MainVerb + Objects + PrepPhrases + Manner + Location
+  const parts = [auxiliary, subject, mainVerb, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
+
+  let result = parts.join(' ');
+
+  // 動詞の等位接続を処理
+  if (verbPhrase.coordinatedWith) {
+    const coordVP = verbPhrase.coordinatedWith.verbPhrase;
+    const conjunction = verbPhrase.coordinatedWith.conjunction;
+    const coordVerbStr = renderCoordinatedVerbPhrase(coordVP, tense, aspect, polarity, subjectForConjugation, modal, modalPolarity);
+    result += ` ${conjunction} ${coordVerbStr}`;
+  }
+
+  return result;
+}
+
+// Wh疑問文をレンダリング
+function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
+  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
+
+  // 副詞を種類別に分類
+  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
+  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
+  const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place');
+
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
+  // 場所副詞は最後（Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
+  // 前置詞句（動詞修飾）
+  const prepPhrases = verbPhrase.prepositionalPhrases
+    .map(pp => renderPrepositionalPhrase(pp, polarity))
+    .join(' ');
+
+  if (whInfo.isSubject) {
+    // 主語Wh疑問文: Who ate the apple? (do-supportなし)
+    // 語順: Wh + Verb(活用) + Objects + ...
+
+    // 動詞を3人称単数として活用（疑問詞は3人称単数扱い）
+    const verbForm = conjugateVerbWithAdverbs(
+      verbPhrase.verb.lemma,
+      tense,
+      aspect,
+      polarity,
+      frequencyAdverbs,
+      undefined, // 主語は疑問詞なので3人称単数
+      modal,
+      modalPolarity
+    );
+
+    // 疑問詞以外の引数（目的語など）
+    const otherArgs = verbPhrase.arguments
+      .filter(a => a !== whInfo.slot && a.filler)
+      .map(a => {
+        const slotDef = verbEntry?.valency.find(v => v.role === a.role);
+        const preposition = slotDef?.preposition;
+        const rendered = renderFiller(a.filler!, false, polarity);
+        return preposition ? `${preposition} ${rendered}` : rendered;
+      })
+      .join(' ');
+
+    const parts = [whInfo.whWord, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
+    return parts.join(' ');
+  } else {
+    // 目的語Wh疑問文: What did you eat? (do-support必要)
+    // 語順: Wh + Auxiliary + Subject + MainVerb + (他の目的語) + ...
+
+    // 主語を取得
+    let subjectSlot: FilledArgumentSlot | undefined;
+    for (const role of SUBJECT_ROLES) {
+      subjectSlot = verbPhrase.arguments.find(a => a.role === role);
+      if (subjectSlot?.filler) break;
+    }
+
+    const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : 'someone';
+    const subjectForConjugation = subjectSlot?.filler &&
+      (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
+      ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
+      : undefined;
+
+    // 疑問文用の動詞活用
+    const { auxiliary, mainVerb } = conjugateVerbForQuestion(
+      verbPhrase.verb.lemma,
+      tense,
+      aspect,
+      polarity,
+      frequencyAdverbs,
+      subjectForConjugation,
+      modal,
+      modalPolarity
+    );
+
+    // 疑問詞と主語以外の引数
+    const otherArgs = verbPhrase.arguments
+      .filter(a => a !== whInfo.slot && a !== subjectSlot && a.filler)
+      .map(a => {
+        const slotDef = verbEntry?.valency.find(v => v.role === a.role);
+        const preposition = slotDef?.preposition;
+        const rendered = renderFiller(a.filler!, false, polarity);
+        return preposition ? `${preposition} ${rendered}` : rendered;
+      })
+      .join(' ');
+
+    // whom処理: 目的語位置の?whoは?whomになる
+    let whWord = whInfo.whWord;
+    if (whWord === 'who') {
+      // 目的語位置なので whom を使用（ただし口語では who も許容）
+      whWord = 'whom';
+    }
+
+    const parts = [whWord, auxiliary, subject, mainVerb, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
+    return parts.join(' ');
+  }
+}
+
+// Wh副詞疑問文をレンダリング（Where/When/How did you...?）
+function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo): string {
+  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
+
+  // 主語を取得
+  let subjectSlot: FilledArgumentSlot | undefined;
+  for (const role of SUBJECT_ROLES) {
+    subjectSlot = verbPhrase.arguments.find(a => a.role === role);
+    if (subjectSlot?.filler) break;
+  }
+
+  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : 'someone';
+  const subjectForConjugation = subjectSlot?.filler &&
+    (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
+    ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
+    : undefined;
+
+  // 副詞を種類別に分類（Wh副詞は除外）
+  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
+  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner' && a !== whAdverbInfo.adverb);
+  const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place' && a !== whAdverbInfo.adverb);
+  const timeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'time' && a !== whAdverbInfo.adverb);
+
+  // 疑問文用の動詞活用（助動詞と本動詞を分離）
+  const { auxiliary, mainVerb } = conjugateVerbForQuestion(
+    verbPhrase.verb.lemma,
+    tense,
+    aspect,
+    polarity,
+    frequencyAdverbs,
+    subjectForConjugation,
+    modal,
+    modalPolarity
+  );
+
+  // その他の引数（目的語など）
+  const otherArgs = verbPhrase.arguments
+    .filter(a => a !== subjectSlot && a.filler)
+    .map(a => {
+      const slotDef = verbEntry?.valency.find(v => v.role === a.role);
+      const preposition = slotDef?.preposition;
+      const rendered = renderFiller(a.filler!, false, polarity);
+      return preposition ? `${preposition} ${rendered}` : rendered;
+    })
+    .join(' ');
+
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
+  // 場所副詞（Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
+  // 時間副詞（Wh副詞は?を除去）
+  const timeStr = timeAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
+
+  // 前置詞句（動詞修飾）
+  const prepPhrases = verbPhrase.prepositionalPhrases
+    .map(pp => renderPrepositionalPhrase(pp, polarity))
+    .join(' ');
+
+  // Wh副詞を先頭に、その後は通常の疑問文語順
+  // Where + Auxiliary + Subject + MainVerb + Objects + PrepPhrases + Manner + Location + Time
+  const parts = [whAdverbInfo.whWord, auxiliary, subject, mainVerb, otherArgs, prepPhrases, mannerStr, locativeStr, timeStr].filter(p => p.length > 0);
 
   let result = parts.join(' ');
 
@@ -169,11 +547,11 @@ function renderImperativeClause(clause: ClauseNode): string {
     })
     .join(' ');
 
-  // 様態副詞は文末
-  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
-  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere、Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
 
   // 前置詞句（動詞修飾）
   const prepPhrases = verbPhrase.prepositionalPhrases
@@ -231,11 +609,11 @@ function renderImperativeCoordinatedVP(
     })
     .join(' ');
 
-  // 様態副詞は文末
-  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
-  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere、Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
 
   // 前置詞句（動詞修飾）
   const prepPhrases = vp.prepositionalPhrases
@@ -320,11 +698,11 @@ function renderCoordinatedVerbPhrase(
     })
     .join(' ');
 
-  // 様態副詞は文末
-  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+  // 様態副詞は文末（Wh副詞は?を除去）
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
 
-  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere、Wh副詞は?を除去）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
 
   // 前置詞句（動詞修飾）
   const prepPhrases = vp.prepositionalPhrases
@@ -522,7 +900,26 @@ function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirma
   const pronoun = findPronoun(head.lemma);
 
   if (!pronoun) {
+    // 疑問詞（?who, ?what）の場合、?を除去して返す
+    if (head.lemma.startsWith('?')) {
+      const stripped = head.lemma.slice(1);
+      // 目的格の場合は whom を使用
+      if (!isSubject && stripped === 'who') {
+        return 'whom';
+      }
+      return stripped;
+    }
     return head.lemma;
+  }
+
+  // 疑問詞の場合
+  if (pronoun.type === 'interrogative') {
+    const lemma = pronoun.lemma.replace(/^\?/, '');
+    if (isSubject) {
+      return lemma;
+    } else {
+      return pronoun.objectForm.replace(/^\?/, '');
+    }
   }
 
   // 不定代名詞の極性による切り替え（someone → anyone / nobody）
@@ -782,6 +1179,195 @@ function conjugateWithModal(
   }
 
   return aux ? `${aux} ${verbEntry.forms.base}` : verbEntry.forms.base;
+}
+
+// 助動詞を否定形にする（疑問文用）
+function negateModalAuxiliary(aux: string): string {
+  const negationMap: Record<string, string> = {
+    'can': "can't",
+    'could': "couldn't",
+    'will': "won't",
+    'would': "wouldn't",
+    'shall': "shan't",
+    'should': "shouldn't",
+    'may': "may not",  // mayn't は古語
+    'might': "might not",
+    'must': "mustn't",
+  };
+  return negationMap[aux] || `${aux} not`;
+}
+
+// 疑問文用の動詞活用（助動詞と本動詞を分離）
+function conjugateVerbForQuestion(
+  lemma: string,
+  tense: 'past' | 'present' | 'future',
+  aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
+  polarity: 'affirmative' | 'negative',
+  frequencyAdverbs: AdverbNode[],
+  subject?: NounPhraseNode | CoordinatedNounPhraseNode,
+  modal?: ModalType,
+  modalPolarity?: 'affirmative' | 'negative'
+): { auxiliary: string; mainVerb: string } {
+  const verbEntry = findVerb(lemma);
+  if (!verbEntry) return { auxiliary: 'does', mainVerb: lemma };
+
+  const isNegative = polarity === 'negative';
+  const isThirdPersonSingular = subject ? isThirdSingular(subject) : true;
+  const personNumber = subject ? getPersonNumber(subject) : { person: 3 as const, number: 'singular' as const };
+  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
+
+  // モダリティがある場合
+  if (modal) {
+    const modalForm = getModalEnglishForm(modal, tense);
+    const isModalNegative = modalPolarity === 'negative';
+
+    // 義務の否定（特殊処理）
+    if (isModalNegative && modal === 'obligation') {
+      const haveToAux = tense === 'past' ? "didn't have to" : "don't have to";
+      const notPart = isNegative ? 'not' : '';
+      if (aspect === 'simple') {
+        const mainParts = [notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
+        return { auxiliary: haveToAux, mainVerb: mainParts.join(' ') };
+      }
+    }
+
+    // 迂言形式（was going to, had to）
+    if (modalForm.usePeriPhrastic) {
+      const peri = modalForm.usePeriPhrastic;
+      // 倒置: Was he going to eat? / Did he have to eat?
+      if (peri === 'was going to') {
+        const notPart = isNegative ? 'not' : '';
+        if (aspect === 'simple') {
+          const mainParts = ['going to', notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
+          return { auxiliary: 'was', mainVerb: mainParts.join(' ') };
+        }
+      } else if (peri === 'had to') {
+        const notPart = isNegative ? 'not' : '';
+        if (aspect === 'simple') {
+          const mainParts = ['have to', notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
+          return { auxiliary: 'did', mainVerb: mainParts.join(' ') };
+        }
+      }
+    }
+
+    // 通常のモダリティ
+    const aux = modalForm.auxiliary || '';
+    const notPart = isNegative ? 'not' : '';
+
+    // モダリティ否定の場合は助動詞を否定形にする
+    const negatedAux = isModalNegative ? negateModalAuxiliary(aux) : aux;
+
+    if (aspect === 'simple') {
+      const mainParts = [notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
+      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
+    }
+    if (aspect === 'progressive') {
+      const mainParts = [notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
+      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
+    }
+    if (aspect === 'perfect') {
+      const mainParts = [notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
+      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
+    }
+    if (aspect === 'perfectProgressive') {
+      const mainParts = [notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
+      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
+    }
+  }
+
+  // be動詞の助動詞形を取得（進行形などで使用）
+  const getBeAuxiliary = (t: 'past' | 'present' | 'future'): string => {
+    if (t === 'future') return 'will';
+    const beVerb = findVerb('be');
+    if (beVerb?.forms.irregular) {
+      const key = getIrregularFormKey(t, personNumber);
+      const form = beVerb.forms.irregular[key];
+      if (form) return form;
+    }
+    return t === 'past' ? 'was' : (isThirdPersonSingular ? 'is' : 'are');
+  };
+
+  // Simple aspect
+  if (aspect === 'simple') {
+    // be動詞の特別処理
+    if (lemma === 'be') {
+      const beAux = getBeAuxiliary(tense);
+      if (tense === 'future') {
+        const notPart = isNegative ? 'not' : '';
+        const mainParts = [notPart, freqStr, 'be'].filter(p => p.length > 0);
+        return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
+      }
+      const notPart = isNegative ? 'not' : '';
+      const mainParts = [notPart, freqStr].filter(p => p.length > 0);
+      return { auxiliary: beAux, mainVerb: mainParts.join(' ') };
+    }
+
+    // Do-support
+    let doForm: string;
+    switch (tense) {
+      case 'past':
+        doForm = 'did';
+        break;
+      case 'present':
+        doForm = isThirdPersonSingular ? 'does' : 'do';
+        break;
+      case 'future':
+        const notPart = isNegative ? 'not' : '';
+        const mainParts = [notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
+        return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
+    }
+    const notPart = isNegative ? 'not' : '';
+    const mainParts = [notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
+    return { auxiliary: doForm, mainVerb: mainParts.join(' ') };
+  }
+
+  // Progressive: Aux (is/are/was/were/will be) + [not] + [freq] + verb-ing
+  if (aspect === 'progressive') {
+    const beAux = getBeAuxiliary(tense);
+    const notPart = isNegative ? 'not' : '';
+    if (tense === 'future') {
+      const mainParts = [notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
+      return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
+    }
+    const mainParts = [notPart, freqStr, verbEntry.forms.ing].filter(p => p.length > 0);
+    return { auxiliary: beAux, mainVerb: mainParts.join(' ') };
+  }
+
+  // Perfect: Aux (have/has/had/will have) + [not] + [freq] + verb-pp
+  if (aspect === 'perfect') {
+    let haveAux: string;
+    if (tense === 'past') {
+      haveAux = 'had';
+    } else if (tense === 'future') {
+      const notPart = isNegative ? 'not' : '';
+      const mainParts = [notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
+      return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
+    } else {
+      haveAux = isThirdPersonSingular ? 'has' : 'have';
+    }
+    const notPart = isNegative ? 'not' : '';
+    const mainParts = [notPart, freqStr, verbEntry.forms.pp].filter(p => p.length > 0);
+    return { auxiliary: haveAux, mainVerb: mainParts.join(' ') };
+  }
+
+  // Perfect Progressive: Aux (have/has/had/will have) + [not] + [freq] + been + verb-ing
+  if (aspect === 'perfectProgressive') {
+    let haveAux: string;
+    if (tense === 'past') {
+      haveAux = 'had';
+    } else if (tense === 'future') {
+      const notPart = isNegative ? 'not' : '';
+      const mainParts = [notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
+      return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
+    } else {
+      haveAux = isThirdPersonSingular ? 'has' : 'have';
+    }
+    const notPart = isNegative ? 'not' : '';
+    const mainParts = [notPart, freqStr, 'been', verbEntry.forms.ing].filter(p => p.length > 0);
+    return { auxiliary: haveAux, mainVerb: mainParts.join(' ') };
+  }
+
+  return { auxiliary: 'does', mainVerb: lemma };
 }
 
 // 義務の否定: don't have to / didn't have to（義務なし＝しなくてよい）

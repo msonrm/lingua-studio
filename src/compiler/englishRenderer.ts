@@ -16,6 +16,10 @@ import {
   ModalType,
 } from '../types/schema';
 import { findVerb, findNoun, findPronoun } from '../data/dictionary';
+import { GrammarLogCollector, RenderResult } from '../types/grammarLog';
+
+// Grammar log collector (module-level, reset on each render)
+let logCollector = new GrammarLogCollector();
 
 // 主語となりうるロール
 const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
@@ -106,6 +110,13 @@ function stripWhPrefix(lemma: string): string {
 // AST → 英文レンダラー
 // ============================================
 export function renderToEnglish(ast: SentenceNode): string {
+  return renderToEnglishWithLogs(ast).output;
+}
+
+export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
+  // Reset log collector for fresh render
+  logCollector = new GrammarLogCollector();
+
   let clause: string;
 
   switch (ast.sentenceType) {
@@ -136,7 +147,11 @@ export function renderToEnglish(ast: SentenceNode): string {
     default:
       punctuation = '.';
   }
-  return capitalized + punctuation;
+
+  return {
+    output: capitalized + punctuation,
+    logs: logCollector.getLogs(),
+  };
 }
 
 function renderClause(clause: ClauseNode): string {
@@ -979,6 +994,9 @@ function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarit
     const after = result.slice(idx + 6);
     const firstChar = after.charAt(0).toLowerCase();
     const article = ['a', 'e', 'i', 'o', 'u'].includes(firstChar) ? 'an' : 'a';
+    if (article === 'an') {
+      logCollector.log('article', 'a', 'an', `before vowel '${firstChar}'`);
+    }
     result = before + article + ' ' + after;
   }
 
@@ -1054,6 +1072,9 @@ function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirma
   if (isSubject) {
     return pronoun.lemma;
   } else {
+    if (pronoun.lemma !== pronoun.objectForm) {
+      logCollector.log('case', pronoun.lemma, pronoun.objectForm, 'object position');
+    }
     return pronoun.objectForm;
   }
 }
@@ -1131,12 +1152,15 @@ function conjugateVerbWithAdverbs(
       switch (tense) {
         case 'past':
           doForm = 'did';
+          logCollector.log('do-support', lemma, `did not ${verbEntry.forms.base}`, 'past negative');
           break;
         case 'present':
           doForm = isThirdPersonSingular ? 'does' : 'do';
+          logCollector.log('do-support', lemma, `${doForm} not ${verbEntry.forms.base}`, 'present negative');
           break;
         case 'future':
           // will not [freq] base
+          logCollector.log('negation', lemma, `will not ${verbEntry.forms.base}`, 'future negative');
           return freqStr
             ? `will not ${freqStr} ${verbEntry.forms.base}`
             : `will not ${verbEntry.forms.base}`;
@@ -1149,11 +1173,17 @@ function conjugateVerbWithAdverbs(
       switch (tense) {
         case 'past': {
           const pastForm = getIrregularForm('past') || verbEntry.forms.past;
+          if (pastForm !== lemma) {
+            logCollector.log('tense', lemma, pastForm, 'past');
+          }
           return freqStr ? `${freqStr} ${pastForm}` : pastForm;
         }
         case 'present': {
           const presentForm = getIrregularForm('present') ||
             (isThirdPersonSingular ? verbEntry.forms.s : verbEntry.forms.base);
+          if (isThirdPersonSingular && presentForm !== verbEntry.forms.base) {
+            logCollector.log('agreement', verbEntry.forms.base, presentForm, '3rd person singular');
+          }
           return freqStr ? `${freqStr} ${presentForm}` : presentForm;
         }
         case 'future':

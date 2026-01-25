@@ -4,6 +4,7 @@ import { LinguaScriptBar } from './components/LinguaScriptBar';
 import { LinguaScriptView } from './components/LinguaScriptView';
 import { SentenceNode } from './types/schema';
 import { renderToLinguaScript } from './compiler/linguaScriptRenderer';
+import { TransformLog, formatLogEnglish } from './types/grammarLog';
 import {
   LocaleContext,
   LocaleCode,
@@ -20,6 +21,7 @@ type EditorMode = 'blocks' | 'linguascript' | 'ast';
 function App() {
   const [asts, setASTs] = useState<SentenceNode[]>([]);
   const [sentences, setSentences] = useState<string[]>([]);
+  const [grammarLogs, setGrammarLogs] = useState<TransformLog[]>([]);
   const [editorMode, setEditorMode] = useState<EditorMode>('blocks');
   const [localeCode, setLocaleCode] = useState<LocaleCode>(getStoredLocale());
   const [workspaceKey, setWorkspaceKey] = useState(0);
@@ -129,6 +131,7 @@ function App() {
                     key={workspaceKey}
                     onASTChange={setASTs}
                     onSentenceChange={setSentences}
+                    onLogsChange={setGrammarLogs}
                     initialState={workspaceState}
                   />
                 </div>
@@ -181,9 +184,12 @@ function App() {
               <div className="output-section">
                 <h2>{t.PANEL_GRAMMAR_CONSOLE}</h2>
                 <div className="console-output">
-                  <p className="console-placeholder">
-                    {t.PLACEHOLDER_GRAMMAR}
-                  </p>
+                  {grammarLogs.length > 0
+                    ? grammarLogs.map((log, i) => (
+                        <div key={i} className="grammar-log">{formatLogEnglish(log)}</div>
+                      ))
+                    : <p className="console-placeholder">{t.PLACEHOLDER_GRAMMAR}</p>
+                  }
                 </div>
               </div>
             </div>

@@ -3,13 +3,15 @@ import * as Blockly from 'blockly';
 import '../blocks/definitions';
 import { createToolbox } from '../blocks/definitions';
 import { generateMultipleAST } from '../compiler/astGenerator';
-import { renderToEnglish } from '../compiler/englishRenderer';
+import { renderToEnglishWithLogs } from '../compiler/englishRenderer';
+import { TransformLog } from '../types/grammarLog';
 import { SentenceNode } from '../types/schema';
 import { useLocale } from '../locales';
 
 interface BlocklyWorkspaceProps {
   onASTChange: (asts: SentenceNode[]) => void;
   onSentenceChange: (sentences: string[]) => void;
+  onLogsChange: (logs: TransformLog[]) => void;
   initialState?: object | null;
 }
 
@@ -18,7 +20,7 @@ export interface BlocklyWorkspaceHandle {
 }
 
 export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorkspaceProps>(
-  function BlocklyWorkspace({ onASTChange, onSentenceChange, initialState }, ref) {
+  function BlocklyWorkspace({ onASTChange, onSentenceChange, onLogsChange, initialState }, ref) {
     const blocklyDiv = useRef<HTMLDivElement>(null);
     const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
     const { ui } = useLocale();
@@ -37,15 +39,19 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       const asts = generateMultipleAST(workspaceRef.current);
       onASTChange(asts);
 
+      const allLogs: TransformLog[] = [];
       const sentences = asts.map(ast => {
         try {
-          return renderToEnglish(ast);
+          const result = renderToEnglishWithLogs(ast);
+          allLogs.push(...result.logs);
+          return result.output;
         } catch {
           return ui.ERROR_INCOMPLETE;
         }
       });
       onSentenceChange(sentences);
-    }, [onASTChange, onSentenceChange, ui.ERROR_INCOMPLETE]);
+      onLogsChange(allLogs);
+    }, [onASTChange, onSentenceChange, onLogsChange, ui.ERROR_INCOMPLETE]);
 
     useEffect(() => {
       if (!blocklyDiv.current) return;

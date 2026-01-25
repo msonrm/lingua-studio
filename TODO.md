@@ -10,7 +10,6 @@
 ## Future Enhancements
 
 ### Grammar & Syntax
-- [ ] 代名詞選択時のNUMBER非表示（UX改善）
 - [ ] 疑問文対応（Yes/No疑問文、Wh疑問文）
 - [ ] Passive（受動態）wrapper
   - agent が指定されている場合は by 句を自動生成

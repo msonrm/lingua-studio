@@ -4,6 +4,58 @@
 
 ---
 
+## 記法規約
+
+### リテラル vs メタ値
+
+| 記法 | 意味 | 例 |
+|------|------|-----|
+| `'word` | リテラル（出力される語彙） | `'apple`, `'the`, `'quickly` |
+| `symbol` | メタ値（クォートなし = 出力されない制御値） | `plural`, `uncountable` |
+
+```lisp
+;; リテラル: 実際に出力される（クォート付き）
+noun(det:'the, head:'apple)   ;; → "the apple"
+
+;; メタ値: 出力されないが意味を持つ（クォートなし）
+noun(post:plural, head:'apple)   ;; → "apples"（pluralは出力されない）
+noun(post:uncountable, head:'water)   ;; → "water"（量を指定しない）
+```
+
+**Lisp慣習**: クォート付き `'x` は引用（リテラル）、クォートなし `x` はシンボル（評価される値）。
+
+### 組み合わせ演算子
+
+| 記法 | 意味 | 例 |
+|------|------|-----|
+| `A + B` | 両方適用 | `past + perfect` = 過去完了 |
+
+```lisp
+;; 時制 + 相の組み合わせ
+past+simple(eat(...))           ;; 過去単純
+present+progressive(eat(...))   ;; 現在進行
+past+perfect(eat(...))          ;; 過去完了
+future+perfectProgressive(...)  ;; 未来完了進行
+```
+
+### 意味注釈
+
+同じ表層形に対応する複数の意味を区別するため、`意味:表層形` の記法を使用する。
+
+```lisp
+;; must は2つの意味を持つ
+modal(obligation:must, ...)   ;; 義務: 「〜しなければならない」
+modal(certainty:must, ...)    ;; 確信: 「〜に違いない」
+
+;; 時制により表層形が変化
+modal(ability:can, ...)       ;; 現在: can
+modal(ability:could, ...)     ;; 過去: could
+modal(volition:will, ...)     ;; 現在: will
+modal(volition:was_going_to, ...) ;; 過去: was going to
+```
+
+---
+
 ## 全体構造
 
 ```
@@ -41,46 +93,58 @@ not(modal('obligation, ...))  ;; → 「〜しなくてもよい」（義務の�
 
 ### 3. 判断 modal（省略可）
 
-言語非依存の意味概念として8つのモダリティを定義する。
+言語非依存の意味概念として8つのモダリティを定義する。`意味:表層形` 記法で出力される。
 
 ```lisp
-modal('ability, ...)      ;; 能力: can/could
-modal('permission, ...)   ;; 許可: may/could
-modal('possibility, ...)  ;; 可能性: might
-modal('obligation, ...)   ;; 義務: must/had to
-modal('certainty, ...)    ;; 確信: must
-modal('advice, ...)       ;; 助言: should
-modal('volition, ...)     ;; 意志: will/was going to
-modal('prediction, ...)   ;; 予測: will/would
+modal(ability:can, ...)       ;; 能力: can
+modal(permission:may, ...)    ;; 許可: may
+modal(possibility:might, ...) ;; 可能性: might
+modal(obligation:must, ...)   ;; 義務: must
+modal(certainty:must, ...)    ;; 確信: must（obligationと同じ表層形だが意味が異なる）
+modal(advice:should, ...)     ;; 助言: should
+modal(volition:will, ...)     ;; 意志: will
+modal(prediction:will, ...)   ;; 予測: will
 ```
 
 時制との連動により、適切な英語形式に変換される:
-- ability + past → could
-- volition + past → was going to
-- obligation + past → had to
+
+| 意味概念 | 現在 | 過去 |
+|---------|------|------|
+| ability | can | could |
+| permission | may | could |
+| possibility | might | might |
+| obligation | must | had_to |
+| certainty | must | must_have |
+| advice | should | should_have |
+| volition | will | was_going_to |
+| prediction | will | would |
 
 ### 4. sentence()（必須）
 
 命題（事実の記述）のルート。基本は平叙文としてここから始める。
 
-### 5. 時制 tense（省略可 = present）
+### 5. 時制+相 tense+aspect
 
-| 記法 | 意味 |
-|------|------|
-| `past()` | 過去 |
-| `present()` | 現在（デフォルト） |
-| `future()` | 未来 |
+時制と相は `+` 演算子で組み合わせて表現する。
 
-### 6. 相 aspect（省略可 = simple・排他的）
+| 時制 | 相 | 組み合わせ記法 |
+|------|------|---------------|
+| past | simple | `past+simple()` |
+| past | progressive | `past+progressive()` |
+| past | perfect | `past+perfect()` |
+| past | perfectProgressive | `past+perfectProgressive()` |
+| present | simple | `present+simple()` |
+| present | progressive | `present+progressive()` |
+| present | perfect | `present+perfect()` |
+| present | perfectProgressive | `present+perfectProgressive()` |
+| future | simple | `future+simple()` |
+| future | progressive | `future+progressive()` |
+| future | perfect | `future+perfect()` |
+| future | perfectProgressive | `future+perfectProgressive()` |
 
-| 記法 | 意味 |
-|------|------|
-| `simple()` | 単純（デフォルト） |
-| `progressive()` | 進行 |
-| `perfect()` | 完了 |
-| `perfectProgressive()` | 完了進行 |
+**デフォルト**: 省略時は `present+simple`
 
-**注意**: 入れ子禁止（4択から1つ選ぶ）
+**注意**: 相は排他的（4択から1つ選ぶ）
 
 ### 7. 態 voice（省略可 = active）
 
@@ -206,10 +270,10 @@ time('just_now, sentence(perfect(eat(agent:'I, patient:'apple))))
 
 ```lisp
 ;; OK: 過去の具体時点 + 過去単純
-time('yesterday, sentence(past(simple(eat(...)))))
+time('yesterday, sentence(past+simple(eat(...))))
 
 ;; NG: 過去の具体時点 + 現在完了（英語では非文法的）
-time('yesterday, sentence(present(perfect(eat(...)))))
+time('yesterday, sentence(present+perfect(eat(...))))
 ;; → コンパイラが警告または自動修正
 ```
 
@@ -362,28 +426,28 @@ sentence(eat(agent:'I, theme:'apple))
 ### 明示的に時制・相を指定
 
 ```lisp
-sentence(present(simple(eat(agent:'I, theme:'apple))))
+sentence(present+simple(eat(agent:'I, theme:'apple)))
 ;; → "I eat an apple."
 ```
 
 ### 過去形
 
 ```lisp
-sentence(past(simple(eat(agent:'I, theme:'apple))))
+sentence(past+simple(eat(agent:'I, theme:'apple)))
 ;; → "I ate an apple."
 ```
 
 ### 進行形
 
 ```lisp
-sentence(present(progressive(eat(agent:'I, theme:'apple))))
+sentence(present+progressive(eat(agent:'I, theme:'apple)))
 ;; → "I am eating an apple."
 ```
 
 ### 完了形
 
 ```lisp
-sentence(present(perfect(eat(agent:'I, theme:'apple))))
+sentence(present+perfect(eat(agent:'I, theme:'apple)))
 ;; → "I have eaten an apple."
 ```
 
@@ -404,21 +468,21 @@ sentence(past(simple(passive(eat(theme:'apple)))))
 ### モダリティ付き
 
 ```lisp
-modal('must, sentence(past(perfect(eat(agent:'you, theme:'apple)))))
+modal(certainty:must_have, sentence(past+perfect(eat(agent:'you, theme:'apple))))
 ;; → "You must have eaten an apple."
 ```
 
 ### 結合価3の動詞（give）
 
 ```lisp
-sentence(past(simple(give(agent:'I, theme:'book, recipient:'you))))
+sentence(past+simple(give(agent:'I, theme:'book, recipient:'you)))
 ;; → "I gave you a book."
 ```
 
 ### 複雑な例
 
 ```lisp
-?(not(modal('must, sentence(past(perfect(passive(not(eat(agent:'I, theme:'apple)))))))))
+?(not(modal(possibility:might, sentence(past+perfect(passive(not(eat(agent:'I, theme:'apple))))))))
 ;; → "Might the apple not have been eaten?"
 ```
 
@@ -435,7 +499,7 @@ sentence(past(simple(give(agent:'I, theme:'book, recipient:'you))))
 sentence(eat(agent:'I, theme:'apple))
 
 ;; コンパイラ展開後（内部表現）
-sentence(present(simple(active(eat(agent:'I, theme:'apple)))))
+sentence(present+simple(active(eat(agent:'I, theme:'apple))))
 ```
 
 ### 過去形だけ指定
@@ -445,7 +509,7 @@ sentence(present(simple(active(eat(agent:'I, theme:'apple)))))
 sentence(past(eat(agent:'I, theme:'apple)))
 
 ;; コンパイラ展開後
-sentence(past(simple(active(eat(agent:'I, theme:'apple)))))
+sentence(past+simple(active(eat(agent:'I, theme:'apple))))
 ```
 
 ### 受動態での by 句生成
@@ -502,7 +566,7 @@ noun(pre:'all, det:'the, post:'three, head:'apples)
 |----|------|------|
 | pre | 前置限定詞 | all, both, half |
 | det | 中央限定詞 | the, this, that, a/an, my, your, his, her, its, our, their, no |
-| post | 後置限定詞 | one, two, three, many, few, some, several, [plural], [uncountable] |
+| post | 後置限定詞 | one, two, three, many, few, some, several, plural, uncountable |
 
 ### 制約
 
@@ -515,7 +579,7 @@ noun(det:'the, head:'water)           ;; OK
 noun(post:'three, head:'water)        ;; NG
 
 ;; 相互排他的な組み合わせ
-noun(det:'a, post:'[plural])          ;; NG（a + 複数は矛盾）
+noun(det:'a, post:plural)            ;; NG（a + 複数は矛盾）
 noun(pre:'all, det:'a)                ;; NG（all + a は矛盾）
 ```
 
@@ -531,8 +595,11 @@ noun(det:'a, head:'apple)
 noun(pre:'all, det:'my, head:'friends)
 ;; → "all my friends"
 
-noun(post:'[plural], head:'apple)
-;; → "apples"（限定詞なしの複数形）
+noun(post:plural, head:'apple)
+;; → "apples"（限定詞なしの複数形、pluralは出力されない）
+
+noun(post:uncountable, head:'water)
+;; → "water"（不可算名詞のマーク）
 ```
 
 ---
@@ -705,7 +772,7 @@ LinguaScriptは言語中立的な抽象表現（インターリンガ）とし�
 
 ```lisp
 ;; この抽象表現は言語に依存しない
-sentence(past(simple(eat(agent:'I, theme:'apple))))
+sentence(past+simple(eat(agent:'I, theme:'apple)))
 ```
 
 | 言語 | コンパイル結果 |
@@ -738,8 +805,9 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 ;; 節レベル（sentence内部）
 ;; ============================================
 
-<clause>        ::= <tense> "(" <aspect> "(" <negation>? <verb-expr> ")" ")"
+<clause>        ::= <tense-aspect> "(" <negation>? <verb-expr> ")"
 
+<tense-aspect>  ::= <tense> "+" <aspect>
 <tense>         ::= "past" | "present" | "future"
 <aspect>        ::= "simple" | "progressive" | "perfect" | "perfectProgressive"
 <negation>      ::= "not("
@@ -813,9 +881,9 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 <det-word>      ::= "the" | "a" | "this" | "that" | "these" | "those"
                   | "my" | "your" | "his" | "her" | "its" | "our" | "their" | "no"
 
-<post-det>      ::= "post:'" <post-det-word>
+<post-det>      ::= "post:'" <post-det-word> | "post:" <meta-value>
 <post-det-word> ::= "one" | "two" | "three" | "many" | "few" | "some" | "several"
-                  | "[plural]" | "[uncountable]"
+<meta-value>    ::= "plural" | "uncountable"
 
 <adj-part>      ::= "adj:'" <adjective>                              ;; 単一形容詞
                   | "adj:['" <adjective> ("," "'" <adjective>)* "]"  ;; 複数形容詞
@@ -854,10 +922,13 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 ### 現行実装（モダリティ）
 
 ```bnf
-;; モダリティ（言語非依存の意味概念）
-<modal>         ::= "modal('" <modal-type> ", " <sentence> ")"
+;; モダリティ（意味:表層形 記法）
+<modal>         ::= "modal(" <modal-type> ":" <surface-form> ", " <sentence> ")"
 <modal-type>    ::= "ability" | "permission" | "possibility" | "obligation"
                   | "certainty" | "advice" | "volition" | "prediction"
+<surface-form>  ::= "can" | "could" | "may" | "might" | "must" | "must_have"
+                  | "should" | "should_have" | "will" | "would"
+                  | "had_to" | "was_going_to"
 
 ;; モダリティの否定
 <neg-modal>     ::= "not(" <modal> ")"
@@ -886,81 +957,81 @@ sentence(past(simple(eat(agent:'I, theme:'apple))))
 
 ```lisp
 ;; 基本構文
-sentence(<tense>(<aspect>(<verb>(role:'value, ...))))
+sentence(<tense>+<aspect>(<verb>(role:'value, ...)))
 
 ;; 例: "I eat an apple."
-sentence(present(simple(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
+sentence(present+simple(eat(agent:'I, theme:noun(det:'a, head:'apple))))
 
 ;; 過去形: "I ate an apple."
-sentence(past(simple(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
+sentence(past+simple(eat(agent:'I, theme:noun(det:'a, head:'apple))))
 
 ;; 進行形: "I am eating an apple."
-sentence(present(progressive(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
+sentence(present+progressive(eat(agent:'I, theme:noun(det:'a, head:'apple))))
 
 ;; 完了形: "I have eaten an apple."
-sentence(present(perfect(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
+sentence(present+perfect(eat(agent:'I, theme:noun(det:'a, head:'apple))))
 
 ;; 否定: "I don't eat an apple."
-sentence(present(simple(not(eat(agent:'I, theme:noun(det:'a, head:'apple))))))
+sentence(present+simple(not(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
 
 ;; 命令文: "Eat the apple!"
-imperative(sentence(present(simple(eat(theme:noun(det:'the, head:'apple))))))
+imperative(sentence(present+simple(eat(theme:noun(det:'the, head:'apple)))))
 
 ;; 時間副詞: "Yesterday, I ate an apple."
-time('yesterday, sentence(past(simple(eat(agent:'I, theme:noun(det:'a, head:'apple))))))
+time('yesterday, sentence(past+simple(eat(agent:'I, theme:noun(det:'a, head:'apple)))))
 
 ;; 頻度副詞: "I always eat apples."
-sentence(present(simple(frequency('always, eat(agent:'I, theme:noun(post:'[plural], head:'apple))))))
+sentence(present+simple(frequency('always, eat(agent:'I, theme:noun(post:plural, head:'apple)))))
 
 ;; 様態副詞: "I quickly eat an apple."
-sentence(present(simple(manner('quickly, eat(agent:'I, theme:noun(det:'a, head:'apple))))))
+sentence(present+simple(manner('quickly, eat(agent:'I, theme:noun(det:'a, head:'apple)))))
 
 ;; 前置詞句: "I eat an apple in the park."
-sentence(present(simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, theme:noun(det:'a, head:'apple))))))
+sentence(present+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, theme:noun(det:'a, head:'apple)))))
 
 ;; 等位接続（名詞）: "I and you"
 and('I, 'you)
 
 ;; 等位接続（動詞）: "I eat and drink."
-sentence(present(simple(and(eat(agent:'I), drink(agent:'I)))))
+sentence(present+simple(and(eat(agent:'I), drink(agent:'I))))
 
 ;; 名詞句: "all the three big red apples"
 noun(pre:'all, det:'the, post:'three, adj:['big, 'red], head:'apple)
 
 ;; コピュラ: "She is very happy."
-sentence(present(simple(be(theme:'she, attribute:degree('very, 'happy)))))
+sentence(present+simple(be(theme:'she, attribute:degree('very, 'happy))))
 
 ;; モダリティ: "I can run."
-modal('ability, sentence(present(simple(run(agent:'I)))))
+modal(ability:can, sentence(present+simple(run(agent:'I))))
 
 ;; モダリティ + 過去: "I could run."
-modal('ability, sentence(past(simple(run(agent:'I)))))
+modal(ability:could, sentence(past+simple(run(agent:'I))))
 
 ;; モダリティの否定: "I don't have to run."
-not(modal('obligation, sentence(present(simple(run(agent:'I))))))
+not(modal(obligation:must, sentence(present+simple(run(agent:'I)))))
 ```
 
 ### 現行実装（モダリティ）
 
 ```lisp
-;; モダリティ（言語非依存の意味概念）
-modal('ability, sentence(...))      ;; "I can run."
-modal('obligation, sentence(...))   ;; "I must run."
-modal('volition, sentence(...))     ;; "I will run."（意志）
+;; モダリティ（意味:表層形 記法）
+modal(ability:can, sentence(...))      ;; "I can run."
+modal(obligation:must, sentence(...))  ;; "I must run."
+modal(volition:will, sentence(...))    ;; "I will run."（意志）
 
-;; 時制連動
-sentence(past(simple(modal('ability, eat(...)))))
+;; 時制連動（表層形が変化）
+modal(ability:could, sentence(past+simple(eat(...))))
 ;; → "I could eat."
 
-sentence(past(simple(modal('volition, eat(...)))))
+modal(volition:was_going_to, sentence(past+simple(eat(...))))
 ;; → "I was going to eat."
 
 ;; モダリティの否定（義務なし）
-not(modal('obligation, sentence(...)))
+not(modal(obligation:must, sentence(...)))
 ;; → "I don't have to run."（しなくてもよい）
 
 ;; 過去時制でのモダリティ否定
-time('yesterday, not(modal('obligation, sentence(past(simple(eat(...)))))))
+time('yesterday, not(modal(obligation:had_to, sentence(past+simple(eat(...))))))
 ;; → "Yesterday, I didn't have to eat."
 ```
 

@@ -35,7 +35,9 @@
   - "I saw the man with the telescope and the camera"
 
 ### UI & Localization
-- [ ] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）
+- [x] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）
+  - i18nシステム実装済み（en, ja, ja-hira）
+  - Blockly.Msg + React Context による切り替え
 - [ ] Grammar Console（文法判断のログ表示）
 - [ ] TimeChip 3連プルダウン化（教育的UX改善）
   - [Tense][Aspect][Time] の3スロット構成
@@ -57,6 +59,27 @@
 - [ ] LinguaScriptパーサー（双方向変換の基盤）
   - BNF文法に基づく実装
   - AST ↔ LinguaScript の等価変換
+
+### Linguistic AST Renderer（学術・教育向け）
+- [ ] 言語学的構文木レンダラー
+  - 内部AST → 言語学理論に基づく木構造を生成
+  - 理論選択オプション（教育目的で切り替え可能）
+  - **Note**: LinguaScriptは依存文法的（動詞中心＋意味役割引数）
+- [ ] 対応理論候補:
+  - X-bar Theory: Spec-Head-Comp の階層構造
+  - Dependency Grammar: 主辞間の依存関係（LinguaScriptに最も近い）
+  - Minimalist Program: 二項Merge、最小構造
+  - HPSG/LFG: 制約ベース、素性構造
+- [ ] 出力形式:
+  - テキスト（括弧表記）
+  - SVG/Canvas（視覚的な木構造）
+  - LaTeX (qtree, forest パッケージ)
+
+### LinguaScript Syntax Enhancement
+- [x] メタ値記法: `plural`, `uncountable` （クォートなし = 出力されない制御値）
+- [x] 組み合わせ演算子: `past+perfect` （両方適用を明示）
+- [x] 意味注釈: `obligation:must` vs `certainty:must` （意味概念:表層形の記法）
+- [ ] フィールド必須/任意マーカー: `*field` / `field?` （手書き入力・バリデータ実装時に必要）
 
 ### LinguaScript Editor
 - [ ] Monaco Editor 統合

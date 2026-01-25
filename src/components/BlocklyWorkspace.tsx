@@ -1,10 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react';
 import * as Blockly from 'blockly';
 import '../blocks/definitions';
-import { toolbox } from '../blocks/definitions';
+import { createToolbox } from '../blocks/definitions';
 import { generateMultipleAST } from '../compiler/astGenerator';
 import { renderToEnglish } from '../compiler/englishRenderer';
 import { SentenceNode } from '../types/schema';
+import { useLocale } from '../locales';
 
 interface BlocklyWorkspaceProps {
   onASTChange: (asts: SentenceNode[]) => void;
@@ -14,6 +15,7 @@ interface BlocklyWorkspaceProps {
 export function BlocklyWorkspace({ onASTChange, onSentenceChange }: BlocklyWorkspaceProps) {
   const blocklyDiv = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
+  const { ui } = useLocale();
 
   const handleWorkspaceChange = useCallback(() => {
     if (!workspaceRef.current) return;
@@ -25,14 +27,17 @@ export function BlocklyWorkspace({ onASTChange, onSentenceChange }: BlocklyWorks
       try {
         return renderToEnglish(ast);
       } catch {
-        return '(incomplete)';
+        return ui.ERROR_INCOMPLETE;
       }
     });
     onSentenceChange(sentences);
-  }, [onASTChange, onSentenceChange]);
+  }, [onASTChange, onSentenceChange, ui.ERROR_INCOMPLETE]);
 
   useEffect(() => {
     if (!blocklyDiv.current) return;
+
+    // ツールボックスを動的に生成（現在のロケールを反映）
+    const toolbox = createToolbox();
 
     // ワークスペースを作成
     const workspace = Blockly.inject(blocklyDiv.current, {

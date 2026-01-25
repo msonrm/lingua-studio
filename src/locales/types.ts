@@ -1,0 +1,203 @@
+// Locale types for lingua-studio
+
+export type LocaleCode = 'en' | 'ja' | 'ja-hira';
+
+// Blockly message keys (used with Blockly.Msg)
+export interface BlocklyMessages {
+  // Sentence blocks
+  SENTENCE_LABEL: string;
+  SENTENCE_TA_LABEL: string;
+  SENTENCE_PREDICATE_LABEL: string;
+  SENTENCE_TOOLTIP: string;
+
+  // Modal wrapper
+  MODAL_LABEL: string;
+  MODAL_TOOLTIP: string;
+  MODAL_ABILITY: string;
+  MODAL_PERMISSION: string;
+  MODAL_POSSIBILITY: string;
+  MODAL_OBLIGATION: string;
+  MODAL_CERTAINTY: string;
+  MODAL_ADVICE: string;
+  MODAL_VOLITION: string;
+  MODAL_PREDICTION: string;
+
+  // Imperative wrapper
+  IMPERATIVE_LABEL: string;
+  IMPERATIVE_TOOLTIP: string;
+
+  // Negation sentence wrapper
+  NEGATION_MODAL_LABEL: string;
+  NEGATION_MODAL_TOOLTIP: string;
+
+  // Time chips
+  TIME_CHIP_CONCRETE_LABEL: string;
+  TIME_CHIP_CONCRETE_TOOLTIP: string;
+  TIME_CHIP_ASPECTUAL_LABEL: string;
+  TIME_CHIP_ASPECTUAL_TOOLTIP: string;
+  TIME_CHIP_ABSTRACT_LABEL: string;
+  TIME_CHIP_ABSTRACT_TOOLTIP: string;
+  TIME_CHIP_UNIFIED_LABEL: string;
+  TIME_CHIP_UNIFIED_TOOLTIP: string;
+
+  // Time options
+  TIME_YESTERDAY: string;
+  TIME_TODAY: string;
+  TIME_TOMORROW: string;
+  TIME_EVERY_DAY: string;
+  TIME_LAST_SUNDAY: string;
+  TIME_RIGHT_NOW: string;
+  TIME_AT_THE_MOMENT: string;
+  TIME_NEXT_WEEK: string;
+  TIME_NOW: string;
+  TIME_JUST_NOW: string;
+  TIME_ALREADY_YET: string;
+  TIME_STILL: string;
+  TIME_RECENTLY: string;
+
+  // Tense/Aspect options
+  TENSE_PAST: string;
+  TENSE_PRESENT: string;
+  TENSE_FUTURE: string;
+  ASPECT_SIMPLE: string;
+  ASPECT_PROGRESSIVE: string;
+  ASPECT_PERFECT: string;
+  ASPECT_PERF_PROG: string;
+
+  // Noun blocks
+  PRONOUN_LABEL: string;
+  PRONOUN_TOOLTIP: string;
+  POSSESSIVE_PRONOUN_LABEL: string;
+  POSSESSIVE_PRONOUN_TOOLTIP: string;
+  HUMAN_LABEL: string;
+  HUMAN_TOOLTIP: string;
+  ANIMAL_LABEL: string;
+  ANIMAL_TOOLTIP: string;
+  OBJECT_LABEL: string;
+  OBJECT_TOOLTIP: string;
+  PLACE_LABEL: string;
+  PLACE_TOOLTIP: string;
+  ABSTRACT_LABEL: string;
+  ABSTRACT_TOOLTIP: string;
+
+  // Noun group labels
+  GROUP_PERSONAL: string;
+  GROUP_DEMONSTRATIVE: string;
+  GROUP_INDEFINITE: string;
+  GROUP_COMMON: string;
+  GROUP_NAMES: string;
+
+  // Determiner
+  DETERMINER_LABEL: string;
+  DETERMINER_TOOLTIP: string;
+  DETERMINER_NONE: string;
+  DET_PLURAL: string;
+  DET_UNCOUNTABLE: string;
+
+  // Verb modifiers
+  NEGATION_LABEL: string;
+  NEGATION_TOOLTIP: string;
+  FREQUENCY_LABEL: string;
+  FREQUENCY_TOOLTIP: string;
+  MANNER_LABEL: string;
+  MANNER_TOOLTIP: string;
+
+  // Prepositions
+  PP_LABEL: string;
+  PP_OBJECT_LABEL: string;
+  PP_VERB_TOOLTIP: string;
+  PP_NOUN_TOOLTIP: string;
+
+  // Coordination
+  COORD_AND_LABEL: string;
+  COORD_OR_LABEL: string;
+  COORD_NOUN_AND_TOOLTIP: string;
+  COORD_NOUN_OR_TOOLTIP: string;
+  COORD_VERB_AND_TOOLTIP: string;
+  COORD_VERB_OR_TOOLTIP: string;
+
+  // Verb categories
+  VERB_MOTION: string;
+  VERB_ACTION: string;
+  VERB_TRANSFER: string;
+  VERB_COGNITION: string;
+  VERB_COMMUNICATION: string;
+  VERB_STATE: string;
+
+  // Adjective categories
+  ADJ_SIZE: string;
+  ADJ_AGE: string;
+  ADJ_COLOR: string;
+  ADJ_PHYSICAL: string;
+  ADJ_QUALITY: string;
+  ADJ_EMOTION: string;
+
+  // Toolbox categories
+  TOOLBOX_SENTENCE: string;
+  TOOLBOX_SENTENCE_MODIFIER: string;
+  TOOLBOX_VERBS: string;
+  TOOLBOX_VERB_MODIFIERS: string;
+  TOOLBOX_NOUNS: string;
+  TOOLBOX_NOUN_MODIFIERS: string;
+
+  // Toolbox section labels
+  SECTION_TIME: string;
+  SECTION_ASPECT: string;
+  SECTION_TENSE_ASPECT: string;
+  SECTION_IMPERATIVE: string;
+  SECTION_MODAL_NEGATION: string;
+  SECTION_MODAL: string;
+  SECTION_MOTION: string;
+  SECTION_ACTION: string;
+  SECTION_TRANSFER: string;
+  SECTION_COGNITION: string;
+  SECTION_COMMUNICATION: string;
+  SECTION_STATE: string;
+  SECTION_COORDINATION: string;
+  SECTION_PRONOUNS: string;
+  SECTION_PEOPLE: string;
+  SECTION_ANIMALS: string;
+  SECTION_OBJECTS: string;
+  SECTION_PLACES: string;
+  SECTION_ABSTRACT: string;
+  SECTION_ADJECTIVES: string;
+  SECTION_PREPOSITION: string;
+}
+
+// React UI message keys
+export interface UIMessages {
+  // Header
+  APP_TITLE: string;
+  APP_SUBTITLE: string;
+
+  // Tabs
+  TAB_BLOCKS: string;
+  TAB_LINGUASCRIPT: string;
+  TAB_COMING_SOON: string;
+
+  // Panels
+  PANEL_OUTPUT: string;
+  PANEL_LINGUASCRIPT: string;
+  PANEL_GRAMMAR_CONSOLE: string;
+  PANEL_AST: string;
+
+  // Placeholders
+  PLACEHOLDER_OUTPUT: string;
+  PLACEHOLDER_LINGUASCRIPT: string;
+  PLACEHOLDER_GRAMMAR: string;
+  PLACEHOLDER_AST: string;
+
+  // Errors
+  ERROR_INCOMPLETE: string;
+
+  // Settings
+  SHOW_AST: string;
+  LANGUAGE: string;
+}
+
+export interface LocaleData {
+  code: LocaleCode;
+  name: string;
+  blockly: BlocklyMessages;
+  ui: UIMessages;
+}

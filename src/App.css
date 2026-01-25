@@ -87,6 +87,32 @@ body {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 1rem;
+}
+
+.locale-selector {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  background: #16213e;
+  color: #fff;
+  font-size: 0.875rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.locale-selector:hover {
+  border-color: #e94560;
+}
+
+.locale-selector:focus {
+  border-color: #e94560;
+}
+
+.locale-selector option {
+  background: #16213e;
+  color: #fff;
 }
 
 .ast-toggle {

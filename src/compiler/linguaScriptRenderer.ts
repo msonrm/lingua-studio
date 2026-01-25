@@ -10,6 +10,27 @@ import {
 } from '../types/schema';
 
 // ============================================
+// モダリティ → 英語表層形マッピング
+// ============================================
+type ModalType = 'ability' | 'permission' | 'possibility' | 'obligation' | 'certainty' | 'advice' | 'volition' | 'prediction';
+type Tense = 'past' | 'present' | 'future';
+
+const modalSurfaceForms: Record<ModalType, Record<Tense, string>> = {
+  ability:     { past: 'could',        present: 'can',    future: 'can' },
+  permission:  { past: 'could',        present: 'may',    future: 'may' },
+  possibility: { past: 'might',        present: 'might',  future: 'might' },
+  obligation:  { past: 'had_to',       present: 'must',   future: 'must' },
+  certainty:   { past: 'must_have',    present: 'must',   future: 'must' },
+  advice:      { past: 'should_have',  present: 'should', future: 'should' },
+  volition:    { past: 'was_going_to', present: 'will',   future: 'will' },
+  prediction:  { past: 'would',        present: 'will',   future: 'will' },
+};
+
+function getModalSurfaceForm(modal: ModalType, tense: Tense): string {
+  return modalSurfaceForms[modal]?.[tense] || modal;
+}
+
+// ============================================
 // AST → LinguaScript レンダラー
 // ============================================
 export function renderToLinguaScript(ast: SentenceNode): string {
@@ -18,11 +39,14 @@ export function renderToLinguaScript(ast: SentenceNode): string {
   // sentence() ラッパーで包む（仕様: 命題のルート）
   result = `sentence(${result})`;
 
-  // モダリティがある場合は modal() でラップ（仕様: modal('ability, sentence(...))）
+  // モダリティがある場合は modal() でラップ（仕様: modal(ability:can, sentence(...))）
   if (ast.clause.modal) {
-    result = `modal('${ast.clause.modal}, ${result})`;
+    const modal = ast.clause.modal as ModalType;
+    const tense = ast.clause.tense as Tense;
+    const surfaceForm = getModalSurfaceForm(modal, tense);
+    result = `modal(${modal}:${surfaceForm}, ${result})`;
 
-    // モダリティ否定の場合は not() でラップ（仕様: not(modal('ability, ...))）
+    // モダリティ否定の場合は not() でラップ（仕様: not(modal(ability:can, ...))）
     if (ast.clause.modalPolarity === 'negative') {
       result = `not(${result})`;
     }
@@ -52,12 +76,9 @@ function renderClauseToScript(clause: ClauseNode): string {
     result = `not(${result})`;
   }
 
-  // アスペクトをラップ（常に明示）
+  // 時制+相を組み合わせてラップ（A + B 記法）
   const aspectWrapper = getAspectWrapper(aspect);
-  result = `${aspectWrapper}(${result})`;
-
-  // 時制をラップ（常に明示）
-  result = `${tense}(${result})`;
+  result = `${tense}+${aspectWrapper}(${result})`;
 
   return result;
 }
@@ -158,10 +179,18 @@ function renderNounPhraseToScript(np: NounPhraseNode): string {
 
   // 後置限定詞（複数形マーカー含む）
   if (np.postDeterminer) {
-    parts.push(`post:'${np.postDeterminer}`);
+    // メタ値はクォートなし（Lisp慣習: 非リテラル）、リテラルはクォート付き
+    const postDet = np.postDeterminer;
+    if (postDet === '[plural]' || postDet === '__plural__') {
+      parts.push(`post:plural`);
+    } else if (postDet === '[uncountable]' || postDet === '__uncountable__') {
+      parts.push(`post:uncountable`);
+    } else {
+      parts.push(`post:'${postDet}`);
+    }
   } else if (nounHead.number === 'plural' && !np.determiner?.lexeme && !np.preDeterminer) {
     // 限定詞なしの複数形
-    parts.push(`post:'[plural]`);
+    parts.push(`post:plural`);
   }
 
   // 形容詞

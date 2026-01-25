@@ -242,12 +242,74 @@ function parseTimeFrameBlock(
     modalPolarity: modal ? modalPolarity : undefined,  // モダリティ否定を追加（modalがある場合のみ）
   };
 
+  // Wh疑問詞が含まれている場合は自動的に疑問文として扱う
+  const detectedSentenceType = detectInterrogativeFromWh(verbPhrase, sentenceType);
+
   return {
     type: 'sentence',
     clause,
-    sentenceType,
+    sentenceType: detectedSentenceType,
     timeAdverbial,
   };
+}
+
+// Wh疑問詞・疑問副詞を検出して自動的に疑問文に変換
+function detectInterrogativeFromWh(
+  verbPhrase: VerbPhraseNode,
+  currentType: 'declarative' | 'imperative' | 'interrogative'
+): 'declarative' | 'imperative' | 'interrogative' {
+  // 既に疑問文の場合はそのまま
+  if (currentType === 'interrogative') {
+    return 'interrogative';
+  }
+
+  // 命令文は変換しない（意味的に矛盾）
+  if (currentType === 'imperative') {
+    return 'imperative';
+  }
+
+  // Wh疑問副詞をチェック（?where, ?when, ?how）
+  for (const adverb of verbPhrase.adverbs) {
+    if (adverb.lemma.startsWith('?')) {
+      return 'interrogative';
+    }
+  }
+
+  // Wh疑問代名詞をチェック（?who, ?what）
+  for (const arg of verbPhrase.arguments) {
+    if (arg.filler && hasInterrogativePronoun(arg.filler)) {
+      return 'interrogative';
+    }
+  }
+
+  return currentType;
+}
+
+// フィラーにWh疑問代名詞が含まれているかチェック
+function hasInterrogativePronoun(filler: FilledArgumentSlot['filler']): boolean {
+  if (!filler) return false;
+
+  if (filler.type === 'nounPhrase') {
+    const np = filler as NounPhraseNode;
+    if (np.head.type === 'pronoun') {
+      const head = np.head as PronounHead;
+      return head.pronounType === 'interrogative';
+    }
+  } else if (filler.type === 'coordinatedNounPhrase') {
+    const coordNP = filler as CoordinatedNounPhraseNode;
+    // 選択疑問も疑問文
+    if (coordNP.isChoiceQuestion) {
+      return true;
+    }
+    // 内部の要素をチェック
+    for (const conjunct of coordNP.conjuncts) {
+      if (hasInterrogativePronoun(conjunct)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 // 動詞ラッパーチェーンを解析

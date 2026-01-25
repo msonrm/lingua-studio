@@ -52,27 +52,26 @@ function findInterrogativeInNounPhrase(np: NounPhraseNode): string | null {
 // ClauseNodeから疑問詞情報を検出
 function findInterrogativeInClause(clause: ClauseNode): WhWordInfo | null {
   const { verbPhrase } = clause;
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
 
-  // 主語ロールを先にチェック
+  // 動詞のvalencyから実際の主語ロールを決定
+  let actualSubjectRole: SemanticRole | undefined;
   for (const role of SUBJECT_ROLES) {
-    const slot = verbPhrase.arguments.find(a => a.role === role);
-    if (slot?.filler && slot.filler.type === 'nounPhrase') {
-      const whWord = findInterrogativeInNounPhrase(slot.filler as NounPhraseNode);
-      if (whWord) {
-        return { whWord, role, isSubject: true, slot };
-      }
+    if (verbEntry?.valency.some(v => v.role === role)) {
+      actualSubjectRole = role;
+      break;
     }
   }
 
-  // その他の引数をチェック（目的語など）
+  // 全ての引数を検索してWh語を探す
   for (const slot of verbPhrase.arguments) {
     if (!slot.filler) continue;
-    if (SUBJECT_ROLES.includes(slot.role)) continue; // 既にチェック済み
-
     if (slot.filler.type === 'nounPhrase') {
       const whWord = findInterrogativeInNounPhrase(slot.filler as NounPhraseNode);
       if (whWord) {
-        return { whWord, role: slot.role, isSubject: false, slot };
+        // 実際の主語ロールにWh語がある場合のみisSubject: true
+        const isSubject = slot.role === actualSubjectRole;
+        return { whWord, role: slot.role, isSubject, slot };
       }
     }
   }

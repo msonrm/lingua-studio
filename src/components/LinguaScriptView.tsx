@@ -52,33 +52,46 @@ function formatLinguaScript(code: string): string {
 }
 
 export function LinguaScriptView({ code, placeholder = '// Build a sentence...' }: LinguaScriptViewProps) {
-  const codeRef = useRef<HTMLElement>(null);
+  const codeRef = useRef<HTMLDivElement>(null);
   const isEmpty = !code;
 
   // フォーマット済みコード
   const formattedCode = code ? formatLinguaScript(code) : '';
 
+  // 行に分割してハイライト
+  const lines = formattedCode ? formattedCode.split('\n') : [];
+
   // シンタックスハイライトを適用
   useEffect(() => {
-    if (codeRef.current && formattedCode) {
-      codeRef.current.innerHTML = Prism.highlight(
-        formattedCode,
-        Prism.languages.linguascript,
-        'linguascript'
-      );
+    if (codeRef.current && lines.length > 0) {
+      const lineElements = codeRef.current.querySelectorAll('.line-content');
+      lineElements.forEach((el, i) => {
+        if (lines[i] !== undefined) {
+          el.innerHTML = Prism.highlight(
+            lines[i],
+            Prism.languages.linguascript,
+            'linguascript'
+          ) || '&nbsp;'; // 空行はnbsp
+        }
+      });
     }
-  }, [formattedCode]);
+  }, [formattedCode, lines]);
 
   return (
     <div className="linguascript-view-container">
       {isEmpty ? (
-        <pre className="linguascript-view-code">
-          <code className="placeholder-text">{placeholder}</code>
-        </pre>
+        <div className="linguascript-view-code">
+          <span className="placeholder-text">{placeholder}</span>
+        </div>
       ) : (
-        <pre className="linguascript-view-code">
-          <code ref={codeRef} className="language-linguascript">{formattedCode}</code>
-        </pre>
+        <div ref={codeRef} className="linguascript-view-code line-numbers">
+          {lines.map((line, i) => (
+            <div key={i} className="code-line">
+              <span className="line-number">{i + 1}</span>
+              <code className="line-content">{line || '\u00A0'}</code>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

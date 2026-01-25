@@ -141,5 +141,29 @@
   line-height: 1.6;
   color: #657b83;
   margin: 0;
+}
+
+/* Line numbers */
+.linguascript-view-code.line-numbers {
+  display: table;
+}
+
+.code-line {
+  display: table-row;
+}
+
+.line-number {
+  display: table-cell;
+  text-align: right;
+  padding-right: 1rem;
+  user-select: none;
+  color: #93a1a1;
+  font-size: 0.8rem;
+  min-width: 2rem;
+  opacity: 0.6;
+}
+
+.line-content {
+  display: table-cell;
   white-space: pre;
 }

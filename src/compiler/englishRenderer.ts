@@ -610,24 +610,32 @@ function renderImperativeClause(clause: ClauseNode): string {
     verbForm = freqStr ? `${freqStr} ${baseForm}` : baseForm;
   }
 
-  // その他の引数（目的語など）- 主語は除外
-  // 必須引数が欠けている場合は "___" を表示
-  const subjectRoles: SemanticRole[] = ['agent', 'experiencer', 'possessor'];
+  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
+  // 命令文では主語は省略される（暗黙の "you"）
+  let subjectRole: SemanticRole | undefined;
+  for (const role of SUBJECT_ROLES) {
+    if (verbEntry?.valency.some(v => v.role === role)) {
+      subjectRole = role;
+      break;
+    }
+  }
+
+  // その他の引数（目的語など）- 主語ロール以外
+  // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
   const otherArgs = (verbEntry?.valency || [])
-    .filter(v => !subjectRoles.includes(v.role as SemanticRole))
+    .filter(v => v.role !== subjectRole)
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
-      if (argSlot?.filler) {
-        const rendered = renderFiller(argSlot.filler, false, polarity);
-        return preposition ? `${preposition} ${rendered}` : rendered;
-      } else if (v.required) {
-        return preposition ? `${preposition} ___` : '___';
-      } else {
-        return '';
-      }
+      const filled = argSlot?.filler;
+      const value = filled ? renderFiller(filled, false, polarity) : '___';
+      return {
+        text: preposition ? `${preposition} ${value}` : value,
+        skip: !v.required && !filled,
+      };
     })
-    .filter(s => s.length > 0)
+    .filter(item => !item.skip)
+    .map(item => item.text)
     .join(' ');
 
   // 様態副詞は文末（Wh副詞は?を除去）
@@ -680,16 +688,31 @@ function renderImperativeCoordinatedVP(
   // ここでは単純に原形を使う
   verbForm = freqStr ? `${freqStr} ${baseForm}` : baseForm;
 
-  // その他の引数（目的語など）
-  const subjectRoles: SemanticRole[] = ['agent', 'experiencer', 'possessor'];
-  const otherArgs = vp.arguments
-    .filter(a => !subjectRoles.includes(a.role) && a.filler)
-    .map(a => {
-      const slotDef = verbEntry?.valency.find(v => v.role === a.role);
-      const preposition = slotDef?.preposition;
-      const rendered = renderFiller(a.filler!, false, polarity);
-      return preposition ? `${preposition} ${rendered}` : rendered;
+  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
+  let subjectRole: SemanticRole | undefined;
+  for (const role of SUBJECT_ROLES) {
+    if (verbEntry?.valency.some(v => v.role === role)) {
+      subjectRole = role;
+      break;
+    }
+  }
+
+  // その他の引数（目的語など）- 主語ロール以外
+  // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
+  const otherArgs = (verbEntry?.valency || [])
+    .filter(v => v.role !== subjectRole)
+    .map(v => {
+      const argSlot = vp.arguments.find(a => a.role === v.role);
+      const preposition = v.preposition;
+      const filled = argSlot?.filler;
+      const value = filled ? renderFiller(filled, false, polarity) : '___';
+      return {
+        text: preposition ? `${preposition} ${value}` : value,
+        skip: !v.required && !filled,
+      };
     })
+    .filter(item => !item.skip)
+    .map(item => item.text)
     .join(' ');
 
   // 様態副詞は文末（Wh副詞は?を除去）
@@ -730,13 +753,19 @@ function renderCoordinatedVerbPhrase(
 ): string {
   const verbEntry = findVerb(vp.verb.lemma);
 
-  // 主語となりうるロールを取得
-  const subjectRoles: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
-  let ownSubjectSlot: FilledArgumentSlot | undefined;
-  for (const role of subjectRoles) {
-    ownSubjectSlot = vp.arguments.find(a => a.role === role && a.filler);
-    if (ownSubjectSlot?.filler) break;
+  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
+  let subjectRole: SemanticRole | undefined;
+  for (const role of SUBJECT_ROLES) {
+    if (verbEntry?.valency.some(v => v.role === role)) {
+      subjectRole = role;
+      break;
+    }
   }
+
+  // 主語スロットを取得
+  const ownSubjectSlot = subjectRole
+    ? vp.arguments.find(a => a.role === subjectRole)
+    : undefined;
 
   // 右側の動詞に独自の主語があるかどうかを判定
   const hasOwnSubject = ownSubjectSlot?.filler != null;
@@ -770,15 +799,22 @@ function renderCoordinatedVerbPhrase(
     ? renderFiller(ownSubjectSlot.filler, true, polarity)
     : '';
 
-  // その他の引数（目的語など）- 主語以外
-  const otherArgs = vp.arguments
-    .filter(a => a !== ownSubjectSlot && a.filler)
-    .map(a => {
-      const slotDef = verbEntry?.valency.find(v => v.role === a.role);
-      const preposition = slotDef?.preposition;
-      const rendered = renderFiller(a.filler!, false, polarity);
-      return preposition ? `${preposition} ${rendered}` : rendered;
+  // その他の引数（目的語など）- 主語ロール以外
+  // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
+  const otherArgs = (verbEntry?.valency || [])
+    .filter(v => v.role !== subjectRole)
+    .map(v => {
+      const argSlot = vp.arguments.find(a => a.role === v.role);
+      const preposition = v.preposition;
+      const filled = argSlot?.filler;
+      const value = filled ? renderFiller(filled, false, polarity) : '___';
+      return {
+        text: preposition ? `${preposition} ${value}` : value,
+        skip: !v.required && !filled,
+      };
     })
+    .filter(item => !item.skip)
+    .map(item => item.text)
     .join(' ');
 
   // 様態副詞は文末（Wh副詞は?を除去）

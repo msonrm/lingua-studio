@@ -1063,6 +1063,22 @@ function conjugateWithModal(
   return aux ? `${aux} ${verbEntry.forms.base}` : verbEntry.forms.base;
 }
 
+// 助動詞を否定形にする（疑問文用）
+function negateModalAuxiliary(aux: string): string {
+  const negationMap: Record<string, string> = {
+    'can': "can't",
+    'could': "couldn't",
+    'will': "won't",
+    'would': "wouldn't",
+    'shall': "shan't",
+    'should': "shouldn't",
+    'may': "may not",  // mayn't は古語
+    'might': "might not",
+    'must': "mustn't",
+  };
+  return negationMap[aux] || `${aux} not`;
+}
+
 // 疑問文用の動詞活用（助動詞と本動詞を分離）
 function conjugateVerbForQuestion(
   lemma: string,
@@ -1120,21 +1136,24 @@ function conjugateVerbForQuestion(
     const aux = modalForm.auxiliary || '';
     const notPart = isNegative ? 'not' : '';
 
+    // モダリティ否定の場合は助動詞を否定形にする
+    const negatedAux = isModalNegative ? negateModalAuxiliary(aux) : aux;
+
     if (aspect === 'simple') {
       const mainParts = [notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
-      return { auxiliary: aux, mainVerb: mainParts.join(' ') };
+      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
     }
     if (aspect === 'progressive') {
       const mainParts = [notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
-      return { auxiliary: aux, mainVerb: mainParts.join(' ') };
+      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
     }
     if (aspect === 'perfect') {
       const mainParts = [notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
-      return { auxiliary: aux, mainVerb: mainParts.join(' ') };
+      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
     }
     if (aspect === 'perfectProgressive') {
       const mainParts = [notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
-      return { auxiliary: aux, mainVerb: mainParts.join(' ') };
+      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
     }
   }
 

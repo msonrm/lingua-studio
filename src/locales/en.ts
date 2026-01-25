@@ -92,7 +92,7 @@ export const en: LocaleData = {
     DETERMINER_TOOLTIP: 'Determiner: pre + central + post',
     DETERMINER_NONE: '─',
     DET_PLURAL: '[plural]',
-    DET_UNCOUNTABLE: '[–]',
+    DET_UNCOUNTABLE: '[uncountable]',
 
     // Verb modifiers
     NEGATION_LABEL: 'NOT',

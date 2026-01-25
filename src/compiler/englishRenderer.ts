@@ -106,7 +106,7 @@ function renderClause(clause: ClauseNode): string {
   if (verbPhrase.coordinatedWith) {
     const coordVP = verbPhrase.coordinatedWith.verbPhrase;
     const conjunction = verbPhrase.coordinatedWith.conjunction;
-    const coordVerbStr = renderCoordinatedVerbPhrase(coordVP, tense, aspect, polarity, subjectForConjugation);
+    const coordVerbStr = renderCoordinatedVerbPhrase(coordVP, tense, aspect, polarity, subjectForConjugation, modal, modalPolarity);
     result += ` ${conjunction} ${coordVerbStr}`;
   }
 
@@ -184,7 +184,9 @@ function renderCoordinatedVerbPhrase(
   tense: 'past' | 'present' | 'future',
   aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
   polarity: 'affirmative' | 'negative',
-  leftSubject?: NounPhraseNode | CoordinatedNounPhraseNode
+  leftSubject?: NounPhraseNode | CoordinatedNounPhraseNode,
+  modal?: ModalType,
+  modalPolarity?: 'affirmative' | 'negative'
 ): string {
   const verbEntry = findVerb(vp.verb.lemma);
 
@@ -210,13 +212,16 @@ function renderCoordinatedVerbPhrase(
   const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
 
   // 動詞を活用（effectiveSubject で人称・数を決定）
+  // 独自の主語がある場合はモーダルを繰り返す、ない場合はモーダルのスコープ内（原形）
   const verbForm = conjugateVerbWithAdverbs(
     vp.verb.lemma,
     tense,
     aspect,
     polarity,
     frequencyAdverbs,
-    effectiveSubject
+    effectiveSubject,
+    hasOwnSubject ? modal : modal,  // モーダルは常に渡す（原形になる）
+    hasOwnSubject ? modalPolarity : undefined  // 独自主語がある場合のみモーダルを表示
   );
 
   // 主語をレンダリング（独自の主語がある場合のみ）
@@ -251,7 +256,7 @@ function renderCoordinatedVerbPhrase(
   if (vp.coordinatedWith) {
     const coordVPInner = vp.coordinatedWith.verbPhrase;
     const conjunctionInner = vp.coordinatedWith.conjunction;
-    const coordVerbStr = renderCoordinatedVerbPhrase(coordVPInner, tense, aspect, polarity, effectiveSubject);
+    const coordVerbStr = renderCoordinatedVerbPhrase(coordVPInner, tense, aspect, polarity, effectiveSubject, modal, modalPolarity);
     result += ` ${conjunctionInner} ${coordVerbStr}`;
   }
 

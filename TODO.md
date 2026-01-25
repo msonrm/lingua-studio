@@ -61,9 +61,9 @@
   - AST ↔ LinguaScript の等価変換
 
 ### LinguaScript Syntax Enhancement
-- [ ] メタ値プレフィックス: `@plural`, `@none` （出力されない制御値を明示）
-- [ ] 組み合わせ演算子: `Past + Perfect` （両方適用を明示）
-- [ ] 意味注釈: `must:obligation` vs `must:certainty` （多言語翻訳・逆変換時に必要）
+- [x] メタ値プレフィックス: `@plural`, `@uncountable` （出力されない制御値を明示）
+- [x] 組み合わせ演算子: `past+perfect` （両方適用を明示）
+- [x] 意味注釈: `obligation:must` vs `certainty:must` （意味概念:表層形の記法）
 - [ ] フィールド必須/任意マーカー: `*field` / `field?` （手書き入力・バリデータ実装時に必要）
 
 ### LinguaScript Editor

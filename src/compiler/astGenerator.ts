@@ -162,6 +162,7 @@ interface VerbChainResult {
   polarity: 'affirmative' | 'negative';
   frequencyAdverbs: AdverbNode[];
   mannerAdverbs: AdverbNode[];
+  locativeAdverbs: AdverbNode[];
   prepositionalPhrases: PrepositionalPhraseNode[];
   coordination?: {
     conjunction: Conjunction;
@@ -196,6 +197,7 @@ function parseTimeFrameBlock(
     adverbs: [
       ...verbChain.mannerAdverbs,
       ...verbChain.frequencyAdverbs,
+      ...verbChain.locativeAdverbs,
       ...verbChain.verbPhrase.adverbs,
     ],
     prepositionalPhrases: [
@@ -287,6 +289,26 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     };
   }
 
+  // 場所副詞ラッパーの処理
+  if (blockType === 'locative_wrapper') {
+    const locativeValue = block.getFieldValue('LOCATIVE_VALUE');
+    const innerBlock = block.getInputTargetBlock('VERB');
+    if (!innerBlock) {
+      return null;
+    }
+    const innerResult = parseVerbChain(innerBlock);
+    if (!innerResult) {
+      return null;
+    }
+    return {
+      ...innerResult,
+      locativeAdverbs: [
+        { type: 'adverb', lemma: locativeValue, advType: 'place' },
+        ...innerResult.locativeAdverbs,
+      ],
+    };
+  }
+
   // 前置詞ラッパー（動詞用）の処理
   if (blockType === 'preposition_verb') {
     const prepValue = block.getFieldValue('PREP_VALUE');
@@ -348,6 +370,7 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
       polarity: 'affirmative',
       frequencyAdverbs: [],
       mannerAdverbs: [],
+      locativeAdverbs: [],
       prepositionalPhrases: [],
     };
   }

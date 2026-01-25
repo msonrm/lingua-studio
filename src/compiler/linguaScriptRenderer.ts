@@ -111,6 +111,12 @@ function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
     result = `manner('${adv.lemma}, ${result})`;
   }
 
+  // 副詞をラップ（場所副詞）- 仕様: locative('here, verb(...))
+  const locativeAdverbs = vp.adverbs.filter(a => a.advType === 'place');
+  for (const adv of locativeAdverbs) {
+    result = `locative('${adv.lemma}, ${result})`;
+  }
+
   // 前置詞句をラップ - 仕様: pp('in, 'park, verb(...))
   for (const pp of vp.prepositionalPhrases) {
     const objScript = pp.object.type === 'coordinatedNounPhrase'

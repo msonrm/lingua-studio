@@ -101,6 +101,8 @@ export const en: LocaleData = {
     FREQUENCY_TOOLTIP: 'Frequency: how often the action occurs',
     MANNER_LABEL: 'MANNER',
     MANNER_TOOLTIP: 'Manner: how the action is performed',
+    LOCATIVE_LABEL: 'LOCATION',
+    LOCATIVE_TOOLTIP: 'Location: where the action occurs',
 
     // Prepositions
     PP_LABEL: 'PP',

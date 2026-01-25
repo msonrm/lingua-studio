@@ -59,6 +59,7 @@ function renderClause(clause: ClauseNode): string {
   // 副詞を種類別に分類
   const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
   const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
+  const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place');
 
   // 動詞を活用（否定含む、頻度副詞を挿入位置で返す）
   // 主語が NounPhraseNode か CoordinatedNounPhraseNode の場合のみ渡す
@@ -92,13 +93,16 @@ function renderClause(clause: ClauseNode): string {
   // 様態副詞は文末
   const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
 
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+
   // 前置詞句（動詞修飾）
   const prepPhrases = verbPhrase.prepositionalPhrases
     .map(pp => renderPrepositionalPhrase(pp, polarity))
     .join(' ');
 
-  // 語順: Subject + Verb(+neg+freq) + Objects + PrepPhrases + Manner
-  const parts = [subject, verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
+  // 語順: Subject + Verb(+neg+freq) + Objects + PrepPhrases + Manner + Location
+  const parts = [subject, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
 
   let result = parts.join(' ');
 
@@ -121,6 +125,7 @@ function renderImperativeClause(clause: ClauseNode): string {
   // 副詞を種類別に分類
   const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
   const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
+  const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place');
 
   // 動詞形を決定（命令文は原形）
   let verbForm: string;
@@ -167,13 +172,16 @@ function renderImperativeClause(clause: ClauseNode): string {
   // 様態副詞は文末
   const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
 
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+
   // 前置詞句（動詞修飾）
   const prepPhrases = verbPhrase.prepositionalPhrases
     .map(pp => renderPrepositionalPhrase(pp, polarity))
     .join(' ');
 
-  // 語順: Verb + Objects + PrepPhrases + Manner（主語なし）
-  const parts = [verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
+  // 語順: Verb + Objects + PrepPhrases + Manner + Location（主語なし）
+  const parts = [verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
   let result = parts.join(' ');
 
   // 動詞の等位接続を処理（命令文でも対応）
@@ -199,6 +207,7 @@ function renderImperativeCoordinatedVP(
   // 副詞を種類別に分類
   const frequencyAdverbs = vp.adverbs.filter(a => a.advType === 'frequency');
   const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
+  const locativeAdverbs = vp.adverbs.filter(a => a.advType === 'place');
 
   // 動詞形を決定（命令文は原形）
   let verbForm: string;
@@ -225,12 +234,15 @@ function renderImperativeCoordinatedVP(
   // 様態副詞は文末
   const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
 
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+
   // 前置詞句（動詞修飾）
   const prepPhrases = vp.prepositionalPhrases
     .map(pp => renderPrepositionalPhrase(pp, polarity))
     .join(' ');
 
-  const parts = [verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
+  const parts = [verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
   let result = parts.join(' ');
 
   // 再帰的に等位接続を処理
@@ -277,6 +289,7 @@ function renderCoordinatedVerbPhrase(
   // 副詞を種類別に分類
   const frequencyAdverbs = vp.adverbs.filter(a => a.advType === 'frequency');
   const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
+  const locativeAdverbs = vp.adverbs.filter(a => a.advType === 'place');
 
   // 動詞を活用（effectiveSubject で人称・数を決定）
   // 独自の主語がある場合はモーダルを繰り返す、ない場合はモーダルのスコープ内（原形）
@@ -310,12 +323,15 @@ function renderCoordinatedVerbPhrase(
   // 様態副詞は文末
   const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
 
+  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+
   // 前置詞句（動詞修飾）
   const prepPhrases = vp.prepositionalPhrases
     .map(pp => renderPrepositionalPhrase(pp, polarity))
     .join(' ');
 
-  const parts = [subjectStr, verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
+  const parts = [subjectStr, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
 
   let result = parts.join(' ');
 
@@ -483,6 +499,23 @@ function renderPrepositionalPhrase(pp: PrepositionalPhraseNode, polarity: 'affir
     ? renderCoordinatedNounPhrase(pp.object as CoordinatedNounPhraseNode, false, polarity)
     : renderNounPhrase(pp.object as NounPhraseNode, false, polarity);
   return `${pp.preposition} ${objectStr}`;
+}
+
+// 場所副詞をレンダリング（極性感応: somewhere ↔ anywhere）
+function renderLocativeAdverb(lemma: string, polarity: 'affirmative' | 'negative'): string {
+  // 極性感応の場所副詞マッピング
+  const polarityMap: Record<string, { affirmative: string; negative: string }> = {
+    'somewhere': { affirmative: 'somewhere', negative: 'anywhere' },
+    'anywhere': { affirmative: 'somewhere', negative: 'anywhere' },
+  };
+
+  const mapping = polarityMap[lemma];
+  if (mapping) {
+    return polarity === 'negative' ? mapping.negative : mapping.affirmative;
+  }
+
+  // 極性感応でない場所副詞はそのまま返す
+  return lemma;
 }
 
 function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirmative' | 'negative'): string {

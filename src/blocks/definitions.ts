@@ -15,6 +15,7 @@ const COLORS = {
   negation: '#E53935',   // 明るい赤
   frequency: '#EF5350',  // さらに明るい赤
   manner: '#EF6C57',     // 赤オレンジ
+  locative: '#F08C70',   // 明るい赤オレンジ（場所副詞）
 
   // Verb カテゴリ別（モンテッソーリ: 動詞=赤で統一）
   verbMotion: '#DC143C',        // 移動
@@ -924,6 +925,29 @@ Blockly.Blocks['manner_wrapper'] = {
 };
 
 // ============================================
+// 場所副詞データ定義
+// ============================================
+const LOCATIVE_ADVERBS = adverbs.filter(a => a.type === 'place');
+
+// ============================================
+// 場所副詞ラッパーブロック（動詞修飾）
+// ============================================
+Blockly.Blocks['locative_wrapper'] = {
+  init: function() {
+    const options: [string, string][] = LOCATIVE_ADVERBS.map(a => [a.lemma, a.lemma]);
+
+    this.appendStatementInput("VERB")
+        .setCheck("verb")
+        .appendField(msg('LOCATIVE_LABEL', 'LOCATION'))
+        .appendField(new Blockly.FieldDropdown(options), "LOCATIVE_VALUE");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.locative);
+    this.setTooltip(msg('LOCATIVE_TOOLTIP', 'Location: where the action occurs'));
+  }
+};
+
+// ============================================
 // 前置詞データ定義
 // ============================================
 const PREPOSITIONS = {
@@ -1149,6 +1173,7 @@ export function createToolbox() {
           { kind: "block", type: "negation_wrapper" },
           { kind: "block", type: "frequency_wrapper" },
           { kind: "block", type: "manner_wrapper" },
+          { kind: "block", type: "locative_wrapper" },
           { kind: "block", type: "preposition_verb" },
           { kind: "label", text: msg('SECTION_COORDINATION', '── Coordination ──') },
           { kind: "block", type: "coordination_verb_and" },

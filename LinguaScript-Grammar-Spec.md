@@ -325,6 +325,39 @@ frequency('never, drink(agent:'he, patient:'coffee))
 'always, 'usually, 'often, 'sometimes, 'rarely, 'never
 ```
 
+### 場所副詞（Locative Adverbs）
+
+場所は `locative()` ラッパーで表現する。前置詞句とは異なり、単独で場所を示す副詞。
+
+```lisp
+locative('here, eat(agent:'I, patient:'apple))
+;; → "I eat an apple here."
+
+locative('there, go(agent:'she))
+;; → "She goes there."
+
+locative('home, go(agent:'I))
+;; → "I go home."
+
+;; 場所副詞の種類
+'here, 'there              ;; 基本（直示的）
+'somewhere, 'anywhere      ;; 不定（極性感応）
+'everywhere, 'nowhere      ;; 全称・否定
+'home                      ;; 特殊（方向も含む）
+```
+
+#### 極性感応（Polarity Sensitivity）
+
+`somewhere` は否定文で `anywhere` に自動変換される。
+
+```lisp
+locative('somewhere, eat(agent:'I, patient:'apple))
+;; → "I eat an apple somewhere."
+
+not(locative('somewhere, eat(agent:'I, patient:'apple)))
+;; → "I don't eat an apple anywhere."
+```
+
 ### 前置詞句（Prepositional Phrases）
 
 場所・方向・関係などは前置詞句で表現する。

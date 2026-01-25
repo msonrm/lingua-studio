@@ -101,6 +101,8 @@ export const ja: LocaleData = {
     FREQUENCY_TOOLTIP: '頻度: 動作がどれくらい頻繁に起こるか',
     MANNER_LABEL: '様態',
     MANNER_TOOLTIP: '様態: 動作がどのように行われるか',
+    LOCATIVE_LABEL: '場所',
+    LOCATIVE_TOOLTIP: '場所: 動作がどこで起こるか',
 
     // Prepositions
     PP_LABEL: '前置詞句',

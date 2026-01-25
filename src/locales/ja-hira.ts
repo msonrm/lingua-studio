@@ -101,6 +101,8 @@ export const jaHira: LocaleData = {
     FREQUENCY_TOOLTIP: 'いつも？ときどき？',
     MANNER_LABEL: 'どうやって？',
     MANNER_TOOLTIP: 'はやく、ゆっくり、じょうずに など',
+    LOCATIVE_LABEL: 'どこで？',
+    LOCATIVE_TOOLTIP: 'ここ、そこ、どこかで など',
 
     // Prepositions
     PP_LABEL: 'どこ？だれと？',

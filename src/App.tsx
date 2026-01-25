@@ -4,7 +4,7 @@ import { LinguaScriptBar } from './components/LinguaScriptBar';
 import { LinguaScriptView } from './components/LinguaScriptView';
 import { SentenceNode } from './types/schema';
 import { renderToLinguaScript } from './compiler/linguaScriptRenderer';
-import { TransformLog, BlockChange, formatLogEnglish } from './types/grammarLog';
+import { TransformLog, BlockChange, formatLogStructured } from './types/grammarLog';
 import {
   LocaleContext,
   LocaleCode,
@@ -200,9 +200,15 @@ function App() {
                 <h3>Applied Rules</h3>
                 <div className="console-output console-rules">
                   {grammarLogs.length > 0
-                    ? grammarLogs.map((log, i) => (
-                        <div key={i} className="grammar-log">{formatLogEnglish(log)}</div>
-                      ))
+                    ? grammarLogs.map((log, i) => {
+                        const formatted = formatLogStructured(log);
+                        return (
+                          <div key={i} className="grammar-log">
+                            <div className="log-condition">{formatted.condition}</div>
+                            <div className="log-result">{formatted.result}</div>
+                          </div>
+                        );
+                      })
                     : <span className="console-placeholder">Grammar transformations will appear here</span>
                   }
                 </div>

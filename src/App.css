@@ -344,8 +344,25 @@ body {
 }
 
 .grammar-log {
+  padding: 4px 0;
+  margin-bottom: 8px;
+  border-left: 2px solid #444;
+  padding-left: 8px;
+}
+
+.grammar-log:last-child {
+  margin-bottom: 0;
+}
+
+.log-condition {
+  color: #888;
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+}
+
+.log-result {
   color: #f1fa8c;
-  padding: 2px 0;
+  font-size: 0.85rem;
 }
 
 /* ============================================

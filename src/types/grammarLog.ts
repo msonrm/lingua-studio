@@ -55,33 +55,57 @@ export class GrammarLogCollector {
   }
 }
 
-// English formatter (hardcoded for now, i18n later)
-export function formatLogEnglish(log: TransformLog): string {
-  const arrow = '→';
+// Format log as two-line HTML for display
+export interface FormattedLog {
+  condition: string;  // e.g., "Subject \"she\" is 3sg"
+  result: string;     // e.g., "+s: run → runs"
+}
 
-  // Format: [Trigger] → [Rule] → [Result]
-  // Example: Subject "he" → 3rd person singular → run + -s → runs
+// English formatter - returns structured two-line format
+export function formatLogStructured(log: TransformLog): FormattedLog {
+  const arrow = '→';
 
   switch (log.type) {
     case 'agreement':
-      // Subject "he" → 3sg → run → runs
-      return `${log.trigger} ${arrow} ${log.rule} ${arrow} ${log.from} ${arrow} ${log.to}`;
+      return {
+        condition: log.trigger || 'Subject agreement',
+        result: `${log.rule}: ${log.from} ${arrow} ${log.to}`,
+      };
     case 'tense':
-      // Tense: past → eat → ate
-      return `Tense: ${log.rule} ${arrow} ${log.from} ${arrow} ${log.to}`;
+      return {
+        condition: log.trigger || 'Tense',
+        result: `${log.rule}: ${log.from} ${arrow} ${log.to}`,
+      };
     case 'case':
-      // Position: object → I → me
-      return `${log.trigger} ${arrow} ${log.from} ${arrow} ${log.to}`;
+      return {
+        condition: log.trigger || 'Case',
+        result: `${log.rule}: ${log.from} ${arrow} ${log.to}`,
+      };
     case 'article':
-      // Next word starts with "a" → a → an
-      return `${log.trigger} ${arrow} ${log.from} ${arrow} ${log.to}`;
+      return {
+        condition: log.trigger || 'Article',
+        result: `${log.rule}: ${log.from} ${arrow} ${log.to}`,
+      };
     case 'do-support':
-      // Negation + present → do + not + base form
-      return `${log.trigger} ${arrow} ${log.from} ${arrow} ${log.to}`;
+      return {
+        condition: log.trigger || 'Do-support',
+        result: `${log.rule}: ${log.from} ${arrow} ${log.to}`,
+      };
     case 'negation':
-      return `${log.trigger} ${arrow} ${log.from} ${arrow} ${log.to}`;
+      return {
+        condition: log.trigger || 'Negation',
+        result: `${log.rule}: ${log.from} ${arrow} ${log.to}`,
+      };
     default:
-      const parts = [log.trigger, log.rule, `${log.from} ${arrow} ${log.to}`].filter(Boolean);
-      return parts.join(` ${arrow} `);
+      return {
+        condition: log.trigger || log.type,
+        result: `${log.rule ? log.rule + ': ' : ''}${log.from} ${arrow} ${log.to}`,
+      };
   }
+}
+
+// Legacy single-line formatter (kept for compatibility)
+export function formatLogEnglish(log: TransformLog): string {
+  const formatted = formatLogStructured(log);
+  return `${formatted.condition} → ${formatted.result}`;
 }

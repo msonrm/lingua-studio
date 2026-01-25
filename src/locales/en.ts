@@ -91,6 +91,8 @@ export const en: LocaleData = {
     DETERMINER_LABEL: 'DET',
     DETERMINER_TOOLTIP: 'Determiner: pre + central + post',
     DETERMINER_NONE: '─',
+    DET_PLURAL: '[plural]',
+    DET_UNCOUNTABLE: '[–]',
 
     // Verb modifiers
     NEGATION_LABEL: 'NOT',

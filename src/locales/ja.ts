@@ -91,6 +91,8 @@ export const ja: LocaleData = {
     DETERMINER_LABEL: '限定詞',
     DETERMINER_TOOLTIP: '限定詞: 前置 + 中央 + 後置',
     DETERMINER_NONE: '─',
+    DET_PLURAL: '[複数]',
+    DET_UNCOUNTABLE: '[不可算]',
 
     // Verb modifiers
     NEGATION_LABEL: '否定',
@@ -124,10 +126,10 @@ export const ja: LocaleData = {
 
     // Adjective categories
     ADJ_SIZE: '大きさ',
-    ADJ_AGE: '年齢',
+    ADJ_AGE: '新旧',
     ADJ_COLOR: '色',
-    ADJ_PHYSICAL: '物理的',
-    ADJ_QUALITY: '品質',
+    ADJ_PHYSICAL: '形状',
+    ADJ_QUALITY: '性質',
     ADJ_EMOTION: '感情',
 
     // Toolbox categories

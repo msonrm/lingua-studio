@@ -132,19 +132,21 @@ const CENTRAL_DETERMINERS: DeterminerOption[] = [
   { label: 'no', value: 'no', output: 'no' },
 ];
 
-// 後置限定詞（postdeterminer）
-const POST_DETERMINERS: DeterminerOption[] = [
-  { label: '─', value: '__none__', output: null },
-  { label: 'one', value: 'one', number: 'singular', output: 'one' },
-  { label: 'two', value: 'two', number: 'plural', output: 'two' },
-  { label: 'three', value: 'three', number: 'plural', output: 'three' },
-  { label: 'many', value: 'many', number: 'plural', output: 'many' },
-  { label: 'few', value: 'few', number: 'plural', output: 'few' },
-  { label: 'some', value: 'some', number: 'plural', output: 'some' },
-  { label: 'several', value: 'several', number: 'plural', output: 'several' },
-  { label: '[plural]', value: '__plural__', number: 'plural', output: null },
-  { label: '[–]', value: '__uncountable__', number: 'uncountable', output: null },
-];
+// 後置限定詞（postdeterminer）- ローカライズ可能なラベルを動的に生成
+function getPostDeterminers(): DeterminerOption[] {
+  return [
+    { label: '─', value: '__none__', output: null },
+    { label: 'one', value: 'one', number: 'singular', output: 'one' },
+    { label: 'two', value: 'two', number: 'plural', output: 'two' },
+    { label: 'three', value: 'three', number: 'plural', output: 'three' },
+    { label: 'many', value: 'many', number: 'plural', output: 'many' },
+    { label: 'few', value: 'few', number: 'plural', output: 'few' },
+    { label: 'some', value: 'some', number: 'plural', output: 'some' },
+    { label: 'several', value: 'several', number: 'plural', output: 'several' },
+    { label: msg('DET_PLURAL', '[plural]'), value: '__plural__', number: 'plural', output: null },
+    { label: msg('DET_UNCOUNTABLE', '[–]'), value: '__uncountable__', number: 'uncountable', output: null },
+  ];
+}
 
 // ============================================
 // 制約ルール（双方向）
@@ -712,7 +714,7 @@ Blockly.Blocks['determiner_unified'] = {
       const nounInfo = getConnectedNounInfo();
       const countableOnly = ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'];
 
-      return POST_DETERMINERS.map(o => {
+      return getPostDeterminers().map(o => {
         if (o.value === '__none__') return [o.label, o.value];
 
         // 固有名詞：全て無効
@@ -1076,7 +1078,7 @@ export const TIME_CHIP_DATA = {
 export const DETERMINER_DATA = {
   pre: PRE_DETERMINERS,
   central: CENTRAL_DETERMINERS,
-  post: POST_DETERMINERS,
+  post: getPostDeterminers(),
 };
 
 export const FREQUENCY_ADVERB_DATA = FREQUENCY_ADVERBS;

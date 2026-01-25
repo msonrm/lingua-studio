@@ -52,44 +52,52 @@ const COLORS = {
 };
 
 // ============================================
+// ヘルパー関数: Blockly.Msg から取得（フォールバック付き）
+// ============================================
+function msg(key: string, fallback: string): string {
+  return Blockly.Msg[key] || fallback;
+}
+
+// ============================================
 // TimeChip データ定義
 // ============================================
 type Tense = 'past' | 'present' | 'future' | 'inherit';
 type Aspect = 'simple' | 'progressive' | 'perfect' | 'perfectProgressive' | 'inherit';
 
 interface TimeChipOption {
-  label: string;
+  msgKey: string;
+  fallback: string;
   value: string;
   tense: Tense;
   aspect: Aspect;
 }
 
 const CONCRETE_OPTIONS: TimeChipOption[] = [
-  { label: 'Yesterday', value: 'yesterday', tense: 'past', aspect: 'simple' },
-  { label: 'Today', value: 'today', tense: 'present', aspect: 'simple' },
-  { label: 'Tomorrow', value: 'tomorrow', tense: 'future', aspect: 'simple' },
-  { label: 'Every day', value: 'every_day', tense: 'present', aspect: 'simple' },
-  { label: 'Last Sunday', value: 'last_sunday', tense: 'past', aspect: 'simple' },
-  { label: 'Right now', value: 'right_now', tense: 'present', aspect: 'progressive' },
-  { label: 'At the moment', value: 'at_the_moment', tense: 'present', aspect: 'progressive' },
-  { label: 'Next week', value: 'next_week', tense: 'future', aspect: 'simple' },
+  { msgKey: 'TIME_YESTERDAY', fallback: 'Yesterday', value: 'yesterday', tense: 'past', aspect: 'simple' },
+  { msgKey: 'TIME_TODAY', fallback: 'Today', value: 'today', tense: 'present', aspect: 'simple' },
+  { msgKey: 'TIME_TOMORROW', fallback: 'Tomorrow', value: 'tomorrow', tense: 'future', aspect: 'simple' },
+  { msgKey: 'TIME_EVERY_DAY', fallback: 'Every day', value: 'every_day', tense: 'present', aspect: 'simple' },
+  { msgKey: 'TIME_LAST_SUNDAY', fallback: 'Last Sunday', value: 'last_sunday', tense: 'past', aspect: 'simple' },
+  { msgKey: 'TIME_RIGHT_NOW', fallback: 'Right now', value: 'right_now', tense: 'present', aspect: 'progressive' },
+  { msgKey: 'TIME_AT_THE_MOMENT', fallback: 'At the moment', value: 'at_the_moment', tense: 'present', aspect: 'progressive' },
+  { msgKey: 'TIME_NEXT_WEEK', fallback: 'Next week', value: 'next_week', tense: 'future', aspect: 'simple' },
 ];
 
 const ASPECTUAL_OPTIONS: TimeChipOption[] = [
-  { label: 'Now', value: 'now', tense: 'present', aspect: 'progressive' },
-  { label: 'Just now', value: 'just_now', tense: 'past', aspect: 'simple' },
-  { label: 'Already/Yet', value: 'completion', tense: 'inherit', aspect: 'perfect' },
-  { label: 'Still', value: 'still', tense: 'inherit', aspect: 'inherit' },
-  { label: 'Recently', value: 'recently', tense: 'past', aspect: 'perfect' },
+  { msgKey: 'TIME_NOW', fallback: 'Now', value: 'now', tense: 'present', aspect: 'progressive' },
+  { msgKey: 'TIME_JUST_NOW', fallback: 'Just now', value: 'just_now', tense: 'past', aspect: 'simple' },
+  { msgKey: 'TIME_ALREADY_YET', fallback: 'Already/Yet', value: 'completion', tense: 'inherit', aspect: 'perfect' },
+  { msgKey: 'TIME_STILL', fallback: 'Still', value: 'still', tense: 'inherit', aspect: 'inherit' },
+  { msgKey: 'TIME_RECENTLY', fallback: 'Recently', value: 'recently', tense: 'past', aspect: 'perfect' },
 ];
 
 const ABSTRACT_OPTIONS: TimeChipOption[] = [
-  { label: '[Past]', value: 'past', tense: 'past', aspect: 'inherit' },
-  { label: '[Future]', value: 'future', tense: 'future', aspect: 'inherit' },
-  { label: '[Current]', value: 'current', tense: 'present', aspect: 'inherit' },
-  { label: '[Progressive]', value: 'progressive', tense: 'inherit', aspect: 'progressive' },
-  { label: '[Perfect]', value: 'perfect', tense: 'inherit', aspect: 'perfect' },
-  { label: '[Perf. Prog.]', value: 'perfectProgressive', tense: 'inherit', aspect: 'perfectProgressive' },
+  { msgKey: 'TENSE_PAST', fallback: '[Past]', value: 'past', tense: 'past', aspect: 'inherit' },
+  { msgKey: 'TENSE_FUTURE', fallback: '[Future]', value: 'future', tense: 'future', aspect: 'inherit' },
+  { msgKey: 'TENSE_PRESENT', fallback: '[Current]', value: 'current', tense: 'present', aspect: 'inherit' },
+  { msgKey: 'ASPECT_PROGRESSIVE', fallback: '[Progressive]', value: 'progressive', tense: 'inherit', aspect: 'progressive' },
+  { msgKey: 'ASPECT_PERFECT', fallback: '[Perfect]', value: 'perfect', tense: 'inherit', aspect: 'perfect' },
+  { msgKey: 'ASPECT_PERF_PROG', fallback: '[Perf. Prog.]', value: 'perfectProgressive', tense: 'inherit', aspect: 'perfectProgressive' },
 ];
 
 // ============================================
@@ -204,16 +212,16 @@ const DETERMINER_CONSTRAINTS = {
 Blockly.Blocks['time_frame'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("SENTENCE");
+        .appendField(msg('SENTENCE_LABEL', 'SENTENCE'));
     this.appendValueInput("TIME_CHIP")
         .setCheck("timeChip")
-        .appendField("T/A:");
+        .appendField(msg('SENTENCE_TA_LABEL', 'T/A:'));
     this.appendStatementInput("ACTION")
         .setCheck("verb")
-        .appendField("predicate:");
+        .appendField(msg('SENTENCE_PREDICATE_LABEL', 'predicate:'));
     this.setPreviousStatement(true, "sentence");  // modal_wrapperに接続可能
     this.setColour(COLORS.timeFrame);
-    this.setTooltip("The root of a sentence, specifying tense and aspect");
+    this.setTooltip(msg('SENTENCE_TOOLTIP', 'The root of a sentence, specifying tense and aspect'));
   }
 };
 
@@ -223,25 +231,25 @@ Blockly.Blocks['time_frame'] = {
 // ============================================
 Blockly.Blocks['modal_wrapper'] = {
   init: function() {
-    const modalOptions: [string, string][] = [
-      ['Ability (can)', 'ability'],
-      ['Permission (may)', 'permission'],
-      ['Possibility (might)', 'possibility'],
-      ['Obligation (must)', 'obligation'],
-      ['Certainty (must)', 'certainty'],
-      ['Advice (should)', 'advice'],
-      ['Volition (will)', 'volition'],
-      ['Prediction (will)', 'prediction'],
+    const getModalOptions = (): [string, string][] => [
+      [msg('MODAL_ABILITY', 'Ability (can)'), 'ability'],
+      [msg('MODAL_PERMISSION', 'Permission (may)'), 'permission'],
+      [msg('MODAL_POSSIBILITY', 'Possibility (might)'), 'possibility'],
+      [msg('MODAL_OBLIGATION', 'Obligation (must)'), 'obligation'],
+      [msg('MODAL_CERTAINTY', 'Certainty (must)'), 'certainty'],
+      [msg('MODAL_ADVICE', 'Advice (should)'), 'advice'],
+      [msg('MODAL_VOLITION', 'Volition (will)'), 'volition'],
+      [msg('MODAL_PREDICTION', 'Prediction (will)'), 'prediction'],
     ];
 
     this.appendDummyInput()
-        .appendField("MODAL")
-        .appendField(new Blockly.FieldDropdown(modalOptions), "MODAL_VALUE");
+        .appendField(msg('MODAL_LABEL', 'MODAL'))
+        .appendField(new Blockly.FieldDropdown(getModalOptions), "MODAL_VALUE");
     this.appendStatementInput("SENTENCE")
         .setCheck("sentence");
     this.setPreviousStatement(true, ["modal", "sentence"]);  // negation_sentence_wrapper / imperative_wrapper に接続可能
     this.setColour(COLORS.modal);
-    this.setTooltip("Modal: adds modality (ability, permission, obligation, etc.) to the sentence");
+    this.setTooltip(msg('MODAL_TOOLTIP', 'Modal: adds modality (ability, permission, obligation, etc.) to the sentence'));
   }
 };
 
@@ -251,11 +259,11 @@ Blockly.Blocks['modal_wrapper'] = {
 Blockly.Blocks['imperative_wrapper'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("IMPERATIVE");
+        .appendField(msg('IMPERATIVE_LABEL', 'IMPERATIVE'));
     this.appendStatementInput("SENTENCE")
         .setCheck("sentence");
     this.setColour(COLORS.imperative);
-    this.setTooltip("Imperative: creates a command (e.g., 'Eat the apple!')");
+    this.setTooltip(msg('IMPERATIVE_TOOLTIP', "Imperative: creates a command (e.g., 'Eat the apple!')"));
   }
 };
 
@@ -265,12 +273,12 @@ Blockly.Blocks['imperative_wrapper'] = {
 Blockly.Blocks['negation_sentence_wrapper'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("NOT (modal)");
+        .appendField(msg('NEGATION_MODAL_LABEL', 'NOT (modal)'));
     this.appendStatementInput("MODAL")
         .setCheck("modal");
     this.setPreviousStatement(true, "sentence");  // imperative_wrapper / modal_wrapper に接続可能
     this.setColour(COLORS.imperative);  // 紫系（sentence modifier）
-    this.setTooltip("Negates the modality (e.g., 'need not', 'don't have to')");
+    this.setTooltip(msg('NEGATION_MODAL_TOOLTIP', "Negates the modality (e.g., 'need not', 'don't have to')"));
   }
 };
 
@@ -279,14 +287,15 @@ Blockly.Blocks['negation_sentence_wrapper'] = {
 // ============================================
 Blockly.Blocks['time_chip_concrete'] = {
   init: function() {
-    const options: [string, string][] = CONCRETE_OPTIONS.map(o => [o.label, o.value]);
+    const getOptions = (): [string, string][] =>
+      CONCRETE_OPTIONS.map(o => [msg(o.msgKey, o.fallback), o.value]);
 
     this.appendDummyInput()
-        .appendField("TIME")
-        .appendField(new Blockly.FieldDropdown(options), "TIME_VALUE");
+        .appendField(msg('TIME_CHIP_CONCRETE_LABEL', 'TIME'))
+        .appendField(new Blockly.FieldDropdown(getOptions), "TIME_VALUE");
     this.setOutput(true, "timeChip");
     this.setColour(COLORS.timeChip);
-    this.setTooltip("Concrete time specification (when?)");
+    this.setTooltip(msg('TIME_CHIP_CONCRETE_TOOLTIP', 'Concrete time specification (when?)'));
   }
 };
 
@@ -295,14 +304,15 @@ Blockly.Blocks['time_chip_concrete'] = {
 // ============================================
 Blockly.Blocks['time_chip_aspectual'] = {
   init: function() {
-    const options: [string, string][] = ASPECTUAL_OPTIONS.map(o => [o.label, o.value]);
+    const getOptions = (): [string, string][] =>
+      ASPECTUAL_OPTIONS.map(o => [msg(o.msgKey, o.fallback), o.value]);
 
     this.appendDummyInput()
-        .appendField("ASPECT")
-        .appendField(new Blockly.FieldDropdown(options), "ASPECT_VALUE");
+        .appendField(msg('TIME_CHIP_ASPECTUAL_LABEL', 'ASPECT'))
+        .appendField(new Blockly.FieldDropdown(getOptions), "ASPECT_VALUE");
     this.setOutput(true, "timeChip");
     this.setColour(COLORS.timeChip);
-    this.setTooltip("Aspectual marker (progressive, perfect, etc.)");
+    this.setTooltip(msg('TIME_CHIP_ASPECTUAL_TOOLTIP', 'Aspectual marker (progressive, perfect, etc.)'));
   }
 };
 
@@ -311,73 +321,75 @@ Blockly.Blocks['time_chip_aspectual'] = {
 // ============================================
 Blockly.Blocks['time_chip_abstract'] = {
   init: function() {
-    const options: [string, string][] = ABSTRACT_OPTIONS.map(o => [o.label, o.value]);
+    const getOptions = (): [string, string][] =>
+      ABSTRACT_OPTIONS.map(o => [msg(o.msgKey, o.fallback), o.value]);
 
     this.appendDummyInput()
-        .appendField("TENSE/ASPECT")
-        .appendField(new Blockly.FieldDropdown(options), "MODIFIER_VALUE");
+        .appendField(msg('TIME_CHIP_ABSTRACT_LABEL', 'TENSE/ASPECT'))
+        .appendField(new Blockly.FieldDropdown(getOptions), "MODIFIER_VALUE");
     this.setOutput(true, "timeChip");
     this.setColour(COLORS.timeChip);
-    this.setTooltip("Tense/aspect modifier (affects verb conjugation)");
+    this.setTooltip(msg('TIME_CHIP_ABSTRACT_TOOLTIP', 'Tense/aspect modifier (affects verb conjugation)'));
   }
 };
 
 // ============================================
 // TimeChip - Unified (統合: Tense × Aspect)
 // ============================================
-const TENSE_OPTIONS: [string, string][] = [
-  ['[Past]', 'past'],
-  ['[Present]', 'present'],
-  ['[Future]', 'future'],
-];
-
-const ASPECT_OPTIONS: [string, string][] = [
-  ['[Simple]', 'simple'],
-  ['[Progressive]', 'progressive'],
-  ['[Perfect]', 'perfect'],
-  ['[Perf. Prog.]', 'perfectProgressive'],
-];
-
 Blockly.Blocks['time_chip_unified'] = {
   init: function() {
+    const getTenseOptions = (): [string, string][] => [
+      [msg('TENSE_PAST', '[Past]'), 'past'],
+      [msg('TENSE_PRESENT', '[Present]'), 'present'],
+      [msg('TENSE_FUTURE', '[Future]'), 'future'],
+    ];
+
+    const getAspectOptions = (): [string, string][] => [
+      [msg('ASPECT_SIMPLE', '[Simple]'), 'simple'],
+      [msg('ASPECT_PROGRESSIVE', '[Progressive]'), 'progressive'],
+      [msg('ASPECT_PERFECT', '[Perfect]'), 'perfect'],
+      [msg('ASPECT_PERF_PROG', '[Perf. Prog.]'), 'perfectProgressive'],
+    ];
+
     this.appendDummyInput()
-        .appendField("T/A")
-        .appendField(new Blockly.FieldDropdown(TENSE_OPTIONS), "TENSE_VALUE")
-        .appendField(new Blockly.FieldDropdown(ASPECT_OPTIONS), "ASPECT_VALUE");
+        .appendField(msg('TIME_CHIP_UNIFIED_LABEL', 'T/A'))
+        .appendField(new Blockly.FieldDropdown(getTenseOptions), "TENSE_VALUE")
+        .appendField(new Blockly.FieldDropdown(getAspectOptions), "ASPECT_VALUE");
     this.setOutput(true, "timeChip");
     this.setColour(COLORS.timeChip);
-    this.setTooltip("Unified Tense/Aspect: select both independently");
+    this.setTooltip(msg('TIME_CHIP_UNIFIED_TOOLTIP', 'Unified Tense/Aspect: select both independently'));
   }
 };
 
 // ============================================
 // カテゴリ別動詞ブロック
 // ============================================
-const VERB_CATEGORY_CONFIG: Record<VerbCategory, { label: string; color: string }> = {
-  motion: { label: 'MOTION', color: COLORS.verbMotion },
-  action: { label: 'ACTION', color: COLORS.verbAction },
-  transfer: { label: 'TRANSFER', color: COLORS.verbTransfer },
-  cognition: { label: 'COGNITION', color: COLORS.verbCognition },
-  communication: { label: 'COMMUNICATION', color: COLORS.verbCommunication },
-  state: { label: 'STATE', color: COLORS.verbState },
+const VERB_CATEGORY_KEYS: Record<VerbCategory, { msgKey: string; fallback: string; color: string }> = {
+  motion: { msgKey: 'VERB_MOTION', fallback: 'MOTION', color: COLORS.verbMotion },
+  action: { msgKey: 'VERB_ACTION', fallback: 'ACTION', color: COLORS.verbAction },
+  transfer: { msgKey: 'VERB_TRANSFER', fallback: 'TRANSFER', color: COLORS.verbTransfer },
+  cognition: { msgKey: 'VERB_COGNITION', fallback: 'COGNITION', color: COLORS.verbCognition },
+  communication: { msgKey: 'VERB_COMMUNICATION', fallback: 'COMMUNICATION', color: COLORS.verbCommunication },
+  state: { msgKey: 'VERB_STATE', fallback: 'STATE', color: COLORS.verbState },
 };
 
 // カテゴリ別動詞ブロック生成関数
 function createVerbCategoryBlock(category: VerbCategory) {
-  const config = VERB_CATEGORY_CONFIG[category];
+  const config = VERB_CATEGORY_KEYS[category];
   const categoryVerbs = getVerbsByCategory(category);
 
   Blockly.Blocks[`verb_${category}`] = {
     init: function() {
       const verbOptions: [string, string][] = categoryVerbs.map(v => [v.lemma, v.lemma]);
+      const label = msg(config.msgKey, config.fallback);
 
       this.appendDummyInput()
-          .appendField(config.label)
+          .appendField(label)
           .appendField(new Blockly.FieldDropdown(verbOptions, this.updateShape.bind(this)), "VERB");
 
       this.setPreviousStatement(true, "verb");
       this.setColour(config.color);
-      this.setTooltip(`${config.label} verb`);
+      this.setTooltip(`${label} verb`);
 
       // 初期形状を設定
       if (categoryVerbs.length > 0) {
@@ -427,18 +439,19 @@ Blockly.Blocks['pronoun_block'] = {
     const personalOptions: [string, string][] = personalPronouns.map(p => [p.lemma, p.lemma]);
     const indefiniteOptions: [string, string][] = indefinitePronouns.map(p => [p.lemma, p.lemma]);
     const demonstrativeOptions: [string, string][] = demonstrativePronouns.map(p => [p.lemma, p.lemma]);
-    const allOptions: [string, string][] = [
-      ["── Personal ──", "__label_personal__"],
+
+    const getAllOptions = (): [string, string][] => [
+      [msg('GROUP_PERSONAL', '── Personal ──'), "__label_personal__"],
       ...personalOptions,
-      ["── Demonstrative ──", "__label_demonstrative__"],
+      [msg('GROUP_DEMONSTRATIVE', '── Demonstrative ──'), "__label_demonstrative__"],
       ...demonstrativeOptions,
-      ["── Indefinite ──", "__label_indefinite__"],
+      [msg('GROUP_INDEFINITE', '── Indefinite ──'), "__label_indefinite__"],
       ...indefiniteOptions,
     ];
 
     this.appendDummyInput()
-        .appendField("PRONOUN")
-        .appendField(new Blockly.FieldDropdown(allOptions), "PRONOUN_VALUE");
+        .appendField(msg('PRONOUN_LABEL', 'PRONOUN'))
+        .appendField(new Blockly.FieldDropdown(getAllOptions), "PRONOUN_VALUE");
 
     // デフォルト値を最初の実際の項目に設定
     if (personalOptions.length > 0) {
@@ -447,7 +460,7 @@ Blockly.Blocks['pronoun_block'] = {
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.person);
-    this.setTooltip("A pronoun (I, you, he, this, someone, etc.) - no determiner needed");
+    this.setTooltip(msg('PRONOUN_TOOLTIP', 'A pronoun (I, you, he, this, someone, etc.) - no determiner needed'));
   }
 };
 
@@ -461,7 +474,7 @@ Blockly.Blocks['possessive_pronoun_block'] = {
     const options: [string, string][] = possessivePronouns.map(p => [p.lemma, p.lemma]);
 
     this.appendDummyInput()
-        .appendField("POSSESSIVE")
+        .appendField(msg('POSSESSIVE_PRONOUN_LABEL', 'POSSESSIVE'))
         .appendField(new Blockly.FieldDropdown(options), "POSSESSIVE_VALUE");
 
     // デフォルト値を設定
@@ -471,7 +484,7 @@ Blockly.Blocks['possessive_pronoun_block'] = {
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.thing);  // オブジェクト色（モノを指すため）
-    this.setTooltip("A possessive pronoun (mine, yours, his, hers, ours, theirs) - refers to a possessed thing");
+    this.setTooltip(msg('POSSESSIVE_PRONOUN_TOOLTIP', 'A possessive pronoun (mine, yours, his, hers, ours, theirs) - refers to a possessed thing'));
   }
 };
 
@@ -485,15 +498,16 @@ Blockly.Blocks['human_block'] = {
   init: function() {
     const commonOptions: [string, string][] = humanNouns.map(n => [n.lemma, n.lemma]);
     const properOptions: [string, string][] = humanProperNouns.map(n => [n.lemma, n.lemma]);
-    const nounOptions: [string, string][] = [
-      ["── Common ──", "__label_common__"],
+
+    const getNounOptions = (): [string, string][] => [
+      [msg('GROUP_COMMON', '── Common ──'), "__label_common__"],
       ...commonOptions,
-      ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
+      ...(properOptions.length > 0 ? [[msg('GROUP_NAMES', '── Names ──'), "__label_proper__"] as [string, string], ...properOptions] : []),
     ];
 
     this.appendDummyInput()
-        .appendField("HUMAN")
-        .appendField(new Blockly.FieldDropdown(nounOptions), "HUMAN_VALUE");
+        .appendField(msg('HUMAN_LABEL', 'HUMAN'))
+        .appendField(new Blockly.FieldDropdown(getNounOptions), "HUMAN_VALUE");
 
     // デフォルト値を最初の実際の項目に設定
     if (commonOptions.length > 0) {
@@ -502,7 +516,7 @@ Blockly.Blocks['human_block'] = {
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.person);
-    this.setTooltip("A human (father, teacher, John, etc.)");
+    this.setTooltip(msg('HUMAN_TOOLTIP', 'A human (father, teacher, John, etc.)'));
   }
 };
 
@@ -518,12 +532,12 @@ Blockly.Blocks['animal_block'] = {
     ];
 
     this.appendDummyInput()
-        .appendField("ANIMAL")
+        .appendField(msg('ANIMAL_LABEL', 'ANIMAL'))
         .appendField(new Blockly.FieldDropdown(nounOptions), "ANIMAL_VALUE");
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.thing);
-    this.setTooltip("An animal (cat, dog, bird, etc.)");
+    this.setTooltip(msg('ANIMAL_TOOLTIP', 'An animal (cat, dog, bird, etc.)'));
   }
 };
 
@@ -539,12 +553,12 @@ Blockly.Blocks['object_block'] = {
     ];
 
     this.appendDummyInput()
-        .appendField("OBJECT")
+        .appendField(msg('OBJECT_LABEL', 'OBJECT'))
         .appendField(new Blockly.FieldDropdown(nounOptions), "OBJECT_VALUE");
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.thing);
-    this.setTooltip("An object (apple, book, pen, water, etc.)");
+    this.setTooltip(msg('OBJECT_TOOLTIP', 'An object (apple, book, pen, water, etc.)'));
   }
 };
 
@@ -559,15 +573,16 @@ Blockly.Blocks['place_block'] = {
   init: function() {
     const commonOptions: [string, string][] = placeNouns.map(n => [n.lemma, n.lemma]);
     const properOptions: [string, string][] = placeProperNouns.map(n => [n.lemma, n.lemma]);
-    const nounOptions: [string, string][] = [
-      ["── Common ──", "__label_common__"],
+
+    const getNounOptions = (): [string, string][] => [
+      [msg('GROUP_COMMON', '── Common ──'), "__label_common__"],
       ...commonOptions,
-      ...(properOptions.length > 0 ? [["── Names ──", "__label_proper__"] as [string, string], ...properOptions] : []),
+      ...(properOptions.length > 0 ? [[msg('GROUP_NAMES', '── Names ──'), "__label_proper__"] as [string, string], ...properOptions] : []),
     ];
 
     this.appendDummyInput()
-        .appendField("PLACE")
-        .appendField(new Blockly.FieldDropdown(nounOptions), "PLACE_VALUE");
+        .appendField(msg('PLACE_LABEL', 'PLACE'))
+        .appendField(new Blockly.FieldDropdown(getNounOptions), "PLACE_VALUE");
 
     // デフォルト値を最初の実際の項目に設定
     if (commonOptions.length > 0) {
@@ -576,7 +591,7 @@ Blockly.Blocks['place_block'] = {
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.place);
-    this.setTooltip("A place (park, school, Tokyo, etc.)");
+    this.setTooltip(msg('PLACE_TOOLTIP', 'A place (park, school, Tokyo, etc.)'));
   }
 };
 
@@ -592,12 +607,12 @@ Blockly.Blocks['abstract_block'] = {
     ];
 
     this.appendDummyInput()
-        .appendField("ABSTRACT")
+        .appendField(msg('ABSTRACT_LABEL', 'ABSTRACT'))
         .appendField(new Blockly.FieldDropdown(nounOptions), "ABSTRACT_VALUE");
 
     this.setOutput(true, "noun");
     this.setColour(COLORS.thing);
-    this.setTooltip("An abstract concept (idea, love, music, etc.)");
+    this.setTooltip(msg('ABSTRACT_TOOLTIP', 'An abstract concept (idea, love, music, etc.)'));
   }
 };
 
@@ -732,14 +747,14 @@ Blockly.Blocks['determiner_unified'] = {
 
     this.appendValueInput("NOUN")
         .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞
-        .appendField("DET")
+        .appendField(msg('DETERMINER_LABEL', 'DET'))
         .appendField(new Blockly.FieldDropdown(getPreOptions, createValidator(getPreOptions)), "PRE")
         .appendField(new Blockly.FieldDropdown(getCentralOptions, createValidator(getCentralOptions)), "CENTRAL")
         .appendField(new Blockly.FieldDropdown(getPostOptions, createValidator(getPostOptions)), "POST");
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.determiner);
-    this.setTooltip("Determiner: pre + central + post (× = 選択不可)");
+    this.setTooltip(msg('DETERMINER_TOOLTIP', 'Determiner: pre + central + post'));
 
     // 名詞情報取得関数を保存（onchangeで使用）
     this._getConnectedNounInfo = getConnectedNounInfo;
@@ -802,32 +817,33 @@ Blockly.Blocks['determiner_unified'] = {
 // ============================================
 // カテゴリ別形容詞ブロック
 // ============================================
-const ADJECTIVE_CATEGORY_CONFIG: Record<AdjectiveCategory, { label: string; color: string }> = {
-  size: { label: 'SIZE', color: COLORS.adjective },
-  age: { label: 'AGE', color: COLORS.adjective },
-  color: { label: 'COLOR', color: COLORS.adjective },
-  physical: { label: 'PHYSICAL', color: COLORS.adjective },
-  quality: { label: 'QUALITY', color: COLORS.adjective },
-  emotion: { label: 'EMOTION', color: COLORS.adjective },
+const ADJECTIVE_CATEGORY_KEYS: Record<AdjectiveCategory, { msgKey: string; fallback: string; color: string }> = {
+  size: { msgKey: 'ADJ_SIZE', fallback: 'SIZE', color: COLORS.adjective },
+  age: { msgKey: 'ADJ_AGE', fallback: 'AGE', color: COLORS.adjective },
+  color: { msgKey: 'ADJ_COLOR', fallback: 'COLOR', color: COLORS.adjective },
+  physical: { msgKey: 'ADJ_PHYSICAL', fallback: 'PHYSICAL', color: COLORS.adjective },
+  quality: { msgKey: 'ADJ_QUALITY', fallback: 'QUALITY', color: COLORS.adjective },
+  emotion: { msgKey: 'ADJ_EMOTION', fallback: 'EMOTION', color: COLORS.adjective },
 };
 
 // カテゴリ別形容詞ブロック生成関数
 function createAdjectiveCategoryBlock(category: AdjectiveCategory) {
-  const config = ADJECTIVE_CATEGORY_CONFIG[category];
+  const config = ADJECTIVE_CATEGORY_KEYS[category];
   const categoryAdjs = adjectives.filter(a => a.category === category);
 
   Blockly.Blocks[`adjective_${category}`] = {
     init: function() {
       const adjOptions: [string, string][] = categoryAdjs.map(a => [a.lemma, a.lemma]);
+      const label = msg(config.msgKey, config.fallback);
 
       this.appendValueInput("NOUN")
           .setCheck(["noun", "adjective"])
-          .appendField(config.label)
+          .appendField(label)
           .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE");
 
       this.setOutput(true, "adjective");
       this.setColour(config.color);
-      this.setTooltip(`${config.label} adjective: modifies a noun`);
+      this.setTooltip(`${label} adjective: modifies a noun`);
     }
   };
 }
@@ -859,11 +875,11 @@ Blockly.Blocks['negation_wrapper'] = {
   init: function() {
     this.appendStatementInput("VERB")
         .setCheck("verb")
-        .appendField("NOT");
+        .appendField(msg('NEGATION_LABEL', 'NOT'));
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.negation);
-    this.setTooltip("Negation: makes the action negative");
+    this.setTooltip(msg('NEGATION_TOOLTIP', 'Negation: makes the action negative'));
   }
 };
 
@@ -876,12 +892,12 @@ Blockly.Blocks['frequency_wrapper'] = {
 
     this.appendStatementInput("VERB")
         .setCheck("verb")
-        .appendField("FREQ")
+        .appendField(msg('FREQUENCY_LABEL', 'FREQ'))
         .appendField(new Blockly.FieldDropdown(options), "FREQ_VALUE");
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.frequency);
-    this.setTooltip("Frequency: how often the action occurs");
+    this.setTooltip(msg('FREQUENCY_TOOLTIP', 'Frequency: how often the action occurs'));
   }
 };
 
@@ -894,12 +910,12 @@ Blockly.Blocks['manner_wrapper'] = {
 
     this.appendStatementInput("VERB")
         .setCheck("verb")
-        .appendField("MANNER")
+        .appendField(msg('MANNER_LABEL', 'MANNER'))
         .appendField(new Blockly.FieldDropdown(options), "MANNER_VALUE");
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.manner);
-    this.setTooltip("Manner: how the action is performed");
+    this.setTooltip(msg('MANNER_TOOLTIP', 'Manner: how the action is performed'));
   }
 };
 
@@ -943,16 +959,16 @@ Blockly.Blocks['preposition_verb'] = {
   init: function() {
     this.appendStatementInput("VERB")
         .setCheck("verb")
-        .appendField("PP")
+        .appendField(msg('PP_LABEL', 'PP'))
         .appendField(new Blockly.FieldDropdown(ALL_PREPOSITIONS), "PREP_VALUE");
 
     this.appendValueInput("OBJECT")
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
-        .appendField("object:");
+        .appendField(msg('PP_OBJECT_LABEL', 'object:'));
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.prepVerb);
-    this.setTooltip("Prepositional Phrase (Verb): adds a prepositional phrase to a verb");
+    this.setTooltip(msg('PP_VERB_TOOLTIP', 'Prepositional Phrase (Verb): adds a prepositional phrase to a verb'));
   }
 };
 
@@ -963,16 +979,16 @@ Blockly.Blocks['preposition_noun'] = {
   init: function() {
     this.appendValueInput("NOUN")
         .setCheck(["noun", "adjective", "nounPhrase"])
-        .appendField("PP")
+        .appendField(msg('PP_LABEL', 'PP'))
         .appendField(new Blockly.FieldDropdown(ALL_PREPOSITIONS), "PREP_VALUE");
 
     this.appendValueInput("OBJECT")
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
-        .appendField("object:");
+        .appendField(msg('PP_OBJECT_LABEL', 'object:'));
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.prepNoun);
-    this.setTooltip("Prepositional Phrase (Noun): modifies a noun with a prepositional phrase");
+    this.setTooltip(msg('PP_NOUN_TOOLTIP', 'Prepositional Phrase (Noun): modifies a noun with a prepositional phrase'));
   }
 };
 
@@ -983,14 +999,14 @@ Blockly.Blocks['coordination_noun_and'] = {
   init: function() {
     this.appendValueInput("LEFT")
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
-        .appendField("AND");
+        .appendField(msg('COORD_AND_LABEL', 'AND'));
 
     this.appendValueInput("RIGHT")
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"]);
 
     this.setOutput(true, "coordinatedNounPhrase");
     this.setColour(COLORS.coordNoun);
-    this.setTooltip("Coordination (Noun): connects two noun phrases with AND");
+    this.setTooltip(msg('COORD_NOUN_AND_TOOLTIP', 'Coordination (Noun): connects two noun phrases with AND'));
   }
 };
 
@@ -1001,14 +1017,14 @@ Blockly.Blocks['coordination_noun_or'] = {
   init: function() {
     this.appendValueInput("LEFT")
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
-        .appendField("OR");
+        .appendField(msg('COORD_OR_LABEL', 'OR'));
 
     this.appendValueInput("RIGHT")
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"]);
 
     this.setOutput(true, "coordinatedNounPhrase");
     this.setColour(COLORS.coordNoun);
-    this.setTooltip("Coordination (Noun): connects two noun phrases with OR");
+    this.setTooltip(msg('COORD_NOUN_OR_TOOLTIP', 'Coordination (Noun): connects two noun phrases with OR'));
   }
 };
 
@@ -1019,14 +1035,14 @@ Blockly.Blocks['coordination_verb_and'] = {
   init: function() {
     this.appendStatementInput("LEFT")
         .setCheck("verb")
-        .appendField("AND");
+        .appendField(msg('COORD_AND_LABEL', 'AND'));
 
     this.appendStatementInput("RIGHT")
         .setCheck("verb");
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.coordVerb);
-    this.setTooltip("Coordination (Verb): connects two verb phrases with AND");
+    this.setTooltip(msg('COORD_VERB_AND_TOOLTIP', 'Coordination (Verb): connects two verb phrases with AND'));
   }
 };
 
@@ -1037,14 +1053,14 @@ Blockly.Blocks['coordination_verb_or'] = {
   init: function() {
     this.appendStatementInput("LEFT")
         .setCheck("verb")
-        .appendField("OR");
+        .appendField(msg('COORD_OR_LABEL', 'OR'));
 
     this.appendStatementInput("RIGHT")
         .setCheck("verb");
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.coordVerb);
-    this.setTooltip("Coordination (Verb): connects two verb phrases with OR");
+    this.setTooltip(msg('COORD_VERB_OR_TOOLTIP', 'Coordination (Verb): connects two verb phrases with OR'));
   }
 };
 
@@ -1052,9 +1068,9 @@ Blockly.Blocks['coordination_verb_or'] = {
 // オプションのエクスポート（コンパイラ用）
 // ============================================
 export const TIME_CHIP_DATA = {
-  concrete: CONCRETE_OPTIONS,
-  aspectual: ASPECTUAL_OPTIONS,
-  abstract: ABSTRACT_OPTIONS,
+  concrete: CONCRETE_OPTIONS.map(o => ({ label: o.fallback, value: o.value, tense: o.tense, aspect: o.aspect })),
+  aspectual: ASPECTUAL_OPTIONS.map(o => ({ label: o.fallback, value: o.value, tense: o.tense, aspect: o.aspect })),
+  abstract: ABSTRACT_OPTIONS.map(o => ({ label: o.fallback, value: o.value, tense: o.tense, aspect: o.aspect })),
 };
 
 export const DETERMINER_DATA = {
@@ -1068,176 +1084,181 @@ export const FREQUENCY_ADVERB_DATA = FREQUENCY_ADVERBS;
 export const PREPOSITION_DATA = PREPOSITIONS;
 
 // ============================================
-// ツールボックス定義
+// ツールボックス定義（動的生成）
 // ============================================
-export const toolbox = {
-  kind: "categoryToolbox",
-  contents: [
-    {
-      kind: "category",
-      name: "Sentence",
-      colour: COLORS.timeFrame,
-      contents: [
-        { kind: "block", type: "time_frame" },
-        { kind: "label", text: "── Time ──" },
-        { kind: "block", type: "time_chip_concrete" },
-        { kind: "label", text: "── Aspect ──" },
-        { kind: "block", type: "time_chip_aspectual" },
-        { kind: "label", text: "── Tense/Aspect ──" },
-        { kind: "block", type: "time_chip_abstract" },
-        { kind: "block", type: "time_chip_unified" },
-      ]
-    },
-    {
-      kind: "category",
-      name: "Sentence Modifier",
-      colour: COLORS.modal,
-      contents: [
-        { kind: "label", text: "── Imperative ──" },
-        { kind: "block", type: "imperative_wrapper" },
-        { kind: "label", text: "── Modal Negation ──" },
-        { kind: "block", type: "negation_sentence_wrapper" },
-        { kind: "label", text: "── Modal ──" },
-        { kind: "block", type: "modal_wrapper" },
-      ]
-    },
-    {
-      kind: "category",
-      name: "Verbs",
-      colour: COLORS.action,
-      contents: [
-        { kind: "label", text: "── Motion ──" },
-        { kind: "block", type: "verb_motion" },
-        { kind: "label", text: "── Action ──" },
-        { kind: "block", type: "verb_action" },
-        { kind: "label", text: "── Transfer ──" },
-        { kind: "block", type: "verb_transfer" },
-        { kind: "label", text: "── Cognition ──" },
-        { kind: "block", type: "verb_cognition" },
-        { kind: "label", text: "── Communication ──" },
-        { kind: "block", type: "verb_communication" },
-        { kind: "label", text: "── State ──" },
-        { kind: "block", type: "verb_state" },
-      ]
-    },
-    {
-      kind: "category",
-      name: "Verb Modifiers",
-      colour: COLORS.frequency,
-      contents: [
-        { kind: "block", type: "negation_wrapper" },
-        { kind: "block", type: "frequency_wrapper" },
-        { kind: "block", type: "manner_wrapper" },
-        { kind: "block", type: "preposition_verb" },
-        { kind: "label", text: "── Coordination ──" },
-        { kind: "block", type: "coordination_verb_and" },
-        { kind: "block", type: "coordination_verb_or" },
-      ]
-    },
-    {
-      kind: "category",
-      name: "Nouns",
-      colour: COLORS.person,
-      contents: [
-        { kind: "label", text: "── Pronouns ──" },
-        { kind: "block", type: "pronoun_block" },
-        { kind: "block", type: "possessive_pronoun_block" },
-        { kind: "label", text: "── People ──" },
-        {
-          kind: "block",
-          type: "determiner_unified",
-          inputs: {
-            NOUN: {
-              block: { type: "human_block" }
+export function createToolbox() {
+  return {
+    kind: "categoryToolbox",
+    contents: [
+      {
+        kind: "category",
+        name: msg('TOOLBOX_SENTENCE', 'Sentence'),
+        colour: COLORS.timeFrame,
+        contents: [
+          { kind: "block", type: "time_frame" },
+          { kind: "label", text: msg('SECTION_TIME', '── Time ──') },
+          { kind: "block", type: "time_chip_concrete" },
+          { kind: "label", text: msg('SECTION_ASPECT', '── Aspect ──') },
+          { kind: "block", type: "time_chip_aspectual" },
+          { kind: "label", text: msg('SECTION_TENSE_ASPECT', '── Tense/Aspect ──') },
+          { kind: "block", type: "time_chip_abstract" },
+          { kind: "block", type: "time_chip_unified" },
+        ]
+      },
+      {
+        kind: "category",
+        name: msg('TOOLBOX_SENTENCE_MODIFIER', 'Sentence Modifier'),
+        colour: COLORS.modal,
+        contents: [
+          { kind: "label", text: msg('SECTION_IMPERATIVE', '── Imperative ──') },
+          { kind: "block", type: "imperative_wrapper" },
+          { kind: "label", text: msg('SECTION_MODAL_NEGATION', '── Modal Negation ──') },
+          { kind: "block", type: "negation_sentence_wrapper" },
+          { kind: "label", text: msg('SECTION_MODAL', '── Modal ──') },
+          { kind: "block", type: "modal_wrapper" },
+        ]
+      },
+      {
+        kind: "category",
+        name: msg('TOOLBOX_VERBS', 'Verbs'),
+        colour: COLORS.action,
+        contents: [
+          { kind: "label", text: msg('SECTION_MOTION', '── Motion ──') },
+          { kind: "block", type: "verb_motion" },
+          { kind: "label", text: msg('SECTION_ACTION', '── Action ──') },
+          { kind: "block", type: "verb_action" },
+          { kind: "label", text: msg('SECTION_TRANSFER', '── Transfer ──') },
+          { kind: "block", type: "verb_transfer" },
+          { kind: "label", text: msg('SECTION_COGNITION', '── Cognition ──') },
+          { kind: "block", type: "verb_cognition" },
+          { kind: "label", text: msg('SECTION_COMMUNICATION', '── Communication ──') },
+          { kind: "block", type: "verb_communication" },
+          { kind: "label", text: msg('SECTION_STATE', '── State ──') },
+          { kind: "block", type: "verb_state" },
+        ]
+      },
+      {
+        kind: "category",
+        name: msg('TOOLBOX_VERB_MODIFIERS', 'Verb Modifiers'),
+        colour: COLORS.frequency,
+        contents: [
+          { kind: "block", type: "negation_wrapper" },
+          { kind: "block", type: "frequency_wrapper" },
+          { kind: "block", type: "manner_wrapper" },
+          { kind: "block", type: "preposition_verb" },
+          { kind: "label", text: msg('SECTION_COORDINATION', '── Coordination ──') },
+          { kind: "block", type: "coordination_verb_and" },
+          { kind: "block", type: "coordination_verb_or" },
+        ]
+      },
+      {
+        kind: "category",
+        name: msg('TOOLBOX_NOUNS', 'Nouns'),
+        colour: COLORS.person,
+        contents: [
+          { kind: "label", text: msg('SECTION_PRONOUNS', '── Pronouns ──') },
+          { kind: "block", type: "pronoun_block" },
+          { kind: "block", type: "possessive_pronoun_block" },
+          { kind: "label", text: msg('SECTION_PEOPLE', '── People ──') },
+          {
+            kind: "block",
+            type: "determiner_unified",
+            inputs: {
+              NOUN: {
+                block: { type: "human_block" }
+              }
+            },
+            fields: {
+              PRE: "__none__",
+              CENTRAL: "a",
+              POST: "__none__"
             }
           },
-          fields: {
-            PRE: "__none__",
-            CENTRAL: "a",
-            POST: "__none__"
-          }
-        },
-        { kind: "label", text: "── Animals ──" },
-        {
-          kind: "block",
-          type: "determiner_unified",
-          inputs: {
-            NOUN: {
-              block: { type: "animal_block" }
+          { kind: "label", text: msg('SECTION_ANIMALS', '── Animals ──') },
+          {
+            kind: "block",
+            type: "determiner_unified",
+            inputs: {
+              NOUN: {
+                block: { type: "animal_block" }
+              }
+            },
+            fields: {
+              PRE: "__none__",
+              CENTRAL: "a",
+              POST: "__none__"
             }
           },
-          fields: {
-            PRE: "__none__",
-            CENTRAL: "a",
-            POST: "__none__"
-          }
-        },
-        { kind: "label", text: "── Objects ──" },
-        {
-          kind: "block",
-          type: "determiner_unified",
-          inputs: {
-            NOUN: {
-              block: { type: "object_block" }
+          { kind: "label", text: msg('SECTION_OBJECTS', '── Objects ──') },
+          {
+            kind: "block",
+            type: "determiner_unified",
+            inputs: {
+              NOUN: {
+                block: { type: "object_block" }
+              }
+            },
+            fields: {
+              PRE: "__none__",
+              CENTRAL: "a",
+              POST: "__none__"
             }
           },
-          fields: {
-            PRE: "__none__",
-            CENTRAL: "a",
-            POST: "__none__"
-          }
-        },
-        { kind: "label", text: "── Places ──" },
-        {
-          kind: "block",
-          type: "determiner_unified",
-          inputs: {
-            NOUN: {
-              block: { type: "place_block" }
+          { kind: "label", text: msg('SECTION_PLACES', '── Places ──') },
+          {
+            kind: "block",
+            type: "determiner_unified",
+            inputs: {
+              NOUN: {
+                block: { type: "place_block" }
+              }
+            },
+            fields: {
+              PRE: "__none__",
+              CENTRAL: "the",
+              POST: "__none__"
             }
           },
-          fields: {
-            PRE: "__none__",
-            CENTRAL: "the",
-            POST: "__none__"
-          }
-        },
-        { kind: "label", text: "── Abstract ──" },
-        {
-          kind: "block",
-          type: "determiner_unified",
-          inputs: {
-            NOUN: {
-              block: { type: "abstract_block" }
+          { kind: "label", text: msg('SECTION_ABSTRACT', '── Abstract ──') },
+          {
+            kind: "block",
+            type: "determiner_unified",
+            inputs: {
+              NOUN: {
+                block: { type: "abstract_block" }
+              }
+            },
+            fields: {
+              PRE: "__none__",
+              CENTRAL: "a",
+              POST: "__none__"
             }
           },
-          fields: {
-            PRE: "__none__",
-            CENTRAL: "a",
-            POST: "__none__"
-          }
-        },
-      ]
-    },
-    {
-      kind: "category",
-      name: "Noun Modifiers",
-      colour: COLORS.determiner,
-      contents: [
-        { kind: "block", type: "determiner_unified" },
-        { kind: "label", text: "── Adjectives ──" },
-        { kind: "block", type: "adjective_size" },
-        { kind: "block", type: "adjective_age" },
-        { kind: "block", type: "adjective_color" },
-        { kind: "block", type: "adjective_physical" },
-        { kind: "block", type: "adjective_quality" },
-        { kind: "block", type: "adjective_emotion" },
-        { kind: "label", text: "── Preposition ──" },
-        { kind: "block", type: "preposition_noun" },
-        { kind: "label", text: "── Coordination ──" },
-        { kind: "block", type: "coordination_noun_and" },
-        { kind: "block", type: "coordination_noun_or" },
-      ]
-    },
-  ]
-};
+        ]
+      },
+      {
+        kind: "category",
+        name: msg('TOOLBOX_NOUN_MODIFIERS', 'Noun Modifiers'),
+        colour: COLORS.determiner,
+        contents: [
+          { kind: "block", type: "determiner_unified" },
+          { kind: "label", text: msg('SECTION_ADJECTIVES', '── Adjectives ──') },
+          { kind: "block", type: "adjective_size" },
+          { kind: "block", type: "adjective_age" },
+          { kind: "block", type: "adjective_color" },
+          { kind: "block", type: "adjective_physical" },
+          { kind: "block", type: "adjective_quality" },
+          { kind: "block", type: "adjective_emotion" },
+          { kind: "label", text: msg('SECTION_PREPOSITION', '── Preposition ──') },
+          { kind: "block", type: "preposition_noun" },
+          { kind: "label", text: msg('SECTION_COORDINATION', '── Coordination ──') },
+          { kind: "block", type: "coordination_noun_and" },
+          { kind: "block", type: "coordination_noun_or" },
+        ]
+      },
+    ]
+  };
+}
+
+// 後方互換性のための静的エクスポート（非推奨）
+export const toolbox = createToolbox();

@@ -181,10 +181,31 @@ verb(agent:'x, theme:'y, ...)
 | `agent` | 動作主 | I, she |
 | `theme` | 対象 | apple, book |
 | `recipient` | 受け手 | you, him |
-| `source` | 起点 | from the store |
-| `goal` | 着点 | to the station |
+| `source` | 起点 | leave the room |
+| `goal` | 着点 | put X on the table |
+| `location` | 位置 | live in Tokyo |
 
-**注意**: `source`/`goal` は移動・授与動詞の必須項として使用する。任意の場所表現は `pp()` で表現する。
+**注意**: `source`/`goal`/`location` は特定の動詞の必須項として使用する。任意の場所表現は `pp()` で表現する。
+
+### 着点・位置を必須とする動詞
+
+UGの観点から、これらの役割が必須項である動詞は valency で定義する（付加詞としての pp() ではない）。
+
+```lisp
+;; put: goal が必須
+put(agent:'I, theme:'book, goal:'table)
+;; → "I put the book on the table."
+
+;; live: location が必須
+live(agent:'I, location:'Tokyo)
+;; → "I live in Tokyo."
+```
+
+| 動詞 | 必須役割 | 前置詞 |
+|------|---------|--------|
+| put, place, hang | goal | on |
+| live, reside | location | in |
+| stay | location | at |
 
 ### 拡張役割
 
@@ -665,6 +686,30 @@ and(or('a, 'b), 'c)
 'anyone, 'anything, 'nobody, 'nothing
 ```
 
+### 代名詞 + 修飾
+
+代名詞に形容詞や前置詞句修飾がある場合は `pronoun()` でラップする。
+
+```lisp
+;; 単純な代名詞（修飾なし）
+'someone
+;; → "someone"
+
+;; 不定代名詞 + 形容詞（後置）
+pronoun('something, adj:'beautiful)
+;; → "something beautiful"
+
+;; 代名詞 + 前置詞句修飾
+pronoun('someone, post:pp('in, noun(det:'the, head:'room)))
+;; → "someone in the room"
+
+;; 両方の修飾
+pronoun('someone, adj:'important, post:pp('from, noun(head:'Tokyo)))
+;; → "someone important from Tokyo"
+```
+
+**注意**: 修飾がない場合は単純なクォート形式 `'someone` を使用する。
+
 **注意**: 所有代名詞と所有限定詞（my, your 等）は異なる。
 - 所有限定詞: 名詞を修飾 → `noun(det:'my, head:'book)` → "my book"
 - 所有代名詞: 名詞句として使用 → `'mine` → "mine"
@@ -847,7 +892,7 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
 ;; ============================================
 
 <role>          ::= <basic-role> | <extended-role>
-<basic-role>    ::= "agent" | "theme" | "recipient" | "source" | "goal"
+<basic-role>    ::= "agent" | "theme" | "recipient" | "source" | "goal" | "location"
 <extended-role> ::= "patient" | "experiencer" | "stimulus"
                   | "beneficiary" | "possessor" | "attribute"
 
@@ -896,10 +941,19 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
                   | "post:as('" <adjective> ", " <noun-expr> ")"     ;; 同等比較
 
 ;; ============================================
-;; 代名詞（クォート付きリテラル）
+;; 代名詞（クォート付きリテラル or 修飾付きラッパー）
 ;; ============================================
 
-<pronoun>       ::= "'" <pronoun-word>
+<pronoun>       ::= <simple-pronoun> | <modified-pronoun>
+<simple-pronoun> ::= "'" <pronoun-word>
+<modified-pronoun> ::= "pronoun('" <pronoun-word> ", " <pronoun-mods> ")"
+
+<pronoun-mods>  ::= <pronoun-mod> ("," <pronoun-mod>)*
+<pronoun-mod>   ::= <pron-adj> | <pron-pp>
+<pron-adj>      ::= "adj:'" <adjective>
+                  | "adj:['" <adjective> ("," "'" <adjective>)* "]"
+<pron-pp>       ::= "post:pp('" <preposition> ", " <noun-expr> ")"
+
 <pronoun-word>  ::= <personal> | <possessive-pron> | <demonstrative-pron> | <indefinite-pron>
 
 <personal>      ::= "I" | "you" | "he" | "she" | "it" | "we" | "they"

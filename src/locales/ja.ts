@@ -92,6 +92,11 @@ export const ja: LocaleData = {
     GROUP_NAMES: '── 固有名詞 ──',
     GROUP_INTERROGATIVE: '── 疑問詞 ──',
 
+    // Preposition group labels
+    GROUP_LOCATION: '── 場所 ──',
+    GROUP_DIRECTION: '── 方向 ──',
+    GROUP_RELATION: '── 関係 ──',
+
     // Determiner
     DETERMINER_LABEL: '限定詞',
     DETERMINER_TOOLTIP: '限定詞: 前置 + 中央 + 後置',

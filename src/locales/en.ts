@@ -92,6 +92,11 @@ export const en: LocaleData = {
     GROUP_NAMES: '── Names ──',
     GROUP_INTERROGATIVE: '── Interrogative ──',
 
+    // Preposition group labels
+    GROUP_LOCATION: '── Location ──',
+    GROUP_DIRECTION: '── Direction ──',
+    GROUP_RELATION: '── Relation ──',
+
     // Determiner
     DETERMINER_LABEL: 'DET',
     DETERMINER_TOOLTIP: 'Determiner: pre + central + post',

@@ -92,6 +92,11 @@ export const jaHira: LocaleData = {
     GROUP_NAMES: '── ひとのなまえ ──',
     GROUP_INTERROGATIVE: '── しつもんのことば ──',
 
+    // Preposition group labels
+    GROUP_LOCATION: '── ばしょ ──',
+    GROUP_DIRECTION: '── ほうこう ──',
+    GROUP_RELATION: '── かんけい ──',
+
     // Determiner
     DETERMINER_LABEL: 'どの？いくつ？',
     DETERMINER_TOOLTIP: 'どの？いくつ？をきめる',

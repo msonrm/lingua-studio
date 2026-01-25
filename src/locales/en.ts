@@ -134,6 +134,8 @@ export const en: LocaleData = {
     ROLE_POSSESSOR: 'possessor',
     ROLE_ATTRIBUTE: 'attribute',
     ROLE_PLACE: 'place',
+    ROLE_GOAL: 'goal',
+    ROLE_LOCATION: 'location',
     ROLE_SUBJECT: 'subject',
 
     // Adjective categories

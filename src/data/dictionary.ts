@@ -191,6 +191,39 @@ export const verbs: VerbEntry[] = [
     category: "action",
     valency: [{ role: "agent", required: true, label: "agent" }],
   },
+  {
+    lemma: "put",
+    forms: { base: "put", past: "put", pp: "put", ing: "putting", s: "puts" },
+    type: "action",
+    category: "action",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+      { role: "goal", required: true, label: "goal", preposition: "on" },
+    ],
+  },
+  {
+    lemma: "place",
+    forms: { base: "place", past: "placed", pp: "placed", ing: "placing", s: "places" },
+    type: "action",
+    category: "action",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+      { role: "goal", required: true, label: "goal", preposition: "on" },
+    ],
+  },
+  {
+    lemma: "hang",
+    forms: { base: "hang", past: "hung", pp: "hung", ing: "hanging", s: "hangs" },
+    type: "action",
+    category: "action",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "theme", required: true, label: "theme" },
+      { role: "goal", required: true, label: "goal", preposition: "on" },
+    ],
+  },
 
   // ============================================
   // Transfer（授受・移転）
@@ -530,6 +563,36 @@ export const verbs: VerbEntry[] = [
     valency: [
       { role: "experiencer", required: true, label: "experiencer" },
       { role: "theme", required: true, label: "theme" },
+    ],
+  },
+  {
+    lemma: "live",
+    forms: { base: "live", past: "lived", pp: "lived", ing: "living", s: "lives" },
+    type: "stative",
+    category: "state",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "location", required: true, label: "location", preposition: "in" },
+    ],
+  },
+  {
+    lemma: "reside",
+    forms: { base: "reside", past: "resided", pp: "resided", ing: "residing", s: "resides" },
+    type: "stative",
+    category: "state",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "location", required: true, label: "location", preposition: "in" },
+    ],
+  },
+  {
+    lemma: "stay",
+    forms: { base: "stay", past: "stayed", pp: "stayed", ing: "staying", s: "stays" },
+    type: "stative",
+    category: "state",
+    valency: [
+      { role: "agent", required: true, label: "agent" },
+      { role: "location", required: true, label: "location", preposition: "at" },
     ],
   },
   {

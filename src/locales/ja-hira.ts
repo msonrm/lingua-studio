@@ -134,6 +134,8 @@ export const jaHira: LocaleData = {
     ROLE_POSSESSOR: 'だれが',
     ROLE_ATTRIBUTE: 'どんな',
     ROLE_PLACE: 'どこから',
+    ROLE_GOAL: 'どこへ',
+    ROLE_LOCATION: 'どこに',
     ROLE_SUBJECT: 'なにが',
 
     // Adjective categories

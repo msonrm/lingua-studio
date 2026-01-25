@@ -134,6 +134,8 @@ export interface BlocklyMessages {
   ROLE_POSSESSOR: string;
   ROLE_ATTRIBUTE: string;
   ROLE_PLACE: string;
+  ROLE_GOAL: string;
+  ROLE_LOCATION: string;
   ROLE_SUBJECT: string;
 
   // Adjective categories

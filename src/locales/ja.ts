@@ -128,6 +128,9 @@ export const ja: LocaleData = {
     CHOICE_QUESTION_OR: 'それとも',
     CHOICE_QUESTION_TOOLTIP: '選択疑問: どちらかを尋ねる（例: 紅茶かコーヒーか？）',
 
+    // Wh-placeholder
+    WH_PLACEHOLDER_TOOLTIP: '疑問詞: who（人）または what（もの）',
+
     // Verb categories
     VERB_MOTION: '移動',
     VERB_ACTION: '動作',

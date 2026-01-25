@@ -1094,6 +1094,25 @@ Blockly.Blocks['choice_question_block'] = {
 };
 
 // ============================================
+// Wh疑問詞プレースホルダーブロック（Questionセクション用）
+// ============================================
+Blockly.Blocks['wh_placeholder_block'] = {
+  init: function() {
+    const options: [string, string][] = [
+      ['?who', '?who'],
+      ['?what', '?what'],
+    ];
+
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown(options), "WH_VALUE");
+
+    this.setOutput(true, "nounPhrase");
+    this.setColour(COLORS.imperative);  // 紫系（疑問と同系）
+    this.setTooltip(msg('WH_PLACEHOLDER_TOOLTIP', 'Wh-question word: who (person) or what (thing)'));
+  }
+};
+
+// ============================================
 // 等位接続ブロック（動詞用）- AND (VERB)
 // ============================================
 Blockly.Blocks['coordination_verb_and'] = {
@@ -1177,6 +1196,8 @@ export function createToolbox() {
         contents: [
           { kind: "label", text: msg('SECTION_QUESTION', '── Question ──') },
           { kind: "block", type: "question_wrapper" },
+          { kind: "block", type: "wh_placeholder_block" },
+          { kind: "block", type: "choice_question_block" },
           { kind: "label", text: msg('SECTION_IMPERATIVE', '── Imperative ──') },
           { kind: "block", type: "imperative_wrapper" },
           { kind: "label", text: msg('SECTION_MODAL_NEGATION', '── Modal Negation ──') },

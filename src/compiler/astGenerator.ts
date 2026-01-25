@@ -540,6 +540,25 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode | Coordinate
     return parseAdjectiveWrapperBlock(block);
   }
 
+  // Wh疑問詞プレースホルダーブロックの処理
+  if (blockType === 'wh_placeholder_block') {
+    const whValue = block.getFieldValue('WH_VALUE') as string;
+    const pronoun = findPronoun(whValue);
+    if (pronoun) {
+      return {
+        type: 'nounPhrase',
+        adjectives: [],
+        head: {
+          type: 'pronoun',
+          lemma: pronoun.lemma,
+          person: pronoun.person,
+          number: pronoun.number,
+          pronounType: pronoun.type,
+        } as PronounHead,
+      };
+    }
+  }
+
   // 名詞ブロックの処理（カテゴリ別）
   const nounBlockTypes = [
     'pronoun_block', 'possessive_pronoun_block', 'human_block', 'animal_block', 'object_block', 'place_block', 'abstract_block',

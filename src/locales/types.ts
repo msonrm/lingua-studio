@@ -128,6 +128,9 @@ export interface BlocklyMessages {
   CHOICE_QUESTION_OR: string;
   CHOICE_QUESTION_TOOLTIP: string;
 
+  // Wh-placeholder
+  WH_PLACEHOLDER_TOOLTIP: string;
+
   // Verb categories
   VERB_MOTION: string;
   VERB_ACTION: string;

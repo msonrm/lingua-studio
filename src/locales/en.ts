@@ -128,6 +128,9 @@ export const en: LocaleData = {
     CHOICE_QUESTION_OR: 'or',
     CHOICE_QUESTION_TOOLTIP: 'Choice Question: asks which option (e.g., "tea or coffee?")',
 
+    // Wh-placeholder
+    WH_PLACEHOLDER_TOOLTIP: 'Wh-question word: who (person) or what (thing)',
+
     // Verb categories
     VERB_MOTION: 'MOTION',
     VERB_ACTION: 'ACTION',

@@ -128,6 +128,9 @@ export const jaHira: LocaleData = {
     CHOICE_QUESTION_OR: 'それとも',
     CHOICE_QUESTION_TOOLTIP: 'どっちがいい？（おちゃかこーひーか？）',
 
+    // Wh-placeholder
+    WH_PLACEHOLDER_TOOLTIP: 'だれ？なに？（しつもんのことば）',
+
     // Verb categories
     VERB_MOTION: 'うごく',
     VERB_ACTION: 'する',

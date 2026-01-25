@@ -108,6 +108,8 @@ export const en: LocaleData = {
     MANNER_TOOLTIP: 'Manner: how the action is performed',
     LOCATIVE_LABEL: 'LOCATION',
     LOCATIVE_TOOLTIP: 'Location: where the action occurs',
+    TIME_ADVERB_LABEL: 'TIME',
+    TIME_ADVERB_TOOLTIP: 'Time: when the action occurs',
 
     // Prepositions
     PP_LABEL: 'PP',
@@ -130,6 +132,7 @@ export const en: LocaleData = {
 
     // Wh-placeholder
     WH_PLACEHOLDER_TOOLTIP: 'Wh-question word: who (person) or what (thing)',
+    WH_ADVERB_TOOLTIP: 'Wh-adverb: where (place), when (time), or how (manner)',
 
     // Verb categories
     VERB_MOTION: 'MOTION',
@@ -193,6 +196,8 @@ export const en: LocaleData = {
     SECTION_ABSTRACT: '── Abstract ──',
     SECTION_ADJECTIVES: '── Adjectives ──',
     SECTION_PREPOSITION: '── Preposition ──',
+    SECTION_WH_NOUNS: '── Wh-Nouns ──',
+    SECTION_WH_ADVERBS: '── Wh-Adverbs ──',
   },
   ui: {
     // Header

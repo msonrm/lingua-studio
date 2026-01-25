@@ -1076,6 +1076,19 @@ export const adverbs: AdverbEntry[] = [
     lemma: "home",
     type: "place",
   },
+  // 疑問副詞（interrogative adverbs）
+  {
+    lemma: "?where",
+    type: "place",
+  },
+  {
+    lemma: "?when",
+    type: "time",
+  },
+  {
+    lemma: "?how",
+    type: "manner",
+  },
 ];
 
 // ============================================

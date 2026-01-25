@@ -30,6 +30,13 @@ interface WhWordInfo {
   slot: FilledArgumentSlot; // 元のスロット
 }
 
+// Wh副詞情報
+interface WhAdverbInfo {
+  whWord: string;           // 疑問副詞（where, when, how）
+  advType: 'place' | 'time' | 'manner';
+  adverb: AdverbNode;       // 元の副詞ノード
+}
+
 // NounPhraseNodeから疑問詞を検出
 function findInterrogativeInNounPhrase(np: NounPhraseNode): string | null {
   if (np.head.type === 'pronoun') {
@@ -67,6 +74,24 @@ function findInterrogativeInClause(clause: ClauseNode): WhWordInfo | null {
       if (whWord) {
         return { whWord, role: slot.role, isSubject: false, slot };
       }
+    }
+  }
+
+  return null;
+}
+
+// ClauseNodeから疑問副詞を検出
+function findInterrogativeAdverbInClause(clause: ClauseNode): WhAdverbInfo | null {
+  const { verbPhrase } = clause;
+
+  for (const adverb of verbPhrase.adverbs) {
+    if (adverb.lemma.startsWith('?')) {
+      const whWord = adverb.lemma.slice(1); // ?where → where
+      return {
+        whWord,
+        advType: adverb.advType as 'place' | 'time' | 'manner',
+        adverb,
+      };
     }
   }
 
@@ -131,6 +156,7 @@ function renderClause(clause: ClauseNode): string {
   const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
   const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
   const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place');
+  const timeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'time');
 
   // 動詞を活用（否定含む、頻度副詞を挿入位置で返す）
   // 主語が NounPhraseNode か CoordinatedNounPhraseNode の場合のみ渡す
@@ -167,13 +193,16 @@ function renderClause(clause: ClauseNode): string {
   // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
   const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
 
+  // 時間副詞
+  const timeStr = timeAdverbs.map(a => a.lemma).join(' ');
+
   // 前置詞句（動詞修飾）
   const prepPhrases = verbPhrase.prepositionalPhrases
     .map(pp => renderPrepositionalPhrase(pp, polarity))
     .join(' ');
 
-  // 語順: Subject + Verb(+neg+freq) + Objects + PrepPhrases + Manner + Location
-  const parts = [subject, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
+  // 語順: Subject + Verb(+neg+freq) + Objects + PrepPhrases + Manner + Location + Time
+  const parts = [subject, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr, timeStr].filter(p => p.length > 0);
 
   let result = parts.join(' ');
 
@@ -192,12 +221,20 @@ function renderClause(clause: ClauseNode): string {
 function renderInterrogativeClause(clause: ClauseNode): string {
   const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
 
-  // Wh疑問詞を検出
+  // Wh疑問詞（名詞）を検出
   const whInfo = findInterrogativeInClause(clause);
 
-  // Wh疑問文の場合は専用レンダリング
+  // Wh疑問文（名詞）の場合は専用レンダリング
   if (whInfo) {
     return renderWhQuestion(clause, whInfo);
+  }
+
+  // Wh疑問副詞を検出
+  const whAdverbInfo = findInterrogativeAdverbInClause(clause);
+
+  // Wh副詞疑問文の場合は専用レンダリング
+  if (whAdverbInfo) {
+    return renderWhAdverbQuestion(clause, whAdverbInfo);
   }
 
   // Yes/No疑問文の場合
@@ -375,6 +412,82 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
     const parts = [whWord, auxiliary, subject, mainVerb, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
     return parts.join(' ');
   }
+}
+
+// Wh副詞疑問文をレンダリング（Where/When/How did you...?）
+function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo): string {
+  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
+
+  // 主語を取得
+  let subjectSlot: FilledArgumentSlot | undefined;
+  for (const role of SUBJECT_ROLES) {
+    subjectSlot = verbPhrase.arguments.find(a => a.role === role);
+    if (subjectSlot?.filler) break;
+  }
+
+  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : 'someone';
+  const subjectForConjugation = subjectSlot?.filler &&
+    (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
+    ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
+    : undefined;
+
+  // 副詞を種類別に分類（Wh副詞は除外）
+  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
+  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner' && a !== whAdverbInfo.adverb);
+  const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place' && a !== whAdverbInfo.adverb);
+  const timeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'time' && a !== whAdverbInfo.adverb);
+
+  // 疑問文用の動詞活用（助動詞と本動詞を分離）
+  const { auxiliary, mainVerb } = conjugateVerbForQuestion(
+    verbPhrase.verb.lemma,
+    tense,
+    aspect,
+    polarity,
+    frequencyAdverbs,
+    subjectForConjugation,
+    modal,
+    modalPolarity
+  );
+
+  // その他の引数（目的語など）
+  const otherArgs = verbPhrase.arguments
+    .filter(a => a !== subjectSlot && a.filler)
+    .map(a => {
+      const slotDef = verbEntry?.valency.find(v => v.role === a.role);
+      const preposition = slotDef?.preposition;
+      const rendered = renderFiller(a.filler!, false, polarity);
+      return preposition ? `${preposition} ${rendered}` : rendered;
+    })
+    .join(' ');
+
+  // 様態副詞は文末
+  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+  // 場所副詞
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(a.lemma, polarity)).join(' ');
+  // 時間副詞
+  const timeStr = timeAdverbs.map(a => a.lemma).join(' ');
+
+  // 前置詞句（動詞修飾）
+  const prepPhrases = verbPhrase.prepositionalPhrases
+    .map(pp => renderPrepositionalPhrase(pp, polarity))
+    .join(' ');
+
+  // Wh副詞を先頭に、その後は通常の疑問文語順
+  // Where + Auxiliary + Subject + MainVerb + Objects + PrepPhrases + Manner + Location + Time
+  const parts = [whAdverbInfo.whWord, auxiliary, subject, mainVerb, otherArgs, prepPhrases, mannerStr, locativeStr, timeStr].filter(p => p.length > 0);
+
+  let result = parts.join(' ');
+
+  // 動詞の等位接続を処理
+  if (verbPhrase.coordinatedWith) {
+    const coordVP = verbPhrase.coordinatedWith.verbPhrase;
+    const conjunction = verbPhrase.coordinatedWith.conjunction;
+    const coordVerbStr = renderCoordinatedVerbPhrase(coordVP, tense, aspect, polarity, subjectForConjugation, modal, modalPolarity);
+    result += ` ${conjunction} ${coordVerbStr}`;
+  }
+
+  return result;
 }
 
 // 命令文の節をレンダリング（主語省略、動詞原形）

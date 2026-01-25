@@ -108,6 +108,8 @@ export interface BlocklyMessages {
   MANNER_TOOLTIP: string;
   LOCATIVE_LABEL: string;
   LOCATIVE_TOOLTIP: string;
+  TIME_ADVERB_LABEL: string;
+  TIME_ADVERB_TOOLTIP: string;
 
   // Prepositions
   PP_LABEL: string;
@@ -130,6 +132,7 @@ export interface BlocklyMessages {
 
   // Wh-placeholder
   WH_PLACEHOLDER_TOOLTIP: string;
+  WH_ADVERB_TOOLTIP: string;
 
   // Verb categories
   VERB_MOTION: string;
@@ -193,6 +196,8 @@ export interface BlocklyMessages {
   SECTION_ABSTRACT: string;
   SECTION_ADJECTIVES: string;
   SECTION_PREPOSITION: string;
+  SECTION_WH_NOUNS: string;
+  SECTION_WH_ADVERBS: string;
 }
 
 // React UI message keys

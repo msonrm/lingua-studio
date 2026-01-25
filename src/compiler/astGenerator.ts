@@ -182,6 +182,7 @@ interface VerbChainResult {
   frequencyAdverbs: AdverbNode[];
   mannerAdverbs: AdverbNode[];
   locativeAdverbs: AdverbNode[];
+  timeAdverbs: AdverbNode[];
   prepositionalPhrases: PrepositionalPhraseNode[];
   coordination?: {
     conjunction: Conjunction;
@@ -217,6 +218,7 @@ function parseTimeFrameBlock(
       ...verbChain.mannerAdverbs,
       ...verbChain.frequencyAdverbs,
       ...verbChain.locativeAdverbs,
+      ...(verbChain.timeAdverbs || []),
       ...verbChain.verbPhrase.adverbs,
     ],
     prepositionalPhrases: [
@@ -291,6 +293,11 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
   // 様態副詞ラッパーの処理
   if (blockType === 'manner_wrapper') {
     const mannerValue = block.getFieldValue('MANNER_VALUE');
+    // ラベル行はスキップ
+    if (mannerValue?.startsWith('__')) {
+      const innerBlock = block.getInputTargetBlock('VERB');
+      return innerBlock ? parseVerbChain(innerBlock) : null;
+    }
     const innerBlock = block.getInputTargetBlock('VERB');
     if (!innerBlock) {
       return null;
@@ -311,6 +318,11 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
   // 場所副詞ラッパーの処理
   if (blockType === 'locative_wrapper') {
     const locativeValue = block.getFieldValue('LOCATIVE_VALUE');
+    // ラベル行はスキップ
+    if (locativeValue?.startsWith('__')) {
+      const innerBlock = block.getInputTargetBlock('VERB');
+      return innerBlock ? parseVerbChain(innerBlock) : null;
+    }
     const innerBlock = block.getInputTargetBlock('VERB');
     if (!innerBlock) {
       return null;
@@ -324,6 +336,64 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
       locativeAdverbs: [
         { type: 'adverb', lemma: locativeValue, advType: 'place' },
         ...innerResult.locativeAdverbs,
+      ],
+    };
+  }
+
+  // 時間副詞ラッパーの処理
+  if (blockType === 'time_adverb_wrapper') {
+    const timeAdverbValue = block.getFieldValue('TIME_ADVERB_VALUE');
+    // ラベル行はスキップ
+    if (timeAdverbValue?.startsWith('__')) {
+      const innerBlock = block.getInputTargetBlock('VERB');
+      return innerBlock ? parseVerbChain(innerBlock) : null;
+    }
+    const innerBlock = block.getInputTargetBlock('VERB');
+    if (!innerBlock) {
+      return null;
+    }
+    const innerResult = parseVerbChain(innerBlock);
+    if (!innerResult) {
+      return null;
+    }
+    return {
+      ...innerResult,
+      timeAdverbs: [
+        { type: 'adverb', lemma: timeAdverbValue, advType: 'time' },
+        ...(innerResult.timeAdverbs || []),
+      ],
+    };
+  }
+
+  // Wh副詞ブロックの処理（Question用）
+  if (blockType === 'wh_adverb_block') {
+    const whAdverbValue = block.getFieldValue('WH_ADVERB_VALUE');
+    const innerBlock = block.getInputTargetBlock('VERB');
+    if (!innerBlock) {
+      return null;
+    }
+    const innerResult = parseVerbChain(innerBlock);
+    if (!innerResult) {
+      return null;
+    }
+    // ?where, ?when, ?how を適切な advType に振り分け
+    let advType: 'place' | 'time' | 'manner' = 'manner';
+    let targetArray: 'locativeAdverbs' | 'timeAdverbs' | 'mannerAdverbs' = 'mannerAdverbs';
+    if (whAdverbValue === '?where') {
+      advType = 'place';
+      targetArray = 'locativeAdverbs';
+    } else if (whAdverbValue === '?when') {
+      advType = 'time';
+      targetArray = 'timeAdverbs';
+    } else if (whAdverbValue === '?how') {
+      advType = 'manner';
+      targetArray = 'mannerAdverbs';
+    }
+    return {
+      ...innerResult,
+      [targetArray]: [
+        { type: 'adverb', lemma: whAdverbValue, advType },
+        ...(innerResult[targetArray] || []),
       ],
     };
   }
@@ -390,6 +460,7 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
       frequencyAdverbs: [],
       mannerAdverbs: [],
       locativeAdverbs: [],
+      timeAdverbs: [],
       prepositionalPhrases: [],
     };
   }

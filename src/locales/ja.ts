@@ -108,6 +108,8 @@ export const ja: LocaleData = {
     MANNER_TOOLTIP: '様態: 動作がどのように行われるか',
     LOCATIVE_LABEL: '場所',
     LOCATIVE_TOOLTIP: '場所: 動作がどこで起こるか',
+    TIME_ADVERB_LABEL: '時間',
+    TIME_ADVERB_TOOLTIP: '時間: 動作がいつ起こるか',
 
     // Prepositions
     PP_LABEL: '前置詞句',
@@ -130,6 +132,7 @@ export const ja: LocaleData = {
 
     // Wh-placeholder
     WH_PLACEHOLDER_TOOLTIP: '疑問詞: who（人）または what（もの）',
+    WH_ADVERB_TOOLTIP: '疑問副詞: where（場所）、when（時間）、how（方法）',
 
     // Verb categories
     VERB_MOTION: '移動',
@@ -193,6 +196,8 @@ export const ja: LocaleData = {
     SECTION_ABSTRACT: '── 抽象概念 ──',
     SECTION_ADJECTIVES: '── 形容詞 ──',
     SECTION_PREPOSITION: '── 前置詞 ──',
+    SECTION_WH_NOUNS: '── 疑問代名詞 ──',
+    SECTION_WH_ADVERBS: '── 疑問副詞 ──',
   },
   ui: {
     // Header

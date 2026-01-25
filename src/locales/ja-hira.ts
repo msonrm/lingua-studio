@@ -108,6 +108,8 @@ export const jaHira: LocaleData = {
     MANNER_TOOLTIP: 'はやく、ゆっくり、じょうずに など',
     LOCATIVE_LABEL: 'どこで？',
     LOCATIVE_TOOLTIP: 'ここ、そこ、どこかで など',
+    TIME_ADVERB_LABEL: 'いつ？',
+    TIME_ADVERB_TOOLTIP: 'いつ？（きょう、きのう、いつ？など）',
 
     // Prepositions
     PP_LABEL: 'どこ？だれと？',
@@ -130,6 +132,7 @@ export const jaHira: LocaleData = {
 
     // Wh-placeholder
     WH_PLACEHOLDER_TOOLTIP: 'だれ？なに？（しつもんのことば）',
+    WH_ADVERB_TOOLTIP: 'どこ？いつ？どうやって？（しつもんのことば）',
 
     // Verb categories
     VERB_MOTION: 'うごく',
@@ -193,6 +196,8 @@ export const jaHira: LocaleData = {
     SECTION_ABSTRACT: '── かんがえ・きもち ──',
     SECTION_ADJECTIVES: '── どんなことば ──',
     SECTION_PREPOSITION: '── どこ？だれと？ ──',
+    SECTION_WH_NOUNS: '── だれ？なに？ ──',
+    SECTION_WH_ADVERBS: '── どこ？いつ？どうやって？ ──',
   },
   ui: {
     // Header

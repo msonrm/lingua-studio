@@ -110,16 +110,28 @@ function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
     result = `frequency('${adv.lemma}, ${result})`;
   }
 
-  // 副詞をラップ（様態副詞）- 仕様: manner('quickly, verb(...))
+  // 副詞をラップ（様態副詞）- 仕様: manner('quickly, verb(...)) / manner(?how, verb(...))
   const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
   for (const adv of mannerAdverbs) {
-    result = `manner('${adv.lemma}, ${result})`;
+    // 疑問副詞はクォートなし
+    const advValue = adv.lemma.startsWith('?') ? adv.lemma : `'${adv.lemma}`;
+    result = `manner(${advValue}, ${result})`;
   }
 
-  // 副詞をラップ（場所副詞）- 仕様: locative('here, verb(...))
+  // 副詞をラップ（場所副詞）- 仕様: locative('here, verb(...)) / locative(?where, verb(...))
   const locativeAdverbs = vp.adverbs.filter(a => a.advType === 'place');
   for (const adv of locativeAdverbs) {
-    result = `locative('${adv.lemma}, ${result})`;
+    // 疑問副詞はクォートなし
+    const advValue = adv.lemma.startsWith('?') ? adv.lemma : `'${adv.lemma}`;
+    result = `locative(${advValue}, ${result})`;
+  }
+
+  // 副詞をラップ（時間副詞）- 仕様: time('today, verb(...)) / time(?when, verb(...))
+  const timeAdverbs = vp.adverbs.filter(a => a.advType === 'time');
+  for (const adv of timeAdverbs) {
+    // 疑問副詞はクォートなし
+    const advValue = adv.lemma.startsWith('?') ? adv.lemma : `'${adv.lemma}`;
+    result = `time(${advValue}, ${result})`;
   }
 
   // 前置詞句をラップ - 仕様: pp('in, 'park, verb(...))

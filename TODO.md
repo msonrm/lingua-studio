@@ -7,7 +7,9 @@
   - [x] `question()` ラッパー（`?()` から変更：可読性・検索性向上）
   - [x] 名詞句疑問詞プレースホルダー: `?who`, `?what`
   - [x] 選択疑問: `?which('tea, 'coffee)`
-  - [ ] 副詞疑問詞プレースホルダー: `?where`, `?when`, `?how`（検討中）
+  - [x] 副詞疑問詞プレースホルダー: `?where`, `?when`, `?how`
+    - Questionカテゴリ + 各副詞カテゴリに二重配置
+    - LinguaScript: `question(sentence(past+simple(locative(?where, run(agent:'I)))))` → "Where did I run?"
   - 仕様: `question(sentence(past+simple(eat(agent:?who, theme:'apple))))` → "Who ate the apple?"
 - [ ] Passive（受動態）wrapper
   - agent が指定されている場合は by 句を自動生成

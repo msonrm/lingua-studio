@@ -252,6 +252,35 @@ break(agent:'I, patient:'window)
 | 受動態 | 任意 | The apple was eaten. / The apple was eaten by me. |
 | 命令文 | 省略 | Eat the apple!（暗黙の'you） |
 
+### 主語ロールの決定
+
+英語レンダラーは、動詞のvalencyで定義された役割の順序に基づいて主語を決定する。
+優先順位: `agent` > `experiencer` > `possessor` > `theme`
+
+```lisp
+;; eat: valency = [agent, patient]
+;; → agent が主語
+eat(agent:'I, patient:'apple)
+;; → "I eat an apple."
+
+;; see: valency = [experiencer, stimulus]
+;; → experiencer が主語
+see(experiencer:'I, stimulus:'bird)
+;; → "I see a bird."
+
+;; say: valency = [agent, theme]
+;; → agent が主語、theme が目的語
+say(agent:'I, theme:'hello)
+;; → "I say hello."
+
+;; theme のみ指定（agent 欠損）
+say(theme:'hello)
+;; → "___ says hello."（主語位置に欠損マーカー）
+```
+
+**欠損引数の表示**: 必須引数が欠損している場合は `___` マーカーを表示する。
+オプショナルな引数が欠損している場合は省略される。
+
 ---
 
 ## 付加詞（Adjuncts）

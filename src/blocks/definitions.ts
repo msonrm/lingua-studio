@@ -932,7 +932,7 @@ Blockly.Blocks['manner_wrapper'] = {
     // 通常の様態副詞 + 疑問副詞 ?how
     const getOptions = (): [string, string][] => [
       [msg('GROUP_COMMON', '── Common ──'), '__label_common__'],
-      ...MANNER_ADVERBS.map(a => [a.lemma, a.lemma] as [string, string]),
+      ...MANNER_ADVERBS.filter(a => !a.lemma.startsWith('?')).map(a => [a.lemma, a.lemma] as [string, string]),
       [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), '__label_interrogative__'],
       ['?how', '?how'],
     ];

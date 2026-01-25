@@ -304,3 +304,9 @@
   - 必須引数欠損: `___` を表示（例: "I cut ___."）
   - PP/等位接続の欠損: `something`/`thing` → `___`
   - Grammar Console 対応の準備完了
+- [x] 引数レンダリングアルゴリズムの簡素化
+  - 主語ロールはvalencyの順序で決定（最初のSUBJECT_ROLE）
+  - シンプルなアルゴリズム: 全スロット`___` → 値代入 → オプショナル欠損省略
+  - 全レンダリング関数で統一（declarative, interrogative, wh-question, imperative, coordinated VP）
+- [x] 前置詞プルダウンのデフォルト値を `in` に修正
+  - グループヘッダーではなく実際の値をデフォルトに

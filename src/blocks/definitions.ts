@@ -931,10 +931,10 @@ Blockly.Blocks['manner_wrapper'] = {
   init: function() {
     // 通常の様態副詞 + 疑問副詞 ?how
     const getOptions = (): [string, string][] => [
-      [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), '__label_interrogative__'],
-      ['?how', '?how'],
       [msg('GROUP_COMMON', '── Common ──'), '__label_common__'],
       ...MANNER_ADVERBS.map(a => [a.lemma, a.lemma] as [string, string]),
+      [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), '__label_interrogative__'],
+      ['?how', '?how'],
     ];
 
     this.appendStatementInput("VERB")
@@ -943,7 +943,7 @@ Blockly.Blocks['manner_wrapper'] = {
         .appendField(new Blockly.FieldDropdown(getOptions), "MANNER_VALUE");
 
     // デフォルト値を設定（最初の実際の値）
-    this.setFieldValue('?how', 'MANNER_VALUE');
+    this.setFieldValue('quickly', 'MANNER_VALUE');
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.manner);
@@ -961,12 +961,12 @@ const LOCATIVE_ADVERBS = adverbs.filter(a => a.type === 'place');
 // ============================================
 Blockly.Blocks['locative_wrapper'] = {
   init: function() {
-    // 通常の場所副詞 + 疑問副詞 ?where
+    // 通常の場所副詞 + 疑問副詞 ?where（homeは除外）
     const getOptions = (): [string, string][] => [
+      [msg('GROUP_COMMON', '── Common ──'), '__label_common__'],
+      ...LOCATIVE_ADVERBS.filter(a => !a.lemma.startsWith('?') && a.lemma !== 'home').map(a => [a.lemma, a.lemma] as [string, string]),
       [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), '__label_interrogative__'],
       ['?where', '?where'],
-      [msg('GROUP_COMMON', '── Common ──'), '__label_common__'],
-      ...LOCATIVE_ADVERBS.filter(a => !a.lemma.startsWith('?')).map(a => [a.lemma, a.lemma] as [string, string]),
     ];
 
     this.appendStatementInput("VERB")
@@ -975,7 +975,7 @@ Blockly.Blocks['locative_wrapper'] = {
         .appendField(new Blockly.FieldDropdown(getOptions), "LOCATIVE_VALUE");
 
     // デフォルト値を設定（最初の実際の値）
-    this.setFieldValue('?where', 'LOCATIVE_VALUE');
+    this.setFieldValue('here', 'LOCATIVE_VALUE');
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.locative);
@@ -987,8 +987,8 @@ Blockly.Blocks['locative_wrapper'] = {
 // 時間副詞データ定義
 // ============================================
 const TIME_ADVERBS = [
-  { label: 'today', value: 'today' },
   { label: 'yesterday', value: 'yesterday' },
+  { label: 'today', value: 'today' },
   { label: 'tomorrow', value: 'tomorrow' },
   { label: 'now', value: 'now' },
   { label: 'then', value: 'then' },
@@ -1004,10 +1004,10 @@ Blockly.Blocks['time_adverb_wrapper'] = {
   init: function() {
     // 通常の時間副詞 + 疑問副詞 ?when
     const getOptions = (): [string, string][] => [
-      [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), '__label_interrogative__'],
-      ['?when', '?when'],
       [msg('GROUP_COMMON', '── Common ──'), '__label_common__'],
       ...TIME_ADVERBS.map(a => [a.label, a.value] as [string, string]),
+      [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), '__label_interrogative__'],
+      ['?when', '?when'],
     ];
 
     this.appendStatementInput("VERB")
@@ -1016,7 +1016,7 @@ Blockly.Blocks['time_adverb_wrapper'] = {
         .appendField(new Blockly.FieldDropdown(getOptions), "TIME_ADVERB_VALUE");
 
     // デフォルト値を設定
-    this.setFieldValue('?when', 'TIME_ADVERB_VALUE');
+    this.setFieldValue('yesterday', 'TIME_ADVERB_VALUE');
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.timeChip);

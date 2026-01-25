@@ -34,6 +34,11 @@
 - [ ] 等位接続の構造的曖昧性
   - "I saw the man with the telescope and the camera"
 
+### Vocabulary
+- [ ] LOCATION副詞に「home」と同ジャンルの単語を追加
+  - 現在 home は一時的に除外
+  - 検討候補: home, abroad, indoors, outdoors, upstairs, downstairs 等
+
 ### UI & Localization
 - [x] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）
   - i18nシステム実装済み（en, ja, ja-hira）

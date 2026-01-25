@@ -1106,6 +1106,9 @@ Blockly.Blocks['preposition_verb'] = {
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
         .appendField(msg('PP_OBJECT_LABEL', 'object:'));
 
+    // デフォルト値を設定（最初の実際の値）
+    this.setFieldValue('in', 'PREP_VALUE');
+
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.prepVerb);
     this.setTooltip(msg('PP_VERB_TOOLTIP', 'Prepositional Phrase (Verb): adds a prepositional phrase to a verb'));
@@ -1128,6 +1131,9 @@ Blockly.Blocks['preposition_noun'] = {
     this.appendValueInput("OBJECT")
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
         .appendField(msg('PP_OBJECT_LABEL', 'object:'));
+
+    // デフォルト値を設定（最初の実際の値）
+    this.setFieldValue('in', 'PREP_VALUE');
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.prepNoun);

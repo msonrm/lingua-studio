@@ -182,9 +182,18 @@ function renderClause(clause: ClauseNode): string {
 
   // その他の引数（目的語など）- 主語以外（isSubject = false）
   // 必須引数が欠けている場合は "___" を表示
-  // 主語ロールは除外（agent, experiencer, possessor, theme）
+  // 実際の主語ロールのみを除外（theme等が目的語の場合は含める）
+  const actualSubjectRole = subjectSlot?.role;
   const otherArgs = (verbEntry?.valency || [])
-    .filter(v => !SUBJECT_ROLES.includes(v.role as SemanticRole))
+    .filter(v => {
+      if (actualSubjectRole) {
+        // 主語が特定されている場合はそのロールのみ除外
+        return v.role !== actualSubjectRole;
+      } else {
+        // 主語がない場合は全ての主語候補ロールを除外
+        return !SUBJECT_ROLES.includes(v.role as SemanticRole);
+      }
+    })
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
@@ -294,9 +303,18 @@ function renderInterrogativeClause(clause: ClauseNode): string {
 
   // その他の引数（目的語など）- 主語以外（isSubject = false）
   // 必須引数が欠けている場合は "___" を表示
-  // 主語ロールは除外（agent, experiencer, possessor, theme）
+  // 実際の主語ロールのみを除外（theme等が目的語の場合は含める）
+  const actualSubjectRole = subjectSlot?.role;
   const otherArgs = (verbEntry?.valency || [])
-    .filter(v => !SUBJECT_ROLES.includes(v.role as SemanticRole))
+    .filter(v => {
+      if (actualSubjectRole) {
+        // 主語が特定されている場合はそのロールのみ除外
+        return v.role !== actualSubjectRole;
+      } else {
+        // 主語がない場合は全ての主語候補ロールを除外
+        return !SUBJECT_ROLES.includes(v.role as SemanticRole);
+      }
+    })
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
@@ -431,10 +449,20 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
 
     // 疑問詞と主語以外の引数
     // 必須引数が欠けている場合は "___" を表示
-    // 主語ロールと疑問詞ロールを除外
+    // 実際の主語ロールと疑問詞ロールを除外
     const whRole = whInfo.slot.role;
+    const actualSubjectRole = subjectSlot?.role;
     const otherArgs = (verbEntry?.valency || [])
-      .filter(v => !SUBJECT_ROLES.includes(v.role as SemanticRole) && v.role !== whRole)
+      .filter(v => {
+        // 疑問詞ロールは除外
+        if (v.role === whRole) return false;
+        // 主語ロールの処理
+        if (actualSubjectRole) {
+          return v.role !== actualSubjectRole;
+        } else {
+          return !SUBJECT_ROLES.includes(v.role as SemanticRole);
+        }
+      })
       .map(v => {
         const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
         const preposition = v.preposition;
@@ -501,9 +529,18 @@ function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo):
 
   // その他の引数（目的語など）
   // 必須引数が欠けている場合は "___" を表示
-  // 主語ロールは除外
+  // 実際の主語ロールのみを除外（theme等が目的語の場合は含める）
+  const actualSubjectRole = subjectSlot?.role;
   const otherArgs = (verbEntry?.valency || [])
-    .filter(v => !SUBJECT_ROLES.includes(v.role as SemanticRole))
+    .filter(v => {
+      if (actualSubjectRole) {
+        // 主語が特定されている場合はそのロールのみ除外
+        return v.role !== actualSubjectRole;
+      } else {
+        // 主語がない場合は全ての主語候補ロールを除外
+        return !SUBJECT_ROLES.includes(v.role as SemanticRole);
+      }
+    })
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;

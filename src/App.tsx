@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
-import { BlocklyWorkspace } from './components/BlocklyWorkspace';
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { BlocklyWorkspace, BlocklyWorkspaceHandle } from './components/BlocklyWorkspace';
 import { LinguaScriptBar } from './components/LinguaScriptBar';
 import { LinguaScriptView } from './components/LinguaScriptView';
 import { SentenceNode } from './types/schema';
@@ -24,12 +24,18 @@ function App() {
   const [localeCode, setLocaleCode] = useState<LocaleCode>(getStoredLocale());
   const [workspaceKey, setWorkspaceKey] = useState(0);
   const [showSidePanel, setShowSidePanel] = useState(false);
+  const [workspaceState, setWorkspaceState] = useState<object | null>(null);
+  const workspaceRef = useRef<BlocklyWorkspaceHandle>(null);
 
   // 現在のロケールデータ
   const currentLocale = useMemo(() => getLocale(localeCode), [localeCode]);
 
   // ロケール切り替え
   const handleLocaleChange = useCallback((code: LocaleCode) => {
+    // 現在のワークスペース状態を保存
+    const state = workspaceRef.current?.saveState() ?? null;
+    setWorkspaceState(state);
+
     setStoredLocale(code);
     applyBlocklyLocale(code);
     setLocaleCode(code);
@@ -119,9 +125,11 @@ function App() {
               {editorMode === 'blocks' && (
                 <div className="workspace-container">
                   <BlocklyWorkspace
+                    ref={workspaceRef}
                     key={workspaceKey}
                     onASTChange={setASTs}
                     onSentenceChange={setSentences}
+                    initialState={workspaceState}
                   />
                 </div>
               )}

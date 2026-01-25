@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { BlocklyWorkspace } from './components/BlocklyWorkspace';
+import { LinguaScriptBar } from './components/LinguaScriptBar';
 import { SentenceNode } from './types/schema';
 import { renderToLinguaScript } from './compiler/linguaScriptRenderer';
 import {
@@ -103,6 +104,12 @@ function App() {
             </button>
           </div>
         </header>
+
+        {/* LinguaScript Bar - URL-like always-visible display */}
+        <LinguaScriptBar
+          code={linguaScripts.join('; ')}
+          placeholder={t.PLACEHOLDER_LINGUASCRIPT}
+        />
 
         <main className="main">
           <div className="editor-area">

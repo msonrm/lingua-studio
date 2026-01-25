@@ -1,0 +1,126 @@
+/* ============================================
+   LinguaScript Bar - URL-like display
+   ============================================ */
+.linguascript-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #fdf6e3; /* Solarized Light background */
+  border-bottom: 2px solid #0f3460;
+  min-height: 44px;
+}
+
+.copy-button {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #93a1a1;
+  border-radius: 6px;
+  background: #eee8d5;
+  color: #657b83;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-button:hover:not(:disabled) {
+  background: #d33682;
+  color: #fff;
+  border-color: #d33682;
+}
+
+.copy-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.code-container {
+  flex: 1;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.code-container code {
+  color: #657b83; /* Solarized base00 */
+}
+
+.placeholder-text {
+  color: #93a1a1;
+  font-style: italic;
+}
+
+/* ============================================
+   LinguaScript Syntax Highlighting
+   Solarized Light Theme
+   ============================================ */
+
+/* ラッパー関数: sentence, question, imperative, modal, not */
+.token.wrapper {
+  color: #d33682; /* Magenta */
+  font-weight: 600;
+}
+
+/* 疑問詞: ?who, ?what, ?where, etc. */
+.token.interrogative {
+  color: #dc322f; /* Red */
+  font-weight: 600;
+}
+
+/* 時制+アスペクト: past+simple, present+progressive */
+.token.tense-aspect {
+  color: #6c71c4; /* Violet */
+}
+
+/* 副詞ラッパー: time, frequency, manner, locative, pp */
+.token.adverb-wrapper {
+  color: #2aa198; /* Cyan */
+}
+
+/* 名詞構築: noun, pronoun, and, or */
+.token.noun-builder {
+  color: #268bd2; /* Blue */
+}
+
+/* 意味役割ラベル: agent:, theme:, etc. */
+.token.semantic-role {
+  color: #cb4b16; /* Orange */
+}
+
+/* モダリティ概念: ability:, permission:, etc. */
+.token.modality {
+  color: #b58900; /* Yellow */
+}
+
+/* メタ値: plural, uncountable */
+.token.meta-value {
+  color: #859900; /* Green */
+  font-style: italic;
+}
+
+/* リテラル: 'apple, 'I */
+.token.literal {
+  color: #859900; /* Green */
+}
+
+/* 演算子: +, :, , */
+.token.operator {
+  color: #93a1a1; /* Base1 */
+}
+
+/* 括弧: (, ), [, ] */
+.token.punctuation {
+  color: #657b83; /* Base00 */
+}
+
+/* コメント */
+.token.comment {
+  color: #93a1a1;
+  font-style: italic;
+}

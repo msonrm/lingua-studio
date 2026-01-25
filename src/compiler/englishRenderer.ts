@@ -174,7 +174,74 @@ function renderImperativeClause(clause: ClauseNode): string {
 
   // 語順: Verb + Objects + PrepPhrases + Manner（主語なし）
   const parts = [verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
-  return parts.join(' ');
+  let result = parts.join(' ');
+
+  // 動詞の等位接続を処理（命令文でも対応）
+  if (verbPhrase.coordinatedWith) {
+    const coordVP = verbPhrase.coordinatedWith.verbPhrase;
+    const conjunction = verbPhrase.coordinatedWith.conjunction;
+    // 命令文の等位接続: 同じ形式で継続（原形、主語なし）
+    const coordVerbStr = renderImperativeCoordinatedVP(coordVP, polarity, modal);
+    result += ` ${conjunction} ${coordVerbStr}`;
+  }
+
+  return result;
+}
+
+// 命令文の等位接続動詞句をレンダリング
+function renderImperativeCoordinatedVP(
+  vp: VerbPhraseNode,
+  polarity: 'affirmative' | 'negative',
+  modal?: string
+): string {
+  const verbEntry = findVerb(vp.verb.lemma);
+
+  // 副詞を種類別に分類
+  const frequencyAdverbs = vp.adverbs.filter(a => a.advType === 'frequency');
+  const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
+
+  // 動詞形を決定（命令文は原形）
+  let verbForm: string;
+  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
+  const baseForm = verbEntry?.forms.base || vp.verb.lemma;
+
+  // 等位接続の2番目以降は、否定でも do not を繰り返さない（原形のみ）
+  // "Don't run and eat" ではなく "Don't run or eat" が自然だが、
+  // ここでは単純に原形を使う
+  verbForm = freqStr ? `${freqStr} ${baseForm}` : baseForm;
+
+  // その他の引数（目的語など）
+  const subjectRoles: SemanticRole[] = ['agent', 'experiencer', 'possessor'];
+  const otherArgs = vp.arguments
+    .filter(a => !subjectRoles.includes(a.role) && a.filler)
+    .map(a => {
+      const slotDef = verbEntry?.valency.find(v => v.role === a.role);
+      const preposition = slotDef?.preposition;
+      const rendered = renderFiller(a.filler!, false, polarity);
+      return preposition ? `${preposition} ${rendered}` : rendered;
+    })
+    .join(' ');
+
+  // 様態副詞は文末
+  const mannerStr = mannerAdverbs.map(a => a.lemma).join(' ');
+
+  // 前置詞句（動詞修飾）
+  const prepPhrases = vp.prepositionalPhrases
+    .map(pp => renderPrepositionalPhrase(pp, polarity))
+    .join(' ');
+
+  const parts = [verbForm, otherArgs, prepPhrases, mannerStr].filter(p => p.length > 0);
+  let result = parts.join(' ');
+
+  // 再帰的に等位接続を処理
+  if (vp.coordinatedWith) {
+    const coordVPInner = vp.coordinatedWith.verbPhrase;
+    const conjunctionInner = vp.coordinatedWith.conjunction;
+    const coordVerbStr = renderImperativeCoordinatedVP(coordVPInner, polarity, modal);
+    result += ` ${conjunctionInner} ${coordVerbStr}`;
+  }
+
+  return result;
 }
 
 // 等位接続された動詞句をレンダリング

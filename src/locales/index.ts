@@ -3,17 +3,19 @@ import { createContext, useContext } from 'react';
 import type { LocaleCode, LocaleData, UIMessages, BlocklyMessages } from './types';
 import { en } from './en';
 import { ja } from './ja';
+import { jaHira } from './ja-hira';
 
 // Available locales
 export const locales: Record<LocaleCode, LocaleData> = {
   en,
   ja,
+  'ja-hira': jaHira,
 };
 
 // Get locale from localStorage or default to 'en'
 export function getStoredLocale(): LocaleCode {
   const stored = localStorage.getItem('lingua-studio-locale');
-  if (stored === 'en' || stored === 'ja') {
+  if (stored === 'en' || stored === 'ja' || stored === 'ja-hira') {
     return stored;
   }
   return 'en';

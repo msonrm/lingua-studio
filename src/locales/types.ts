@@ -1,6 +1,6 @@
 // Locale types for lingua-studio
 
-export type LocaleCode = 'en' | 'ja';
+export type LocaleCode = 'en' | 'ja' | 'ja-hira';
 
 // Blockly message keys (used with Blockly.Msg)
 export interface BlocklyMessages {

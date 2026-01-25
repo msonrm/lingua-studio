@@ -126,11 +126,11 @@ export const ja: LocaleData = {
 
     // Semantic role labels
     ROLE_AGENT: '動作主',
-    ROLE_PATIENT: '対象',
+    ROLE_PATIENT: '被動者',
     ROLE_THEME: '主題',
     ROLE_EXPERIENCER: '経験者',
     ROLE_STIMULUS: '刺激',
-    ROLE_RECIPIENT: '受け手',
+    ROLE_RECIPIENT: '受領者',
     ROLE_POSSESSOR: '所有者',
     ROLE_ATTRIBUTE: '属性',
     ROLE_PLACE: '場所',

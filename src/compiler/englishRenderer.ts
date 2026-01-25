@@ -184,18 +184,23 @@ function renderClause(clause: ClauseNode): string {
   // 必須引数が欠けている場合は "___" を表示
   // 主語ロールは除外（agent, experiencer, possessor, theme）
   const otherArgs = (verbEntry?.valency || [])
-    .filter(v => v.required && !SUBJECT_ROLES.includes(v.role as SemanticRole))
+    .filter(v => !SUBJECT_ROLES.includes(v.role as SemanticRole))
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
       if (argSlot?.filler) {
-        const rendered = renderFiller(argSlot.filler, false, polarity);  // 目的語は isSubject = false
+        // 値がある場合は表示
+        const rendered = renderFiller(argSlot.filler, false, polarity);
         return preposition ? `${preposition} ${rendered}` : rendered;
-      } else {
-        // 欠損引数は "___" で表示
+      } else if (v.required) {
+        // 必須で値がない場合は ___
         return preposition ? `${preposition} ___` : '___';
+      } else {
+        // オプションで値がない場合は何も表示しない
+        return '';
       }
     })
+    .filter(s => s.length > 0)
     .join(' ');
 
   // 様態副詞は文末（Wh副詞は?を除去）
@@ -291,18 +296,23 @@ function renderInterrogativeClause(clause: ClauseNode): string {
   // 必須引数が欠けている場合は "___" を表示
   // 主語ロールは除外（agent, experiencer, possessor, theme）
   const otherArgs = (verbEntry?.valency || [])
-    .filter(v => v.required && !SUBJECT_ROLES.includes(v.role as SemanticRole))
+    .filter(v => !SUBJECT_ROLES.includes(v.role as SemanticRole))
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
       if (argSlot?.filler) {
-        const rendered = renderFiller(argSlot.filler, false, polarity);  // 目的語は isSubject = false
+        // 値がある場合は表示
+        const rendered = renderFiller(argSlot.filler, false, polarity);
         return preposition ? `${preposition} ${rendered}` : rendered;
-      } else {
-        // 欠損引数は "___" で表示
+      } else if (v.required) {
+        // 必須で値がない場合は ___
         return preposition ? `${preposition} ___` : '___';
+      } else {
+        // オプションで値がない場合は何も表示しない
+        return '';
       }
     })
+    .filter(s => s.length > 0)
     .join(' ');
 
   // 様態副詞は文末（Wh副詞は?を除去）
@@ -371,17 +381,20 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
     // 必須引数が欠けている場合は "___" を表示
     // 主語Wh疑問文なので主語ロールは除外
     const otherArgs = (verbEntry?.valency || [])
-      .filter(v => v.required && !SUBJECT_ROLES.includes(v.role as SemanticRole))
+      .filter(v => !SUBJECT_ROLES.includes(v.role as SemanticRole))
       .map(v => {
         const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
         const preposition = v.preposition;
         if (argSlot?.filler) {
           const rendered = renderFiller(argSlot.filler, false, polarity);
           return preposition ? `${preposition} ${rendered}` : rendered;
-        } else {
+        } else if (v.required) {
           return preposition ? `${preposition} ___` : '___';
+        } else {
+          return '';
         }
       })
+      .filter(s => s.length > 0)
       .join(' ');
 
     const parts = [whInfo.whWord, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
@@ -421,17 +434,20 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
     // 主語ロールと疑問詞ロールを除外
     const whRole = whInfo.slot.role;
     const otherArgs = (verbEntry?.valency || [])
-      .filter(v => v.required && !SUBJECT_ROLES.includes(v.role as SemanticRole) && v.role !== whRole)
+      .filter(v => !SUBJECT_ROLES.includes(v.role as SemanticRole) && v.role !== whRole)
       .map(v => {
         const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
         const preposition = v.preposition;
         if (argSlot?.filler) {
           const rendered = renderFiller(argSlot.filler, false, polarity);
           return preposition ? `${preposition} ${rendered}` : rendered;
-        } else {
+        } else if (v.required) {
           return preposition ? `${preposition} ___` : '___';
+        } else {
+          return '';
         }
       })
+      .filter(s => s.length > 0)
       .join(' ');
 
     // whom処理: 目的語位置の?whoは?whomになる
@@ -487,17 +503,20 @@ function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo):
   // 必須引数が欠けている場合は "___" を表示
   // 主語ロールは除外
   const otherArgs = (verbEntry?.valency || [])
-    .filter(v => v.required && !SUBJECT_ROLES.includes(v.role as SemanticRole))
+    .filter(v => !SUBJECT_ROLES.includes(v.role as SemanticRole))
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
       if (argSlot?.filler) {
         const rendered = renderFiller(argSlot.filler, false, polarity);
         return preposition ? `${preposition} ${rendered}` : rendered;
-      } else {
+      } else if (v.required) {
         return preposition ? `${preposition} ___` : '___';
+      } else {
+        return '';
       }
     })
+    .filter(s => s.length > 0)
     .join(' ');
 
   // 様態副詞は文末（Wh副詞は?を除去）
@@ -573,17 +592,20 @@ function renderImperativeClause(clause: ClauseNode): string {
   // 必須引数が欠けている場合は "___" を表示
   const subjectRoles: SemanticRole[] = ['agent', 'experiencer', 'possessor'];
   const otherArgs = (verbEntry?.valency || [])
-    .filter(v => v.required && !subjectRoles.includes(v.role as SemanticRole))
+    .filter(v => !subjectRoles.includes(v.role as SemanticRole))
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
       if (argSlot?.filler) {
         const rendered = renderFiller(argSlot.filler, false, polarity);
         return preposition ? `${preposition} ${rendered}` : rendered;
-      } else {
+      } else if (v.required) {
         return preposition ? `${preposition} ___` : '___';
+      } else {
+        return '';
       }
     })
+    .filter(s => s.length > 0)
     .join(' ');
 
   // 様態副詞は文末（Wh副詞は?を除去）

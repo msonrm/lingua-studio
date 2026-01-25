@@ -143,19 +143,28 @@ export function renderToEnglish(ast: SentenceNode): string {
 function renderClause(clause: ClauseNode): string {
   const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
 
-  // 主語を取得（agent, experiencer, possessor, theme の順で探す）
-  let subjectSlot: FilledArgumentSlot | undefined;
+  // 動詞エントリを取得
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
+
+  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
+  // これにより、動詞ごとに固定の主語ロールが決まる
+  let subjectRole: SemanticRole | undefined;
   for (const role of SUBJECT_ROLES) {
-    subjectSlot = verbPhrase.arguments.find(a => a.role === role);
-    if (subjectSlot?.filler) break;
+    if (verbEntry?.valency.some(v => v.role === role)) {
+      subjectRole = role;
+      break;
+    }
   }
 
-  // 主語をレンダリング（isSubject = true）
-  // 主語がない場合は "___" を表示（未完成を明示）
-  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : '___';
+  // 主語スロットを取得
+  const subjectSlot = subjectRole
+    ? verbPhrase.arguments.find(a => a.role === subjectRole)
+    : undefined;
 
-  // 動詞エントリを取得して前置詞情報を参照
-  const verbEntry = findVerb(verbPhrase.verb.lemma);
+  // 主語をレンダリング（値があれば表示、なければ ___）
+  const subject = subjectSlot?.filler
+    ? renderFiller(subjectSlot.filler, true, polarity)
+    : '___';
 
   // 副詞を種類別に分類
   const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
@@ -180,36 +189,25 @@ function renderClause(clause: ClauseNode): string {
     modalPolarity
   );
 
-  // その他の引数（目的語など）- 主語以外（isSubject = false）
-  // 必須引数が欠けている場合は "___" を表示
-  // 実際の主語ロールのみを除外（theme等が目的語の場合は含める）
-  const actualSubjectRole = subjectSlot?.role;
+  // その他の引数（目的語など）- 主語ロール以外
+  // シンプルなアルゴリズム：
+  // 1. 全スロットに ___ を想定
+  // 2. フィラーがあれば値を代入
+  // 3. オプショナルな欠損は省略
   const otherArgs = (verbEntry?.valency || [])
-    .filter(v => {
-      if (actualSubjectRole) {
-        // 主語が特定されている場合はそのロールのみ除外
-        return v.role !== actualSubjectRole;
-      } else {
-        // 主語がない場合は全ての主語候補ロールを除外
-        return !SUBJECT_ROLES.includes(v.role as SemanticRole);
-      }
-    })
+    .filter(v => v.role !== subjectRole)
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
-      if (argSlot?.filler) {
-        // 値がある場合は表示
-        const rendered = renderFiller(argSlot.filler, false, polarity);
-        return preposition ? `${preposition} ${rendered}` : rendered;
-      } else if (v.required) {
-        // 必須で値がない場合は ___
-        return preposition ? `${preposition} ___` : '___';
-      } else {
-        // オプションで値がない場合は何も表示しない
-        return '';
-      }
+      const filled = argSlot?.filler;
+      const value = filled ? renderFiller(filled, false, polarity) : '___';
+      return {
+        text: preposition ? `${preposition} ${value}` : value,
+        skip: !v.required && !filled,  // オプショナルかつ空なら省略
+      };
     })
-    .filter(s => s.length > 0)
+    .filter(item => !item.skip)
+    .map(item => item.text)
     .join(' ');
 
   // 様態副詞は文末（Wh副詞は?を除去）
@@ -264,19 +262,27 @@ function renderInterrogativeClause(clause: ClauseNode): string {
 
   // Yes/No疑問文の場合
 
-  // 主語を取得（agent, experiencer, possessor, theme の順で探す）
-  let subjectSlot: FilledArgumentSlot | undefined;
+  // 動詞エントリを取得
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
+
+  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
+  let subjectRole: SemanticRole | undefined;
   for (const role of SUBJECT_ROLES) {
-    subjectSlot = verbPhrase.arguments.find(a => a.role === role);
-    if (subjectSlot?.filler) break;
+    if (verbEntry?.valency.some(v => v.role === role)) {
+      subjectRole = role;
+      break;
+    }
   }
 
-  // 主語をレンダリング（isSubject = true）
-  // 主語がない場合は "___" を表示（未完成を明示）
-  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : '___';
+  // 主語スロットを取得
+  const subjectSlot = subjectRole
+    ? verbPhrase.arguments.find(a => a.role === subjectRole)
+    : undefined;
 
-  // 動詞エントリを取得して前置詞情報を参照
-  const verbEntry = findVerb(verbPhrase.verb.lemma);
+  // 主語をレンダリング（値があれば表示、なければ ___）
+  const subject = subjectSlot?.filler
+    ? renderFiller(subjectSlot.filler, true, polarity)
+    : '___';
 
   // 副詞を種類別に分類
   const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
@@ -301,36 +307,22 @@ function renderInterrogativeClause(clause: ClauseNode): string {
     modalPolarity
   );
 
-  // その他の引数（目的語など）- 主語以外（isSubject = false）
-  // 必須引数が欠けている場合は "___" を表示
-  // 実際の主語ロールのみを除外（theme等が目的語の場合は含める）
-  const actualSubjectRole = subjectSlot?.role;
+  // その他の引数（目的語など）- 主語ロール以外
+  // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
   const otherArgs = (verbEntry?.valency || [])
-    .filter(v => {
-      if (actualSubjectRole) {
-        // 主語が特定されている場合はそのロールのみ除外
-        return v.role !== actualSubjectRole;
-      } else {
-        // 主語がない場合は全ての主語候補ロールを除外
-        return !SUBJECT_ROLES.includes(v.role as SemanticRole);
-      }
-    })
+    .filter(v => v.role !== subjectRole)
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
-      if (argSlot?.filler) {
-        // 値がある場合は表示
-        const rendered = renderFiller(argSlot.filler, false, polarity);
-        return preposition ? `${preposition} ${rendered}` : rendered;
-      } else if (v.required) {
-        // 必須で値がない場合は ___
-        return preposition ? `${preposition} ___` : '___';
-      } else {
-        // オプションで値がない場合は何も表示しない
-        return '';
-      }
+      const filled = argSlot?.filler;
+      const value = filled ? renderFiller(filled, false, polarity) : '___';
+      return {
+        text: preposition ? `${preposition} ${value}` : value,
+        skip: !v.required && !filled,
+      };
     })
-    .filter(s => s.length > 0)
+    .filter(item => !item.skip)
+    .map(item => item.text)
     .join(' ');
 
   // 様態副詞は文末（Wh副詞は?を除去）
@@ -365,6 +357,15 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
   const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
   const verbEntry = findVerb(verbPhrase.verb.lemma);
 
+  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
+  let subjectRole: SemanticRole | undefined;
+  for (const role of SUBJECT_ROLES) {
+    if (verbEntry?.valency.some(v => v.role === role)) {
+      subjectRole = role;
+      break;
+    }
+  }
+
   // 副詞を種類別に分類
   const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
   const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
@@ -395,24 +396,22 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
       modalPolarity
     );
 
-    // 疑問詞以外の引数（目的語など）
-    // 必須引数が欠けている場合は "___" を表示
-    // 主語Wh疑問文なので主語ロールは除外
+    // 疑問詞（主語）以外の引数
+    // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
     const otherArgs = (verbEntry?.valency || [])
-      .filter(v => !SUBJECT_ROLES.includes(v.role as SemanticRole))
+      .filter(v => v.role !== subjectRole)
       .map(v => {
         const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
         const preposition = v.preposition;
-        if (argSlot?.filler) {
-          const rendered = renderFiller(argSlot.filler, false, polarity);
-          return preposition ? `${preposition} ${rendered}` : rendered;
-        } else if (v.required) {
-          return preposition ? `${preposition} ___` : '___';
-        } else {
-          return '';
-        }
+        const filled = argSlot?.filler;
+        const value = filled ? renderFiller(filled, false, polarity) : '___';
+        return {
+          text: preposition ? `${preposition} ${value}` : value,
+          skip: !v.required && !filled,
+        };
       })
-      .filter(s => s.length > 0)
+      .filter(item => !item.skip)
+      .map(item => item.text)
       .join(' ');
 
     const parts = [whInfo.whWord, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
@@ -421,15 +420,15 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
     // 目的語Wh疑問文: What did you eat? (do-support必要)
     // 語順: Wh + Auxiliary + Subject + MainVerb + (他の目的語) + ...
 
-    // 主語を取得
-    let subjectSlot: FilledArgumentSlot | undefined;
-    for (const role of SUBJECT_ROLES) {
-      subjectSlot = verbPhrase.arguments.find(a => a.role === role);
-      if (subjectSlot?.filler) break;
-    }
+    // 主語スロットを取得
+    const subjectSlot = subjectRole
+      ? verbPhrase.arguments.find(a => a.role === subjectRole)
+      : undefined;
 
-    // 主語がない場合は "___" を表示（未完成を明示）
-    const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : '___';
+    // 主語をレンダリング（値があれば表示、なければ ___）
+    const subject = subjectSlot?.filler
+      ? renderFiller(subjectSlot.filler, true, polarity)
+      : '___';
     const subjectForConjugation = subjectSlot?.filler &&
       (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
       ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
@@ -448,34 +447,22 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
     );
 
     // 疑問詞と主語以外の引数
-    // 必須引数が欠けている場合は "___" を表示
-    // 実際の主語ロールと疑問詞ロールを除外
+    // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
     const whRole = whInfo.slot.role;
-    const actualSubjectRole = subjectSlot?.role;
     const otherArgs = (verbEntry?.valency || [])
-      .filter(v => {
-        // 疑問詞ロールは除外
-        if (v.role === whRole) return false;
-        // 主語ロールの処理
-        if (actualSubjectRole) {
-          return v.role !== actualSubjectRole;
-        } else {
-          return !SUBJECT_ROLES.includes(v.role as SemanticRole);
-        }
-      })
+      .filter(v => v.role !== subjectRole && v.role !== whRole)
       .map(v => {
         const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
         const preposition = v.preposition;
-        if (argSlot?.filler) {
-          const rendered = renderFiller(argSlot.filler, false, polarity);
-          return preposition ? `${preposition} ${rendered}` : rendered;
-        } else if (v.required) {
-          return preposition ? `${preposition} ___` : '___';
-        } else {
-          return '';
-        }
+        const filled = argSlot?.filler;
+        const value = filled ? renderFiller(filled, false, polarity) : '___';
+        return {
+          text: preposition ? `${preposition} ${value}` : value,
+          skip: !v.required && !filled,
+        };
       })
-      .filter(s => s.length > 0)
+      .filter(item => !item.skip)
+      .map(item => item.text)
       .join(' ');
 
     // whom処理: 目的語位置の?whoは?whomになる
@@ -495,15 +482,24 @@ function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo):
   const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
   const verbEntry = findVerb(verbPhrase.verb.lemma);
 
-  // 主語を取得
-  let subjectSlot: FilledArgumentSlot | undefined;
+  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
+  let subjectRole: SemanticRole | undefined;
   for (const role of SUBJECT_ROLES) {
-    subjectSlot = verbPhrase.arguments.find(a => a.role === role);
-    if (subjectSlot?.filler) break;
+    if (verbEntry?.valency.some(v => v.role === role)) {
+      subjectRole = role;
+      break;
+    }
   }
 
-  // 主語がない場合は "___" を表示（未完成を明示）
-  const subject = subjectSlot?.filler ? renderFiller(subjectSlot.filler, true, polarity) : '___';
+  // 主語スロットを取得
+  const subjectSlot = subjectRole
+    ? verbPhrase.arguments.find(a => a.role === subjectRole)
+    : undefined;
+
+  // 主語をレンダリング（値があれば表示、なければ ___）
+  const subject = subjectSlot?.filler
+    ? renderFiller(subjectSlot.filler, true, polarity)
+    : '___';
   const subjectForConjugation = subjectSlot?.filler &&
     (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
     ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
@@ -527,33 +523,22 @@ function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo):
     modalPolarity
   );
 
-  // その他の引数（目的語など）
-  // 必須引数が欠けている場合は "___" を表示
-  // 実際の主語ロールのみを除外（theme等が目的語の場合は含める）
-  const actualSubjectRole = subjectSlot?.role;
+  // その他の引数（目的語など）- 主語ロール以外
+  // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
   const otherArgs = (verbEntry?.valency || [])
-    .filter(v => {
-      if (actualSubjectRole) {
-        // 主語が特定されている場合はそのロールのみ除外
-        return v.role !== actualSubjectRole;
-      } else {
-        // 主語がない場合は全ての主語候補ロールを除外
-        return !SUBJECT_ROLES.includes(v.role as SemanticRole);
-      }
-    })
+    .filter(v => v.role !== subjectRole)
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
-      if (argSlot?.filler) {
-        const rendered = renderFiller(argSlot.filler, false, polarity);
-        return preposition ? `${preposition} ${rendered}` : rendered;
-      } else if (v.required) {
-        return preposition ? `${preposition} ___` : '___';
-      } else {
-        return '';
-      }
+      const filled = argSlot?.filler;
+      const value = filled ? renderFiller(filled, false, polarity) : '___';
+      return {
+        text: preposition ? `${preposition} ${value}` : value,
+        skip: !v.required && !filled,
+      };
     })
-    .filter(s => s.length > 0)
+    .filter(item => !item.skip)
+    .map(item => item.text)
     .join(' ');
 
   // 様態副詞は文末（Wh副詞は?を除去）

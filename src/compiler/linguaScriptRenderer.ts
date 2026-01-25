@@ -155,9 +155,33 @@ function renderCoordinatedNounPhraseToScript(coordNP: CoordinatedNounPhraseNode)
 }
 
 function renderNounPhraseToScript(np: NounPhraseNode): string {
-  // 代名詞の場合はシンプルに返す
+  // 代名詞の場合
   if (np.head.type === 'pronoun') {
     const pronounHead = np.head as PronounHead;
+    const parts: string[] = [`'${pronounHead.lemma}`];
+
+    // 形容詞（不定代名詞 + 形容詞: "something beautiful"）
+    if (np.adjectives.length > 0) {
+      if (np.adjectives.length === 1) {
+        parts.push(`adj:'${np.adjectives[0].lemma}`);
+      } else {
+        const adjList = np.adjectives.map(adj => `'${adj.lemma}`).join(', ');
+        parts.push(`adj:[${adjList}]`);
+      }
+    }
+
+    // 前置詞句修飾（例: "someone in the room"）
+    if (np.prepModifier) {
+      const objScript = np.prepModifier.object.type === 'coordinatedNounPhrase'
+        ? renderCoordinatedNounPhraseToScript(np.prepModifier.object as CoordinatedNounPhraseNode)
+        : renderNounPhraseToScript(np.prepModifier.object as NounPhraseNode);
+      parts.push(`post:pp('${np.prepModifier.preposition}, ${objScript})`);
+    }
+
+    // 修飾がある場合は pronoun() でラップ
+    if (parts.length > 1) {
+      return `pronoun(${parts.join(', ')})`;
+    }
     return `'${pronounHead.lemma}`;
   }
 

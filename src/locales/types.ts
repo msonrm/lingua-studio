@@ -124,6 +124,20 @@ export interface BlocklyMessages {
   VERB_COMMUNICATION: string;
   VERB_STATE: string;
 
+  // Semantic role labels (for verb argument slots)
+  ROLE_AGENT: string;
+  ROLE_PATIENT: string;
+  ROLE_THEME: string;
+  ROLE_EXPERIENCER: string;
+  ROLE_STIMULUS: string;
+  ROLE_RECIPIENT: string;
+  ROLE_POSSESSOR: string;
+  ROLE_ATTRIBUTE: string;
+  ROLE_PLACE: string;
+  ROLE_GOAL: string;
+  ROLE_LOCATION: string;
+  ROLE_SUBJECT: string;
+
   // Adjective categories
   ADJ_SIZE: string;
   ADJ_AGE: string;

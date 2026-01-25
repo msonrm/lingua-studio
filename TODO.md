@@ -104,6 +104,32 @@
 
 ## Completed
 
+### Renderer Bug Fixes (2026-01)
+- [x] LinguaScript: 代名詞 + prepModifier が出力されない問題を修正
+  - 修正前: `'I` （前置詞句が消える）
+  - 修正後: `pronoun('I, post:pp('to, noun(...)))`
+- [x] LinguaScript: 代名詞 + 形容詞が出力されない問題を修正
+  - 修正前: `'something`
+  - 修正後: `pronoun('something, adj:'beautiful)`
+- [x] 英語: モーダル + 等位接続で2番目の動詞がモーダルを無視する問題を修正
+  - 修正前: "I can run and a father eats a fish."
+  - 修正後: "I can run and a father can eat a fish."
+- [x] 英語: 命令文 + 等位接続で2番目の動詞が出力されない問題を修正
+  - 修正前: "Run!"
+  - 修正後: "Run and eat!"
+
+### Semantic Roles & Verbs (2026-01)
+- [x] 動詞ブロックのセマンティック役割ラベルをi18n対応
+  - agent, patient, theme 等が言語切替で翻訳される
+- [x] 言語学的慣習に従った日本語用語に修正
+  - patient → 被動者, recipient → 受領者, place → 起点
+- [x] goal/location 役割の翻訳キーを追加
+  - goal: 着点 / どこへ
+  - location: 位置 / どこに
+- [x] 着点/位置が必須項の動詞を追加
+  - put, place, hang (action): goal が必須
+  - live, reside, stay (state): location が必須
+
 ### Sentence Modifier (2026-01)
 - [x] Modal（法助動詞）wrapper
   - 8概念の言語非依存設計（UG: 原理とパラメータ）

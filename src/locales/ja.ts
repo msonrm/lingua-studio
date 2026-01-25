@@ -124,6 +124,20 @@ export const ja: LocaleData = {
     VERB_COMMUNICATION: '伝達',
     VERB_STATE: '状態',
 
+    // Semantic role labels
+    ROLE_AGENT: '動作主',
+    ROLE_PATIENT: '被動者',
+    ROLE_THEME: '主題',
+    ROLE_EXPERIENCER: '経験者',
+    ROLE_STIMULUS: '刺激',
+    ROLE_RECIPIENT: '受領者',
+    ROLE_POSSESSOR: '所有者',
+    ROLE_ATTRIBUTE: '属性',
+    ROLE_PLACE: '起点',
+    ROLE_GOAL: '着点',
+    ROLE_LOCATION: '位置',
+    ROLE_SUBJECT: '主語',
+
     // Adjective categories
     ADJ_SIZE: '大きさ',
     ADJ_AGE: '新旧',

@@ -413,9 +413,11 @@ function createVerbCategoryBlock(category: VerbCategory) {
       // 新しいスロットを追加
       verb.valency.forEach((slot: { role: string; label?: string; required: boolean }, index: number) => {
         const inputName = `ARG_${index}`;
-        const label = slot.label || slot.role;
+        const labelKey = slot.label || slot.role;
+        const roleKey = `ROLE_${labelKey.toUpperCase()}`;
+        const translatedLabel = msg(roleKey, labelKey);
         const checkType = slot.role === 'attribute' ? ['noun', 'nounPhrase', 'adjective', 'coordinatedNounPhrase'] : ['noun', 'nounPhrase', 'coordinatedNounPhrase'];
-        const displayLabel = slot.required ? `${label}:` : `(${label}):`;
+        const displayLabel = slot.required ? `${translatedLabel}:` : `(${translatedLabel}):`;
         this.appendValueInput(inputName)
             .setCheck(checkType)
             .appendField(displayLabel);

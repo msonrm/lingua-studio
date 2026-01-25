@@ -124,6 +124,20 @@ export const en: LocaleData = {
     VERB_COMMUNICATION: 'COMMUNICATION',
     VERB_STATE: 'STATE',
 
+    // Semantic role labels
+    ROLE_AGENT: 'agent',
+    ROLE_PATIENT: 'patient',
+    ROLE_THEME: 'theme',
+    ROLE_EXPERIENCER: 'experiencer',
+    ROLE_STIMULUS: 'stimulus',
+    ROLE_RECIPIENT: 'recipient',
+    ROLE_POSSESSOR: 'possessor',
+    ROLE_ATTRIBUTE: 'attribute',
+    ROLE_PLACE: 'place',
+    ROLE_GOAL: 'goal',
+    ROLE_LOCATION: 'location',
+    ROLE_SUBJECT: 'subject',
+
     // Adjective categories
     ADJ_SIZE: 'SIZE',
     ADJ_AGE: 'AGE',

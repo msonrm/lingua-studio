@@ -472,10 +472,11 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     if (!innerResult) {
       return null;
     }
+    // 欠損時は ___ マーカーを使用（Grammar Console対応時に警告表示予定）
     const objectNP = objectBlock ? parseNounPhraseBlock(objectBlock) : {
       type: 'nounPhrase' as const,
       adjectives: [],
-      head: { type: 'noun' as const, lemma: 'something', number: 'singular' as const },
+      head: { type: 'noun' as const, lemma: '___', number: 'singular' as const },
       prepositionalPhrases: [],
     };
     return {
@@ -807,18 +808,18 @@ function parsePrepositionNounBlock(block: Blockly.Block): NounPhraseNode | Coord
   const nounBlock = block.getInputTargetBlock('NOUN');
   const objectBlock = block.getInputTargetBlock('OBJECT');
 
-  // 内部の名詞ブロックを解析
+  // 内部の名詞ブロックを解析（欠損時は ___ マーカー）
   const innerResult = nounBlock ? parseNounPhraseBlock(nounBlock) : {
     type: 'nounPhrase' as const,
     adjectives: [],
-    head: { type: 'noun' as const, lemma: 'thing', number: 'singular' as const },
+    head: { type: 'noun' as const, lemma: '___', number: 'singular' as const },
   };
 
-  // 前置詞の目的語を解析
+  // 前置詞の目的語を解析（欠損時は ___ マーカー）
   const objectResult = objectBlock ? parseNounPhraseBlock(objectBlock) : {
     type: 'nounPhrase' as const,
     adjectives: [],
-    head: { type: 'noun' as const, lemma: 'something', number: 'singular' as const },
+    head: { type: 'noun' as const, lemma: '___', number: 'singular' as const },
   };
 
   // 等位接続の場合はそのまま返す（前置詞句修飾は適用しない）
@@ -843,11 +844,11 @@ function parseCoordinationNounBlock(block: Blockly.Block, conjValue: Conjunction
   const leftBlock = block.getInputTargetBlock('LEFT');
   const rightBlock = block.getInputTargetBlock('RIGHT');
 
-  // デフォルトの名詞句
+  // デフォルトの名詞句（欠損時は ___ マーカー）
   const defaultNP: NounPhraseNode = {
     type: 'nounPhrase',
     adjectives: [],
-    head: { type: 'noun', lemma: 'something', number: 'singular' },
+    head: { type: 'noun', lemma: '___', number: 'singular' },
   };
 
   // 左右の名詞句を解析（再帰的にCoordinatedも可能）

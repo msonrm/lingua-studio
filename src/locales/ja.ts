@@ -133,7 +133,7 @@ export const ja: LocaleData = {
     ROLE_RECIPIENT: '受領者',
     ROLE_POSSESSOR: '所有者',
     ROLE_ATTRIBUTE: '属性',
-    ROLE_PLACE: '場所',
+    ROLE_PLACE: '起点',
     ROLE_SUBJECT: '主語',
 
     // Adjective categories

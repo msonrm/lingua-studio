@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useRef } from 'react';
 import { BlocklyWorkspace, BlocklyWorkspaceHandle } from './components/BlocklyWorkspace';
 import { LinguaScriptBar } from './components/LinguaScriptBar';
 import { LinguaScriptView } from './components/LinguaScriptView';
+import { VisualizationPanel } from './components/VisualizationPanel';
 import { SentenceNode } from './types/schema';
 import { renderToLinguaScript } from './compiler/linguaScriptRenderer';
 import { TransformLog, BlockChange, formatLogStructured } from './types/grammarLog';
@@ -159,11 +160,8 @@ function App() {
             {/* Side Panel */}
             {showSidePanel && (
               <div className="side-panel">
-                <div className="side-panel-header">
-                  <h3>Options</h3>
-                </div>
                 <div className="side-panel-content">
-                  <p className="coming-soon">Build options coming soon...</p>
+                  <VisualizationPanel asts={asts} />
                 </div>
               </div>
             )}

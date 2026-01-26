@@ -401,3 +401,142 @@ body {
   font-style: normal;
   padding-left: 4px;
 }
+
+/* ============================================
+   Visualization Panel
+   ============================================ */
+.visualization-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.viz-section {
+  background: #0f3460;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.viz-section h4 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #e94560;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+/* Tense Timeline */
+.tense-timeline {
+  width: 100%;
+  height: 60px;
+  margin-bottom: 0.75rem;
+}
+
+.tense-timeline text {
+  fill: #888;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.timeline-marker.active text {
+  fill: #fff;
+  font-weight: 600;
+}
+
+/* Aspect Icons */
+.aspect-icons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.aspect-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  background: #16213e;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.aspect-item.active {
+  background: #1a365d;
+  border-color: #e94560;
+}
+
+.aspect-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.aspect-item span {
+  font-size: 0.7rem;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aspect-item.active span {
+  color: #fff;
+}
+
+/* Preposition Diagram */
+.prep-group {
+  margin-bottom: 0.75rem;
+}
+
+.prep-group:last-child {
+  margin-bottom: 0;
+}
+
+.prep-group-label {
+  display: block;
+  font-size: 0.65rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.375rem;
+}
+
+.prep-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.prep-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem;
+  background: #16213e;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  min-width: 48px;
+  transition: all 0.2s;
+}
+
+.prep-item.active {
+  background: #1a365d;
+  border-color: #e94560;
+}
+
+.prep-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.prep-label {
+  font-size: 0.65rem;
+  color: #888;
+}
+
+.prep-item.active .prep-label {
+  color: #fff;
+  font-weight: 600;
+}

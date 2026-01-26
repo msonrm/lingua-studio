@@ -384,6 +384,26 @@ function hasInterrogativePronoun(filler: FilledArgumentSlot['filler']): boolean 
 function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
   const blockType = block.type;
 
+  // VerbChainResultをVerbPhraseNode（logicOp含む）に変換するヘルパー
+  // 等位接続や論理演算のオペランドで使用
+  const toVerbPhraseWithLogic = (result: VerbChainResult): VerbPhraseNode => {
+    return {
+      ...result.verbPhrase,
+      adverbs: [
+        ...result.mannerAdverbs,
+        ...result.frequencyAdverbs,
+        ...result.locativeAdverbs,
+        ...(result.timeAdverbs || []),
+        ...result.verbPhrase.adverbs,
+      ],
+      prepositionalPhrases: [
+        ...result.prepositionalPhrases,
+        ...result.verbPhrase.prepositionalPhrases,
+      ],
+      logicOp: result.logicOp,
+    };
+  };
+
   // 否定ラッパーの処理
   if (blockType === 'negation_wrapper') {
     const innerBlock = block.getInputTargetBlock('VERB');
@@ -558,26 +578,6 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
 
   // 命題レベル論理演算ブロックの処理（Logic Extension: AND, OR, NOT）
   // 等位接続 and/or とは異なり、大文字 AND/OR/NOT で出力
-
-  // VerbChainResultをVerbPhraseNode（logicOp含む）に変換するヘルパー
-  const toVerbPhraseWithLogic = (result: VerbChainResult): VerbPhraseNode => {
-    return {
-      ...result.verbPhrase,
-      adverbs: [
-        ...result.mannerAdverbs,
-        ...result.frequencyAdverbs,
-        ...result.locativeAdverbs,
-        ...(result.timeAdverbs || []),
-        ...result.verbPhrase.adverbs,
-      ],
-      prepositionalPhrases: [
-        ...result.prepositionalPhrases,
-        ...result.verbPhrase.prepositionalPhrases,
-      ],
-      logicOp: result.logicOp,
-    };
-  };
-
   if (blockType === 'logic_and_block' || blockType === 'logic_or_block') {
     const operator: PropositionalOperator = blockType === 'logic_and_block' ? 'AND' : 'OR';
     const leftBlock = block.getInputTargetBlock('LEFT');
@@ -675,13 +675,13 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     if (!leftResult) {
       return null;
     }
-    // 右側も解析
+    // 右側も解析（logicOpを含めて完全なVerbPhraseNodeに変換）
     const rightResult = rightBlock ? parseVerbChain(rightBlock) : null;
     return {
       ...leftResult,
       coordination: rightResult ? {
         conjunction: conjValue,
-        rightVerbPhrase: rightResult.verbPhrase,
+        rightVerbPhrase: toVerbPhraseWithLogic(rightResult),
       } : undefined,
     };
   }

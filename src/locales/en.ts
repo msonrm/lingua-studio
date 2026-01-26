@@ -146,13 +146,24 @@ export const en: LocaleData = {
     PP_VERB_TOOLTIP: 'Prepositional Phrase (Verb): adds a prepositional phrase to a verb',
     PP_NOUN_TOOLTIP: 'Prepositional Phrase (Noun): modifies a noun with a prepositional phrase',
 
-    // Coordination
-    COORD_AND_LABEL: 'AND',
-    COORD_OR_LABEL: 'OR',
-    COORD_NOUN_AND_TOOLTIP: 'Coordination (Noun): connects two noun phrases with AND',
-    COORD_NOUN_OR_TOOLTIP: 'Coordination (Noun): connects two noun phrases with OR',
-    COORD_VERB_AND_TOOLTIP: 'Coordination (Verb): connects two verb phrases with AND',
-    COORD_VERB_OR_TOOLTIP: 'Coordination (Verb): connects two verb phrases with OR',
+    // Coordination (lowercase - linguistic)
+    COORD_AND_LABEL: 'and',
+    COORD_OR_LABEL: 'or',
+    COORD_NOUN_AND_TOOLTIP: 'Coordination (Noun): connects two noun phrases with and',
+    COORD_NOUN_OR_TOOLTIP: 'Coordination (Noun): connects two noun phrases with or',
+    COORD_VERB_AND_TOOLTIP: 'Coordination (Verb): connects two verb phrases with and',
+    COORD_VERB_OR_TOOLTIP: 'Coordination (Verb): connects two verb phrases with or',
+
+    // Logic Extension (uppercase - propositional logic)
+    FACT_LABEL: 'fact',
+    FACT_TOOLTIP: 'Declares a logical fact (assertion). Exclusive with sentence/modal.',
+    LOGIC_AND_LABEL: 'AND',
+    LOGIC_AND_TOOLTIP: 'Logical conjunction (AND): both propositions must be true',
+    LOGIC_OR_LABEL: 'OR',
+    LOGIC_OR_TOOLTIP: 'Logical disjunction (OR): at least one proposition must be true',
+    LOGIC_NOT_LABEL: 'NOT',
+    LOGIC_NOT_TOOLTIP: 'Logical negation (NOT): the proposition is false',
+    TOOLBOX_LOGIC: 'Logic',
 
     // Choice question
     CHOICE_QUESTION_LABEL: '?which',

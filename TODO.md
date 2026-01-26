@@ -142,12 +142,15 @@ LinguaScriptを論理推論言語として拡張し、LLMを推論エンジン�
 Geminiでの実験により、前提知識なしで論理構文が理解され、正しく推論されることを確認済み。
 
 #### 構文追加
-- [ ] `fact(P)` - 真偽値の確定（アサーション）
+- [x] `fact(P)` - 真偽値の確定（アサーション）
   - P を真と宣言する
   - 例: `fact(own(experiencer:'John, theme:'car))`
-- [ ] `and(P, Q)`, `or(P, Q)`, `not(P)` - ブール演算ラッパー
-  - 既存の等位接続・否定を論理演算として再解釈
-  - 真偽値を返す関数として統一
+  - `sentence()` / `modal()` とは排他的
+- [x] `AND(P, Q)`, `OR(P, Q)`, `NOT(P)` - 命題論理演算（大文字）
+  - 小文字 `and()`/`or()`/`not()` は等位接続・動詞否定（言語学的）
+  - 大文字 `AND()`/`OR()`/`NOT()` は命題論理（論理学的）
+  - `fact()` 内でのみ使用可能（ブロックレベルで接続制限）
+  - ネスト対応: `NOT(AND(P, OR(Q, R)))`
 - [ ] `if(P, then:Q)` - 条件・含意
   - ルール定義: 前件が真なら後件も真
   - 例: `if(give(agent:?A, theme:?T, recipient:?R), then:have(experiencer:?R, theme:?T))`
@@ -156,11 +159,25 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - 例: `because(cause:rain(), effect:wet(theme:'ground))`
 
 #### Blocklyブロック
-- [ ] `fact_wrapper` ブロック - 事実の宣言
+- [x] `fact_wrapper` ブロック - 事実の宣言
+- [x] `logic_and_block`, `logic_or_block`, `logic_not_block` - 命題論理演算
+  - Logic カテゴリとして Toolbox に追加（Question の下）
+  - 接続タイプ制限: logic ブロックは fact_wrapper 内でのみ接続可能
 - [ ] `if_block` ブロック - 条件・ルール定義
 - [ ] `because_block` ブロック - 因果関係
 
-#### 推論機能
+#### 英語レンダリング
+- [x] `⊨` マーカーで fact 出力を区別
+- [x] `AND(P, Q)` → "both P and Q"
+- [x] `OR(P, Q)` → "either P or Q"
+- [x] `NOT(P)` → "it is not the case that P"
+- [x] `NOT(OR(P, Q))` → "neither P nor Q" (De Morgan 対応)
+
+#### ローカライズ
+- [x] 日本語 (ja): 事実, AND, OR, NOT, 論理
+- [x] ひらがな (ja-hira): ほんと, かつ, または, ちがう, ほんと？うそ？
+
+#### 推論機能（未実装）
 - [ ] LLM連携API - LinguaScriptをLLMに送信してクエリ結果を取得
   - question() をクエリとして解釈
   - ?who, ?what 等を変数として束縛
@@ -207,6 +224,26 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 - 従属節 (if, when, although...)
 
 ## Completed
+
+### Logic Extension - Phase 1 (2026-01)
+- [x] `fact()` wrapper と `AND()`/`OR()`/`NOT()` 命題論理ブロック実装
+  - fact_wrapper: sentence/modal と排他的な事実宣言
+  - logic_and_block, logic_or_block, logic_not_block: 命題論理演算
+  - 接続タイプ制限: logic ブロックは fact_wrapper 内でのみ接続可能
+  - ネスト対応: NOT(AND(P, OR(Q, R))) などの深いネスト
+- [x] 英語レンダリング
+  - `⊨` マーカーで fact 出力を区別
+  - both/either/neither マーカーでスコープを明確化
+  - NOT(OR(P, Q)) → "neither P nor Q" (De Morgan)
+- [x] 小文字/大文字の区別
+  - 小文字 and/or/not: 等位接続・動詞否定（言語学的）
+  - 大文字 AND/OR/NOT: 命題論理（論理学的）
+- [x] ローカライズ (ja, ja-hira)
+  - 日本語: 事実, AND, OR, NOT, 論理
+  - ひらがな: ほんと, かつ, または, ちがう, ほんと？うそ？
+- [x] バグ修正
+  - and()/or() 等位接続で内側の logicOp が失われる問題
+  - ネストされた論理式で rightOperand の logicOp が失われる問題
 
 ### Screen Layout Refactor (2026-01)
 - [x] 3タブ構成: Blocks / LinguaScript / AST

@@ -1201,6 +1201,8 @@ function conjugateVerbWithAdverbs(
           return freqStr ? `${freqStr} ${presentForm}` : presentForm;
         }
         case 'future':
+          logCollector.log('tense', lemma, `will ${verbEntry.forms.base}`,
+            'Tense: future', 'will + base');
           return freqStr
             ? `will ${freqStr} ${verbEntry.forms.base}`
             : `will ${verbEntry.forms.base}`;

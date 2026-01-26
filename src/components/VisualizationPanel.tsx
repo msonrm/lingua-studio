@@ -190,7 +190,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                 <path
                   d={generateWavePath(ePos - 20, rPos + 30, 40, 4, 12)}
                   fill="none"
-                  stroke={colors.R}
+                  stroke={colors.E}
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 >

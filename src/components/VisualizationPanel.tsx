@@ -43,21 +43,45 @@ function extractPrepositions(obj: unknown, found: Set<string> = new Set()): Set<
 // Tense/Aspect Timeline Component
 function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: string | null }) {
   const { code: localeCode } = useLocale();
+  const isHiragana = localeCode === 'ja-hira';
   const isJapanese = localeCode.startsWith('ja');
 
-  const labels = {
-    past: isJapanese ? 'まえ' : 'Past',
-    present: isJapanese ? 'いま' : 'Now',
-    future: isJapanese ? 'あと' : 'Future',
-    simple: isJapanese ? 'ふつう' : 'Simple',
-    progressive: isJapanese ? 'しているところ' : 'Progressive',
-    perfect: isJapanese ? 'したところ' : 'Perfect',
-    perfectProgressive: isJapanese ? 'してきた' : 'Perf. Prog.',
+  const labels = isHiragana ? {
+    past: 'まえ',
+    present: 'いま',
+    future: 'あと',
+    simple: 'ふつう',
+    progressive: 'しているところ',
+    perfect: 'したところ',
+    perfectProgressive: 'してきた',
+    title: 'いつ？どんなようす？',
+  } : isJapanese ? {
+    past: '過去',
+    present: '現在',
+    future: '未来',
+    simple: '単純',
+    progressive: '進行',
+    perfect: '完了',
+    perfectProgressive: '完了進行',
+    title: '時制・アスペクト',
+  } : {
+    past: 'Past',
+    present: 'Now',
+    future: 'Future',
+    simple: 'Simple',
+    progressive: 'Progressive',
+    perfect: 'Perfect',
+    perfectProgressive: 'Perf. Prog.',
+    title: 'Tense & Aspect',
   };
+
+  // Active aspect icon color (bright for dark background)
+  const activeColor = '#fff';
+  const inactiveColor = '#666';
 
   return (
     <div className="viz-section">
-      <h4>{isJapanese ? 'いつ？どんなようす？' : 'Tense & Aspect'}</h4>
+      <h4>{labels.title}</h4>
 
       {/* Timeline */}
       <svg viewBox="0 0 200 60" className="tense-timeline">
@@ -66,19 +90,19 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
 
         {/* Past marker */}
         <g className={`timeline-marker ${tense === 'past' ? 'active' : ''}`}>
-          <circle cx="40" cy="30" r="8" fill={tense === 'past' ? '#DC143C' : '#ddd'} />
+          <circle cx="40" cy="30" r="8" fill={tense === 'past' ? '#DC143C' : '#444'} />
           <text x="40" y="50" textAnchor="middle" fontSize="10">{labels.past}</text>
         </g>
 
         {/* Present marker */}
         <g className={`timeline-marker ${tense === 'present' ? 'active' : ''}`}>
-          <circle cx="100" cy="30" r="8" fill={tense === 'present' ? '#2E7D32' : '#ddd'} />
+          <circle cx="100" cy="30" r="8" fill={tense === 'present' ? '#2E7D32' : '#444'} />
           <text x="100" y="50" textAnchor="middle" fontSize="10">{labels.present}</text>
         </g>
 
         {/* Future marker */}
         <g className={`timeline-marker ${tense === 'future' ? 'active' : ''}`}>
-          <circle cx="160" cy="30" r="8" fill={tense === 'future' ? '#1565C0' : '#ddd'} />
+          <circle cx="160" cy="30" r="8" fill={tense === 'future' ? '#1565C0' : '#444'} />
           <text x="160" y="50" textAnchor="middle" fontSize="10">{labels.future}</text>
         </g>
 
@@ -91,13 +115,13 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
       <div className="aspect-icons">
         <div className={`aspect-item ${aspect === 'simple' ? 'active' : ''}`}>
           <svg viewBox="0 0 30 30" className="aspect-icon">
-            <circle cx="15" cy="15" r="6" fill={aspect === 'simple' ? '#333' : '#ccc'} />
+            <circle cx="15" cy="15" r="6" fill={aspect === 'simple' ? activeColor : inactiveColor} />
           </svg>
           <span>{labels.simple}</span>
         </div>
         <div className={`aspect-item ${aspect === 'progressive' ? 'active' : ''}`}>
           <svg viewBox="0 0 30 30" className="aspect-icon">
-            <circle cx="15" cy="15" r="8" fill="none" stroke={aspect === 'progressive' ? '#333' : '#ccc'} strokeWidth="2" strokeDasharray="4 2">
+            <circle cx="15" cy="15" r="8" fill="none" stroke={aspect === 'progressive' ? activeColor : inactiveColor} strokeWidth="2" strokeDasharray="4 2">
               <animateTransform
                 attributeName="transform"
                 type="rotate"
@@ -107,7 +131,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                 repeatCount="indefinite"
               />
             </circle>
-            <circle cx="15" cy="15" r="3" fill={aspect === 'progressive' ? '#333' : '#ccc'} />
+            <circle cx="15" cy="15" r="3" fill={aspect === 'progressive' ? activeColor : inactiveColor} />
           </svg>
           <span>{labels.progressive}</span>
         </div>
@@ -116,7 +140,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
             <path
               d="M8 15 L13 20 L22 10"
               fill="none"
-              stroke={aspect === 'perfect' ? '#333' : '#ccc'}
+              stroke={aspect === 'perfect' ? activeColor : inactiveColor}
               strokeWidth="3"
               strokeLinecap="round"
             />
@@ -125,11 +149,11 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
         </div>
         <div className={`aspect-item ${aspect === 'perfectProgressive' ? 'active' : ''}`}>
           <svg viewBox="0 0 30 30" className="aspect-icon">
-            <circle cx="15" cy="15" r="8" fill="none" stroke={aspect === 'perfectProgressive' ? '#333' : '#ccc'} strokeWidth="2" strokeDasharray="4 2" />
+            <circle cx="15" cy="15" r="8" fill="none" stroke={aspect === 'perfectProgressive' ? activeColor : inactiveColor} strokeWidth="2" strokeDasharray="4 2" />
             <path
               d="M10 15 L13 18 L20 11"
               fill="none"
-              stroke={aspect === 'perfectProgressive' ? '#333' : '#ccc'}
+              stroke={aspect === 'perfectProgressive' ? activeColor : inactiveColor}
               strokeWidth="2"
               strokeLinecap="round"
             />
@@ -144,6 +168,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
 // Preposition Diagram Component
 function PrepositionDiagram({ activePreps }: { activePreps: Set<string> }) {
   const { code: localeCode } = useLocale();
+  const isHiragana = localeCode === 'ja-hira';
   const isJapanese = localeCode.startsWith('ja');
 
   // Location prepositions
@@ -290,13 +315,15 @@ function PrepositionDiagram({ activePreps }: { activePreps: Set<string> }) {
     }
   };
 
-  const sectionLabels = isJapanese
-    ? { location: 'いるところ', direction: 'いく・くる', relation: 'つながり' }
-    : { location: 'Location', direction: 'Direction', relation: 'Relation' };
+  const sectionLabels = isHiragana
+    ? { location: 'いるところ', direction: 'いく・くる', relation: 'つながり', title: 'ぜんちし' }
+    : isJapanese
+    ? { location: '場所', direction: '方向', relation: '関係', title: '前置詞' }
+    : { location: 'Location', direction: 'Direction', relation: 'Relation', title: 'Prepositions' };
 
   return (
     <div className="viz-section">
-      <h4>{isJapanese ? 'ぜんちし' : 'Prepositions'}</h4>
+      <h4>{sectionLabels.title}</h4>
 
       <div className="prep-group">
         <span className="prep-group-label">{sectionLabels.location}</span>

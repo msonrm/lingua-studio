@@ -308,23 +308,22 @@ function renderLogicExpression(clause: ClauseNode): string {
   }
 
   // AND / OR: 右側の命題もレンダリング
-  if (logicOp.rightOperand) {
-    const rightClause: ClauseNode = {
-      type: 'clause',
-      verbPhrase: logicOp.rightOperand,
-      tense,
-      aspect,
-      polarity: 'affirmative',  // 右側のデフォルト極性
-    };
-    const rightStr = renderClause(rightClause);
+  const rightStr = logicOp.rightOperand
+    ? renderClause({
+        type: 'clause',
+        verbPhrase: logicOp.rightOperand,
+        tense,
+        aspect,
+        polarity: 'affirmative',  // 右側のデフォルト極性
+      })
+    : '___';  // 右側欠損
 
-    if (logicOp.operator === 'AND') {
-      // AND: "P, and Q" (論理的接続)
-      return `${leftStr}, and ${rightStr}`;
-    } else if (logicOp.operator === 'OR') {
-      // OR: "P, or Q" (論理的選択)
-      return `${leftStr}, or ${rightStr}`;
-    }
+  if (logicOp.operator === 'AND') {
+    // AND: "P, and Q" (論理的接続)
+    return `${leftStr}, and ${rightStr}`;
+  } else if (logicOp.operator === 'OR') {
+    // OR: "P, or Q" (論理的選択)
+    return `${leftStr}, or ${rightStr}`;
   }
 
   return leftStr;

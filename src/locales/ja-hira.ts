@@ -157,12 +157,12 @@ export const jaHira: LocaleData = {
     // Logic Extension (uppercase - propositional logic)
     FACT_LABEL: 'ほんと',
     FACT_TOOLTIP: '「〜はほんとうだよ」といういみ',
-    LOGIC_AND_LABEL: 'AND',
-    LOGIC_AND_TOOLTIP: 'どっちもほんと（AND）',
-    LOGIC_OR_LABEL: 'OR',
-    LOGIC_OR_TOOLTIP: 'どちらかはほんと（OR）',
-    LOGIC_NOT_LABEL: 'NOT',
-    LOGIC_NOT_TOOLTIP: 'ほんとじゃない（NOT）',
+    LOGIC_AND_LABEL: 'かつ',
+    LOGIC_AND_TOOLTIP: 'どっちもほんと',
+    LOGIC_OR_LABEL: 'または',
+    LOGIC_OR_TOOLTIP: 'どちらかはほんと',
+    LOGIC_NOT_LABEL: 'ちがう',
+    LOGIC_NOT_TOOLTIP: 'ほんとじゃない',
     TOOLBOX_LOGIC: 'ほんと？うそ？',
 
     // Choice question

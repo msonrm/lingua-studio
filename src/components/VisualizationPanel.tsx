@@ -170,12 +170,12 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                   y1="40"
                   x2={rPos - 18}
                   y2="40"
-                  stroke={colors.R}
+                  stroke="#fff"
                   strokeWidth="3"
                 />
                 <polygon
                   points={`${rPos - 9},40 ${rPos - 19},34 ${rPos - 19},46`}
-                  fill={colors.R}
+                  fill="#fff"
                 />
               </>
             )}
@@ -186,12 +186,12 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                   y1="40"
                   x2={rPos - 12}
                   y2="40"
-                  stroke={colors.R}
+                  stroke="#fff"
                   strokeWidth="3"
                 />
                 <polygon
                   points={`${rPos - 3},40 ${rPos - 13},34 ${rPos - 13},46`}
-                  fill={colors.R}
+                  fill="#fff"
                 />
               </>
             )}
@@ -221,12 +221,12 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                 {!rAtS ? (
                   <polygon
                     points={`${rPos - 9},40 ${rPos - 19},34 ${rPos - 19},46`}
-                    fill={colors.E}
+                    fill="#fff"
                   />
                 ) : (
                   <polygon
                     points={`${rPos - 3},40 ${rPos - 13},34 ${rPos - 13},46`}
-                    fill={colors.E}
+                    fill="#fff"
                   />
                 )}
               </>

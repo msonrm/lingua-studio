@@ -262,9 +262,9 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
           </>
         )}
 
-        {/* Tense labels below */}
-        <text x="40" y="72" textAnchor="middle" fontSize="10" fill={tense === 'past' ? '#fff' : colors.inactive}>{timelineLabels.past}</text>
-        <text x="200" y="72" textAnchor="middle" fontSize="10" fill={tense === 'future' ? '#fff' : colors.inactive}>{timelineLabels.future}</text>
+        {/* Tense labels below - left/right aligned to show axis direction */}
+        <text x="15" y="72" textAnchor="start" fontSize="10" fill={tense === 'past' ? '#fff' : colors.inactive}>{timelineLabels.past}</text>
+        <text x="225" y="72" textAnchor="end" fontSize="10" fill={tense === 'future' ? '#fff' : colors.inactive}>{timelineLabels.future}</text>
       </svg>
 
       {/* Simple tense+aspect label */}

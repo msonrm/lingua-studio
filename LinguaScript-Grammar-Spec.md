@@ -1259,23 +1259,54 @@ fact(give(agent:'Mary, theme:'book, recipient:'John))
 ;; → "give(Mary, book, John) は真である"
 ```
 
-#### ブール演算
+#### ブール演算（命題レベル）
+
+命題レベルのブール演算は**大文字**で表記する。これは等位接続（小文字 `and`, `or`）と区別するため。
 
 ```bnf
-<bool-expr>     ::= "and(" <proposition> ", " <proposition> ")"
-                  | "or(" <proposition> ", " <proposition> ")"
-                  | "not(" <proposition> ")"
+<bool-expr>     ::= "AND(" <proposition> ", " <proposition> ")"
+                  | "OR(" <proposition> ", " <proposition> ")"
+                  | "NOT(" <proposition> ")"
 ```
 
+##### 等位接続 vs ブール演算
+
+| 構文 | 種類 | 用途 | 例 |
+|------|------|------|-----|
+| `and()` 小文字 | 等位接続 | NP/VPの接続 | `and('John, 'Mary)` → "John and Mary" |
+| `AND()` 大文字 | 論理積 | 命題の論理演算 | `AND(P, Q)` → P ∧ Q |
+| `or()` 小文字 | 等位接続 | NP/VPの接続 | `or('tea, 'coffee)` → "tea or coffee" |
+| `OR()` 大文字 | 論理和 | 命題の論理演算 | `OR(P, Q)` → P ∨ Q |
+| `not()` 小文字 | 動詞否定 | 文の否定 | `not(eat(...))` → "don't eat" |
+| `NOT()` 大文字 | 論理否定 | 命題の否定 | `NOT(P)` → ¬P |
+
 ```lisp
-;; AND: 両方真なら真
-and(own(experiencer:'John, theme:'car), own(experiencer:'Mary, theme:'book))
+;; 等位接続（小文字）- 自然言語の "and/or"
+fact(like(experiencer:and('John, 'Mary), stimulus:'apple))
+;; → "John and Mary like apples."
 
-;; OR: どちらか真なら真
-or(own(experiencer:'John, theme:'car), own(experiencer:'John, theme:'bike))
+;; 論理積（大文字）- 命題レベル
+fact(AND(own(experiencer:'John, theme:'car), own(experiencer:'Mary, theme:'book)))
+;; → "John owns a car" ∧ "Mary owns a book"
 
-;; NOT: 否定
-not(own(experiencer:'John, theme:'bike))
+;; 論理和（大文字）- 命題レベル
+fact(OR(live(experiencer:'Tom, location:'Tokyo), live(experiencer:'Tom, location:'Osaka)))
+;; → "Tom lives in Tokyo" ∨ "Tom lives in Osaka"
+
+;; 論理否定（大文字）- 命題レベル
+fact(NOT(own(experiencer:'John, theme:'bike)))
+;; → ¬"John owns a bike"
+```
+
+##### 英語出力（⊨マーカー）
+
+`fact()` の英語出力には記号論理学の `⊨`（double turnstile: "models"）を使用する。
+
+```
+⊨ John and Mary like apples.
+⊨ John owns a car AND Mary owns a book.
+⊨ Tom lives in Tokyo OR Tom lives in Osaka.
+⊨ NOT: John owns a bike.
 ```
 
 #### 含意・因果
@@ -1341,7 +1372,7 @@ fact(own(experiencer:'John, theme:'car))
 question(own(experiencer:'John, theme:'bike))
 ;; → false（宣言されていないので偽）
 
-question(not(own(experiencer:'John, theme:'bike)))
+question(NOT(own(experiencer:'John, theme:'bike)))
 ;; → true（閉世界仮説による）
 ```
 
@@ -1417,7 +1448,8 @@ question(have(experiencer:'John, theme:?what))
 | `fact(tense, P)` | 時制付きアサーション | 特定時点での真理 |
 | `sentence(P)` | 文出力 | 自然言語文を生成 |
 | `question(P)` | クエリ | P は真か？/ P を真にする値は？ |
-| `and`, `or`, `not` | ブール演算子 | Bool × Bool → Bool |
+| `and`, `or` (小文字) | 等位接続 | NP/VPの接続 |
+| `AND`, `OR`, `NOT` (大文字) | ブール演算子 | 命題の論理演算 |
 | `if(A, then:B)` | 含意 | A → B |
 | `because(C, E)` | 因果 | C ⇒ E（因果的含意） |
 
@@ -1441,10 +1473,14 @@ question(have(experiencer:'John, theme:?what))
                   | "fact(" <fact-tense> ", " <proposition> ")"
 <fact-tense>    ::= "past" | "present" | "future"
 
-;; ブール演算（命題レベル）
-<bool-expr>     ::= "and(" <proposition> ", " <proposition> ")"
-                  | "or(" <proposition> ", " <proposition> ")"
-                  | "not(" <proposition> ")"
+;; ブール演算（命題レベル・大文字）
+<bool-expr>     ::= "AND(" <proposition> ", " <proposition> ")"
+                  | "OR(" <proposition> ", " <proposition> ")"
+                  | "NOT(" <proposition> ")"
+
+;; 等位接続（NP/VPレベル・小文字）は別途定義済み
+;; <noun-coord> ::= "and(" ... ")" | "or(" ... ")"
+;; <verb-coord> ::= "and(" ... ")" | "or(" ... ")"
 
 ;; 条件・因果
 <conditional>   ::= "if(" <proposition> ", then:" <proposition> ")"

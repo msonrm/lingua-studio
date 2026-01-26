@@ -1174,6 +1174,174 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
 <wh-adverb>     ::= "?why"    ;; reason節との統一的扱いが必要
 ```
 
+### 将来拡張（論理推論）
+
+LinguaScriptを論理推論言語として拡張するための構文。LLMを推論エンジンとして活用できることが実験で確認されている。
+
+#### 設計思想
+
+- **生成文法からの原理**: 機能範疇の階層（CP > ModP > TP > VP）
+- **依存文法からのパラメータ**: 動詞の結合価・意味役割
+- **Prolog的な論理意味論**: 事実・ルール・クエリ
+
+#### 真偽値システム
+
+```bnf
+;; アサーション（事実の宣言）
+<assertion>     ::= "fact(" <proposition> ")"
+
+;; 命題は真偽値を持つ
+;; fact(P) は P := true を意味する
+```
+
+```lisp
+;; 事実の宣言
+fact(own(experiencer:'John, theme:'car))
+;; → "own(John, car) は真である"
+
+fact(give(agent:'Mary, theme:'book, recipient:'John))
+;; → "give(Mary, book, John) は真である"
+```
+
+#### ブール演算
+
+```bnf
+<bool-expr>     ::= "and(" <proposition> ", " <proposition> ")"
+                  | "or(" <proposition> ", " <proposition> ")"
+                  | "not(" <proposition> ")"
+```
+
+```lisp
+;; AND: 両方真なら真
+and(own(experiencer:'John, theme:'car), own(experiencer:'Mary, theme:'book))
+
+;; OR: どちらか真なら真
+or(own(experiencer:'John, theme:'car), own(experiencer:'John, theme:'bike))
+
+;; NOT: 否定
+not(own(experiencer:'John, theme:'bike))
+```
+
+#### 含意・因果
+
+```bnf
+;; 条件（含意）
+<conditional>   ::= "if(" <proposition> ", then:" <proposition> ")"
+
+;; 因果関係
+<causal>        ::= "because(cause:" <proposition> ", effect:" <proposition> ")"
+```
+
+```lisp
+;; ルール: 「誰かが誰かに何かを与えると、受け手はそれを持つ」
+if(give(agent:?A, theme:?T, recipient:?R),
+   then:have(experiencer:?R, theme:?T))
+
+;; 因果: 「雨が降ると地面が濡れる」
+because(cause:rain(), effect:wet(theme:'ground))
+```
+
+#### クエリ（論理的解釈）
+
+既存の `question()` は論理的には存在量化クエリとして機能する。
+
+```lisp
+;; Wh疑問文 = 「文を真とする値を求めよ」
+question(eat(agent:?who, theme:'apple))
+;; → ∃X. eat(X, apple) を真にする X を求めよ
+
+;; Yes/No疑問文 = 「命題は真か？」
+question(eat(agent:'John, theme:'apple))
+;; → eat(John, apple) は真か？
+```
+
+#### 変数
+
+疑問詞（`?who`, `?what` 等）は論理変数として機能する。
+
+```lisp
+;; 変数は単一化（unification）の対象
+eat(agent:?X, theme:'apple)
+;; ?X は束縛可能な変数
+
+;; 複数変数
+give(agent:?who, theme:?what, recipient:'Mary)
+;; → ?who = 'Tom, ?what = 'pen （知識ベースから導出）
+```
+
+#### 閉世界仮説
+
+宣言されていない事実は偽とみなす（Negation as Failure）。
+
+```lisp
+;; 知識ベース
+fact(own(experiencer:'John, theme:'car))
+
+;; クエリ
+question(own(experiencer:'John, theme:'bike))
+;; → false（宣言されていない）
+
+question(not(own(experiencer:'John, theme:'bike)))
+;; → true（閉世界仮説による）
+```
+
+#### LLM連携
+
+LinguaScriptの構造化されたクエリは、LLMに直接投げることで推論エンジンとして活用できる。
+
+```lisp
+;; 知識ベース
+fact(give(agent:'Mary, theme:'book, recipient:'John))
+
+;; ルール
+if(give(agent:?A, theme:?T, recipient:?R),
+   then:have(experiencer:?R, theme:?T))
+
+;; クエリ
+question(have(experiencer:'John, theme:?what))
+;; → LLMが推論: ?what = 'book
+```
+
+**利点**:
+- 構造化されたクエリは曖昧さが少ない
+- 意味役割が明示されているため検索精度が向上
+- 推論過程が人間に説明可能
+- 外部知識（Google/Wikidata）との連携が可能
+
+#### 型システム
+
+| 構文 | 型 | 役割 |
+|------|-----|------|
+| `'John`, `'apple` | 定数（Entity） | 個体 |
+| `?who`, `?what`, `?X` | 変数（Variable） | 未知・束縛対象 |
+| `eat(...)`, `own(...)` | 命題（Proposition） | 真偽値を持つ |
+| `fact(P)` | アサーション | P := true |
+| `question(P)` | クエリ | P は真か？/ P を真にする値は？ |
+| `and`, `or`, `not` | ブール演算子 | Bool × Bool → Bool |
+| `if(A, then:B)` | 含意 | A → B |
+| `because(C, E)` | 因果 | C ⇒ E（因果的含意） |
+
+#### BNF
+
+```bnf
+;; 論理拡張
+<logic-expr>    ::= <assertion> | <bool-expr> | <conditional> | <causal>
+
+<assertion>     ::= "fact(" <proposition> ")"
+
+<bool-expr>     ::= "and(" <proposition> ", " <proposition> ")"
+                  | "or(" <proposition> ", " <proposition> ")"
+                  | "not(" <proposition> ")"
+
+<conditional>   ::= "if(" <proposition> ", then:" <proposition> ")"
+
+<causal>        ::= "because(cause:" <proposition> ", effect:" <proposition> ")"
+
+<proposition>   ::= <sentence> | <verb-phrase> | <bool-expr>
+
+<variable>      ::= "?" <identifier>
+```
+
 ---
 
 ## クイックリファレンス

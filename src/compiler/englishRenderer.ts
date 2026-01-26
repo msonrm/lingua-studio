@@ -16,6 +16,10 @@ import {
   ModalType,
 } from '../types/schema';
 import { findVerb, findNoun, findPronoun } from '../data/dictionary';
+import { GrammarLogCollector, RenderResult } from '../types/grammarLog';
+
+// Grammar log collector (module-level, reset on each render)
+let logCollector = new GrammarLogCollector();
 
 // 主語となりうるロール
 const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
@@ -52,27 +56,26 @@ function findInterrogativeInNounPhrase(np: NounPhraseNode): string | null {
 // ClauseNodeから疑問詞情報を検出
 function findInterrogativeInClause(clause: ClauseNode): WhWordInfo | null {
   const { verbPhrase } = clause;
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
 
-  // 主語ロールを先にチェック
+  // 動詞のvalencyから実際の主語ロールを決定
+  let actualSubjectRole: SemanticRole | undefined;
   for (const role of SUBJECT_ROLES) {
-    const slot = verbPhrase.arguments.find(a => a.role === role);
-    if (slot?.filler && slot.filler.type === 'nounPhrase') {
-      const whWord = findInterrogativeInNounPhrase(slot.filler as NounPhraseNode);
-      if (whWord) {
-        return { whWord, role, isSubject: true, slot };
-      }
+    if (verbEntry?.valency.some(v => v.role === role)) {
+      actualSubjectRole = role;
+      break;
     }
   }
 
-  // その他の引数をチェック（目的語など）
+  // 全ての引数を検索してWh語を探す
   for (const slot of verbPhrase.arguments) {
     if (!slot.filler) continue;
-    if (SUBJECT_ROLES.includes(slot.role)) continue; // 既にチェック済み
-
     if (slot.filler.type === 'nounPhrase') {
       const whWord = findInterrogativeInNounPhrase(slot.filler as NounPhraseNode);
       if (whWord) {
-        return { whWord, role: slot.role, isSubject: false, slot };
+        // 実際の主語ロールにWh語がある場合のみisSubject: true
+        const isSubject = slot.role === actualSubjectRole;
+        return { whWord, role: slot.role, isSubject, slot };
       }
     }
   }
@@ -107,6 +110,13 @@ function stripWhPrefix(lemma: string): string {
 // AST → 英文レンダラー
 // ============================================
 export function renderToEnglish(ast: SentenceNode): string {
+  return renderToEnglishWithLogs(ast).output;
+}
+
+export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
+  // Reset log collector for fresh render
+  logCollector = new GrammarLogCollector();
+
   let clause: string;
 
   switch (ast.sentenceType) {
@@ -137,7 +147,11 @@ export function renderToEnglish(ast: SentenceNode): string {
     default:
       punctuation = '.';
   }
-  return capitalized + punctuation;
+
+  return {
+    output: capitalized + punctuation,
+    logs: logCollector.getLogs(),
+  };
 }
 
 function renderClause(clause: ClauseNode): string {
@@ -307,6 +321,10 @@ function renderInterrogativeClause(clause: ClauseNode): string {
     modalPolarity
   );
 
+  // 倒置をログ（Yes/No疑問文）
+  logCollector.log('inversion', `${subject} ${auxiliary}`, `${auxiliary} ${subject}`,
+    'Question formation', 'subject-auxiliary inversion');
+
   // その他の引数（目的語など）- 主語ロール以外
   // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
   const otherArgs = (verbEntry?.valency || [])
@@ -379,6 +397,10 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
   const prepPhrases = verbPhrase.prepositionalPhrases
     .map(pp => renderPrepositionalPhrase(pp, polarity))
     .join(' ');
+
+  // Wh移動をログ
+  logCollector.log('wh-movement', `...${whInfo.whWord}...`, `${whInfo.whWord} ...`,
+    `Wh-word "${whInfo.whWord}" in ${whInfo.role}`, 'fronted to sentence start');
 
   if (whInfo.isSubject) {
     // 主語Wh疑問文: Who ate the apple? (do-supportなし)
@@ -980,6 +1002,10 @@ function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarit
     const after = result.slice(idx + 6);
     const firstChar = after.charAt(0).toLowerCase();
     const article = ['a', 'e', 'i', 'o', 'u'].includes(firstChar) ? 'an' : 'a';
+    if (article === 'an') {
+      logCollector.log('article', 'a', 'an',
+        `Next sound: vowel "${firstChar}"`, 'a → an');
+    }
     result = before + article + ' ' + after;
   }
 
@@ -1055,6 +1081,10 @@ function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirma
   if (isSubject) {
     return pronoun.lemma;
   } else {
+    if (pronoun.lemma !== pronoun.objectForm) {
+      logCollector.log('case', pronoun.lemma, pronoun.objectForm,
+        'Position: object', 'objective case');
+    }
     return pronoun.objectForm;
   }
 }
@@ -1132,12 +1162,18 @@ function conjugateVerbWithAdverbs(
       switch (tense) {
         case 'past':
           doForm = 'did';
+          logCollector.log('do-support', lemma, `did not ${verbEntry.forms.base}`,
+            'Negation + past', 'did + not + base');
           break;
         case 'present':
           doForm = isThirdPersonSingular ? 'does' : 'do';
+          logCollector.log('do-support', lemma, `${doForm} not ${verbEntry.forms.base}`,
+            `Negation + present`, `${doForm} + not + base`);
           break;
         case 'future':
           // will not [freq] base
+          logCollector.log('negation', lemma, `will not ${verbEntry.forms.base}`,
+            'Negation + future', 'will + not + base');
           return freqStr
             ? `will not ${freqStr} ${verbEntry.forms.base}`
             : `will not ${verbEntry.forms.base}`;
@@ -1150,11 +1186,18 @@ function conjugateVerbWithAdverbs(
       switch (tense) {
         case 'past': {
           const pastForm = getIrregularForm('past') || verbEntry.forms.past;
+          if (pastForm !== lemma) {
+            logCollector.log('tense', lemma, pastForm, 'Tense: past', '-ed');
+          }
           return freqStr ? `${freqStr} ${pastForm}` : pastForm;
         }
         case 'present': {
           const presentForm = getIrregularForm('present') ||
             (isThirdPersonSingular ? verbEntry.forms.s : verbEntry.forms.base);
+          if (isThirdPersonSingular && presentForm !== verbEntry.forms.base) {
+            logCollector.log('agreement', verbEntry.forms.base, presentForm,
+              `Subject ${getSubjectDescription(subject)} is 3sg`, '+s');
+          }
           return freqStr ? `${freqStr} ${presentForm}` : presentForm;
         }
         case 'future':
@@ -1168,6 +1211,8 @@ function conjugateVerbWithAdverbs(
   // Progressive: aux + [not] + [freq] + verb-ing
   if (aspect === 'progressive') {
     const beForm = getBeAuxiliary(tense);
+    logCollector.log('aspect', lemma, verbEntry.forms.ing,
+      'Aspect: progressive', 'be + -ing');
     const notPart = isNegative ? 'not' : '';
     const parts = [beForm, notPart, freqStr, verbEntry.forms.ing].filter(p => p.length > 0);
     return parts.join(' ');
@@ -1176,6 +1221,8 @@ function conjugateVerbWithAdverbs(
   // Perfect: aux + [not] + [freq] + verb-pp
   if (aspect === 'perfect') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
+    logCollector.log('aspect', lemma, verbEntry.forms.pp,
+      'Aspect: perfect', 'have + past participle');
     const notPart = isNegative ? 'not' : '';
     const parts = [haveForm, notPart, freqStr, verbEntry.forms.pp].filter(p => p.length > 0);
     return parts.join(' ');
@@ -1223,6 +1270,24 @@ function getModalEnglishForm(
   }
 }
 
+// モダル変換のログ出力（共通ヘルパー）
+// 平叙文・疑問文の両方から呼び出される
+function logModalTransformation(
+  modal: ModalType,
+  tense: 'past' | 'present' | 'future',
+  modalForm: { auxiliary?: string; usePeriPhrastic?: string }
+): void {
+  if (tense === 'past') {
+    const presentForm = getModalEnglishForm(modal, 'present');
+    const presentAux = presentForm.auxiliary || '';
+    const pastAux = modalForm.auxiliary || modalForm.usePeriPhrastic || '';
+    if (presentAux && pastAux && presentAux !== pastAux) {
+      logCollector.log('modal', presentAux, pastAux,
+        `Modal: ${modal} + past tense`, 'past form');
+    }
+  }
+}
+
 // モダリティ付きの動詞活用（時制連動）
 // modal + (not) + (aspect markers) + verb
 function conjugateWithModal(
@@ -1249,6 +1314,9 @@ function conjugateWithModal(
   const notPart = isModalNegative ? 'not' : (isVerbNegative ? 'not' : '');
 
   const modalForm = getModalEnglishForm(modal, tense);
+
+  // モダル変換をログ（共通ヘルパー使用）
+  logModalTransformation(modal, tense, modalForm);
 
   // 迂言形式（was going to, had to）の場合
   if (modalForm.usePeriPhrastic) {
@@ -1339,6 +1407,9 @@ function conjugateVerbForQuestion(
   if (modal) {
     const modalForm = getModalEnglishForm(modal, tense);
     const isModalNegative = modalPolarity === 'negative';
+
+    // モダル変換をログ（共通ヘルパー使用）
+    logModalTransformation(modal, tense, modalForm);
 
     // 義務の否定（特殊処理）
     if (isModalNegative && modal === 'obligation') {
@@ -1561,6 +1632,26 @@ type PersonNumber = {
   person: 1 | 2 | 3;
   number: 'singular' | 'plural';
 };
+
+// 主語の簡易説明を取得（ログ用）
+function getSubjectDescription(subject?: NounPhraseNode | CoordinatedNounPhraseNode): string {
+  if (!subject) return 'subject (default)';
+
+  if (subject.type === 'coordinatedNounPhrase') {
+    return `"${subject.conjuncts.length} items with ${subject.conjunction}"`;
+  }
+
+  const np = subject as NounPhraseNode;
+  if (np.head.type === 'pronoun') {
+    const pronounHead = np.head as PronounHead;
+    return `"${pronounHead.lemma}"`;
+  }
+  if (np.head.type === 'noun') {
+    const nounHead = np.head as NounHead;
+    return `"${nounHead.lemma}"`;
+  }
+  return 'subject';
+}
 
 function getPersonNumber(subject: NounPhraseNode | CoordinatedNounPhraseNode): PersonNumber {
   // 等位接続の場合

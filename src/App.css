@@ -309,6 +309,61 @@ body {
   font-style: italic;
 }
 
+/* Console two-panel layout */
+.console-section-changes,
+.console-section-rules {
+  padding: 0.5rem 1rem;
+}
+
+.console-section-changes {
+  border-bottom: 1px solid #0f3460;
+}
+
+.console-section-changes h3,
+.console-section-rules h3 {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.console-changes {
+  min-height: 40px;
+  background: #0a1628;
+}
+
+.console-rules {
+  min-height: 60px;
+}
+
+.block-change {
+  color: #8be9fd;
+  padding: 2px 0;
+}
+
+.grammar-log {
+  padding: 4px 0;
+  margin-bottom: 8px;
+  border-left: 2px solid #444;
+  padding-left: 8px;
+}
+
+.grammar-log:last-child {
+  margin-bottom: 0;
+}
+
+.log-condition {
+  color: #888;
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+}
+
+.log-result {
+  color: #f1fa8c;
+  font-size: 0.85rem;
+}
 
 /* ============================================
    Blockly Overrides

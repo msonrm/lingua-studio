@@ -3,13 +3,16 @@ import * as Blockly from 'blockly';
 import '../blocks/definitions';
 import { createToolbox } from '../blocks/definitions';
 import { generateMultipleAST } from '../compiler/astGenerator';
-import { renderToEnglish } from '../compiler/englishRenderer';
+import { renderToEnglishWithLogs } from '../compiler/englishRenderer';
+import { TransformLog, BlockChange } from '../types/grammarLog';
 import { SentenceNode } from '../types/schema';
 import { useLocale } from '../locales';
 
 interface BlocklyWorkspaceProps {
   onASTChange: (asts: SentenceNode[]) => void;
   onSentenceChange: (sentences: string[]) => void;
+  onLogsChange: (logs: TransformLog[]) => void;
+  onBlockChanges: (changes: BlockChange[]) => void;
   initialState?: object | null;
 }
 
@@ -18,9 +21,10 @@ export interface BlocklyWorkspaceHandle {
 }
 
 export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorkspaceProps>(
-  function BlocklyWorkspace({ onASTChange, onSentenceChange, initialState }, ref) {
+  function BlocklyWorkspace({ onASTChange, onSentenceChange, onLogsChange, onBlockChanges, initialState }, ref) {
     const blocklyDiv = useRef<HTMLDivElement>(null);
     const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
+    const pendingChangesRef = useRef<BlockChange[]>([]);
     const { ui } = useLocale();
 
     // 親コンポーネントから状態を保存できるようにする
@@ -31,21 +35,118 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       },
     }));
 
+    // フィールド名を人間が読みやすい形式に変換
+    const getReadableFieldName = (fieldName: string): string => {
+      // Common field name mappings
+      const fieldMappings: Record<string, string> = {
+        'PRONOUN_VALUE': 'Subject',
+        'TENSE': 'Tense',
+        'ASPECT': 'Aspect',
+        'VERB': 'Verb',
+        'PREP_VALUE': 'Preposition',
+        'MANNER_VALUE': 'Manner',
+        'LOCATIVE_VALUE': 'Location',
+        'TIME_ADVERB': 'Time',
+        'CENTRAL_DET': 'Determiner',
+        'ADJ_VALUE': 'Adjective',
+      };
+      return fieldMappings[fieldName] || fieldName;
+    };
+
+    // ブロック変更イベントを処理
+    const handleBlockChange = useCallback((event: Blockly.Events.Abstract) => {
+      // フィールド値の変更（プルダウン等）
+      if (event.type === Blockly.Events.BLOCK_CHANGE) {
+        const changeEvent = event as Blockly.Events.BlockChange;
+        if (changeEvent.element === 'field' && changeEvent.name) {
+          const fieldName = getReadableFieldName(changeEvent.name);
+          const oldValue = String(changeEvent.oldValue || '');
+          const newValue = String(changeEvent.newValue || '');
+
+          // Skip label values and unchanged values
+          if (oldValue !== newValue && !oldValue.startsWith('__label_')) {
+            pendingChangesRef.current.push({
+              field: fieldName,
+              from: oldValue,
+              to: newValue,
+            });
+          }
+        }
+      }
+
+      // ブロックの接続/切断
+      if (event.type === Blockly.Events.BLOCK_MOVE) {
+        const moveEvent = event as Blockly.Events.BlockMove;
+        // 親が変わった（接続/切断された）
+        if (moveEvent.oldParentId !== moveEvent.newParentId) {
+          const block = workspaceRef.current?.getBlockById(moveEvent.blockId || '');
+          const blockType = block?.type || 'block';
+
+          // ブロックタイプを読みやすい名前に変換
+          const getBlockLabel = (type: string): string => {
+            const labels: Record<string, string> = {
+              'pronoun_block': 'Subject',
+              'noun_block': 'Noun',
+              'verb_motion': 'Verb',
+              'verb_action': 'Verb',
+              'verb_transfer': 'Verb',
+              'verb_cognition': 'Verb',
+              'verb_communication': 'Verb',
+              'verb_state': 'Verb',
+              'adjective_block': 'Adjective',
+              'preposition_verb': 'Preposition',
+              'preposition_noun': 'Preposition',
+            };
+            return labels[type] || type;
+          };
+
+          const label = getBlockLabel(blockType);
+
+          if (moveEvent.oldParentId && !moveEvent.newParentId) {
+            // 切断された
+            pendingChangesRef.current.push({
+              field: label,
+              from: 'connected',
+              to: 'disconnected',
+            });
+          } else if (!moveEvent.oldParentId && moveEvent.newParentId) {
+            // 接続された
+            pendingChangesRef.current.push({
+              field: label,
+              from: 'disconnected',
+              to: 'connected',
+            });
+          }
+        }
+      }
+    }, []);
+
     const handleWorkspaceChange = useCallback(() => {
       if (!workspaceRef.current) return;
 
       const asts = generateMultipleAST(workspaceRef.current);
       onASTChange(asts);
 
+      const allLogs: TransformLog[] = [];
       const sentences = asts.map(ast => {
         try {
-          return renderToEnglish(ast);
+          const result = renderToEnglishWithLogs(ast);
+          allLogs.push(...result.logs);
+          return result.output;
         } catch {
           return ui.ERROR_INCOMPLETE;
         }
       });
       onSentenceChange(sentences);
-    }, [onASTChange, onSentenceChange, ui.ERROR_INCOMPLETE]);
+      onLogsChange(allLogs);
+
+      // Send pending block changes and clear (only update if there are changes)
+      if (pendingChangesRef.current.length > 0) {
+        onBlockChanges([...pendingChangesRef.current]);
+        pendingChangesRef.current = [];
+      }
+      // Note: Don't clear blockChanges when empty - keep showing last change
+    }, [onASTChange, onSentenceChange, onLogsChange, onBlockChanges, ui.ERROR_INCOMPLETE]);
 
     useEffect(() => {
       if (!blocklyDiv.current) return;
@@ -108,6 +209,7 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       }
 
       // 変更リスナーを追加
+      workspace.addChangeListener(handleBlockChange);
       workspace.addChangeListener(handleWorkspaceChange);
 
       // 初期状態を反映させるため、最初に一度呼び出す
@@ -116,7 +218,7 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       return () => {
         workspace.dispose();
       };
-    }, [handleWorkspaceChange, initialState]);
+    }, [handleWorkspaceChange, handleBlockChange, initialState]);
 
     return (
       <div

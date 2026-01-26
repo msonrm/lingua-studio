@@ -162,48 +162,74 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
 
         {isActive && (
           <>
-            {/* Perfect aspect (non-progressive): solid line from E to R */}
+            {/* Perfect aspect (non-progressive): solid line from E to R with arrow */}
             {isPerfect && !isProgressive && !rAtS && (
-              <line
-                x1={ePos + 7}
-                y1="40"
-                x2={rPos - 9}
-                y2="40"
-                stroke={colors.R}
-                strokeWidth="3"
-              />
+              <>
+                <line
+                  x1={ePos + 7}
+                  y1="40"
+                  x2={rPos - 14}
+                  y2="40"
+                  stroke={colors.R}
+                  strokeWidth="3"
+                />
+                <polygon
+                  points={`${rPos - 9},40 ${rPos - 15},36 ${rPos - 15},44`}
+                  fill={colors.R}
+                />
+              </>
             )}
             {isPerfect && !isProgressive && rAtS && (
-              <line
-                x1={ePos + 7}
-                y1="40"
-                x2={rPos - 3}
-                y2="40"
-                stroke={colors.R}
-                strokeWidth="3"
-              />
+              <>
+                <line
+                  x1={ePos + 7}
+                  y1="40"
+                  x2={rPos - 8}
+                  y2="40"
+                  stroke={colors.R}
+                  strokeWidth="3"
+                />
+                <polygon
+                  points={`${rPos - 3},40 ${rPos - 9},36 ${rPos - 9},44`}
+                  fill={colors.R}
+                />
+              </>
             )}
 
-            {/* Perfect Progressive: wavy line flowing from E to R */}
+            {/* Perfect Progressive: wavy line flowing from E to R with arrow */}
             {isPerfect && isProgressive && (
-              <g clipPath="url(#perfectWaveClip)">
-                <path
-                  d={generateWavePath(ePos - 20, rPos + 30, 40, 4, 12)}
-                  fill="none"
-                  stroke={colors.E}
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                >
-                  <animateTransform
-                    attributeName="transform"
-                    type="translate"
-                    from="0 0"
-                    to="24 0"
-                    dur="1.2s"
-                    repeatCount="indefinite"
+              <>
+                <g clipPath="url(#perfectWaveClip)">
+                  <path
+                    d={generateWavePath(ePos - 20, rPos + 30, 40, 4, 12)}
+                    fill="none"
+                    stroke={colors.E}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  >
+                    <animateTransform
+                      attributeName="transform"
+                      type="translate"
+                      from="0 0"
+                      to="24 0"
+                      dur="1.2s"
+                      repeatCount="indefinite"
+                    />
+                  </path>
+                </g>
+                {/* Arrow at R end */}
+                {!rAtS ? (
+                  <polygon
+                    points={`${rPos - 9},40 ${rPos - 15},36 ${rPos - 15},44`}
+                    fill={colors.E}
                   />
-                </path>
-              </g>
+                ) : (
+                  <polygon
+                    points={`${rPos - 3},40 ${rPos - 9},36 ${rPos - 9},44`}
+                    fill={colors.E}
+                  />
+                )}
+              </>
             )}
 
             {/* Progressive (non-perfect): wavy line centered around E, flowing right */}

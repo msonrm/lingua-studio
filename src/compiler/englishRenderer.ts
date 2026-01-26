@@ -1201,6 +1201,8 @@ function conjugateVerbWithAdverbs(
           return freqStr ? `${freqStr} ${presentForm}` : presentForm;
         }
         case 'future':
+          logCollector.log('tense', lemma, `will ${verbEntry.forms.base}`,
+            'Tense: future', 'will + base');
           return freqStr
             ? `will ${freqStr} ${verbEntry.forms.base}`
             : `will ${verbEntry.forms.base}`;
@@ -1211,7 +1213,7 @@ function conjugateVerbWithAdverbs(
   // Progressive: aux + [not] + [freq] + verb-ing
   if (aspect === 'progressive') {
     const beForm = getBeAuxiliary(tense);
-    logCollector.log('aspect', lemma, verbEntry.forms.ing,
+    logCollector.log('aspect', lemma, `be ${verbEntry.forms.ing}`,
       'Aspect: progressive', 'be + -ing');
     const notPart = isNegative ? 'not' : '';
     const parts = [beForm, notPart, freqStr, verbEntry.forms.ing].filter(p => p.length > 0);
@@ -1221,7 +1223,7 @@ function conjugateVerbWithAdverbs(
   // Perfect: aux + [not] + [freq] + verb-pp
   if (aspect === 'perfect') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
-    logCollector.log('aspect', lemma, verbEntry.forms.pp,
+    logCollector.log('aspect', lemma, `have ${verbEntry.forms.pp}`,
       'Aspect: perfect', 'have + past participle');
     const notPart = isNegative ? 'not' : '';
     const parts = [haveForm, notPart, freqStr, verbEntry.forms.pp].filter(p => p.length > 0);
@@ -1231,6 +1233,8 @@ function conjugateVerbWithAdverbs(
   // Perfect Progressive: aux + [not] + [freq] + been + verb-ing
   if (aspect === 'perfectProgressive') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
+    logCollector.log('aspect', lemma, `have been ${verbEntry.forms.ing}`,
+      'Aspect: perfect progressive', 'have + been + -ing');
     const notPart = isNegative ? 'not' : '';
     const parts = [haveForm, notPart, freqStr, 'been', verbEntry.forms.ing].filter(p => p.length > 0);
     return parts.join(' ');

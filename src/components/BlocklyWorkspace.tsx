@@ -41,12 +41,16 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       const fieldMappings: Record<string, string> = {
         'PRONOUN_VALUE': 'Subject',
         'TENSE': 'Tense',
+        'TENSE_VALUE': 'Tense',
         'ASPECT': 'Aspect',
+        'ASPECT_VALUE': 'Aspect',
+        'ABSTRACT_VALUE': 'Tense/Aspect',
         'VERB': 'Verb',
         'PREP_VALUE': 'Preposition',
         'MANNER_VALUE': 'Manner',
         'LOCATIVE_VALUE': 'Location',
         'TIME_ADVERB': 'Time',
+        'TIME_VALUE': 'Time',
         'CENTRAL_DET': 'Determiner',
         'ADJ_VALUE': 'Adjective',
       };

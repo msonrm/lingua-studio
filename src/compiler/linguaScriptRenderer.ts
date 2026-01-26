@@ -34,11 +34,13 @@ function getModalSurfaceForm(modal: ModalType, tense: Tense): string {
 // AST → LinguaScript レンダラー
 // ============================================
 export function renderToLinguaScript(ast: SentenceNode): string {
-  let result = renderClauseToScript(ast.clause, ast.timeAdverbial);
+  // fact かどうかでレンダリングコンテキストを決定
+  const isFact = ast.sentenceType === 'fact';
+  let result = renderClauseToScript(ast.clause, ast.timeAdverbial, isFact);
 
   // fact の場合は fact() ラッパー（仕様: fact と sentence は排他）
   // fact は modal を持たない（仕様）
-  if (ast.sentenceType === 'fact') {
+  if (isFact) {
     result = `fact(${result})`;
     return result;
   }
@@ -72,11 +74,11 @@ export function renderToLinguaScript(ast: SentenceNode): string {
   return result;
 }
 
-function renderClauseToScript(clause: ClauseNode, timeAdverbial?: string): string {
+function renderClauseToScript(clause: ClauseNode, timeAdverbial?: string, isFact: boolean = false): string {
   const { verbPhrase, tense, aspect, polarity } = clause;
 
-  // 動詞句をレンダリング
-  let result = renderVerbPhraseToScript(verbPhrase);
+  // 動詞句をレンダリング（isFact で大文字 AND/OR/NOT の出力を制御）
+  let result = renderVerbPhraseToScript(verbPhrase, isFact);
 
   // 時間副詞をラップ（他の副詞と同階層、not の前）
   if (timeAdverbial) {
@@ -102,7 +104,7 @@ function getAspectWrapper(
   return aspect;
 }
 
-function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
+function renderVerbPhraseToScript(vp: VerbPhraseNode, isFact: boolean = false): string {
   // 意味役割の名前付き引数形式（仕様: verb(agent:'x, theme:'y, ...)）
   const args = vp.arguments
     .filter(arg => arg.filler !== null)
@@ -151,19 +153,20 @@ function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
 
   // 等位接続をラップ（小文字 and/or - NP/VP の接続）
   if (vp.coordinatedWith) {
-    const coordScript = renderVerbPhraseToScript(vp.coordinatedWith.verbPhrase);
+    const coordScript = renderVerbPhraseToScript(vp.coordinatedWith.verbPhrase, isFact);
     result = `${vp.coordinatedWith.conjunction}(${result}, ${coordScript})`;
   }
 
   // 命題レベル論理演算をラップ（大文字 AND/OR/NOT - Logic Extension）
-  if (vp.logicOp) {
+  // 仕様: fact() 内でのみ大文字で出力、それ以外では無視
+  if (vp.logicOp && isFact) {
     const { operator, rightOperand } = vp.logicOp;
     if (operator === 'NOT') {
       // 単項演算子: NOT(P)
       result = `NOT(${result})`;
     } else {
       // 二項演算子: AND(P, Q), OR(P, Q)
-      const rightScript = rightOperand ? renderVerbPhraseToScript(rightOperand) : '___';
+      const rightScript = rightOperand ? renderVerbPhraseToScript(rightOperand, isFact) : '___';
       result = `${operator}(${result}, ${rightScript})`;
     }
   }

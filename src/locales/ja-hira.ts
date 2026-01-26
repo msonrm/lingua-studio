@@ -155,15 +155,15 @@ export const jaHira: LocaleData = {
     COORD_VERB_OR_TOOLTIP: 'うごきを「か」でつなぐ',
 
     // Logic Extension (uppercase - propositional logic)
-    FACT_LABEL: 'じじつ',
-    FACT_TOOLTIP: 'ほんとうのことをいう',
+    FACT_LABEL: 'ほんと',
+    FACT_TOOLTIP: '「〜はほんとうだよ」といういみ',
     LOGIC_AND_LABEL: 'AND',
     LOGIC_AND_TOOLTIP: 'どっちもほんと（AND）',
     LOGIC_OR_LABEL: 'OR',
-    LOGIC_OR_TOOLTIP: 'どちらかがほんと（OR）',
+    LOGIC_OR_TOOLTIP: 'どちらかはほんと（OR）',
     LOGIC_NOT_LABEL: 'NOT',
     LOGIC_NOT_TOOLTIP: 'ほんとじゃない（NOT）',
-    TOOLBOX_LOGIC: 'ろんり',
+    TOOLBOX_LOGIC: 'ほんと？うそ？',
 
     // Choice question
     CHOICE_QUESTION_LABEL: 'どっち？',

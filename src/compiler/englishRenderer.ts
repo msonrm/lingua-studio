@@ -344,11 +344,11 @@ function renderLogicExpression(clause: ClauseNode): string {
   }
 
   if (logicOp.operator === 'AND') {
-    // AND: "P, and Q" (論理的接続)
-    return `${leftStr}, and ${rightStr}`;
+    // AND: "both P and Q" (論理的接続)
+    return `both ${leftStr} and ${rightStr}`;
   } else if (logicOp.operator === 'OR') {
-    // OR: "P, or Q" (論理的選択)
-    return `${leftStr}, or ${rightStr}`;
+    // OR: "either P or Q" (論理的選択)
+    return `either ${leftStr} or ${rightStr}`;
   }
 
   return leftStr;

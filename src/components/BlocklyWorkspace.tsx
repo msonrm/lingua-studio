@@ -190,17 +190,17 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
         sentenceBlock.render();
         sentenceBlock.moveBy(50, 50);
 
-        const verbBlock = workspace.newBlock('verb_motion');
+        const verbBlock = workspace.newBlock('verb_action');
         verbBlock.initSvg();
         verbBlock.render();
 
-        // MOTION verbをSENTENCEのactionスロットに接続
+        // ACTION verbをSENTENCEのactionスロットに接続
         const connection = sentenceBlock.getInput('ACTION')?.connection;
         if (connection) {
           connection.connect(verbBlock.previousConnection);
         }
 
-        // PRONOUN "I" を作成してMOTION verbのARG_0（agent）に接続
+        // PRONOUN "I" を作成してACTION verbのARG_0（agent）に接続
         const pronounBlock = workspace.newBlock('pronoun_block');
         pronounBlock.setFieldValue('I', 'PRONOUN_VALUE');
         pronounBlock.initSvg();

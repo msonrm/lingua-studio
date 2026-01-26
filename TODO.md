@@ -45,17 +45,31 @@
   - Blockly.Msg + React Context による切り替え
 - [x] 言語切り替え時のワークスペース状態保持
   - Blockly.serialization を使用した状態保存・復元
-- [ ] Grammar Console（文法判断のログ表示）
-  - 必須引数の欠落警告
+- [x] Grammar Console（文法判断のログ表示）
+  - [x] 2パネル構成
+    - "Your Changes": ユーザーのブロック操作を表示
+    - "Applied Rules": 文法変換ルールを表示
+  - [x] ブロック変更検知
+    - フィールド値変更（プルダウン）: `BLOCK_CHANGE` イベント
+    - ブロック接続/切断: `BLOCK_MOVE` イベント
+  - [x] 変換ログの表示（2行フォーマット: 条件 + 結果）
+    - agreement: Subject-verb agreement `run → runs` (3rd person singular)
+    - tense: Tense inflection `eat → ate` (past tense)
+    - aspect: Progressive/Perfect marking `eat → eating/eaten`
+    - case: Pronoun case `I → me` (object position)
+    - article: Article selection `a → an` (before vowel)
+    - do-support: Do-insertion for questions/negation
+    - modal: Modal past form `can → could`
+    - inversion: Subject-auxiliary inversion
+    - wh-movement: Wh-word fronting
+  - [x] アーキテクチャ
+    - `GrammarLogCollector` クラス（モジュールレベル）
+    - `renderToEnglishWithLogs()` → `RenderResult { output, logs, warnings }`
+    - 共通ヘルパー関数パターン（他言語レンダラーの参考用）
+  - [ ] 必須引数の欠落警告（警告表示は未実装）
     - `⚠️ Missing required argument: patient (for verb 'cut')`
     - ~~出力に `___` を表示（例: "I cut ___."）~~ ✅ 実装済み
     - ~~agent の欠落も同様に扱う（現在の someone 補完をやめる）~~ ✅ 実装済み
-  - 変換ログの表示
-    - Subject-verb agreement: `run → runs` (3rd person singular)
-    - Tense inflection: `eat → ate` (past tense)
-    - Article selection: `a → an` (before vowel)
-    - Pronoun case: `I → me` (object position)
-  - アーキテクチャ: レンダラーが `RenderResult { output, transformations, warnings }` を返す形に拡張
 - [ ] TimeChip 3連プルダウン化（教育的UX改善）
   - [Tense][Aspect][Time] の3スロット構成
   - Time で "Yesterday" を選択 → [Past][Simple][Yesterday] に自動設定
@@ -149,6 +163,22 @@
   - 将来のビルドオプション用にスペース確保
 - [x] Bottom Panel 簡素化
   - Output + Grammar Console のみに整理
+
+### Grammar Console Implementation (2026-01)
+- [x] 2パネル構成で教育的UXを実現
+  - "Your Changes": ユーザーのブロック操作（接続、値変更）を表示
+  - "Applied Rules": 文法変換ルールを条件→結果の2行形式で表示
+- [x] ブロック変更検知システム
+  - `BLOCK_CHANGE` イベント: プルダウン値変更
+  - `BLOCK_MOVE` イベント: ブロック接続/切断
+  - フィールド名・ブロックタイプを読みやすいラベルに変換
+- [x] 文法変換ログ
+  - TransformType: agreement, tense, aspect, case, article, do-support, modal, negation, wh-movement, inversion
+  - `GrammarLogCollector` クラスで変換を収集
+  - `renderToEnglishWithLogs()` で RenderResult を返す
+- [x] 共通ヘルパー関数パターン
+  - `logModalTransformation()`: 平叙文・疑問文の両方で使用
+  - 他言語レンダラー作成時の参考パターンとして整備
 
 ### Question Implementation (2026-01)
 - [x] `question()` ラッパー実装（Yes/No疑問文）

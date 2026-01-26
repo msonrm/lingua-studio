@@ -102,6 +102,22 @@ export interface BlocklyMessages {
   GROUP_DIRECTION: string;
   GROUP_RELATION: string;
 
+  // Visualization Panel - Tense/Aspect
+  VIZ_TENSE_ASPECT_TITLE: string;
+  VIZ_TENSE_PAST: string;
+  VIZ_TENSE_PRESENT: string;
+  VIZ_TENSE_FUTURE: string;
+  VIZ_ASPECT_SIMPLE: string;
+  VIZ_ASPECT_PROGRESSIVE: string;
+  VIZ_ASPECT_PERFECT: string;
+  VIZ_ASPECT_PERF_PROG: string;
+
+  // Visualization Panel - Prepositions
+  VIZ_PREP_TITLE: string;
+  VIZ_PREP_LOCATION: string;
+  VIZ_PREP_DIRECTION: string;
+  VIZ_PREP_RELATION: string;
+
   // Determiner
   DETERMINER_LABEL: string;
   DETERMINER_TOOLTIP: string;

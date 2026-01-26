@@ -102,6 +102,22 @@ export const en: LocaleData = {
     GROUP_DIRECTION: '── Direction ──',
     GROUP_RELATION: '── Relation ──',
 
+    // Visualization Panel - Tense/Aspect
+    VIZ_TENSE_ASPECT_TITLE: 'Tense & Aspect',
+    VIZ_TENSE_PAST: 'Past',
+    VIZ_TENSE_PRESENT: 'Now',
+    VIZ_TENSE_FUTURE: 'Future',
+    VIZ_ASPECT_SIMPLE: 'Simple',
+    VIZ_ASPECT_PROGRESSIVE: 'Progressive',
+    VIZ_ASPECT_PERFECT: 'Perfect',
+    VIZ_ASPECT_PERF_PROG: 'Perf. Prog.',
+
+    // Visualization Panel - Prepositions
+    VIZ_PREP_TITLE: 'Prepositions',
+    VIZ_PREP_LOCATION: 'Location',
+    VIZ_PREP_DIRECTION: 'Direction',
+    VIZ_PREP_RELATION: 'Relation',
+
     // Determiner
     DETERMINER_LABEL: 'DET',
     DETERMINER_TOOLTIP: 'Determiner: pre + central + post',

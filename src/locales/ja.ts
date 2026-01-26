@@ -102,6 +102,22 @@ export const ja: LocaleData = {
     GROUP_DIRECTION: '── 方向 ──',
     GROUP_RELATION: '── 関係 ──',
 
+    // Visualization Panel - Tense/Aspect
+    VIZ_TENSE_ASPECT_TITLE: '時制・アスペクト',
+    VIZ_TENSE_PAST: '過去',
+    VIZ_TENSE_PRESENT: '現在',
+    VIZ_TENSE_FUTURE: '未来',
+    VIZ_ASPECT_SIMPLE: '単純',
+    VIZ_ASPECT_PROGRESSIVE: '進行',
+    VIZ_ASPECT_PERFECT: '完了',
+    VIZ_ASPECT_PERF_PROG: '完了進行',
+
+    // Visualization Panel - Prepositions
+    VIZ_PREP_TITLE: '前置詞',
+    VIZ_PREP_LOCATION: '場所',
+    VIZ_PREP_DIRECTION: '方向',
+    VIZ_PREP_RELATION: '関係',
+
     // Determiner
     DETERMINER_LABEL: '限定詞',
     DETERMINER_TOOLTIP: '限定詞: 前置 + 中央 + 後置',

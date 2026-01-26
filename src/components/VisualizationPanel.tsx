@@ -42,37 +42,17 @@ function extractPrepositions(obj: unknown, found: Set<string> = new Set()): Set<
 
 // Tense/Aspect Timeline Component
 function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: string | null }) {
-  const { code: localeCode } = useLocale();
-  const isHiragana = localeCode === 'ja-hira';
-  const isJapanese = localeCode.startsWith('ja');
+  const { blockly: t } = useLocale();
 
-  const labels = isHiragana ? {
-    past: 'まえ',
-    present: 'いま',
-    future: 'あと',
-    simple: 'ふつう',
-    progressive: 'しているところ',
-    perfect: 'したところ',
-    perfectProgressive: 'してきた',
-    title: 'いつ？どんなようす？',
-  } : isJapanese ? {
-    past: '過去',
-    present: '現在',
-    future: '未来',
-    simple: '単純',
-    progressive: '進行',
-    perfect: '完了',
-    perfectProgressive: '完了進行',
-    title: '時制・アスペクト',
-  } : {
-    past: 'Past',
-    present: 'Now',
-    future: 'Future',
-    simple: 'Simple',
-    progressive: 'Progressive',
-    perfect: 'Perfect',
-    perfectProgressive: 'Perf. Prog.',
-    title: 'Tense & Aspect',
+  const labels = {
+    past: t.VIZ_TENSE_PAST,
+    present: t.VIZ_TENSE_PRESENT,
+    future: t.VIZ_TENSE_FUTURE,
+    simple: t.VIZ_ASPECT_SIMPLE,
+    progressive: t.VIZ_ASPECT_PROGRESSIVE,
+    perfect: t.VIZ_ASPECT_PERFECT,
+    perfectProgressive: t.VIZ_ASPECT_PERF_PROG,
+    title: t.VIZ_TENSE_ASPECT_TITLE,
   };
 
   // Active aspect icon color (bright for dark background)
@@ -167,9 +147,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
 
 // Preposition Diagram Component
 function PrepositionDiagram({ activePreps }: { activePreps: Set<string> }) {
-  const { code: localeCode } = useLocale();
-  const isHiragana = localeCode === 'ja-hira';
-  const isJapanese = localeCode.startsWith('ja');
+  const { blockly: t } = useLocale();
 
   // Location prepositions
   const locationPreps = [
@@ -315,11 +293,12 @@ function PrepositionDiagram({ activePreps }: { activePreps: Set<string> }) {
     }
   };
 
-  const sectionLabels = isHiragana
-    ? { location: 'いるところ', direction: 'いく・くる', relation: 'つながり', title: 'ぜんちし' }
-    : isJapanese
-    ? { location: '場所', direction: '方向', relation: '関係', title: '前置詞' }
-    : { location: 'Location', direction: 'Direction', relation: 'Relation', title: 'Prepositions' };
+  const sectionLabels = {
+    location: t.VIZ_PREP_LOCATION,
+    direction: t.VIZ_PREP_DIRECTION,
+    relation: t.VIZ_PREP_RELATION,
+    title: t.VIZ_PREP_TITLE,
+  };
 
   return (
     <div className="viz-section">

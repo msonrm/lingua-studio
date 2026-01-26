@@ -102,6 +102,22 @@ export const jaHira: LocaleData = {
     GROUP_DIRECTION: '── いく・くる ──',
     GROUP_RELATION: '── つながり ──',
 
+    // Visualization Panel - Tense/Aspect
+    VIZ_TENSE_ASPECT_TITLE: 'いつ？どんなようす？',
+    VIZ_TENSE_PAST: 'まえ',
+    VIZ_TENSE_PRESENT: 'いま',
+    VIZ_TENSE_FUTURE: 'あと',
+    VIZ_ASPECT_SIMPLE: 'ふつう',
+    VIZ_ASPECT_PROGRESSIVE: 'しているところ',
+    VIZ_ASPECT_PERFECT: 'したところ',
+    VIZ_ASPECT_PERF_PROG: 'してきた',
+
+    // Visualization Panel - Prepositions
+    VIZ_PREP_TITLE: 'ぜんちし',
+    VIZ_PREP_LOCATION: 'いるところ',
+    VIZ_PREP_DIRECTION: 'いく・くる',
+    VIZ_PREP_RELATION: 'つながり',
+
     // Determiner
     DETERMINER_LABEL: 'どの？いくつ？',
     DETERMINER_TOOLTIP: 'どの？いくつ？をきめる',

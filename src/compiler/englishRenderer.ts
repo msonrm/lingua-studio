@@ -1270,6 +1270,24 @@ function getModalEnglishForm(
   }
 }
 
+// モダル変換のログ出力（共通ヘルパー）
+// 平叙文・疑問文の両方から呼び出される
+function logModalTransformation(
+  modal: ModalType,
+  tense: 'past' | 'present' | 'future',
+  modalForm: { auxiliary?: string; usePeriPhrastic?: string }
+): void {
+  if (tense === 'past') {
+    const presentForm = getModalEnglishForm(modal, 'present');
+    const presentAux = presentForm.auxiliary || '';
+    const pastAux = modalForm.auxiliary || modalForm.usePeriPhrastic || '';
+    if (presentAux && pastAux && presentAux !== pastAux) {
+      logCollector.log('modal', presentAux, pastAux,
+        `Modal: ${modal} + past tense`, 'past form');
+    }
+  }
+}
+
 // モダリティ付きの動詞活用（時制連動）
 // modal + (not) + (aspect markers) + verb
 function conjugateWithModal(
@@ -1297,16 +1315,8 @@ function conjugateWithModal(
 
   const modalForm = getModalEnglishForm(modal, tense);
 
-  // モダル変換をログ
-  if (tense === 'past') {
-    const presentForm = getModalEnglishForm(modal, 'present');
-    const presentAux = presentForm.auxiliary || '';
-    const pastAux = modalForm.auxiliary || modalForm.usePeriPhrastic || '';
-    if (presentAux && pastAux && presentAux !== pastAux) {
-      logCollector.log('modal', presentAux, pastAux,
-        `Modal: ${modal} + past tense`, 'past form');
-    }
-  }
+  // モダル変換をログ（共通ヘルパー使用）
+  logModalTransformation(modal, tense, modalForm);
 
   // 迂言形式（was going to, had to）の場合
   if (modalForm.usePeriPhrastic) {
@@ -1398,16 +1408,8 @@ function conjugateVerbForQuestion(
     const modalForm = getModalEnglishForm(modal, tense);
     const isModalNegative = modalPolarity === 'negative';
 
-    // Log modal transformation if past tense
-    if (tense === 'past') {
-      const presentForm = getModalEnglishForm(modal, 'present');
-      const presentAux = presentForm.auxiliary || '';
-      const pastAux = modalForm.auxiliary || modalForm.usePeriPhrastic || '';
-      if (presentAux && pastAux && presentAux !== pastAux) {
-        logCollector.log('modal', presentAux, pastAux,
-          `Modal: ${modal} + past tense`, 'past form');
-      }
-    }
+    // モダル変換をログ（共通ヘルパー使用）
+    logModalTransformation(modal, tense, modalForm);
 
     // 義務の否定（特殊処理）
     if (isModalNegative && modal === 'obligation') {

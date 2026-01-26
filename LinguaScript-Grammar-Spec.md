@@ -626,15 +626,16 @@ sentence(present+perfect(eat(agent:'I, theme:'apple)))
 ### 疑問文
 
 ```lisp
-?(sentence(past(simple(eat(agent:'you, theme:'apple)))))
+question(sentence(past+simple(eat(agent:'you, theme:'apple))))
 ;; → "Did you eat an apple?"
 ```
 
 ### 受動態
 
 ```lisp
-sentence(past(simple(passive(eat(theme:'apple)))))
+sentence(past+simple(passive(eat(theme:'apple))))
 ;; → "The apple was eaten."
+;; 注: passive() は未実装
 ```
 
 ### モダリティ付き
@@ -654,8 +655,9 @@ sentence(past+simple(give(agent:'I, theme:'book, recipient:'you)))
 ### 複雑な例
 
 ```lisp
-?(not(modal(possibility:might, sentence(past+perfect(passive(not(eat(agent:'I, theme:'apple))))))))
+question(not(modal(possibility:might, sentence(past+perfect(passive(not(eat(agent:'I, theme:'apple))))))))
 ;; → "Might the apple not have been eaten?"
+;; 注: passive() は未実装
 ```
 
 ---
@@ -1049,11 +1051,12 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
                   | "beneficiary" | "possessor" | "attribute"
 
 ;; ============================================
-;; 値（名詞句・形容詞句・疑問）
+;; 値（名詞句・形容詞句・疑問詞）
 ;; ============================================
 
-<value>         ::= <noun-expr> | <adj-expr> | <question>
-<question>      ::= "?" | "?or(" <value> ", " <value> ")"
+<value>         ::= <noun-expr> | <adj-expr> | <wh-noun>
+<wh-noun>       ::= "?who" | "?whom" | "?what"
+                  | "?which(" <value> ", " <value> ")"   ;; 選択疑問
 
 ;; ============================================
 ;; 名詞句（等位接続対応）

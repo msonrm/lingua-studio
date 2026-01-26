@@ -321,6 +321,10 @@ function renderInterrogativeClause(clause: ClauseNode): string {
     modalPolarity
   );
 
+  // 倒置をログ（Yes/No疑問文）
+  logCollector.log('inversion', `${subject} ${auxiliary}`, `${auxiliary} ${subject}`,
+    'Question formation', 'subject-auxiliary inversion');
+
   // その他の引数（目的語など）- 主語ロール以外
   // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
   const otherArgs = (verbEntry?.valency || [])
@@ -393,6 +397,10 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
   const prepPhrases = verbPhrase.prepositionalPhrases
     .map(pp => renderPrepositionalPhrase(pp, polarity))
     .join(' ');
+
+  // Wh移動をログ
+  logCollector.log('wh-movement', `...${whInfo.whWord}...`, `${whInfo.whWord} ...`,
+    `Wh-word "${whInfo.whWord}" in ${whInfo.role}`, 'fronted to sentence start');
 
   if (whInfo.isSubject) {
     // 主語Wh疑問文: Who ate the apple? (do-supportなし)
@@ -1203,6 +1211,8 @@ function conjugateVerbWithAdverbs(
   // Progressive: aux + [not] + [freq] + verb-ing
   if (aspect === 'progressive') {
     const beForm = getBeAuxiliary(tense);
+    logCollector.log('aspect', lemma, verbEntry.forms.ing,
+      'Aspect: progressive', 'be + -ing');
     const notPart = isNegative ? 'not' : '';
     const parts = [beForm, notPart, freqStr, verbEntry.forms.ing].filter(p => p.length > 0);
     return parts.join(' ');
@@ -1211,6 +1221,8 @@ function conjugateVerbWithAdverbs(
   // Perfect: aux + [not] + [freq] + verb-pp
   if (aspect === 'perfect') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
+    logCollector.log('aspect', lemma, verbEntry.forms.pp,
+      'Aspect: perfect', 'have + past participle');
     const notPart = isNegative ? 'not' : '';
     const parts = [haveForm, notPart, freqStr, verbEntry.forms.pp].filter(p => p.length > 0);
     return parts.join(' ');
@@ -1284,6 +1296,17 @@ function conjugateWithModal(
   const notPart = isModalNegative ? 'not' : (isVerbNegative ? 'not' : '');
 
   const modalForm = getModalEnglishForm(modal, tense);
+
+  // モダル変換をログ
+  if (tense === 'past') {
+    const presentForm = getModalEnglishForm(modal, 'present');
+    const presentAux = presentForm.auxiliary || '';
+    const pastAux = modalForm.auxiliary || modalForm.usePeriPhrastic || '';
+    if (presentAux && pastAux && presentAux !== pastAux) {
+      logCollector.log('modal', presentAux, pastAux,
+        `Modal: ${modal} + past tense`, 'past form');
+    }
+  }
 
   // 迂言形式（was going to, had to）の場合
   if (modalForm.usePeriPhrastic) {

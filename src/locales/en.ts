@@ -92,10 +92,34 @@ export const en: LocaleData = {
     GROUP_NAMES: '── Names ──',
     GROUP_INTERROGATIVE: '── Interrogative ──',
 
+    // Time group labels
+    GROUP_PAST: '── Past ──',
+    GROUP_PRESENT: '── Present ──',
+    GROUP_FUTURE: '── Future ──',
+
     // Preposition group labels
     GROUP_LOCATION: '── Location ──',
     GROUP_DIRECTION: '── Direction ──',
     GROUP_RELATION: '── Relation ──',
+
+    // Visualization Panel - Tense/Aspect
+    VIZ_TENSE_ASPECT_TITLE: 'Tense & Aspect',
+    VIZ_TENSE_PAST: 'Past',
+    VIZ_TENSE_PRESENT: 'Now',
+    VIZ_TENSE_FUTURE: 'Future',
+    VIZ_LABEL_PAST: 'Past',
+    VIZ_LABEL_PRESENT: 'Present',
+    VIZ_LABEL_FUTURE: 'Future',
+    VIZ_ASPECT_SIMPLE: 'Simple',
+    VIZ_ASPECT_PROGRESSIVE: 'Progressive',
+    VIZ_ASPECT_PERFECT: 'Perfect',
+    VIZ_ASPECT_PERF_PROG: 'Perf. Prog.',
+
+    // Visualization Panel - Prepositions
+    VIZ_PREP_TITLE: 'Prepositions',
+    VIZ_PREP_LOCATION: 'Location',
+    VIZ_PREP_DIRECTION: 'Direction',
+    VIZ_PREP_RELATION: 'Relation',
 
     // Determiner
     DETERMINER_LABEL: 'DET',

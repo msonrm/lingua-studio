@@ -92,10 +92,34 @@ export const jaHira: LocaleData = {
     GROUP_NAMES: '── ひとのなまえ ──',
     GROUP_INTERROGATIVE: '── しつもんのことば ──',
 
+    // Time group labels
+    GROUP_PAST: '── まえ ──',
+    GROUP_PRESENT: '── いま ──',
+    GROUP_FUTURE: '── あと ──',
+
     // Preposition group labels
-    GROUP_LOCATION: '── ばしょ ──',
-    GROUP_DIRECTION: '── ほうこう ──',
-    GROUP_RELATION: '── かんけい ──',
+    GROUP_LOCATION: '── いるところ ──',
+    GROUP_DIRECTION: '── いく・くる ──',
+    GROUP_RELATION: '── つながり ──',
+
+    // Visualization Panel - Tense/Aspect
+    VIZ_TENSE_ASPECT_TITLE: 'いつ？どんなようす？',
+    VIZ_TENSE_PAST: 'まえ',
+    VIZ_TENSE_PRESENT: 'いま',
+    VIZ_TENSE_FUTURE: 'あと',
+    VIZ_LABEL_PAST: 'かこ',
+    VIZ_LABEL_PRESENT: 'げんざい',
+    VIZ_LABEL_FUTURE: 'みらい',
+    VIZ_ASPECT_SIMPLE: 'ふつう',
+    VIZ_ASPECT_PROGRESSIVE: 'しているところ',
+    VIZ_ASPECT_PERFECT: 'したところ',
+    VIZ_ASPECT_PERF_PROG: 'してきた',
+
+    // Visualization Panel - Prepositions
+    VIZ_PREP_TITLE: 'ぜんちし',
+    VIZ_PREP_LOCATION: 'いるところ',
+    VIZ_PREP_DIRECTION: 'いく・くる',
+    VIZ_PREP_RELATION: 'つながり',
 
     // Determiner
     DETERMINER_LABEL: 'どの？いくつ？',

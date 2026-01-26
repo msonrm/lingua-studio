@@ -247,12 +247,12 @@ Blockly.Blocks['modal_wrapper'] = {
   init: function() {
     const getModalOptions = (): [string, string][] => [
       [msg('MODAL_ABILITY', 'Ability (can)'), 'ability'],
+      [msg('MODAL_VOLITION', 'Volition (will)'), 'volition'],
+      [msg('MODAL_ADVICE', 'Advice (should)'), 'advice'],
+      [msg('MODAL_OBLIGATION', 'Obligation (must)'), 'obligation'],
       [msg('MODAL_PERMISSION', 'Permission (may)'), 'permission'],
       [msg('MODAL_POSSIBILITY', 'Possibility (might)'), 'possibility'],
-      [msg('MODAL_OBLIGATION', 'Obligation (must)'), 'obligation'],
       [msg('MODAL_CERTAINTY', 'Certainty (must)'), 'certainty'],
-      [msg('MODAL_ADVICE', 'Advice (should)'), 'advice'],
-      [msg('MODAL_VOLITION', 'Volition (will)'), 'volition'],
       [msg('MODAL_PREDICTION', 'Prediction (will)'), 'prediction'],
     ];
 
@@ -315,12 +315,34 @@ Blockly.Blocks['negation_sentence_wrapper'] = {
 // ============================================
 Blockly.Blocks['time_chip_concrete'] = {
   init: function() {
-    const getOptions = (): [string, string][] =>
-      CONCRETE_OPTIONS.map(o => [msg(o.msgKey, o.fallback), o.value]);
+    const getOptions = (): [string, string][] => {
+      // Past options
+      const pastOptions = CONCRETE_OPTIONS.filter(o => o.tense === 'past');
+      // Present options
+      const presentOptions = CONCRETE_OPTIONS.filter(o => o.tense === 'present');
+      // Future options
+      const futureOptions = CONCRETE_OPTIONS.filter(o => o.tense === 'future');
+
+      return [
+        [msg('GROUP_PAST', '── Past ──'), '__label_past__'],
+        ...pastOptions.map(o => [msg(o.msgKey, o.fallback), o.value] as [string, string]),
+        [msg('GROUP_PRESENT', '── Present ──'), '__label_present__'],
+        ...presentOptions.map(o => [msg(o.msgKey, o.fallback), o.value] as [string, string]),
+        [msg('GROUP_FUTURE', '── Future ──'), '__label_future__'],
+        ...futureOptions.map(o => [msg(o.msgKey, o.fallback), o.value] as [string, string]),
+      ];
+    };
+
+    const dropdown = new Blockly.FieldDropdown(getOptions);
+    dropdown.setValidator(labelValidator);
 
     this.appendDummyInput()
         .appendField(msg('TIME_CHIP_CONCRETE_LABEL', 'TIME'))
-        .appendField(new Blockly.FieldDropdown(getOptions), "TIME_VALUE");
+        .appendField(dropdown, "TIME_VALUE");
+
+    // デフォルト値を最初の実際の値に設定 (yesterday)
+    this.setFieldValue('yesterday', 'TIME_VALUE');
+
     this.setOutput(true, "timeChip");
     this.setColour(COLORS.timeChip);
     this.setTooltip(msg('TIME_CHIP_CONCRETE_TOOLTIP', 'Concrete time specification (when?)'));
@@ -1315,19 +1337,6 @@ export function createToolbox() {
       },
       {
         kind: "category",
-        name: msg('TOOLBOX_QUESTION', 'Question'),
-        colour: COLORS.imperative,
-        contents: [
-          { kind: "block", type: "question_wrapper" },
-          { kind: "label", text: msg('SECTION_WH_NOUNS', '── Wh-Nouns ──') },
-          { kind: "block", type: "wh_placeholder_block" },
-          { kind: "block", type: "choice_question_block" },
-          { kind: "label", text: msg('SECTION_WH_ADVERBS', '── Wh-Adverbs ──') },
-          { kind: "block", type: "wh_adverb_block" },
-        ]
-      },
-      {
-        kind: "category",
         name: msg('TOOLBOX_SENTENCE_MODIFIER', 'Sentence Modifier'),
         colour: COLORS.modal,
         contents: [
@@ -1344,18 +1353,18 @@ export function createToolbox() {
         name: msg('TOOLBOX_VERBS', 'Verbs'),
         colour: COLORS.action,
         contents: [
-          { kind: "label", text: msg('SECTION_MOTION', '── Motion ──') },
-          { kind: "block", type: "verb_motion" },
           { kind: "label", text: msg('SECTION_ACTION', '── Action ──') },
           { kind: "block", type: "verb_action" },
-          { kind: "label", text: msg('SECTION_TRANSFER', '── Transfer ──') },
-          { kind: "block", type: "verb_transfer" },
-          { kind: "label", text: msg('SECTION_COGNITION', '── Cognition ──') },
-          { kind: "block", type: "verb_cognition" },
-          { kind: "label", text: msg('SECTION_COMMUNICATION', '── Communication ──') },
-          { kind: "block", type: "verb_communication" },
+          { kind: "label", text: msg('SECTION_MOTION', '── Motion ──') },
+          { kind: "block", type: "verb_motion" },
           { kind: "label", text: msg('SECTION_STATE', '── State ──') },
           { kind: "block", type: "verb_state" },
+          { kind: "label", text: msg('SECTION_COMMUNICATION', '── Communication ──') },
+          { kind: "block", type: "verb_communication" },
+          { kind: "label", text: msg('SECTION_COGNITION', '── Cognition ──') },
+          { kind: "block", type: "verb_cognition" },
+          { kind: "label", text: msg('SECTION_TRANSFER', '── Transfer ──') },
+          { kind: "block", type: "verb_transfer" },
         ]
       },
       {
@@ -1478,6 +1487,19 @@ export function createToolbox() {
           { kind: "block", type: "coordination_noun_and" },
           { kind: "block", type: "coordination_noun_or" },
           { kind: "block", type: "choice_question_block" },
+        ]
+      },
+      {
+        kind: "category",
+        name: msg('TOOLBOX_QUESTION', 'Question'),
+        colour: COLORS.imperative,
+        contents: [
+          { kind: "block", type: "question_wrapper" },
+          { kind: "label", text: msg('SECTION_WH_NOUNS', '── Wh-Nouns ──') },
+          { kind: "block", type: "wh_placeholder_block" },
+          { kind: "block", type: "choice_question_block" },
+          { kind: "label", text: msg('SECTION_WH_ADVERBS', '── Wh-Adverbs ──') },
+          { kind: "block", type: "wh_adverb_block" },
         ]
       },
     ]

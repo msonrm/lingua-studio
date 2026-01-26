@@ -11,8 +11,8 @@ export const ja: LocaleData = {
     SENTENCE_TOOLTIP: '文のルート。時制と相を指定する',
 
     // Modal wrapper
-    MODAL_LABEL: 'モダリティ',
-    MODAL_TOOLTIP: 'モダリティ: 能力・許可・義務などを文に追加',
+    MODAL_LABEL: '助動詞',
+    MODAL_TOOLTIP: '助動詞: 能力・許可・義務などを文に追加',
     MODAL_ABILITY: '能力 (can)',
     MODAL_PERMISSION: '許可 (may)',
     MODAL_POSSIBILITY: '可能性 (might)',
@@ -31,8 +31,8 @@ export const ja: LocaleData = {
     QUESTION_TOOLTIP: '疑問文: 疑問を作成（例: "Do you like apples?"）',
 
     // Negation sentence wrapper
-    NEGATION_MODAL_LABEL: 'NOT (モダリティ)',
-    NEGATION_MODAL_TOOLTIP: 'モダリティの否定（例: "しなくてもよい"）',
+    NEGATION_MODAL_LABEL: 'NOT (助動詞)',
+    NEGATION_MODAL_TOOLTIP: '助動詞の否定（例: "しなくてもよい"）',
 
     // Time chips
     TIME_CHIP_CONCRETE_LABEL: '時間',
@@ -92,10 +92,34 @@ export const ja: LocaleData = {
     GROUP_NAMES: '── 固有名詞 ──',
     GROUP_INTERROGATIVE: '── 疑問詞 ──',
 
+    // Time group labels
+    GROUP_PAST: '── 過去 ──',
+    GROUP_PRESENT: '── 現在 ──',
+    GROUP_FUTURE: '── 未来 ──',
+
     // Preposition group labels
     GROUP_LOCATION: '── 場所 ──',
     GROUP_DIRECTION: '── 方向 ──',
     GROUP_RELATION: '── 関係 ──',
+
+    // Visualization Panel - Tense/Aspect
+    VIZ_TENSE_ASPECT_TITLE: '時制・アスペクト',
+    VIZ_TENSE_PAST: '過去',
+    VIZ_TENSE_PRESENT: '現在',
+    VIZ_TENSE_FUTURE: '未来',
+    VIZ_LABEL_PAST: '過去',
+    VIZ_LABEL_PRESENT: '現在',
+    VIZ_LABEL_FUTURE: '未来',
+    VIZ_ASPECT_SIMPLE: '単純',
+    VIZ_ASPECT_PROGRESSIVE: '進行',
+    VIZ_ASPECT_PERFECT: '完了',
+    VIZ_ASPECT_PERF_PROG: '完了進行',
+
+    // Visualization Panel - Prepositions
+    VIZ_PREP_TITLE: '前置詞',
+    VIZ_PREP_LOCATION: '場所',
+    VIZ_PREP_DIRECTION: '方向',
+    VIZ_PREP_RELATION: '関係',
 
     // Determiner
     DETERMINER_LABEL: '限定詞',
@@ -184,8 +208,8 @@ export const ja: LocaleData = {
     SECTION_TENSE_ASPECT: '── 時制/相 ──',
     SECTION_QUESTION: '── 疑問文 ──',
     SECTION_IMPERATIVE: '── 命令文 ──',
-    SECTION_MODAL_NEGATION: '── モダリティ否定 ──',
-    SECTION_MODAL: '── モダリティ ──',
+    SECTION_MODAL_NEGATION: '── 助動詞否定 ──',
+    SECTION_MODAL: '── 助動詞 ──',
     SECTION_MOTION: '── 移動 ──',
     SECTION_ACTION: '── 動作 ──',
     SECTION_TRANSFER: '── 授与 ──',

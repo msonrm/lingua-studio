@@ -92,10 +92,34 @@ export interface BlocklyMessages {
   GROUP_NAMES: string;
   GROUP_INTERROGATIVE: string;
 
+  // Time group labels
+  GROUP_PAST: string;
+  GROUP_PRESENT: string;
+  GROUP_FUTURE: string;
+
   // Preposition group labels
   GROUP_LOCATION: string;
   GROUP_DIRECTION: string;
   GROUP_RELATION: string;
+
+  // Visualization Panel - Tense/Aspect
+  VIZ_TENSE_ASPECT_TITLE: string;
+  VIZ_TENSE_PAST: string;
+  VIZ_TENSE_PRESENT: string;
+  VIZ_TENSE_FUTURE: string;
+  VIZ_LABEL_PAST: string;
+  VIZ_LABEL_PRESENT: string;
+  VIZ_LABEL_FUTURE: string;
+  VIZ_ASPECT_SIMPLE: string;
+  VIZ_ASPECT_PROGRESSIVE: string;
+  VIZ_ASPECT_PERFECT: string;
+  VIZ_ASPECT_PERF_PROG: string;
+
+  // Visualization Panel - Prepositions
+  VIZ_PREP_TITLE: string;
+  VIZ_PREP_LOCATION: string;
+  VIZ_PREP_DIRECTION: string;
+  VIZ_PREP_RELATION: string;
 
   // Determiner
   DETERMINER_LABEL: string;

@@ -40,7 +40,7 @@ function extractPrepositions(obj: unknown, found: Set<string> = new Set()): Set<
   return found;
 }
 
-// Tense/Aspect Timeline Component
+// Tense/Aspect Timeline Component with Reichenbach S/R/E model
 function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: string | null }) {
   const { blockly: t } = useLocale();
 
@@ -55,87 +55,242 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
     title: t.VIZ_TENSE_ASPECT_TITLE,
   };
 
-  // Active aspect icon color (bright for dark background)
-  const activeColor = '#fff';
-  const inactiveColor = '#666';
+  // Colors for S/R/E markers
+  const colors = {
+    E: '#DC143C',      // Event: Red
+    R: '#1565C0',      // Reference: Blue
+    S: '#2E7D32',      // Speech/Now: Green
+    inactive: '#444',
+    line: '#666',
+  };
+
+  // Calculate E and R positions based on tense and aspect
+  // S (Now) is always at center (x=100)
+  const S_POS = 100;
+
+  // Determine positions based on tense + aspect combination
+  const getPositions = () => {
+    const isPerfect = aspect === 'perfect' || aspect === 'perfectProgressive';
+
+    if (tense === 'past') {
+      if (isPerfect) {
+        // Past Perfect: E < R < S
+        return { E: 35, R: 65, showR: true };
+      }
+      // Past Simple/Progressive: E,R < S (E and R coincide)
+      return { E: 50, R: 50, showR: false };
+    } else if (tense === 'future') {
+      if (isPerfect) {
+        // Future Perfect: S < E < R
+        return { E: 130, R: 165, showR: true };
+      }
+      // Future Simple/Progressive: S < E,R
+      return { E: 150, R: 150, showR: false };
+    } else {
+      // Present
+      if (isPerfect) {
+        // Present Perfect: E < R=S
+        return { E: 45, R: S_POS, showR: true };
+      }
+      // Present Simple/Progressive: E=R=S
+      return { E: S_POS, R: S_POS, showR: false };
+    }
+  };
+
+  const { E: ePos, R: rPos, showR } = tense ? getPositions() : { E: 0, R: 0, showR: false };
+  const isActive = tense !== null;
+  const isProgressive = aspect === 'progressive' || aspect === 'perfectProgressive';
+  const isPerfect = aspect === 'perfect' || aspect === 'perfectProgressive';
+
+  // Wave path for progressive aspect
+  const generateWavePath = (startX: number, endX: number, y: number) => {
+    const amplitude = 4;
+    const wavelength = 8;
+    let path = `M ${startX} ${y}`;
+    for (let x = startX; x <= endX; x += 2) {
+      const waveY = y + Math.sin((x - startX) * Math.PI / wavelength) * amplitude;
+      path += ` L ${x} ${waveY}`;
+    }
+    return path;
+  };
 
   return (
     <div className="viz-section">
       <h4>{labels.title}</h4>
 
-      {/* Timeline */}
-      <svg viewBox="0 0 200 60" className="tense-timeline">
-        {/* Timeline line */}
-        <line x1="20" y1="30" x2="180" y2="30" stroke="#666" strokeWidth="2" />
-
-        {/* Past marker */}
-        <g className={`timeline-marker ${tense === 'past' ? 'active' : ''}`}>
-          <circle cx="40" cy="30" r="8" fill={tense === 'past' ? '#DC143C' : '#444'} />
-          <text x="40" y="50" textAnchor="middle" fontSize="10">{labels.past}</text>
-        </g>
-
-        {/* Present marker */}
-        <g className={`timeline-marker ${tense === 'present' ? 'active' : ''}`}>
-          <circle cx="100" cy="30" r="8" fill={tense === 'present' ? '#2E7D32' : '#444'} />
-          <text x="100" y="50" textAnchor="middle" fontSize="10">{labels.present}</text>
-        </g>
-
-        {/* Future marker */}
-        <g className={`timeline-marker ${tense === 'future' ? 'active' : ''}`}>
-          <circle cx="160" cy="30" r="8" fill={tense === 'future' ? '#1565C0' : '#444'} />
-          <text x="160" y="50" textAnchor="middle" fontSize="10">{labels.future}</text>
-        </g>
+      {/* Reichenbach Timeline */}
+      <svg viewBox="0 0 200 80" className="tense-timeline reichenbach">
+        {/* Timeline base line */}
+        <line x1="15" y1="40" x2="185" y2="40" stroke={colors.line} strokeWidth="2" />
 
         {/* Arrow heads */}
-        <polygon points="15,30 25,25 25,35" fill="#666" />
-        <polygon points="185,30 175,25 175,35" fill="#666" />
+        <polygon points="10,40 18,36 18,44" fill={colors.line} />
+        <polygon points="190,40 182,36 182,44" fill={colors.line} />
+
+        {/* S (Speech/Now) - Always at center as vertical line */}
+        <line x1={S_POS} y1="25" x2={S_POS} y2="55" stroke={colors.S} strokeWidth="3" />
+        <text x={S_POS} y="70" textAnchor="middle" fontSize="9" fill={colors.S}>Now</text>
+
+        {isActive && (
+          <>
+            {/* Perfect aspect: line from E to R */}
+            {isPerfect && showR && (
+              <line
+                x1={ePos}
+                y1="40"
+                x2={rPos}
+                y2="40"
+                stroke={colors.R}
+                strokeWidth="3"
+                strokeDasharray={isProgressive ? "none" : "none"}
+              >
+                <animate
+                  attributeName="x2"
+                  from={ePos}
+                  to={rPos}
+                  dur="1s"
+                  fill="freeze"
+                  begin="0s"
+                />
+              </line>
+            )}
+
+            {/* Progressive aspect: wavy line */}
+            {isProgressive && (
+              <g>
+                <path
+                  d={generateWavePath(ePos - 20, ePos + 20, 40)}
+                  fill="none"
+                  stroke={colors.E}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    from="0"
+                    to="-40"
+                    dur="1s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+                <animateTransform
+                  attributeName="transform"
+                  type="translate"
+                  values="0,0; 3,0; 0,0; -3,0; 0,0"
+                  dur="0.5s"
+                  repeatCount="indefinite"
+                />
+              </g>
+            )}
+
+            {/* E (Event) - Red filled circle */}
+            <circle
+              cx={ePos}
+              cy="40"
+              r="7"
+              fill={colors.E}
+            />
+            <text x={ePos} y="22" textAnchor="middle" fontSize="8" fill={colors.E}>E</text>
+
+            {/* R (Reference) - Blue diamond (only shown when different from E) */}
+            {showR && (
+              <>
+                <polygon
+                  points={`${rPos},33 ${rPos + 6},40 ${rPos},47 ${rPos - 6},40`}
+                  fill={colors.R}
+                />
+                <text x={rPos} y="22" textAnchor="middle" fontSize="8" fill={colors.R}>R</text>
+              </>
+            )}
+          </>
+        )}
+
+        {/* Tense labels below */}
+        <text x="35" y="70" textAnchor="middle" fontSize="8" fill={tense === 'past' ? '#fff' : '#666'}>{labels.past}</text>
+        <text x="165" y="70" textAnchor="middle" fontSize="8" fill={tense === 'future' ? '#fff' : '#666'}>{labels.future}</text>
       </svg>
 
-      {/* Aspect icons */}
+      {/* Aspect visualization with animated lines */}
       <div className="aspect-icons">
         <div className={`aspect-item ${aspect === 'simple' ? 'active' : ''}`}>
-          <svg viewBox="0 0 30 30" className="aspect-icon">
-            <circle cx="15" cy="15" r="6" fill={aspect === 'simple' ? activeColor : inactiveColor} />
+          <svg viewBox="0 0 50 24" className="aspect-line-icon">
+            {/* Simple: single static dot */}
+            <line x1="5" y1="12" x2="45" y2="12" stroke="#444" strokeWidth="1" />
+            <circle cx="25" cy="12" r="5" fill={aspect === 'simple' ? colors.E : '#666'} />
           </svg>
           <span>{labels.simple}</span>
         </div>
         <div className={`aspect-item ${aspect === 'progressive' ? 'active' : ''}`}>
-          <svg viewBox="0 0 30 30" className="aspect-icon">
-            <circle cx="15" cy="15" r="8" fill="none" stroke={aspect === 'progressive' ? activeColor : inactiveColor} strokeWidth="2" strokeDasharray="4 2">
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                from="0 15 15"
-                to="360 15 15"
-                dur="2s"
-                repeatCount="indefinite"
-              />
-            </circle>
-            <circle cx="15" cy="15" r="3" fill={aspect === 'progressive' ? activeColor : inactiveColor} />
+          <svg viewBox="0 0 50 24" className="aspect-line-icon">
+            {/* Progressive: wavy flowing line */}
+            <path
+              d="M 5 12 Q 12 6, 19 12 T 33 12 T 47 12"
+              fill="none"
+              stroke={aspect === 'progressive' ? colors.E : '#666'}
+              strokeWidth="3"
+              strokeLinecap="round"
+            >
+              {aspect === 'progressive' && (
+                <animate
+                  attributeName="d"
+                  values="M 5 12 Q 12 6, 19 12 T 33 12 T 47 12;
+                          M 5 12 Q 12 18, 19 12 T 33 12 T 47 12;
+                          M 5 12 Q 12 6, 19 12 T 33 12 T 47 12"
+                  dur="0.8s"
+                  repeatCount="indefinite"
+                />
+              )}
+            </path>
           </svg>
           <span>{labels.progressive}</span>
         </div>
         <div className={`aspect-item ${aspect === 'perfect' ? 'active' : ''}`}>
-          <svg viewBox="0 0 30 30" className="aspect-icon">
-            <path
-              d="M8 15 L13 20 L22 10"
-              fill="none"
-              stroke={aspect === 'perfect' ? activeColor : inactiveColor}
-              strokeWidth="3"
-              strokeLinecap="round"
+          <svg viewBox="0 0 50 24" className="aspect-line-icon">
+            {/* Perfect: line from E to R with arrow */}
+            <circle cx="10" cy="12" r="4" fill={aspect === 'perfect' ? colors.E : '#666'} />
+            <line x1="14" y1="12" x2="36" y2="12" stroke={aspect === 'perfect' ? colors.R : '#666'} strokeWidth="2" />
+            <polygon
+              points="44,12 36,8 36,16"
+              fill={aspect === 'perfect' ? colors.R : '#666'}
             />
+            {aspect === 'perfect' && (
+              <line x1="14" y1="12" x2="36" y2="12" stroke={colors.R} strokeWidth="2">
+                <animate
+                  attributeName="x2"
+                  values="14;36;36"
+                  dur="1.5s"
+                  repeatCount="indefinite"
+                />
+              </line>
+            )}
           </svg>
           <span>{labels.perfect}</span>
         </div>
         <div className={`aspect-item ${aspect === 'perfectProgressive' ? 'active' : ''}`}>
-          <svg viewBox="0 0 30 30" className="aspect-icon">
-            <circle cx="15" cy="15" r="8" fill="none" stroke={aspect === 'perfectProgressive' ? activeColor : inactiveColor} strokeWidth="2" strokeDasharray="4 2" />
+          <svg viewBox="0 0 50 24" className="aspect-line-icon">
+            {/* Perfect Progressive: wavy line to R */}
+            <circle cx="8" cy="12" r="3" fill={aspect === 'perfectProgressive' ? colors.E : '#666'} />
             <path
-              d="M10 15 L13 18 L20 11"
+              d="M 12 12 Q 18 6, 24 12 T 36 12"
               fill="none"
-              stroke={aspect === 'perfectProgressive' ? activeColor : inactiveColor}
+              stroke={aspect === 'perfectProgressive' ? colors.R : '#666'}
               strokeWidth="2"
               strokeLinecap="round"
+            >
+              {aspect === 'perfectProgressive' && (
+                <animate
+                  attributeName="d"
+                  values="M 12 12 Q 18 6, 24 12 T 36 12;
+                          M 12 12 Q 18 18, 24 12 T 36 12;
+                          M 12 12 Q 18 6, 24 12 T 36 12"
+                  dur="0.8s"
+                  repeatCount="indefinite"
+                />
+              )}
+            </path>
+            <polygon
+              points="44,12 36,8 36,16"
+              fill={aspect === 'perfectProgressive' ? colors.R : '#666'}
             />
           </svg>
           <span>{labels.perfectProgressive}</span>

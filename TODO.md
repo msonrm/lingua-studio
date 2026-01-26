@@ -136,6 +136,51 @@
 - [ ] 辞書連携オートコンプリート
 - [ ] 双方向同期（Blocks ↔ LinguaScript）
 
+### Logic Extension（論理推論拡張）
+
+LinguaScriptを論理推論言語として拡張し、LLMを推論エンジンとして活用する。
+Geminiでの実験により、前提知識なしで論理構文が理解され、正しく推論されることを確認済み。
+
+#### 構文追加
+- [ ] `fact(P)` - 真偽値の確定（アサーション）
+  - P を真と宣言する
+  - 例: `fact(own(experiencer:'John, theme:'car))`
+- [ ] `and(P, Q)`, `or(P, Q)`, `not(P)` - ブール演算ラッパー
+  - 既存の等位接続・否定を論理演算として再解釈
+  - 真偽値を返す関数として統一
+- [ ] `if(P, then:Q)` - 条件・含意
+  - ルール定義: 前件が真なら後件も真
+  - 例: `if(give(agent:?A, theme:?T, recipient:?R), then:have(experiencer:?R, theme:?T))`
+- [ ] `because(cause:P, effect:Q)` - 因果関係
+  - 原因→結果の因果推論
+  - 例: `because(cause:rain(), effect:wet(theme:'ground))`
+
+#### Blocklyブロック
+- [ ] `fact_wrapper` ブロック - 事実の宣言
+- [ ] `if_block` ブロック - 条件・ルール定義
+- [ ] `because_block` ブロック - 因果関係
+
+#### 推論機能
+- [ ] LLM連携API - LinguaScriptをLLMに送信してクエリ結果を取得
+  - question() をクエリとして解釈
+  - ?who, ?what 等を変数として束縛
+- [ ] 閉世界仮説（CWA）vs 開世界仮説（OWA）の選択オプション
+- [ ] 外部知識連携 - 未知の事実をGoogle/Wikidataに問い合わせ
+  - LinguaScript → SPARQL 変換（Wikidata連携）
+  - 意味役割がKnowledge Graphスキーマに対応
+
+#### 理論的背景
+- 生成文法からの原理: 機能範疇の階層（普遍的な骨格）
+- 依存文法からのパラメータ: 動詞の結合価・意味役割（語彙駆動）
+- Prolog的な論理意味論: fact/rule/query
+- 「原理とパラメータ」アプローチの再解釈
+
+#### 関連システム
+- AMR (Abstract Meaning Representation) - 意味表現
+- UNL (Universal Networking Language) - Interlingua
+- LFG f-structure - 機能構造
+- Prolog - 論理プログラミング
+
 ### Deferred（設計検討が必要）
 - [ ] Why疑問文（`?why`）の構文設計
   - 構文的には where/when/how と同様（Wh副詞、文頭移動）

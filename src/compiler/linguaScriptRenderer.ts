@@ -158,14 +158,18 @@ function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
   // 命題レベル論理演算をラップ（大文字 AND/OR/NOT - Logic Extension）
   // 注: ブロックレベルで fact_wrapper 内のみ接続可能に制限済み
   if (vp.logicOp) {
-    const { operator, rightOperand } = vp.logicOp;
+    const { operator, leftOperand, rightOperand } = vp.logicOp;
+
+    // leftOperandがある場合はネストされた論理式（例: NOT(AND(P, Q))）
+    const leftScript = leftOperand ? renderVerbPhraseToScript(leftOperand) : result;
+
     if (operator === 'NOT') {
-      // 単項演算子: NOT(P)
-      result = `NOT(${result})`;
+      // 単項演算子: NOT(P) または NOT(AND(P, Q))
+      result = `NOT(${leftScript})`;
     } else {
       // 二項演算子: AND(P, Q), OR(P, Q)
       const rightScript = rightOperand ? renderVerbPhraseToScript(rightOperand) : '___';
-      result = `${operator}(${result}, ${rightScript})`;
+      result = `${operator}(${leftScript}, ${rightScript})`;
     }
   }
 

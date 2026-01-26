@@ -1321,13 +1321,13 @@ Blockly.Blocks['fact_wrapper'] = {
 Blockly.Blocks['logic_and_block'] = {
   init: function() {
     this.appendStatementInput("LEFT")
-        .setCheck("verb")
+        .setCheck(["verb", "logic"])
         .appendField(msg('LOGIC_AND_LABEL', 'AND'));
 
     this.appendStatementInput("RIGHT")
-        .setCheck("verb");
+        .setCheck(["verb", "logic"]);
 
-    this.setPreviousStatement(true, "logic");  // "verb" → "logic" に変更
+    this.setPreviousStatement(true, "logic");
     this.setColour(COLORS.logicOp);
     this.setTooltip(msg('LOGIC_AND_TOOLTIP', 'Logical conjunction (AND): both propositions must be true'));
   }
@@ -1339,13 +1339,13 @@ Blockly.Blocks['logic_and_block'] = {
 Blockly.Blocks['logic_or_block'] = {
   init: function() {
     this.appendStatementInput("LEFT")
-        .setCheck("verb")
+        .setCheck(["verb", "logic"])
         .appendField(msg('LOGIC_OR_LABEL', 'OR'));
 
     this.appendStatementInput("RIGHT")
-        .setCheck("verb");
+        .setCheck(["verb", "logic"]);
 
-    this.setPreviousStatement(true, "logic");  // "verb" → "logic" に変更
+    this.setPreviousStatement(true, "logic");
     this.setColour(COLORS.logicOp);
     this.setTooltip(msg('LOGIC_OR_TOOLTIP', 'Logical disjunction (OR): at least one proposition must be true'));
   }
@@ -1357,10 +1357,10 @@ Blockly.Blocks['logic_or_block'] = {
 Blockly.Blocks['logic_not_block'] = {
   init: function() {
     this.appendStatementInput("PROPOSITION")
-        .setCheck("verb")
+        .setCheck(["verb", "logic"])
         .appendField(msg('LOGIC_NOT_LABEL', 'NOT'));
 
-    this.setPreviousStatement(true, "logic");  // "verb" → "logic" に変更
+    this.setPreviousStatement(true, "logic");
     this.setColour(COLORS.logicOp);
     this.setTooltip(msg('LOGIC_NOT_TOOLTIP', 'Logical negation (NOT): the proposition is false'));
   }

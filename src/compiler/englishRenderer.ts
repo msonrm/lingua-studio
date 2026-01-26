@@ -292,15 +292,33 @@ function renderLogicExpression(clause: ClauseNode): string {
     return renderClause(clause);
   }
 
-  // 左側の命題をレンダリング（論理演算を除いた形で）
-  const leftClause: ClauseNode = {
-    ...clause,
-    verbPhrase: {
-      ...verbPhrase,
-      logicOp: undefined,  // 論理演算を除去
-    },
-  };
-  const leftStr = renderClause(leftClause);
+  // leftOperandがある場合はネストされた論理式（例: NOT(AND(P, Q))）
+  // そうでなければ現在のverbPhraseを左側の命題として使用
+  let leftStr: string;
+  if (logicOp.leftOperand) {
+    // ネストされた論理式をレンダリング
+    const nestedClause: ClauseNode = {
+      type: 'clause',
+      verbPhrase: logicOp.leftOperand,
+      tense,
+      aspect,
+      polarity: 'affirmative',
+    };
+    // leftOperandがlogicOpを持つ場合は再帰的にrenderLogicExpressionを呼ぶ
+    leftStr = logicOp.leftOperand.logicOp
+      ? renderLogicExpression(nestedClause)
+      : renderClause(nestedClause);
+  } else {
+    // 現在のverbPhraseを左側として使用（論理演算を除去）
+    const leftClause: ClauseNode = {
+      ...clause,
+      verbPhrase: {
+        ...verbPhrase,
+        logicOp: undefined,
+      },
+    };
+    leftStr = renderClause(leftClause);
+  }
 
   if (logicOp.operator === 'NOT') {
     // NOT: "It is not the case that P" または "NOT: P"
@@ -308,15 +326,22 @@ function renderLogicExpression(clause: ClauseNode): string {
   }
 
   // AND / OR: 右側の命題もレンダリング
-  const rightStr = logicOp.rightOperand
-    ? renderClause({
-        type: 'clause',
-        verbPhrase: logicOp.rightOperand,
-        tense,
-        aspect,
-        polarity: 'affirmative',  // 右側のデフォルト極性
-      })
-    : '___';  // 右側欠損
+  let rightStr: string;
+  if (logicOp.rightOperand) {
+    const rightClause: ClauseNode = {
+      type: 'clause',
+      verbPhrase: logicOp.rightOperand,
+      tense,
+      aspect,
+      polarity: 'affirmative',
+    };
+    // rightOperandがlogicOpを持つ場合は再帰的にrenderLogicExpressionを呼ぶ
+    rightStr = logicOp.rightOperand.logicOp
+      ? renderLogicExpression(rightClause)
+      : renderClause(rightClause);
+  } else {
+    rightStr = '___';  // 右側欠損
+  }
 
   if (logicOp.operator === 'AND') {
     // AND: "P, and Q" (論理的接続)

@@ -246,6 +246,7 @@ interface VerbChainResult {
   // 命題レベルの論理演算（Logic Extension）
   logicOp?: {
     operator: PropositionalOperator;
+    leftOperand?: VerbPhraseNode;   // ネストされた論理式の場合
     rightOperand?: VerbPhraseNode;
   };
 }
@@ -570,6 +571,36 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     }
     // 右側も解析
     const rightResult = rightBlock ? parseVerbChain(rightBlock) : null;
+
+    // 左側が複合式（logicOpを持つ）の場合、leftOperandとして格納
+    // そうでなければ従来通りスプレッド
+    if (leftResult.logicOp) {
+      // 左側が複合式の場合、完全なVerbPhraseNodeとしてleftOperandに格納
+      const leftVP: VerbPhraseNode = {
+        ...leftResult.verbPhrase,
+        adverbs: [
+          ...leftResult.mannerAdverbs,
+          ...leftResult.frequencyAdverbs,
+          ...leftResult.locativeAdverbs,
+          ...(leftResult.timeAdverbs || []),
+          ...leftResult.verbPhrase.adverbs,
+        ],
+        prepositionalPhrases: [
+          ...leftResult.prepositionalPhrases,
+          ...leftResult.verbPhrase.prepositionalPhrases,
+        ],
+        logicOp: leftResult.logicOp,
+      };
+      return {
+        ...leftResult,
+        logicOp: {
+          operator,
+          leftOperand: leftVP,
+          rightOperand: rightResult?.verbPhrase,
+        },
+      };
+    }
+
     return {
       ...leftResult,
       logicOp: {
@@ -588,6 +619,34 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     if (!innerResult) {
       return null;
     }
+
+    // 内側が複合式（logicOpを持つ）の場合、leftOperandとして格納
+    if (innerResult.logicOp) {
+      // 内側が複合式の場合、完全なVerbPhraseNodeとしてleftOperandに格納
+      const innerVP: VerbPhraseNode = {
+        ...innerResult.verbPhrase,
+        adverbs: [
+          ...innerResult.mannerAdverbs,
+          ...innerResult.frequencyAdverbs,
+          ...innerResult.locativeAdverbs,
+          ...(innerResult.timeAdverbs || []),
+          ...innerResult.verbPhrase.adverbs,
+        ],
+        prepositionalPhrases: [
+          ...innerResult.prepositionalPhrases,
+          ...innerResult.verbPhrase.prepositionalPhrases,
+        ],
+        logicOp: innerResult.logicOp,
+      };
+      return {
+        ...innerResult,
+        logicOp: {
+          operator: 'NOT' as PropositionalOperator,
+          leftOperand: innerVP,
+        },
+      };
+    }
+
     return {
       ...innerResult,
       logicOp: {

@@ -163,7 +163,8 @@ export interface VerbPhraseNode {
   // 命題レベルの論理演算（AND/OR/NOT - 大文字、and/or 等位接続とは別）
   logicOp?: {
     operator: PropositionalOperator;
-    rightOperand?: VerbPhraseNode;  // NOT の場合は undefined
+    leftOperand?: VerbPhraseNode;   // NOT が複合式をラップする場合、または AND/OR の左側
+    rightOperand?: VerbPhraseNode;  // AND/OR の右側
   };
 }
 

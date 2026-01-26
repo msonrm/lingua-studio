@@ -944,7 +944,7 @@ Blockly.Blocks['negation_wrapper'] = {
   init: function() {
     this.appendStatementInput("VERB")
         .setCheck("verb")
-        .appendField(msg('NEGATION_LABEL', 'NOT'));
+        .appendField(msg('NEGATION_LABEL', 'not'));
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.negation);
@@ -1174,7 +1174,7 @@ Blockly.Blocks['coordination_noun_and'] = {
   init: function() {
     this.appendValueInput("LEFT")
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
-        .appendField(msg('COORD_AND_LABEL', 'AND'));
+        .appendField(msg('COORD_AND_LABEL', 'and'));
 
     this.appendValueInput("RIGHT")
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"]);
@@ -1192,7 +1192,7 @@ Blockly.Blocks['coordination_noun_or'] = {
   init: function() {
     this.appendValueInput("LEFT")
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"])
-        .appendField(msg('COORD_OR_LABEL', 'OR'));
+        .appendField(msg('COORD_OR_LABEL', 'or'));
 
     this.appendValueInput("RIGHT")
         .setCheck(["noun", "adjective", "nounPhrase", "coordinatedNounPhrase"]);
@@ -1269,7 +1269,7 @@ Blockly.Blocks['coordination_verb_and'] = {
   init: function() {
     this.appendStatementInput("LEFT")
         .setCheck("verb")
-        .appendField(msg('COORD_AND_LABEL', 'AND'));
+        .appendField(msg('COORD_AND_LABEL', 'and'));
 
     this.appendStatementInput("RIGHT")
         .setCheck("verb");
@@ -1287,7 +1287,7 @@ Blockly.Blocks['coordination_verb_or'] = {
   init: function() {
     this.appendStatementInput("LEFT")
         .setCheck("verb")
-        .appendField(msg('COORD_OR_LABEL', 'OR'));
+        .appendField(msg('COORD_OR_LABEL', 'or'));
 
     this.appendStatementInput("RIGHT")
         .setCheck("verb");

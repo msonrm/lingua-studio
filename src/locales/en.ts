@@ -92,6 +92,11 @@ export const en: LocaleData = {
     GROUP_NAMES: '── Names ──',
     GROUP_INTERROGATIVE: '── Interrogative ──',
 
+    // Time group labels
+    GROUP_PAST: '── Past ──',
+    GROUP_PRESENT: '── Present ──',
+    GROUP_FUTURE: '── Future ──',
+
     // Preposition group labels
     GROUP_LOCATION: '── Location ──',
     GROUP_DIRECTION: '── Direction ──',

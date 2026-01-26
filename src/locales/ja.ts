@@ -92,6 +92,11 @@ export const ja: LocaleData = {
     GROUP_NAMES: '── 固有名詞 ──',
     GROUP_INTERROGATIVE: '── 疑問詞 ──',
 
+    // Time group labels
+    GROUP_PAST: '── 過去 ──',
+    GROUP_PRESENT: '── 現在 ──',
+    GROUP_FUTURE: '── 未来 ──',
+
     // Preposition group labels
     GROUP_LOCATION: '── 場所 ──',
     GROUP_DIRECTION: '── 方向 ──',

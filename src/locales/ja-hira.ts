@@ -92,6 +92,11 @@ export const jaHira: LocaleData = {
     GROUP_NAMES: '── ひとのなまえ ──',
     GROUP_INTERROGATIVE: '── しつもんのことば ──',
 
+    // Time group labels
+    GROUP_PAST: '── まえ ──',
+    GROUP_PRESENT: '── いま ──',
+    GROUP_FUTURE: '── あと ──',
+
     // Preposition group labels
     GROUP_LOCATION: '── ばしょ ──',
     GROUP_DIRECTION: '── ほうこう ──',

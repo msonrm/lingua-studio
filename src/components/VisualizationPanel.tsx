@@ -124,7 +124,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
             <rect x={ePos - 25} y="30" width="50" height="20" />
           </clipPath>
           <clipPath id="perfectWaveClip">
-            <rect x={ePos} y="30" width={rPos - ePos + 10} height="20" />
+            <rect x={ePos} y="30" width={rPos - ePos} height="20" />
           </clipPath>
         </defs>
 
@@ -137,6 +137,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
 
         {/* S (Speech/Now) - Always at center as vertical line */}
         <line x1={S_POS} y1="25" x2={S_POS} y2="55" stroke={colors.S} strokeWidth="3" />
+        <text x={S_POS} y="18" textAnchor="middle" fontSize="8" fill={colors.S}>S</text>
         <text x={S_POS} y="70" textAnchor="middle" fontSize="9" fill={colors.S}>Now</text>
 
         {isActive && (
@@ -168,7 +169,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                     type="translate"
                     from="0 0"
                     to="24 0"
-                    dur="0.6s"
+                    dur="1.2s"
                     repeatCount="indefinite"
                   />
                 </path>
@@ -190,7 +191,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                     type="translate"
                     from="0 0"
                     to="24 0"
-                    dur="0.6s"
+                    dur="1.2s"
                     repeatCount="indefinite"
                   />
                 </path>
@@ -205,10 +206,10 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
             {showR && (
               <>
                 <polygon
-                  points={`${rPos},33 ${rPos + 6},40 ${rPos},47 ${rPos - 6},40`}
+                  points={`${rPos},31 ${rPos + 8},40 ${rPos},49 ${rPos - 8},40`}
                   fill={colors.R}
                 />
-                <text x={rPos} y="22" textAnchor="middle" fontSize="8" fill={colors.R}>R</text>
+                <text x={rPos} y="20" textAnchor="middle" fontSize="8" fill={colors.R}>R</text>
               </>
             )}
           </>
@@ -250,7 +251,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                   type="translate"
                   from="0 0"
                   to="20 0"
-                  dur="0.5s"
+                  dur="1s"
                   repeatCount="indefinite"
                 />
               </path>
@@ -294,7 +295,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                   type="translate"
                   from="0 0"
                   to="20 0"
-                  dur="0.5s"
+                  dur="1s"
                   repeatCount="indefinite"
                 />
               </path>

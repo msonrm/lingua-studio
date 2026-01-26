@@ -202,11 +202,11 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
             <circle cx={ePos} cy="40" r="7" fill={colors.E} />
             <text x={ePos} y="22" textAnchor="middle" fontSize="8" fill={colors.E}>E</text>
 
-            {/* R (Reference) - Blue diamond (only shown when different from E) */}
+            {/* R (Reference) - Blue diamond square 18x18 (only shown when different from E) */}
             {showR && (
               <>
                 <polygon
-                  points={`${rPos},31 ${rPos + 8},40 ${rPos},49 ${rPos - 8},40`}
+                  points={`${rPos},31 ${rPos + 9},40 ${rPos},49 ${rPos - 9},40`}
                   fill={colors.R}
                 />
                 <text x={rPos} y="20" textAnchor="middle" fontSize="8" fill={colors.R}>R</text>
@@ -220,94 +220,12 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
         <text x="165" y="70" textAnchor="middle" fontSize="8" fill={tense === 'future' ? '#fff' : '#666'}>{labels.future}</text>
       </svg>
 
-      {/* Aspect visualization with animated lines */}
-      <div className="aspect-icons">
-        <div className={`aspect-item ${aspect === 'simple' ? 'active' : ''}`}>
-          <svg viewBox="0 0 50 24" className="aspect-line-icon">
-            {/* Simple: single static dot - represents a bounded, completed event */}
-            <circle cx="25" cy="12" r="5" fill={aspect === 'simple' ? colors.E : '#666'} />
-          </svg>
-          <span>{labels.simple}</span>
+      {/* Simple tense+aspect label */}
+      {tense && aspect && (
+        <div className="tense-aspect-label">
+          {labels[tense as keyof typeof labels]} {labels[aspect as keyof typeof labels]}
         </div>
-
-        <div className={`aspect-item ${aspect === 'progressive' ? 'active' : ''}`}>
-          <svg viewBox="0 0 50 24" className="aspect-line-icon">
-            <defs>
-              <clipPath id="progClip">
-                <rect x="5" y="0" width="40" height="24" />
-              </clipPath>
-            </defs>
-            {/* Progressive: wavy line flowing rightward - ongoing, unbounded */}
-            <g clipPath="url(#progClip)">
-              <path
-                d={`M -10 12 ${Array.from({ length: 8 }, (_, i) => `Q ${i * 10 - 5} ${i % 2 === 0 ? 6 : 18}, ${i * 10} 12`).join(' ')}`}
-                fill="none"
-                stroke={aspect === 'progressive' ? colors.E : '#666'}
-                strokeWidth="3"
-                strokeLinecap="round"
-              >
-                <animateTransform
-                  attributeName="transform"
-                  type="translate"
-                  from="0 0"
-                  to="20 0"
-                  dur="1s"
-                  repeatCount="indefinite"
-                />
-              </path>
-            </g>
-          </svg>
-          <span>{labels.progressive}</span>
-        </div>
-
-        <div className={`aspect-item ${aspect === 'perfect' ? 'active' : ''}`}>
-          <svg viewBox="0 0 50 24" className="aspect-line-icon">
-            {/* Perfect: E connected to R - event with current relevance */}
-            <circle cx="8" cy="12" r="4" fill={aspect === 'perfect' ? colors.E : '#666'} />
-            <line x1="12" y1="12" x2="38" y2="12" stroke={aspect === 'perfect' ? colors.R : '#666'} strokeWidth="2" />
-            <polygon
-              points={`${38},12 ${44},8 ${44},16`}
-              fill={aspect === 'perfect' ? colors.R : '#666'}
-            />
-          </svg>
-          <span>{labels.perfect}</span>
-        </div>
-
-        <div className={`aspect-item ${aspect === 'perfectProgressive' ? 'active' : ''}`}>
-          <svg viewBox="0 0 50 24" className="aspect-line-icon">
-            <defs>
-              <clipPath id="perfProgClip">
-                <rect x="10" y="0" width="34" height="24" />
-              </clipPath>
-            </defs>
-            {/* Perfect Progressive: wavy line from E flowing to R */}
-            <circle cx="8" cy="12" r="3" fill={aspect === 'perfectProgressive' ? colors.E : '#666'} />
-            <g clipPath="url(#perfProgClip)">
-              <path
-                d={`M 0 12 ${Array.from({ length: 6 }, (_, i) => `Q ${i * 10 + 5} ${i % 2 === 0 ? 6 : 18}, ${i * 10 + 10} 12`).join(' ')}`}
-                fill="none"
-                stroke={aspect === 'perfectProgressive' ? colors.R : '#666'}
-                strokeWidth="2"
-                strokeLinecap="round"
-              >
-                <animateTransform
-                  attributeName="transform"
-                  type="translate"
-                  from="0 0"
-                  to="20 0"
-                  dur="1s"
-                  repeatCount="indefinite"
-                />
-              </path>
-            </g>
-            <polygon
-              points="38,12 44,8 44,16"
-              fill={aspect === 'perfectProgressive' ? colors.R : '#666'}
-            />
-          </svg>
-          <span>{labels.perfectProgressive}</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

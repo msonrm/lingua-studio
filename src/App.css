@@ -447,53 +447,15 @@ body {
   font-weight: 600;
 }
 
-/* Aspect Icons - Line-based visualization */
-.aspect-icons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-}
-
-.aspect-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  background: #16213e;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  transition: all 0.2s;
-}
-
-.aspect-item.active {
-  background: #1a365d;
-  border-color: #e94560;
-}
-
-.aspect-icon {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-}
-
-.aspect-line-icon {
-  width: 100%;
-  height: 24px;
-  flex-shrink: 0;
-}
-
-.aspect-item span {
-  font-size: 0.65rem;
-  color: #888;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* Tense/Aspect Label */
+.tense-aspect-label {
   text-align: center;
-}
-
-.aspect-item.active span {
+  font-size: 0.85rem;
   color: #fff;
+  padding: 0.5rem;
+  background: #1a365d;
+  border-radius: 6px;
+  text-transform: capitalize;
 }
 
 /* Preposition Diagram */

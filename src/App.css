@@ -67,14 +67,17 @@ body {
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
+  outline: none;
 }
 
-.mode-tab:hover:not(:disabled) {
+.mode-tab:hover:not(:disabled):not(.active) {
   background: #16213e;
   color: #fff;
 }
 
-.mode-tab.active {
+.mode-tab.active,
+.mode-tab.active:focus,
+.mode-tab.active:hover {
   background: #e94560;
   color: #fff;
 }

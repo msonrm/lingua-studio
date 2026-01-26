@@ -190,7 +190,7 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
     - 代替案1: `reason(?why, ...)` ラッパーの導入
     - 代替案2: 付加詞として `?why` を単独で使用
     - 理由節（because...）との統一的な扱いが必要
-  - 実装は where/when/how 完了後に検討
+  - 関連: Logic Extension の `because(cause:P, effect:Q)` と設計を統一すべき
 - [ ] 否定 + 頻度副詞 "never" の二重否定検出
   - `not(frequency('never, ...))` は論理的に二重否定
   - 警告表示 or 禁止の実装が必要

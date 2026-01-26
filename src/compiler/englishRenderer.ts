@@ -321,7 +321,43 @@ function renderLogicExpression(clause: ClauseNode): string {
   }
 
   if (logicOp.operator === 'NOT') {
-    // NOT: "It is not the case that P" または "NOT: P"
+    // NOT(OR(P, Q)) → "neither P nor Q" (De Morgan対応)
+    if (logicOp.leftOperand?.logicOp?.operator === 'OR') {
+      const innerOr = logicOp.leftOperand.logicOp;
+      // 内側のORの左側をレンダリング
+      const innerLeftClause: ClauseNode = {
+        type: 'clause',
+        verbPhrase: {
+          ...logicOp.leftOperand,
+          logicOp: undefined,  // ORを除去
+        },
+        tense,
+        aspect,
+        polarity: 'affirmative',
+      };
+      const innerLeftStr = renderClause(innerLeftClause);
+
+      // 内側のORの右側をレンダリング
+      let innerRightStr: string;
+      if (innerOr.rightOperand) {
+        const innerRightClause: ClauseNode = {
+          type: 'clause',
+          verbPhrase: innerOr.rightOperand,
+          tense,
+          aspect,
+          polarity: 'affirmative',
+        };
+        innerRightStr = innerOr.rightOperand.logicOp
+          ? renderLogicExpression(innerRightClause)
+          : renderClause(innerRightClause);
+      } else {
+        innerRightStr = '___';
+      }
+
+      return `neither ${innerLeftStr} nor ${innerRightStr}`;
+    }
+
+    // 通常のNOT: "It is not the case that P"
     return `it is not the case that ${leftStr}`;
   }
 

@@ -336,7 +336,7 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
     - ability + past → could
     - volition + past → was going to
     - obligation + past → had to
-  - LinguaScript: `modal('ability, sentence(...))`
+  - LinguaScript: `modal(ability:can, sentence(...))`
 - [x] Imperative（命令文）wrapper
   - 主語省略 + 動詞原形
   - 否定: "Do not eat!"
@@ -346,10 +346,12 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - 動詞否定（negation_wrapper）とは別ブロックとして実装
   - negation_sentence_wrapper: modal の外側に配置してモダリティ否定
   - 義務の否定 → "don't have to" / "didn't have to"（義務なし＝しなくてよい）
-  - LinguaScript: `not(modal('obligation, sentence(...)))`
+  - LinguaScript: `not(modal(obligation:must, sentence(...)))`
 
 ### Grammar Spec Review (2026-01)
 - [x] 仕様書とコードベースの比較・精査
+- [x] BNF文法の疑問詞定義を具体的な形式に統一 (`?` → `?who`, `?what`, `?which(...)`)
+- [x] 例文の記法を現行実装に合わせて修正 (`?()` → `question()`, `past(simple())` → `past+simple()`)
 - [x] 拡張意味役割の追加 (patient, experiencer, stimulus, beneficiary, possessor, attribute)
 - [x] 等位接続の仕様追加 (and/or for NP & VP)
 - [x] 限定詞3層システムの仕様化 (pre/det/post)

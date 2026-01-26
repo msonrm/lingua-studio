@@ -1189,10 +1189,66 @@ LinguaScriptを論理推論言語として拡張するための構文。LLMを�
 ```bnf
 ;; アサーション（事実の宣言）
 <assertion>     ::= "fact(" <proposition> ")"
+                  | "fact(" <tense> ", " <proposition> ")"
 
 ;; 命題は真偽値を持つ
 ;; fact(P) は P := true を意味する
 ```
+
+##### `fact()` と `sentence()` の関係
+
+`fact()` と `sentence()` は**排他的**である。
+
+| 構文 | 用途 | 出力 |
+|------|------|------|
+| `sentence(P)` | 自然言語文の生成 | "John eats an apple." |
+| `fact(P)` | 論理的事実の宣言 | P は真である |
+
+```lisp
+;; sentence(): 文を出力（真偽値なし）
+sentence(present+simple(eat(agent:'John, theme:'apple)))
+;; → "John eats an apple."
+
+;; fact(): 事実を宣言（論理的真理）
+fact(eat(agent:'John, theme:'apple))
+;; → "eat(John, apple) は真である"
+```
+
+##### `fact()` と `modal()` の関係
+
+`fact()` と `modal()` は**排他的**である。モダリティ（能力、義務、可能性など）は話者の判断であり、客観的事実ではないため。
+
+```lisp
+;; ✅ OK: 事実の宣言
+fact(eat(agent:'John, theme:'apple))
+
+;; ❌ NG: モダリティは事実ではない
+fact(modal(ability:can, eat(agent:'John, theme:'apple)))
+;; → 「Johnがリンゴを食べられる」は能力の判断であり、事実宣言には不適切
+```
+
+##### 時制なし事実（Timeless Facts）
+
+Prolog的な抽象的真理として、時制なしの事実を許容する。
+
+```lisp
+;; 時制なし（抽象的真理 - Prolog的）
+fact(own(experiencer:'John, theme:'car))
+;; → "own(John, car) は真である"（永遠の真理として）
+
+;; 時制あり（特定時点での事実）
+fact(past, own(experiencer:'John, theme:'car))
+;; → "過去において own(John, car) は真であった"
+
+fact(present, own(experiencer:'John, theme:'car))
+;; → "現在 own(John, car) は真である"
+```
+
+| 形式 | 意味 | 用途 |
+|------|------|------|
+| `fact(P)` | 時制なし（timeless） | 論理推論、ルール定義 |
+| `fact(past, P)` | 過去の事実 | 時系列推論 |
+| `fact(present, P)` | 現在の事実 | 状態の明示 |
 
 ```lisp
 ;; 事実の宣言
@@ -1203,23 +1259,54 @@ fact(give(agent:'Mary, theme:'book, recipient:'John))
 ;; → "give(Mary, book, John) は真である"
 ```
 
-#### ブール演算
+#### ブール演算（命題レベル）
+
+命題レベルのブール演算は**大文字**で表記する。これは等位接続（小文字 `and`, `or`）と区別するため。
 
 ```bnf
-<bool-expr>     ::= "and(" <proposition> ", " <proposition> ")"
-                  | "or(" <proposition> ", " <proposition> ")"
-                  | "not(" <proposition> ")"
+<bool-expr>     ::= "AND(" <proposition> ", " <proposition> ")"
+                  | "OR(" <proposition> ", " <proposition> ")"
+                  | "NOT(" <proposition> ")"
 ```
 
+##### 等位接続 vs ブール演算
+
+| 構文 | 種類 | 用途 | 例 |
+|------|------|------|-----|
+| `and()` 小文字 | 等位接続 | NP/VPの接続 | `and('John, 'Mary)` → "John and Mary" |
+| `AND()` 大文字 | 論理積 | 命題の論理演算 | `AND(P, Q)` → P ∧ Q |
+| `or()` 小文字 | 等位接続 | NP/VPの接続 | `or('tea, 'coffee)` → "tea or coffee" |
+| `OR()` 大文字 | 論理和 | 命題の論理演算 | `OR(P, Q)` → P ∨ Q |
+| `not()` 小文字 | 動詞否定 | 文の否定 | `not(eat(...))` → "don't eat" |
+| `NOT()` 大文字 | 論理否定 | 命題の否定 | `NOT(P)` → ¬P |
+
 ```lisp
-;; AND: 両方真なら真
-and(own(experiencer:'John, theme:'car), own(experiencer:'Mary, theme:'book))
+;; 等位接続（小文字）- 自然言語の "and/or"
+fact(like(experiencer:and('John, 'Mary), stimulus:'apple))
+;; → "John and Mary like apples."
 
-;; OR: どちらか真なら真
-or(own(experiencer:'John, theme:'car), own(experiencer:'John, theme:'bike))
+;; 論理積（大文字）- 命題レベル
+fact(AND(own(experiencer:'John, theme:'car), own(experiencer:'Mary, theme:'book)))
+;; → "John owns a car" ∧ "Mary owns a book"
 
-;; NOT: 否定
-not(own(experiencer:'John, theme:'bike))
+;; 論理和（大文字）- 命題レベル
+fact(OR(live(experiencer:'Tom, location:'Tokyo), live(experiencer:'Tom, location:'Osaka)))
+;; → "Tom lives in Tokyo" ∨ "Tom lives in Osaka"
+
+;; 論理否定（大文字）- 命題レベル
+fact(NOT(own(experiencer:'John, theme:'bike)))
+;; → ¬"John owns a bike"
+```
+
+##### 英語出力（⊨マーカー）
+
+`fact()` の英語出力には記号論理学の `⊨`（double turnstile: "models"）を使用する。
+
+```
+⊨ John and Mary like apples.
+⊨ John owns a car AND Mary owns a book.
+⊨ Tom lives in Tokyo OR Tom lives in Osaka.
+⊨ NOT: John owns a bike.
 ```
 
 #### 含意・因果
@@ -1269,9 +1356,13 @@ give(agent:?who, theme:?what, recipient:'Mary)
 ;; → ?who = 'Tom, ?what = 'pen （知識ベースから導出）
 ```
 
-#### 閉世界仮説
+#### 世界仮説（World Assumption）
 
-宣言されていない事実は偽とみなす（Negation as Failure）。
+知識ベースに宣言されていない事実をどう扱うかを選択できる。
+
+##### 閉世界仮説（CWA: Closed World Assumption）
+
+宣言されていない事実は**偽**とみなす（Negation as Failure）。Prolog的な論理プログラミングに適している。
 
 ```lisp
 ;; 知識ベース
@@ -1279,11 +1370,49 @@ fact(own(experiencer:'John, theme:'car))
 
 ;; クエリ
 question(own(experiencer:'John, theme:'bike))
-;; → false（宣言されていない）
+;; → false（宣言されていないので偽）
 
-question(not(own(experiencer:'John, theme:'bike)))
+question(NOT(own(experiencer:'John, theme:'bike)))
 ;; → true（閉世界仮説による）
 ```
+
+##### 開世界仮説（OWA: Open World Assumption）
+
+宣言されていない事実は**不明**（unknown）とみなす。LLMや外部知識との連携に適している。
+
+```lisp
+;; 知識ベース
+fact(own(experiencer:'John, theme:'car))
+
+;; クエリ
+question(own(experiencer:'John, theme:'bike))
+;; → unknown（宣言されていないが、偽とは限らない）
+;; → LLMや外部知識（Wikidata等）に問い合わせ可能
+```
+
+##### 時制 × 世界仮説のマトリクス
+
+| | 閉世界 (CWA) | 開世界 (OWA) |
+|---|---|---|
+| **時制なし** | Prolog的論理DB | セマンティックWeb/Wikidata |
+| **時制あり** | 時系列DB | LLM + 外部知識 |
+
+##### 設定方法
+
+世界仮説はビルドオプションとして設定する（将来実装）。
+
+```lisp
+;; ビルドオプション
+:world-assumption closed  ;; CWA（デフォルト）
+:world-assumption open    ;; OWA
+```
+
+##### LLMへの指示例
+
+| 仮説 | LLMへの指示 |
+|------|------------|
+| CWA | 「以下の事実のみを前提とし、宣言されていない事実は偽とせよ」 |
+| OWA | 「以下の事実を前提とし、必要に応じて一般知識も使ってよい」 |
 
 #### LLM連携
 
@@ -1315,11 +1444,23 @@ question(have(experiencer:'John, theme:?what))
 | `'John`, `'apple` | 定数（Entity） | 個体 |
 | `?who`, `?what`, `?X` | 変数（Variable） | 未知・束縛対象 |
 | `eat(...)`, `own(...)` | 命題（Proposition） | 真偽値を持つ |
-| `fact(P)` | アサーション | P := true |
+| `fact(P)` | アサーション | P := true（論理的宣言） |
+| `fact(tense, P)` | 時制付きアサーション | 特定時点での真理 |
+| `sentence(P)` | 文出力 | 自然言語文を生成 |
 | `question(P)` | クエリ | P は真か？/ P を真にする値は？ |
-| `and`, `or`, `not` | ブール演算子 | Bool × Bool → Bool |
+| `and`, `or` (小文字) | 等位接続 | NP/VPの接続 |
+| `AND`, `OR`, `NOT` (大文字) | ブール演算子 | 命題の論理演算 |
 | `if(A, then:B)` | 含意 | A → B |
 | `because(C, E)` | 因果 | C ⇒ E（因果的含意） |
+
+##### 排他関係
+
+| 構文A | 構文B | 関係 | 理由 |
+|-------|-------|------|------|
+| `fact()` | `sentence()` | 排他 | 宣言 vs 出力 |
+| `fact()` | `modal()` | 排他 | 事実 vs 判断 |
+| `fact()` | `question()` | 共存可 | 事実ベース + クエリ |
+| `fact()` | `imperative()` | 排他 | 事実 vs 命令 |
 
 #### BNF
 
@@ -1327,19 +1468,46 @@ question(have(experiencer:'John, theme:?what))
 ;; 論理拡張
 <logic-expr>    ::= <assertion> | <bool-expr> | <conditional> | <causal>
 
+;; アサーション（時制オプショナル）
 <assertion>     ::= "fact(" <proposition> ")"
+                  | "fact(" <fact-tense> ", " <proposition> ")"
+<fact-tense>    ::= "past" | "present" | "future"
 
-<bool-expr>     ::= "and(" <proposition> ", " <proposition> ")"
-                  | "or(" <proposition> ", " <proposition> ")"
-                  | "not(" <proposition> ")"
+;; ブール演算（命題レベル・大文字）
+<bool-expr>     ::= "AND(" <proposition> ", " <proposition> ")"
+                  | "OR(" <proposition> ", " <proposition> ")"
+                  | "NOT(" <proposition> ")"
 
+;; 等位接続（NP/VPレベル・小文字）は別途定義済み
+;; <noun-coord> ::= "and(" ... ")" | "or(" ... ")"
+;; <verb-coord> ::= "and(" ... ")" | "or(" ... ")"
+
+;; 条件・因果
 <conditional>   ::= "if(" <proposition> ", then:" <proposition> ")"
-
 <causal>        ::= "because(cause:" <proposition> ", effect:" <proposition> ")"
 
-<proposition>   ::= <sentence> | <verb-phrase> | <bool-expr>
+;; 命題（時制なしの動詞句、または入れ子のブール式）
+<proposition>   ::= <verb-phrase> | <bool-expr>
 
+;; 変数（疑問詞と共通）
 <variable>      ::= "?" <identifier>
+```
+
+#### 型の排他関係
+
+```
+┌─────────────────────────────────────────────────────┐
+│ 最外殻（排他的選択）                                   │
+├─────────────────────────────────────────────────────┤
+│ sentence()  → 自然言語文の出力                        │
+│ question()  → 疑問文（Yes/No または Wh）              │
+│ imperative()→ 命令文                                 │
+│ modal()     → モダリティ付き文                        │
+│ fact()      → 論理的事実の宣言 ← 【排他】             │
+├─────────────────────────────────────────────────────┤
+│ fact() は sentence()/modal()/question()/imperative() │
+│ と同時に使用できない                                   │
+└─────────────────────────────────────────────────────┘
 ```
 
 ---

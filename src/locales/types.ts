@@ -146,13 +146,24 @@ export interface BlocklyMessages {
   PP_VERB_TOOLTIP: string;
   PP_NOUN_TOOLTIP: string;
 
-  // Coordination
+  // Coordination (lowercase - linguistic)
   COORD_AND_LABEL: string;
   COORD_OR_LABEL: string;
   COORD_NOUN_AND_TOOLTIP: string;
   COORD_NOUN_OR_TOOLTIP: string;
   COORD_VERB_AND_TOOLTIP: string;
   COORD_VERB_OR_TOOLTIP: string;
+
+  // Logic Extension (uppercase - propositional logic)
+  FACT_LABEL: string;
+  FACT_TOOLTIP: string;
+  LOGIC_AND_LABEL: string;
+  LOGIC_AND_TOOLTIP: string;
+  LOGIC_OR_LABEL: string;
+  LOGIC_OR_TOOLTIP: string;
+  LOGIC_NOT_LABEL: string;
+  LOGIC_NOT_TOOLTIP: string;
+  TOOLBOX_LOGIC: string;
 
   // Choice question
   CHOICE_QUESTION_LABEL: string;

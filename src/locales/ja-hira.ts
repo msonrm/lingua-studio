@@ -146,13 +146,24 @@ export const jaHira: LocaleData = {
     PP_VERB_TOOLTIP: 'どこで？だれと？なにで？をつける',
     PP_NOUN_TOOLTIP: 'どこの？なにの？をつける',
 
-    // Coordination
+    // Coordination (lowercase - linguistic)
     COORD_AND_LABEL: 'と',
     COORD_OR_LABEL: 'か',
     COORD_NOUN_AND_TOOLTIP: 'なまえを「と」でつなぐ',
     COORD_NOUN_OR_TOOLTIP: 'なまえを「か」でつなぐ',
     COORD_VERB_AND_TOOLTIP: 'うごきを「と」でつなぐ',
     COORD_VERB_OR_TOOLTIP: 'うごきを「か」でつなぐ',
+
+    // Logic Extension (uppercase - propositional logic)
+    FACT_LABEL: 'ほんと',
+    FACT_TOOLTIP: '「〜はほんとうだよ」といういみ',
+    LOGIC_AND_LABEL: 'かつ',
+    LOGIC_AND_TOOLTIP: 'どっちもほんと',
+    LOGIC_OR_LABEL: 'または',
+    LOGIC_OR_TOOLTIP: 'どちらかはほんと',
+    LOGIC_NOT_LABEL: 'ちがう',
+    LOGIC_NOT_TOOLTIP: 'ほんとじゃない',
+    TOOLBOX_LOGIC: 'ほんと？うそ？',
 
     // Choice question
     CHOICE_QUESTION_LABEL: 'どっち？',

@@ -122,7 +122,7 @@ export interface AdverbEntry {
 export interface SentenceNode {
   type: "sentence";
   clause: ClauseNode;
-  sentenceType: "declarative" | "imperative" | "interrogative";
+  sentenceType: "declarative" | "imperative" | "interrogative" | "fact";
   timeAdverbial?: string;  // TimeChipから生成される時間副詞（Yesterday, Now など）
 }
 
@@ -147,6 +147,9 @@ export interface ClauseNode {
   modalPolarity?: "affirmative" | "negative";  // モダリティ否定: "I need NOT run"
 }
 
+// 命題レベルの論理演算子（AND, OR は二項、NOT は単項）
+export type PropositionalOperator = "AND" | "OR" | "NOT";
+
 export interface VerbPhraseNode {
   type: "verbPhrase";
   verb: { lemma: string };
@@ -156,6 +159,12 @@ export interface VerbPhraseNode {
   coordinatedWith?: {
     conjunction: Conjunction;
     verbPhrase: VerbPhraseNode;
+  };
+  // 命題レベルの論理演算（AND/OR/NOT - 大文字、and/or 等位接続とは別）
+  logicOp?: {
+    operator: PropositionalOperator;
+    leftOperand?: VerbPhraseNode;   // NOT が複合式をラップする場合、または AND/OR の左側
+    rightOperand?: VerbPhraseNode;  // AND/OR の右側
   };
 }
 

@@ -146,13 +146,24 @@ export const ja: LocaleData = {
     PP_VERB_TOOLTIP: '前置詞句（動詞修飾）: 動詞に前置詞句を追加',
     PP_NOUN_TOOLTIP: '前置詞句（名詞修飾）: 名詞を前置詞句で修飾',
 
-    // Coordination
-    COORD_AND_LABEL: 'AND',
-    COORD_OR_LABEL: 'OR',
-    COORD_NOUN_AND_TOOLTIP: '等位接続（名詞）: ANDで2つの名詞句を接続',
-    COORD_NOUN_OR_TOOLTIP: '等位接続（名詞）: ORで2つの名詞句を接続',
-    COORD_VERB_AND_TOOLTIP: '等位接続（動詞）: ANDで2つの動詞句を接続',
-    COORD_VERB_OR_TOOLTIP: '等位接続（動詞）: ORで2つの動詞句を接続',
+    // Coordination (lowercase - linguistic)
+    COORD_AND_LABEL: 'and',
+    COORD_OR_LABEL: 'or',
+    COORD_NOUN_AND_TOOLTIP: '等位接続（名詞）: andで2つの名詞句を接続',
+    COORD_NOUN_OR_TOOLTIP: '等位接続（名詞）: orで2つの名詞句を接続',
+    COORD_VERB_AND_TOOLTIP: '等位接続（動詞）: andで2つの動詞句を接続',
+    COORD_VERB_OR_TOOLTIP: '等位接続（動詞）: orで2つの動詞句を接続',
+
+    // Logic Extension (uppercase - propositional logic)
+    FACT_LABEL: '事実',
+    FACT_TOOLTIP: '論理的事実を宣言。sentence/modalとは排他的',
+    LOGIC_AND_LABEL: 'AND',
+    LOGIC_AND_TOOLTIP: '論理積（AND）: 両方の命題が真',
+    LOGIC_OR_LABEL: 'OR',
+    LOGIC_OR_TOOLTIP: '論理和（OR）: 少なくとも一方が真',
+    LOGIC_NOT_LABEL: 'NOT',
+    LOGIC_NOT_TOOLTIP: '論理否定（NOT）: 命題が偽',
+    TOOLBOX_LOGIC: '論理',
 
     // Choice question
     CHOICE_QUESTION_LABEL: '?which',

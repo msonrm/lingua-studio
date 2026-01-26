@@ -36,6 +36,13 @@ function getModalSurfaceForm(modal: ModalType, tense: Tense): string {
 export function renderToLinguaScript(ast: SentenceNode): string {
   let result = renderClauseToScript(ast.clause, ast.timeAdverbial);
 
+  // fact の場合は fact() ラッパー（仕様: fact と sentence は排他）
+  // fact は modal を持たない（仕様）
+  if (ast.sentenceType === 'fact') {
+    result = `fact(${result})`;
+    return result;
+  }
+
   // sentence() ラッパーで包む（仕様: 命題のルート）
   result = `sentence(${result})`;
 
@@ -142,10 +149,28 @@ function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
     result = `pp('${pp.preposition}, ${objScript}, ${result})`;
   }
 
-  // 等位接続をラップ
+  // 等位接続をラップ（小文字 and/or - NP/VP の接続）
   if (vp.coordinatedWith) {
     const coordScript = renderVerbPhraseToScript(vp.coordinatedWith.verbPhrase);
     result = `${vp.coordinatedWith.conjunction}(${result}, ${coordScript})`;
+  }
+
+  // 命題レベル論理演算をラップ（大文字 AND/OR/NOT - Logic Extension）
+  // 注: ブロックレベルで fact_wrapper 内のみ接続可能に制限済み
+  if (vp.logicOp) {
+    const { operator, leftOperand, rightOperand } = vp.logicOp;
+
+    // leftOperandがある場合はネストされた論理式（例: NOT(AND(P, Q))）
+    const leftScript = leftOperand ? renderVerbPhraseToScript(leftOperand) : result;
+
+    if (operator === 'NOT') {
+      // 単項演算子: NOT(P) または NOT(AND(P, Q))
+      result = `NOT(${leftScript})`;
+    } else {
+      // 二項演算子: AND(P, Q), OR(P, Q)
+      const rightScript = rightOperand ? renderVerbPhraseToScript(rightOperand) : '___';
+      result = `${operator}(${leftScript}, ${rightScript})`;
+    }
   }
 
   return result;

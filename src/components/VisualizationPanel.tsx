@@ -62,11 +62,9 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
     perfectProgressive: t.VIZ_ASPECT_PERF_PROG,
   };
 
-  // Colors for S/R/E markers
+  // Colors for visualization
   const colors = {
-    E: '#DC143C',      // Event: Red
-    R: '#1565C0',      // Reference: Blue
-    S: '#2E7D32',      // Speech/Now: Green
+    marker: '#fff',    // All markers white
     inactive: '#555',
     line: '#666',
     label: '#ccc',     // Brighter labels
@@ -149,14 +147,14 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
         <polygon points="230,40 222,36 222,44" fill={colors.line} />
 
         {/* S (Speech/Now) - Always at center as vertical line */}
-        <line x1={S_POS} y1="25" x2={S_POS} y2="55" stroke={colors.S} strokeWidth="3" />
+        <line x1={S_POS} y1="25" x2={S_POS} y2="55" stroke={colors.marker} strokeWidth="3" />
         {/* S label: show combined label if others coincide */}
         {isActive && allAtS ? (
-          <text x={S_POS} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#fff">E,R,S</text>
+          <text x={S_POS} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.marker}>E,R,S</text>
         ) : isActive && rAtS && !allAtS ? (
-          <text x={S_POS} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.R}>R,S</text>
+          <text x={S_POS} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.marker}>R,S</text>
         ) : (
-          <text x={S_POS} y="18" textAnchor="middle" fontSize="10" fill={colors.S}>S</text>
+          <text x={S_POS} y="18" textAnchor="middle" fontSize="10" fill={colors.marker}>S</text>
         )}
         <text x={S_POS} y="72" textAnchor="middle" fontSize="10" fill={colors.label}>{timelineLabels.present}</text>
 
@@ -196,49 +194,13 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
               </>
             )}
 
-            {/* Perfect Progressive: wavy line flowing from E to R with arrow */}
+            {/* Perfect Progressive: wavy line flowing from E to R (no arrow) */}
             {isPerfect && isProgressive && (
-              <>
-                <g clipPath="url(#perfectWaveClip)">
-                  <path
-                    d={generateWavePath(ePos - 20, rPos + 30, 40, 4, 12)}
-                    fill="none"
-                    stroke={colors.E}
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                  >
-                    <animateTransform
-                      attributeName="transform"
-                      type="translate"
-                      from="0 0"
-                      to="24 0"
-                      dur="1.2s"
-                      repeatCount="indefinite"
-                    />
-                  </path>
-                </g>
-                {/* Arrow at R end */}
-                {!rAtS ? (
-                  <polygon
-                    points={`${rPos - 9},40 ${rPos - 19},34 ${rPos - 19},46`}
-                    fill="#fff"
-                  />
-                ) : (
-                  <polygon
-                    points={`${rPos - 3},40 ${rPos - 13},34 ${rPos - 13},46`}
-                    fill="#fff"
-                  />
-                )}
-              </>
-            )}
-
-            {/* Progressive (non-perfect): wavy line centered around E, flowing right */}
-            {isProgressive && !isPerfect && !allAtS && (
-              <g clipPath="url(#waveClip)">
+              <g clipPath="url(#perfectWaveClip)">
                 <path
-                  d={generateWavePath(ePos - 50, ePos + 50, 40, 4, 12)}
+                  d={generateWavePath(ePos - 20, rPos + 30, 40, 4, 12)}
                   fill="none"
-                  stroke={colors.E}
+                  stroke={colors.marker}
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 >
@@ -254,25 +216,47 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
               </g>
             )}
 
-            {/* E (Event) - Red filled circle (not shown if all at S) */}
+            {/* Progressive (non-perfect): wavy line centered around E, flowing right */}
+            {isProgressive && !isPerfect && !allAtS && (
+              <g clipPath="url(#waveClip)">
+                <path
+                  d={generateWavePath(ePos - 50, ePos + 50, 40, 4, 12)}
+                  fill="none"
+                  stroke={colors.marker}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                >
+                  <animateTransform
+                    attributeName="transform"
+                    type="translate"
+                    from="0 0"
+                    to="24 0"
+                    dur="1.2s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+              </g>
+            )}
+
+            {/* E (Event) - White filled circle (not shown if all at S) */}
             {!allAtS && (
               <>
-                <circle cx={ePos} cy="40" r="7" fill={colors.E} />
+                <circle cx={ePos} cy="40" r="7" fill={colors.marker} />
                 {/* E label: show E,R if they coincide */}
-                <text x={ePos} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.E}>
+                <text x={ePos} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.marker}>
                   {eAtR ? 'E,R' : 'E'}
                 </text>
               </>
             )}
 
-            {/* R (Reference) - Blue diamond square 18x18 (only shown when separate from both E and S) */}
+            {/* R (Reference) - White diamond square 18x18 (only shown when separate from both E and S) */}
             {!eAtR && !rAtS && !allAtS && (
               <>
                 <polygon
                   points={`${rPos},31 ${rPos + 9},40 ${rPos},49 ${rPos - 9},40`}
-                  fill={colors.R}
+                  fill={colors.marker}
                 />
-                <text x={rPos} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.R}>R</text>
+                <text x={rPos} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.marker}>R</text>
               </>
             )}
           </>

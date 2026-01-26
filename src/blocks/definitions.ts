@@ -1301,10 +1301,12 @@ Blockly.Blocks['coordination_verb_or'] = {
 // ============================================
 // Logic Extension: fact ブロック
 // ============================================
+// fact_wrapper は "verb" と "logic" の両方を受け入れる
+// これにより fact 内で AND/OR/NOT と通常の動詞ブロック両方が使える
 Blockly.Blocks['fact_wrapper'] = {
   init: function() {
     this.appendStatementInput("PROPOSITION")
-        .setCheck("verb")
+        .setCheck(["verb", "logic"])  // verb（動詞）と logic（AND/OR/NOT）両方受け入れ
         .appendField(msg('FACT_LABEL', 'fact'));
 
     this.setColour(COLORS.logic);
@@ -1315,6 +1317,7 @@ Blockly.Blocks['fact_wrapper'] = {
 // ============================================
 // Logic Extension: AND ブロック（命題レベル）
 // ============================================
+// setPreviousStatement を "logic" タイプにすることで fact_wrapper 内でのみ接続可能
 Blockly.Blocks['logic_and_block'] = {
   init: function() {
     this.appendStatementInput("LEFT")
@@ -1324,7 +1327,7 @@ Blockly.Blocks['logic_and_block'] = {
     this.appendStatementInput("RIGHT")
         .setCheck("verb");
 
-    this.setPreviousStatement(true, "verb");
+    this.setPreviousStatement(true, "logic");  // "verb" → "logic" に変更
     this.setColour(COLORS.logicOp);
     this.setTooltip(msg('LOGIC_AND_TOOLTIP', 'Logical conjunction (AND): both propositions must be true'));
   }
@@ -1342,7 +1345,7 @@ Blockly.Blocks['logic_or_block'] = {
     this.appendStatementInput("RIGHT")
         .setCheck("verb");
 
-    this.setPreviousStatement(true, "verb");
+    this.setPreviousStatement(true, "logic");  // "verb" → "logic" に変更
     this.setColour(COLORS.logicOp);
     this.setTooltip(msg('LOGIC_OR_TOOLTIP', 'Logical disjunction (OR): at least one proposition must be true'));
   }
@@ -1357,7 +1360,7 @@ Blockly.Blocks['logic_not_block'] = {
         .setCheck("verb")
         .appendField(msg('LOGIC_NOT_LABEL', 'NOT'));
 
-    this.setPreviousStatement(true, "verb");
+    this.setPreviousStatement(true, "logic");  // "verb" → "logic" に変更
     this.setColour(COLORS.logicOp);
     this.setTooltip(msg('LOGIC_NOT_TOOLTIP', 'Logical negation (NOT): the proposition is false'));
   }

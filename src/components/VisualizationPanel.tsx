@@ -73,8 +73,8 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
   };
 
   // Calculate E and R positions based on tense and aspect
-  // S (Now) is always at center (x=100)
-  const S_POS = 100;
+  // S (Now) is always at center (x=120 for 240-width viewBox)
+  const S_POS = 120;
 
   // Determine positions and coincidence based on tense + aspect combination
   const getPositions = () => {
@@ -83,22 +83,22 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
     if (tense === 'past') {
       if (isPerfect) {
         // Past Perfect: E < R < S (all separate)
-        return { E: 35, R: 65, eCoincides: '', rCoincides: '' };
+        return { E: 40, R: 80, eCoincides: '', rCoincides: '' };
       }
       // Past Simple/Progressive: E,R < S (E and R coincide)
-      return { E: 50, R: 50, eCoincides: 'R', rCoincides: 'E' };
+      return { E: 60, R: 60, eCoincides: 'R', rCoincides: 'E' };
     } else if (tense === 'future') {
       if (isPerfect) {
         // Future Perfect: S < E < R (all separate)
-        return { E: 130, R: 165, eCoincides: '', rCoincides: '' };
+        return { E: 160, R: 200, eCoincides: '', rCoincides: '' };
       }
       // Future Simple/Progressive: S < E,R (E and R coincide)
-      return { E: 150, R: 150, eCoincides: 'R', rCoincides: 'E' };
+      return { E: 180, R: 180, eCoincides: 'R', rCoincides: 'E' };
     } else {
       // Present
       if (isPerfect) {
         // Present Perfect: E < R=S (R coincides with S)
-        return { E: 45, R: S_POS, eCoincides: '', rCoincides: 'S' };
+        return { E: 55, R: S_POS, eCoincides: '', rCoincides: 'S' };
       }
       // Present Simple/Progressive: E=R=S (all coincide)
       return { E: S_POS, R: S_POS, eCoincides: 'R,S', rCoincides: 'E,S' };
@@ -130,7 +130,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
       <h4>{t.VIZ_TENSE_ASPECT_TITLE}</h4>
 
       {/* Reichenbach Timeline */}
-      <svg viewBox="0 0 200 80" className="tense-timeline reichenbach">
+      <svg viewBox="0 0 240 80" className="tense-timeline reichenbach">
         <defs>
           {/* Clip path for progressive wave on timeline */}
           <clipPath id="waveClip">
@@ -142,11 +142,11 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
         </defs>
 
         {/* Timeline base line */}
-        <line x1="15" y1="40" x2="185" y2="40" stroke={colors.line} strokeWidth="2" />
+        <line x1="15" y1="40" x2="225" y2="40" stroke={colors.line} strokeWidth="2" />
 
         {/* Arrow heads */}
         <polygon points="10,40 18,36 18,44" fill={colors.line} />
-        <polygon points="190,40 182,36 182,44" fill={colors.line} />
+        <polygon points="230,40 222,36 222,44" fill={colors.line} />
 
         {/* S (Speech/Now) - Always at center as vertical line */}
         <line x1={S_POS} y1="25" x2={S_POS} y2="55" stroke={colors.S} strokeWidth="3" />
@@ -168,13 +168,13 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                 <line
                   x1={ePos + 7}
                   y1="40"
-                  x2={rPos - 14}
+                  x2={rPos - 18}
                   y2="40"
                   stroke={colors.R}
                   strokeWidth="3"
                 />
                 <polygon
-                  points={`${rPos - 9},40 ${rPos - 15},36 ${rPos - 15},44`}
+                  points={`${rPos - 9},40 ${rPos - 19},34 ${rPos - 19},46`}
                   fill={colors.R}
                 />
               </>
@@ -184,13 +184,13 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                 <line
                   x1={ePos + 7}
                   y1="40"
-                  x2={rPos - 8}
+                  x2={rPos - 12}
                   y2="40"
                   stroke={colors.R}
                   strokeWidth="3"
                 />
                 <polygon
-                  points={`${rPos - 3},40 ${rPos - 9},36 ${rPos - 9},44`}
+                  points={`${rPos - 3},40 ${rPos - 13},34 ${rPos - 13},46`}
                   fill={colors.R}
                 />
               </>
@@ -220,12 +220,12 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
                 {/* Arrow at R end */}
                 {!rAtS ? (
                   <polygon
-                    points={`${rPos - 9},40 ${rPos - 15},36 ${rPos - 15},44`}
+                    points={`${rPos - 9},40 ${rPos - 19},34 ${rPos - 19},46`}
                     fill={colors.E}
                   />
                 ) : (
                   <polygon
-                    points={`${rPos - 3},40 ${rPos - 9},36 ${rPos - 9},44`}
+                    points={`${rPos - 3},40 ${rPos - 13},34 ${rPos - 13},46`}
                     fill={colors.E}
                   />
                 )}
@@ -279,8 +279,8 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
         )}
 
         {/* Tense labels below */}
-        <text x="35" y="72" textAnchor="middle" fontSize="10" fill={tense === 'past' ? '#fff' : colors.inactive}>{timelineLabels.past}</text>
-        <text x="165" y="72" textAnchor="middle" fontSize="10" fill={tense === 'future' ? '#fff' : colors.inactive}>{timelineLabels.future}</text>
+        <text x="40" y="72" textAnchor="middle" fontSize="10" fill={tense === 'past' ? '#fff' : colors.inactive}>{timelineLabels.past}</text>
+        <text x="200" y="72" textAnchor="middle" fontSize="10" fill={tense === 'future' ? '#fff' : colors.inactive}>{timelineLabels.future}</text>
       </svg>
 
       {/* Simple tense+aspect label */}

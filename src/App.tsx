@@ -88,12 +88,6 @@ function App() {
               >
                 {t.TAB_LINGUASCRIPT}
               </button>
-              <button
-                className={`mode-tab ${editorMode === 'ast' ? 'active' : ''}`}
-                onClick={() => setEditorMode('ast')}
-              >
-                {t.TAB_AST}
-              </button>
             </div>
           </div>
           <div className="header-right">

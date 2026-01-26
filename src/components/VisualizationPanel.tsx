@@ -44,15 +44,22 @@ function extractPrepositions(obj: unknown, found: Set<string> = new Set()): Set<
 function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: string | null }) {
   const { blockly: t } = useLocale();
 
-  const labels = {
+  // Timeline marker labels (short, for diagram)
+  const timelineLabels = {
     past: t.VIZ_TENSE_PAST,
     present: t.VIZ_TENSE_PRESENT,
     future: t.VIZ_TENSE_FUTURE,
+  };
+
+  // Full labels for tense-aspect description
+  const fullLabels = {
+    past: t.VIZ_LABEL_PAST,
+    present: t.VIZ_LABEL_PRESENT,
+    future: t.VIZ_LABEL_FUTURE,
     simple: t.VIZ_ASPECT_SIMPLE,
     progressive: t.VIZ_ASPECT_PROGRESSIVE,
     perfect: t.VIZ_ASPECT_PERFECT,
     perfectProgressive: t.VIZ_ASPECT_PERF_PROG,
-    title: t.VIZ_TENSE_ASPECT_TITLE,
   };
 
   // Colors for S/R/E markers
@@ -60,47 +67,53 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
     E: '#DC143C',      // Event: Red
     R: '#1565C0',      // Reference: Blue
     S: '#2E7D32',      // Speech/Now: Green
-    inactive: '#444',
+    inactive: '#555',
     line: '#666',
+    label: '#ccc',     // Brighter labels
   };
 
   // Calculate E and R positions based on tense and aspect
   // S (Now) is always at center (x=100)
   const S_POS = 100;
 
-  // Determine positions based on tense + aspect combination
+  // Determine positions and coincidence based on tense + aspect combination
   const getPositions = () => {
     const isPerfect = aspect === 'perfect' || aspect === 'perfectProgressive';
 
     if (tense === 'past') {
       if (isPerfect) {
-        // Past Perfect: E < R < S
-        return { E: 35, R: 65, showR: true };
+        // Past Perfect: E < R < S (all separate)
+        return { E: 35, R: 65, eCoincides: '', rCoincides: '' };
       }
       // Past Simple/Progressive: E,R < S (E and R coincide)
-      return { E: 50, R: 50, showR: false };
+      return { E: 50, R: 50, eCoincides: 'R', rCoincides: 'E' };
     } else if (tense === 'future') {
       if (isPerfect) {
-        // Future Perfect: S < E < R
-        return { E: 130, R: 165, showR: true };
+        // Future Perfect: S < E < R (all separate)
+        return { E: 130, R: 165, eCoincides: '', rCoincides: '' };
       }
-      // Future Simple/Progressive: S < E,R
-      return { E: 150, R: 150, showR: false };
+      // Future Simple/Progressive: S < E,R (E and R coincide)
+      return { E: 150, R: 150, eCoincides: 'R', rCoincides: 'E' };
     } else {
       // Present
       if (isPerfect) {
-        // Present Perfect: E < R=S
-        return { E: 45, R: S_POS, showR: true };
+        // Present Perfect: E < R=S (R coincides with S)
+        return { E: 45, R: S_POS, eCoincides: '', rCoincides: 'S' };
       }
-      // Present Simple/Progressive: E=R=S
-      return { E: S_POS, R: S_POS, showR: false };
+      // Present Simple/Progressive: E=R=S (all coincide)
+      return { E: S_POS, R: S_POS, eCoincides: 'R,S', rCoincides: 'E,S' };
     }
   };
 
-  const { E: ePos, R: rPos, showR } = tense ? getPositions() : { E: 0, R: 0, showR: false };
+  const { E: ePos, R: rPos, eCoincides, rCoincides } = tense ? getPositions() : { E: 0, R: 0, eCoincides: '', rCoincides: '' };
   const isActive = tense !== null;
   const isProgressive = aspect === 'progressive' || aspect === 'perfectProgressive';
   const isPerfect = aspect === 'perfect' || aspect === 'perfectProgressive';
+
+  // Determine what labels to show
+  const allAtS = eCoincides === 'R,S'; // E,R,S all at same position
+  const rAtS = rCoincides === 'S' || rCoincides === 'E,S'; // R coincides with S
+  const eAtR = eCoincides === 'R' && !allAtS; // E coincides with R only (not S)
 
   // Generate wavy path from startX to endX
   const generateWavePath = (startX: number, endX: number, y: number, amplitude: number = 4, wavelength: number = 10) => {
@@ -114,7 +127,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
 
   return (
     <div className="viz-section">
-      <h4>{labels.title}</h4>
+      <h4>{t.VIZ_TENSE_ASPECT_TITLE}</h4>
 
       {/* Reichenbach Timeline */}
       <svg viewBox="0 0 200 80" className="tense-timeline reichenbach">
@@ -137,17 +150,34 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
 
         {/* S (Speech/Now) - Always at center as vertical line */}
         <line x1={S_POS} y1="25" x2={S_POS} y2="55" stroke={colors.S} strokeWidth="3" />
-        <text x={S_POS} y="18" textAnchor="middle" fontSize="8" fill={colors.S}>S</text>
-        <text x={S_POS} y="70" textAnchor="middle" fontSize="9" fill={colors.S}>Now</text>
+        {/* S label: show combined label if others coincide */}
+        {isActive && allAtS ? (
+          <text x={S_POS} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#fff">E,R,S</text>
+        ) : isActive && rAtS && !allAtS ? (
+          <text x={S_POS} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.R}>R,S</text>
+        ) : (
+          <text x={S_POS} y="18" textAnchor="middle" fontSize="10" fill={colors.S}>S</text>
+        )}
+        <text x={S_POS} y="72" textAnchor="middle" fontSize="10" fill={colors.label}>{timelineLabels.present}</text>
 
         {isActive && (
           <>
             {/* Perfect aspect (non-progressive): solid line from E to R */}
-            {isPerfect && !isProgressive && showR && (
+            {isPerfect && !isProgressive && !rAtS && (
               <line
                 x1={ePos + 7}
                 y1="40"
-                x2={rPos - 6}
+                x2={rPos - 9}
+                y2="40"
+                stroke={colors.R}
+                strokeWidth="3"
+              />
+            )}
+            {isPerfect && !isProgressive && rAtS && (
+              <line
+                x1={ePos + 7}
+                y1="40"
+                x2={rPos - 3}
                 y2="40"
                 stroke={colors.R}
                 strokeWidth="3"
@@ -155,7 +185,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
             )}
 
             {/* Perfect Progressive: wavy line flowing from E to R */}
-            {isPerfect && isProgressive && showR && (
+            {isPerfect && isProgressive && (
               <g clipPath="url(#perfectWaveClip)">
                 <path
                   d={generateWavePath(ePos - 20, rPos + 30, 40, 4, 12)}
@@ -177,7 +207,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
             )}
 
             {/* Progressive (non-perfect): wavy line centered around E, flowing right */}
-            {isProgressive && !isPerfect && (
+            {isProgressive && !isPerfect && !allAtS && (
               <g clipPath="url(#waveClip)">
                 <path
                   d={generateWavePath(ePos - 50, ePos + 50, 40, 4, 12)}
@@ -198,32 +228,39 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
               </g>
             )}
 
-            {/* E (Event) - Red filled circle */}
-            <circle cx={ePos} cy="40" r="7" fill={colors.E} />
-            <text x={ePos} y="22" textAnchor="middle" fontSize="8" fill={colors.E}>E</text>
+            {/* E (Event) - Red filled circle (not shown if all at S) */}
+            {!allAtS && (
+              <>
+                <circle cx={ePos} cy="40" r="7" fill={colors.E} />
+                {/* E label: show E,R if they coincide */}
+                <text x={ePos} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.E}>
+                  {eAtR ? 'E,R' : 'E'}
+                </text>
+              </>
+            )}
 
-            {/* R (Reference) - Blue diamond square 18x18 (only shown when different from E) */}
-            {showR && (
+            {/* R (Reference) - Blue diamond square 18x18 (only shown when separate from both E and S) */}
+            {!eAtR && !rAtS && !allAtS && (
               <>
                 <polygon
                   points={`${rPos},31 ${rPos + 9},40 ${rPos},49 ${rPos - 9},40`}
                   fill={colors.R}
                 />
-                <text x={rPos} y="20" textAnchor="middle" fontSize="8" fill={colors.R}>R</text>
+                <text x={rPos} y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.R}>R</text>
               </>
             )}
           </>
         )}
 
         {/* Tense labels below */}
-        <text x="35" y="70" textAnchor="middle" fontSize="8" fill={tense === 'past' ? '#fff' : '#666'}>{labels.past}</text>
-        <text x="165" y="70" textAnchor="middle" fontSize="8" fill={tense === 'future' ? '#fff' : '#666'}>{labels.future}</text>
+        <text x="35" y="72" textAnchor="middle" fontSize="10" fill={tense === 'past' ? '#fff' : colors.inactive}>{timelineLabels.past}</text>
+        <text x="165" y="72" textAnchor="middle" fontSize="10" fill={tense === 'future' ? '#fff' : colors.inactive}>{timelineLabels.future}</text>
       </svg>
 
       {/* Simple tense+aspect label */}
       {tense && aspect && (
         <div className="tense-aspect-label">
-          {labels[tense as keyof typeof labels]} {labels[aspect as keyof typeof labels]}
+          {fullLabels[tense as keyof typeof fullLabels]} {fullLabels[aspect as keyof typeof fullLabels]}
         </div>
       )}
     </div>

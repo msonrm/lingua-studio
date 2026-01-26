@@ -107,6 +107,9 @@ export interface BlocklyMessages {
   VIZ_TENSE_PAST: string;
   VIZ_TENSE_PRESENT: string;
   VIZ_TENSE_FUTURE: string;
+  VIZ_LABEL_PAST: string;
+  VIZ_LABEL_PRESENT: string;
+  VIZ_LABEL_FUTURE: string;
   VIZ_ASPECT_SIMPLE: string;
   VIZ_ASPECT_PROGRESSIVE: string;
   VIZ_ASPECT_PERFECT: string;

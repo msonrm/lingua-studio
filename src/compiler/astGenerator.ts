@@ -558,6 +558,26 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
 
   // 命題レベル論理演算ブロックの処理（Logic Extension: AND, OR, NOT）
   // 等位接続 and/or とは異なり、大文字 AND/OR/NOT で出力
+
+  // VerbChainResultをVerbPhraseNode（logicOp含む）に変換するヘルパー
+  const toVerbPhraseWithLogic = (result: VerbChainResult): VerbPhraseNode => {
+    return {
+      ...result.verbPhrase,
+      adverbs: [
+        ...result.mannerAdverbs,
+        ...result.frequencyAdverbs,
+        ...result.locativeAdverbs,
+        ...(result.timeAdverbs || []),
+        ...result.verbPhrase.adverbs,
+      ],
+      prepositionalPhrases: [
+        ...result.prepositionalPhrases,
+        ...result.verbPhrase.prepositionalPhrases,
+      ],
+      logicOp: result.logicOp,
+    };
+  };
+
   if (blockType === 'logic_and_block' || blockType === 'logic_or_block') {
     const operator: PropositionalOperator = blockType === 'logic_and_block' ? 'AND' : 'OR';
     const leftBlock = block.getInputTargetBlock('LEFT');
@@ -572,31 +592,19 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     // 右側も解析
     const rightResult = rightBlock ? parseVerbChain(rightBlock) : null;
 
+    // 右側がlogicOpを持つ場合（例: OR(Q, R)）、それも含める
+    const rightVP = rightResult ? toVerbPhraseWithLogic(rightResult) : undefined;
+
     // 左側が複合式（logicOpを持つ）の場合、leftOperandとして格納
     // そうでなければ従来通りスプレッド
     if (leftResult.logicOp) {
-      // 左側が複合式の場合、完全なVerbPhraseNodeとしてleftOperandに格納
-      const leftVP: VerbPhraseNode = {
-        ...leftResult.verbPhrase,
-        adverbs: [
-          ...leftResult.mannerAdverbs,
-          ...leftResult.frequencyAdverbs,
-          ...leftResult.locativeAdverbs,
-          ...(leftResult.timeAdverbs || []),
-          ...leftResult.verbPhrase.adverbs,
-        ],
-        prepositionalPhrases: [
-          ...leftResult.prepositionalPhrases,
-          ...leftResult.verbPhrase.prepositionalPhrases,
-        ],
-        logicOp: leftResult.logicOp,
-      };
+      const leftVP = toVerbPhraseWithLogic(leftResult);
       return {
         ...leftResult,
         logicOp: {
           operator,
           leftOperand: leftVP,
-          rightOperand: rightResult?.verbPhrase,
+          rightOperand: rightVP,
         },
       };
     }
@@ -605,7 +613,7 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
       ...leftResult,
       logicOp: {
         operator,
-        rightOperand: rightResult?.verbPhrase,
+        rightOperand: rightVP,
       },
     };
   }

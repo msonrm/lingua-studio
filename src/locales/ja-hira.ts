@@ -98,9 +98,9 @@ export const jaHira: LocaleData = {
     GROUP_FUTURE: '── あと ──',
 
     // Preposition group labels
-    GROUP_LOCATION: '── どこ？ ──',
-    GROUP_DIRECTION: '── どこへ？ ──',
-    GROUP_RELATION: '── だれと？ ──',
+    GROUP_LOCATION: '── いるところ ──',
+    GROUP_DIRECTION: '── いく・くる ──',
+    GROUP_RELATION: '── つながり ──',
 
     // Determiner
     DETERMINER_LABEL: 'どの？いくつ？',

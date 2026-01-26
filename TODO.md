@@ -76,6 +76,21 @@
   - 非文法的な組み合わせに×印、自動修正機能
 
 ### Multilingual & Language Parameters
+
+#### 前提作業（多言語展開の基盤）
+- [ ] Grammar Console ログシステムのリファクタリング
+  - 現状: ログが活用コードの各所に散らばっており、漏れやすい
+  - 目標: 活用結果を一箇所で比較してログする設計に変更
+  - 理由: 他言語レンダラーで同じパターンを再現しやすくするため
+  ```typescript
+  function conjugateVerb(...): string {
+    const result = conjugateInternal(...);  // ログなし
+    logVerbConjugation(lemma, result, context);  // 一箇所でログ
+    return result;
+  }
+  ```
+
+#### 言語別レンダラー
 - [ ] 日本語レンダラー
   - 日本語辞書 (dictionary-ja.ts)
   - SOV語順、助詞選択、敬語処理

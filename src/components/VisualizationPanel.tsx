@@ -217,7 +217,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
             )}
 
             {/* Progressive (non-perfect): wavy line centered around E, flowing right */}
-            {isProgressive && !isPerfect && !allAtS && (
+            {isProgressive && !isPerfect && (
               <g clipPath="url(#waveClip)">
                 <path
                   d={generateWavePath(ePos - 50, ePos + 50, 40, 4, 12)}

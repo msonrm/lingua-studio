@@ -1398,6 +1398,17 @@ function conjugateVerbForQuestion(
     const modalForm = getModalEnglishForm(modal, tense);
     const isModalNegative = modalPolarity === 'negative';
 
+    // Log modal transformation if past tense
+    if (tense === 'past') {
+      const presentForm = getModalEnglishForm(modal, 'present');
+      const presentAux = presentForm.auxiliary || '';
+      const pastAux = modalForm.auxiliary || modalForm.usePeriPhrastic || '';
+      if (presentAux && pastAux && presentAux !== pastAux) {
+        logCollector.log('modal', presentAux, pastAux,
+          `Modal: ${modal} + past tense`, 'past form');
+      }
+    }
+
     // 義務の否定（特殊処理）
     if (isModalNegative && modal === 'obligation') {
       const haveToAux = tense === 'past' ? "didn't have to" : "don't have to";

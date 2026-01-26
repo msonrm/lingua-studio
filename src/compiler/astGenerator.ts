@@ -12,6 +12,7 @@ import {
   CoordinationConjunct,
   Conjunction,
   ModalType,
+  PropositionalOperator,
 } from '../types/schema';
 import { findVerb, findPronoun } from '../data/dictionary';
 import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks/definitions';
@@ -65,6 +66,60 @@ export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[
       if (ast) {
         sentences.push(ast);
         processedTimeFrames.add(timeFrameBlock.id);
+      }
+    }
+  }
+
+  // fact_wrapperブロックを処理（Logic Extension: 事実の宣言）
+  const factBlocks = workspace.getBlocksByType('fact_wrapper', false);
+  for (const factBlock of factBlocks) {
+    const innerBlock = factBlock.getInputTargetBlock('PROPOSITION');
+    if (!innerBlock) continue;
+
+    // fact は modal を持たない（仕様: fact と modal は排他）
+    // time_frame を探すか、直接 verb chain を処理
+    const { timeFrameBlock } = findTimeFrameFromSentenceChain(innerBlock);
+    if (timeFrameBlock) {
+      const ast = parseTimeFrameBlock(timeFrameBlock, undefined, 'fact', 'affirmative');
+      if (ast) {
+        sentences.push(ast);
+        processedTimeFrames.add(timeFrameBlock.id);
+      }
+    } else {
+      // time_frame がない場合は直接 verb chain を処理（timeless fact）
+      const verbChain = parseVerbChain(innerBlock);
+      if (verbChain) {
+        const verbPhrase: VerbPhraseNode = {
+          ...verbChain.verbPhrase,
+          adverbs: [
+            ...verbChain.mannerAdverbs,
+            ...verbChain.frequencyAdverbs,
+            ...verbChain.locativeAdverbs,
+            ...(verbChain.timeAdverbs || []),
+            ...verbChain.verbPhrase.adverbs,
+          ],
+          prepositionalPhrases: [
+            ...verbChain.prepositionalPhrases,
+            ...verbChain.verbPhrase.prepositionalPhrases,
+          ],
+          coordinatedWith: verbChain.coordination ? {
+            conjunction: verbChain.coordination.conjunction,
+            verbPhrase: verbChain.coordination.rightVerbPhrase,
+          } : undefined,
+          logicOp: verbChain.logicOp,
+        };
+        const clause: ClauseNode = {
+          type: 'clause',
+          verbPhrase,
+          tense: 'present',  // timeless fact のデフォルト
+          aspect: 'simple',
+          polarity: verbChain.polarity,
+        };
+        sentences.push({
+          type: 'sentence',
+          clause,
+          sentenceType: 'fact',
+        });
       }
     }
   }
@@ -188,12 +243,17 @@ interface VerbChainResult {
     conjunction: Conjunction;
     rightVerbPhrase: VerbPhraseNode;
   };
+  // 命題レベルの論理演算（Logic Extension）
+  logicOp?: {
+    operator: PropositionalOperator;
+    rightOperand?: VerbPhraseNode;
+  };
 }
 
 function parseTimeFrameBlock(
   block: Blockly.Block,
   modal?: ModalType,
-  sentenceType: 'declarative' | 'imperative' | 'interrogative' = 'declarative',
+  sentenceType: 'declarative' | 'imperative' | 'interrogative' | 'fact' = 'declarative',
   modalPolarity: 'affirmative' | 'negative' = 'affirmative'
 ): SentenceNode | null {
   // TimeChipを取得してTense/Aspect/出力単語を決定
@@ -230,6 +290,8 @@ function parseTimeFrameBlock(
       conjunction: verbChain.coordination.conjunction,
       verbPhrase: verbChain.coordination.rightVerbPhrase,
     } : undefined,
+    // 命題レベル論理演算の情報を追加（Logic Extension）
+    logicOp: verbChain.logicOp,
   };
 
   const clause: ClauseNode = {
@@ -256,8 +318,8 @@ function parseTimeFrameBlock(
 // Wh疑問詞・疑問副詞を検出して自動的に疑問文に変換
 function detectInterrogativeFromWh(
   verbPhrase: VerbPhraseNode,
-  currentType: 'declarative' | 'imperative' | 'interrogative'
-): 'declarative' | 'imperative' | 'interrogative' {
+  currentType: 'declarative' | 'imperative' | 'interrogative' | 'fact'
+): 'declarative' | 'imperative' | 'interrogative' | 'fact' {
   // 既に疑問文の場合はそのまま
   if (currentType === 'interrogative') {
     return 'interrogative';
@@ -266,6 +328,11 @@ function detectInterrogativeFromWh(
   // 命令文は変換しない（意味的に矛盾）
   if (currentType === 'imperative') {
     return 'imperative';
+  }
+
+  // fact は変換しない（事実宣言は疑問にならない）
+  if (currentType === 'fact') {
+    return 'fact';
   }
 
   // Wh疑問副詞をチェック（?where, ?when, ?how）
@@ -485,6 +552,47 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
         ...innerResult.prepositionalPhrases,
         { type: 'prepositionalPhrase', preposition: prepValue, object: objectNP },
       ],
+    };
+  }
+
+  // 命題レベル論理演算ブロックの処理（Logic Extension: AND, OR, NOT）
+  // 等位接続 and/or とは異なり、大文字 AND/OR/NOT で出力
+  if (blockType === 'logic_and_block' || blockType === 'logic_or_block') {
+    const operator: PropositionalOperator = blockType === 'logic_and_block' ? 'AND' : 'OR';
+    const leftBlock = block.getInputTargetBlock('LEFT');
+    const rightBlock = block.getInputTargetBlock('RIGHT');
+    if (!leftBlock) {
+      return null;
+    }
+    const leftResult = parseVerbChain(leftBlock);
+    if (!leftResult) {
+      return null;
+    }
+    // 右側も解析
+    const rightResult = rightBlock ? parseVerbChain(rightBlock) : null;
+    return {
+      ...leftResult,
+      logicOp: {
+        operator,
+        rightOperand: rightResult?.verbPhrase,
+      },
+    };
+  }
+
+  if (blockType === 'logic_not_block') {
+    const innerBlock = block.getInputTargetBlock('PROPOSITION');
+    if (!innerBlock) {
+      return null;
+    }
+    const innerResult = parseVerbChain(innerBlock);
+    if (!innerResult) {
+      return null;
+    }
+    return {
+      ...innerResult,
+      logicOp: {
+        operator: 'NOT' as PropositionalOperator,
+      },
     };
   }
 

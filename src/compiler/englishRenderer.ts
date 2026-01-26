@@ -126,6 +126,10 @@ export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
     case 'interrogative':
       clause = renderInterrogativeClause(ast.clause);
       break;
+    case 'fact':
+      // 事実宣言: 論理命題として扱う
+      clause = renderFactClause(ast.clause);
+      break;
     default:
       clause = renderClause(ast.clause);
   }
@@ -144,8 +148,19 @@ export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
     case 'interrogative':
       punctuation = '?';
       break;
+    case 'fact':
+      punctuation = '.';  // 事実宣言も通常のピリオド
+      break;
     default:
       punctuation = '.';
+  }
+
+  // 事実宣言の場合は ⊨ マーカーを付与
+  if (ast.sentenceType === 'fact') {
+    return {
+      output: `⊨ ${capitalized}${punctuation}`,
+      logs: logCollector.getLogs(),
+    };
   }
 
   return {
@@ -252,6 +267,67 @@ function renderClause(clause: ClauseNode): string {
   }
 
   return result;
+}
+
+// 事実宣言の節をレンダリング（Logic Extension）
+// 通常の平叙文と同様だが、命題レベルの論理演算をサポート
+function renderFactClause(clause: ClauseNode): string {
+  const { verbPhrase } = clause;
+
+  // 論理演算がある場合は特別処理
+  if (verbPhrase.logicOp) {
+    return renderLogicExpression(clause);
+  }
+
+  // 論理演算がない場合は通常の平叙文として処理
+  return renderClause(clause);
+}
+
+// 命題レベルの論理演算をレンダリング
+function renderLogicExpression(clause: ClauseNode): string {
+  const { verbPhrase, tense, aspect } = clause;
+  const logicOp = verbPhrase.logicOp;
+
+  if (!logicOp) {
+    return renderClause(clause);
+  }
+
+  // 左側の命題をレンダリング（論理演算を除いた形で）
+  const leftClause: ClauseNode = {
+    ...clause,
+    verbPhrase: {
+      ...verbPhrase,
+      logicOp: undefined,  // 論理演算を除去
+    },
+  };
+  const leftStr = renderClause(leftClause);
+
+  if (logicOp.operator === 'NOT') {
+    // NOT: "It is not the case that P" または "NOT: P"
+    return `it is not the case that ${leftStr}`;
+  }
+
+  // AND / OR: 右側の命題もレンダリング
+  if (logicOp.rightOperand) {
+    const rightClause: ClauseNode = {
+      type: 'clause',
+      verbPhrase: logicOp.rightOperand,
+      tense,
+      aspect,
+      polarity: 'affirmative',  // 右側のデフォルト極性
+    };
+    const rightStr = renderClause(rightClause);
+
+    if (logicOp.operator === 'AND') {
+      // AND: "P, and Q" (論理的接続)
+      return `${leftStr}, and ${rightStr}`;
+    } else if (logicOp.operator === 'OR') {
+      // OR: "P, or Q" (論理的選択)
+      return `${leftStr}, or ${rightStr}`;
+    }
+  }
+
+  return leftStr;
 }
 
 // 疑問文の節をレンダリング（Yes/No疑問文 または Wh疑問文）

@@ -59,6 +59,10 @@ const COLORS = {
   imperative: '#4A148C',  // 濃紫（最外側）
   modal: '#9C27B0',       // 薄紫（内側）
 
+  // Logic系（青緑系 - 論理・科学のイメージ）
+  logic: '#00695C',       // ティール（fact, AND, OR, NOT）
+  logicOp: '#00897B',     // 明るいティール（ブール演算子）
+
   // レガシー
   adverb: '#EF6C57',     // 赤オレンジ（様態副詞と同系）
 };
@@ -1295,6 +1299,71 @@ Blockly.Blocks['coordination_verb_or'] = {
 };
 
 // ============================================
+// Logic Extension: fact ブロック
+// ============================================
+Blockly.Blocks['fact_wrapper'] = {
+  init: function() {
+    this.appendStatementInput("PROPOSITION")
+        .setCheck("verb")
+        .appendField(msg('FACT_LABEL', 'fact'));
+
+    this.setColour(COLORS.logic);
+    this.setTooltip(msg('FACT_TOOLTIP', 'Declares a logical fact (assertion). Exclusive with sentence/modal.'));
+  }
+};
+
+// ============================================
+// Logic Extension: AND ブロック（命題レベル）
+// ============================================
+Blockly.Blocks['logic_and_block'] = {
+  init: function() {
+    this.appendStatementInput("LEFT")
+        .setCheck("verb")
+        .appendField(msg('LOGIC_AND_LABEL', 'AND'));
+
+    this.appendStatementInput("RIGHT")
+        .setCheck("verb");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.logicOp);
+    this.setTooltip(msg('LOGIC_AND_TOOLTIP', 'Logical conjunction (AND): both propositions must be true'));
+  }
+};
+
+// ============================================
+// Logic Extension: OR ブロック（命題レベル）
+// ============================================
+Blockly.Blocks['logic_or_block'] = {
+  init: function() {
+    this.appendStatementInput("LEFT")
+        .setCheck("verb")
+        .appendField(msg('LOGIC_OR_LABEL', 'OR'));
+
+    this.appendStatementInput("RIGHT")
+        .setCheck("verb");
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.logicOp);
+    this.setTooltip(msg('LOGIC_OR_TOOLTIP', 'Logical disjunction (OR): at least one proposition must be true'));
+  }
+};
+
+// ============================================
+// Logic Extension: NOT ブロック（命題レベル）
+// ============================================
+Blockly.Blocks['logic_not_block'] = {
+  init: function() {
+    this.appendStatementInput("PROPOSITION")
+        .setCheck("verb")
+        .appendField(msg('LOGIC_NOT_LABEL', 'NOT'));
+
+    this.setPreviousStatement(true, "verb");
+    this.setColour(COLORS.logicOp);
+    this.setTooltip(msg('LOGIC_NOT_TOOLTIP', 'Logical negation (NOT): the proposition is false'));
+  }
+};
+
+// ============================================
 // オプションのエクスポート（コンパイラ用）
 // ============================================
 export const TIME_CHIP_DATA = {
@@ -1500,6 +1569,19 @@ export function createToolbox() {
           { kind: "block", type: "choice_question_block" },
           { kind: "label", text: msg('SECTION_WH_ADVERBS', '── Wh-Adverbs ──') },
           { kind: "block", type: "wh_adverb_block" },
+        ]
+      },
+      {
+        kind: "category",
+        name: msg('TOOLBOX_LOGIC', 'Logic'),
+        colour: COLORS.logic,
+        contents: [
+          { kind: "label", text: msg('SECTION_ASSERTION', '── Assertion ──') },
+          { kind: "block", type: "fact_wrapper" },
+          { kind: "label", text: msg('SECTION_BOOLEAN', '── Boolean ──') },
+          { kind: "block", type: "logic_and_block" },
+          { kind: "block", type: "logic_or_block" },
+          { kind: "block", type: "logic_not_block" },
         ]
       },
     ]

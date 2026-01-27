@@ -237,7 +237,9 @@ Blockly.Blocks['time_frame'] = {
     this.appendStatementInput("ACTION")
         .setCheck("verb")
         .appendField(msg('SENTENCE_PREDICATE_LABEL', 'predicate:'));
-    this.setPreviousStatement(true, "sentence");  // modal_wrapperに接続可能
+    // "sentence": modal_wrapperに接続可能
+    // "basic_sentence": imperative_wrapperに接続可能（modalは不可）
+    this.setPreviousStatement(true, ["sentence", "basic_sentence"]);
     this.setColour(COLORS.timeFrame);
     this.setTooltip(msg('SENTENCE_TOOLTIP', 'The root of a sentence, specifying tense and aspect'));
   }
@@ -279,7 +281,7 @@ Blockly.Blocks['imperative_wrapper'] = {
     this.appendDummyInput()
         .appendField(msg('IMPERATIVE_LABEL', 'IMPERATIVE'));
     this.appendStatementInput("SENTENCE")
-        .setCheck("sentence");
+        .setCheck("basic_sentence");  // time_frameのみ接続可能（modalは不可）
     this.setColour(COLORS.imperative);
     this.setTooltip(msg('IMPERATIVE_TOOLTIP', "Imperative: creates a command (e.g., 'Eat the apple!')"));
   }

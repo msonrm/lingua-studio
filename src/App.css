@@ -246,6 +246,7 @@ body {
   flex: 1;
   padding: 0.75rem;
   overflow: auto;
+  background: #3a4556;
 }
 
 .coming-soon {

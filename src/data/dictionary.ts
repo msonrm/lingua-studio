@@ -5,7 +5,7 @@
  * VerbEntry, NounEntry 等の従来型でエクスポート
  */
 
-import { VerbEntry, NounEntry, AdjectiveEntry, AdverbEntry, PronounEntry, DeterminerConfig, VerbCategory, AdjectiveCategory, NounCategory } from '../types/schema';
+import { VerbEntry, NounEntry, AdjectiveEntry, AdverbEntry, PronounEntry, VerbCategory, AdjectiveCategory, NounCategory } from '../types/schema';
 
 // Core（言語非依存）
 import { verbCores, nounCores, pronounCores, adjectiveCores, adverbCores } from './dictionary-core';
@@ -132,26 +132,6 @@ export const getVerbsByCategory = (category: VerbCategory): VerbEntry[] =>
 
 export const getAdjectivesByCategory = (category: AdjectiveCategory): AdjectiveEntry[] =>
   adjectives.filter((a) => a.category === category);
-
-// ============================================
-// 限定詞設定
-// ============================================
-export const preDeterminers = ["", "all", "both", "half"];
-export const centralDeterminers = ["", "a", "the", "this", "that", "my", "your", "his", "her", "its", "our", "their"];
-export const postDeterminers = ["", "one", "two", "three", "many", "much", "few", "some", "several", "any", "no"];
-
-export const defaultDeterminerConfig: DeterminerConfig = {
-  defaults: {
-    pre: "",
-    central: "a",
-    post: "",
-  },
-  options: {
-    pre: preDeterminers,
-    central: centralDeterminers,
-    post: postDeterminers,
-  },
-};
 
 export const getNounsByCategory = (category: NounCategory): NounEntry[] =>
   nouns.filter((n) => n.category === category);

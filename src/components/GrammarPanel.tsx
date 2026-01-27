@@ -63,31 +63,31 @@ function computeLogDiff(
   return result;
 }
 
-// Get icon and color for transformation type
-function getTypeStyle(type: string): { icon: string; color: string } {
+// Get color for transformation type
+function getTypeColor(type: string): string {
   switch (type) {
     case 'agreement':
-      return { icon: '👤', color: '#4CAF50' }; // Green - subject related
+      return '#4CAF50'; // Green - subject related
     case 'tense':
-      return { icon: '⏱', color: '#2196F3' }; // Blue - time related
+      return '#2196F3'; // Blue - time related
     case 'aspect':
-      return { icon: '◐', color: '#9C27B0' }; // Purple - aspect
+      return '#9C27B0'; // Purple - aspect
     case 'case':
-      return { icon: '🔤', color: '#FF9800' }; // Orange - form change
+      return '#FF9800'; // Orange - form change
     case 'article':
-      return { icon: 'a', color: '#795548' }; // Brown - article
+      return '#795548'; // Brown - article
     case 'do-support':
-      return { icon: '+do', color: '#F44336' }; // Red - insertion
+      return '#F44336'; // Red - insertion
     case 'negation':
-      return { icon: '¬', color: '#E91E63' }; // Pink - negation
+      return '#E91E63'; // Pink - negation
     case 'modal':
-      return { icon: '◇', color: '#673AB7' }; // Deep purple - modal
+      return '#673AB7'; // Deep purple - modal
     case 'wh-movement':
-      return { icon: '↷', color: '#00BCD4' }; // Cyan - movement
+      return '#00BCD4'; // Cyan - movement
     case 'inversion':
-      return { icon: '⇄', color: '#009688' }; // Teal - swap
+      return '#009688'; // Teal - swap
     default:
-      return { icon: '•', color: '#607D8B' }; // Grey - default
+      return '#607D8B'; // Grey - default
   }
 }
 
@@ -152,7 +152,7 @@ export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
       <div className="grammar-steps">
         {logsWithStatus.map((item, i) => {
           const { log, status, previousLog } = item;
-          const typeStyle = getTypeStyle(log.type);
+          const typeColor = getTypeColor(log.type);
           const statusIndicator = getStatusIndicator(status);
 
           // Translate rule and trigger
@@ -167,7 +167,7 @@ export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
               <div className="step-header">
                 <span
                   className="step-type"
-                  style={{ backgroundColor: typeStyle.color }}
+                  style={{ backgroundColor: typeColor }}
                 >
                   {translateType(log.type)}
                 </span>

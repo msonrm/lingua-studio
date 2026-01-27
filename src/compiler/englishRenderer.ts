@@ -36,6 +36,15 @@ import {
 let tracker = new DerivationTracker();
 
 // ============================================
+// 統一レンダリングゲート（欠損時は自動的に ___ を返す）
+// ============================================
+
+/** 欠損時にプレースホルダーを返す統一レンダリング関数 */
+function render<T>(node: T | undefined | null, fn: (n: T) => string): string {
+  return node != null ? fn(node) : '___';
+}
+
+// ============================================
 // Unified Conjugation Wrapper
 // ============================================
 
@@ -308,9 +317,7 @@ function prepareClauseContext(clause: ClauseNode): ClauseContext {
     : undefined;
 
   // 主語をレンダリング
-  const subjectStr = subjectSlot?.filler
-    ? renderFiller(subjectSlot.filler, true, polarity)
-    : '___';
+  const subjectStr = render(subjectSlot?.filler, f => renderFiller(f, true, polarity));
 
   // 活用用の主語（NounPhraseNode | CoordinatedNounPhraseNode のみ）
   const subjectForConjugation = subjectSlot?.filler &&
@@ -355,11 +362,10 @@ function renderOtherArguments(
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
-      const filled = argSlot?.filler;
-      const value = filled ? renderFiller(filled, false, polarity) : '___';
+      const value = render(argSlot?.filler, f => renderFiller(f, false, polarity));
       return {
         text: preposition ? `${preposition} ${value}` : value,
-        skip: !v.required && !filled,
+        skip: !v.required && !argSlot?.filler,
       };
     })
     .filter(item => !item.skip)
@@ -393,11 +399,10 @@ function appendCoordinatedVP(
 ): string {
   if (!ctx.verbPhrase.coordinatedWith) return result;
 
-  const coordVP = ctx.verbPhrase.coordinatedWith.verbPhrase;
   const conjunction = ctx.verbPhrase.coordinatedWith.conjunction;
-  const coordVerbStr = renderCoordinatedVerbPhrase(
-    coordVP, ctx.tense, ctx.aspect, ctx.polarity,
-    ctx.subjectForConjugation, ctx.modal, ctx.modalPolarity
+  const coordVerbStr = render(ctx.verbPhrase.coordinatedWith.verbPhrase, vp =>
+    renderCoordinatedVerbPhrase(vp, ctx.tense, ctx.aspect, ctx.polarity,
+      ctx.subjectForConjugation, ctx.modal, ctx.modalPolarity)
   );
   return `${result} ${conjunction} ${coordVerbStr}`;
 }
@@ -626,18 +631,14 @@ function renderLogicExpression(clause: ClauseNode): string {
       const innerOr = logicOp.leftOperand.logicOp;
       const innerLeftVP: VerbPhraseNode = { ...logicOp.leftOperand, logicOp: undefined };
       const innerLeftStr = renderClause(makeClause(innerLeftVP));
-      const innerRightStr = innerOr.rightOperand
-        ? renderVerbPhrase(innerOr.rightOperand)
-        : '___';
+      const innerRightStr = render(innerOr.rightOperand, renderVerbPhrase);
       return `neither ${innerLeftStr} nor ${innerRightStr}`;
     }
     return `it is not the case that ${leftStr}`;
   }
 
   // 右側の命題をレンダリング
-  const rightStr = logicOp.rightOperand
-    ? renderVerbPhrase(logicOp.rightOperand)
-    : '___';
+  const rightStr = render(logicOp.rightOperand, renderVerbPhrase);
 
   // 演算子に応じたフォーマット
   switch (logicOp.operator) {
@@ -842,9 +843,10 @@ function renderImperativeClause(clause: ClauseNode): string {
 
   // 等位接続を処理（命令文専用）
   if (verbPhrase.coordinatedWith) {
-    const coordVP = verbPhrase.coordinatedWith.verbPhrase;
     const conjunction = verbPhrase.coordinatedWith.conjunction;
-    const coordVerbStr = renderImperativeCoordinatedVP(coordVP, polarity, modal);
+    const coordVerbStr = render(verbPhrase.coordinatedWith.verbPhrase, vp =>
+      renderImperativeCoordinatedVP(vp, polarity, modal)
+    );
     result += ` ${conjunction} ${coordVerbStr}`;
   }
 
@@ -884,17 +886,15 @@ function renderImperativeCoordinatedVP(
   }
 
   // その他の引数（目的語など）- 主語ロール以外
-  // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
   const otherArgs = (verbEntry?.valency || [])
     .filter(v => v.role !== subjectRole)
     .map(v => {
       const argSlot = vp.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
-      const filled = argSlot?.filler;
-      const value = filled ? renderFiller(filled, false, polarity) : '___';
+      const value = render(argSlot?.filler, f => renderFiller(f, false, polarity));
       return {
         text: preposition ? `${preposition} ${value}` : value,
-        skip: !v.required && !filled,
+        skip: !v.required && !argSlot?.filler,
       };
     })
     .filter(item => !item.skip)
@@ -986,17 +986,15 @@ function renderCoordinatedVerbPhrase(
     : '';
 
   // その他の引数（目的語など）- 主語ロール以外
-  // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
   const otherArgs = (verbEntry?.valency || [])
     .filter(v => v.role !== subjectRole)
     .map(v => {
       const argSlot = vp.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
-      const filled = argSlot?.filler;
-      const value = filled ? renderFiller(filled, false, polarity) : '___';
+      const value = render(argSlot?.filler, f => renderFiller(f, false, polarity));
       return {
         text: preposition ? `${preposition} ${value}` : value,
-        skip: !v.required && !filled,
+        skip: !v.required && !argSlot?.filler,
       };
     })
     .filter(item => !item.skip)

@@ -78,17 +78,17 @@
 ### Multilingual & Language Parameters
 
 #### 前提作業（多言語展開の基盤）
-- [ ] Grammar Console ログシステムのリファクタリング
-  - 現状: ログが活用コードの各所に散らばっており、漏れやすい
-  - 目標: 活用結果を一箇所で比較してログする設計に変更
-  - 理由: 他言語レンダラーで同じパターンを再現しやすくするため
-  ```typescript
-  function conjugateVerb(...): string {
-    const result = conjugateInternal(...);  // ログなし
-    logVerbConjugation(lemma, result, context);  // 一箇所でログ
-    return result;
-  }
-  ```
+- [x] Grammar Rule System アーキテクチャ
+  - `src/grammar/types.ts`: RenderContext, DerivationStep 等の型定義
+  - `src/grammar/DerivationTracker.ts`: 変形記録クラス（GrammarLogCollector を置換）
+  - `src/grammar/rules/english/`: 英語ルールの分離
+    - `morphology.ts`: 形態論（agreement, tense, aspect, case, article）
+    - `syntax.ts`: 統語論（do-support, inversion, wh-movement）
+  - `toLegacyLogs()`: 後方互換性のため既存UI形式に変換
+- [ ] Grammar Console UI の更新（新 DerivationTracker 対応）
+  - 変形ステップを順序付きで表示
+  - 前回との差分表示（DerivationDiff 活用）
+  - サイドパネル移動 + タブ構成
 
 #### 言語別レンダラー
 - [ ] 日本語レンダラー
@@ -227,6 +227,20 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 
 ## Completed
 
+### Grammar Rule System Refactoring (2026-01)
+- [x] 新アーキテクチャ設計・実装
+  - `DerivationTracker` クラス: GrammarLogCollector を置換
+  - 形態論（MorphologyStep）と統語論（SyntaxStep）を明確に分離
+  - `RenderContext` 型: レンダリング文脈を構造化
+  - `DerivationDiff`: 前回との差分計算機能
+- [x] 英語ルールの分離
+  - `src/grammar/rules/english/morphology.ts`: agreement, tense, aspect, case, article
+  - `src/grammar/rules/english/syntax.ts`: do-support, inversion, wh-movement
+  - 将来の日本語レンダラー対応を考慮した設計
+- [x] `englishRenderer.ts` のリファクタリング
+  - `logCollector.log()` → `tracker.recordMorphology()` / `tracker.recordSyntax()`
+  - `toLegacyLogs()` で既存UIとの後方互換性を維持
+
 ### Logic Extension - Phase 1 (2026-01)
 - [x] `fact()` wrapper と `AND()`/`OR()`/`NOT()` 命題論理ブロック実装
   - fact_wrapper: sentence/modal と排他的な事実宣言
@@ -290,7 +304,7 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - フィールド名・ブロックタイプを読みやすいラベルに変換
 - [x] 文法変換ログ
   - TransformType: agreement, tense, aspect, case, article, do-support, modal, negation, wh-movement, inversion
-  - `GrammarLogCollector` クラスで変換を収集
+  - ~~`GrammarLogCollector` クラスで変換を収集~~ → `DerivationTracker` に移行
   - `renderToEnglishWithLogs()` で RenderResult を返す
 - [x] 共通ヘルパー関数パターン
   - `logModalTransformation()`: 平叙文・疑問文の両方で使用

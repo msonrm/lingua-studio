@@ -12,10 +12,6 @@
     - Wh語検出による疑問文自動判定（`question()`不要）
     - LinguaScript: `sentence(past+simple(locative(?where, run(agent:'I))))` → "Where did I run?"
   - 仕様: `sentence(past+simple(eat(agent:?who, theme:'apple)))` → "Who ate the apple?"
-- [ ] Passive（受動態）wrapper
-  - agent が指定されている場合は by 句を自動生成
-  - 仕様: `sentence(passive(eat(agent:'I, patient:'apple)))` → "The apple was eaten by me."
-- [ ] Causative（使役態）wrapper
 
 ### Modality & Register
 - [ ] Register パラメータ（formal/casual）
@@ -35,9 +31,8 @@
   - "I saw the man with the telescope and the camera"
 
 ### Vocabulary
-- [ ] LOCATION副詞に「home」と同ジャンルの単語を追加
-  - 現在 home は一時的に除外
-  - 検討候補: home, abroad, indoors, outdoors, upstairs, downstairs 等
+- [x] LOCATION副詞に「home」と同ジャンルの単語を追加
+  - home, abroad, indoors, outdoors, upstairs, downstairs を追加済み
 
 ### UI & Localization
 - [x] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）
@@ -66,36 +61,42 @@
     - `GrammarLogCollector` クラス（モジュールレベル）
     - `renderToEnglishWithLogs()` → `RenderResult { output, logs, warnings }`
     - 共通ヘルパー関数パターン（他言語レンダラーの参考用）
-  - [ ] 必須引数の欠落警告（警告表示は未実装）
-    - `⚠️ Missing required argument: patient (for verb 'cut')`
-    - ~~出力に `___` を表示（例: "I cut ___."）~~ ✅ 実装済み
-    - ~~agent の欠落も同様に扱う（現在の someone 補完をやめる）~~ ✅ 実装済み
-- [ ] TimeChip 3連プルダウン化（教育的UX改善）
-  - [Tense][Aspect][Time] の3スロット構成
-  - Time で "Yesterday" を選択 → [Past][Simple][Yesterday] に自動設定
-  - 非文法的な組み合わせに×印、自動修正機能
 
 ### Multilingual & Language Parameters
 
 #### 前提作業（多言語展開の基盤）
 - [x] Grammar Rule System アーキテクチャ
-  - `src/grammar/types.ts`: RenderContext, DerivationStep 等の型定義
-  - `src/grammar/DerivationTracker.ts`: 変形記録クラス（GrammarLogCollector を置換）
-  - `src/grammar/rules/english/`: 英語ルールの分離
+  - `src/renderer/types.ts`: RenderContext, DerivationStep 等の型定義
+  - `src/renderer/DerivationTracker.ts`: 変形記録クラス（GrammarLogCollector を置換）
+  - `src/renderer/english/rules/`: 英語ルールの分離
     - `morphology.ts`: 形態論（agreement, tense, aspect, case, article）
     - `syntax.ts`: 統語論（do-support, inversion, wh-movement）
   - `toLegacyLogs()`: 後方互換性のため既存UI形式に変換
-- [ ] Grammar Console UI の更新（新 DerivationTracker 対応）
+- [x] Grammar Console UI の更新（新 DerivationTracker 対応）
   - [x] i18n 対応（GrammarMessages によるメッセージキー翻訳）
-  - 変形ステップを順序付きで表示
-  - 前回との差分表示（DerivationDiff 活用）
   - [x] サイドパネル移動 + タブ構成
+  - toLegacyLogs() で既存UIと後方互換
+
+#### 辞書アーキテクチャ
+- [x] 辞書分離（言語非依存 / 言語固有）
+  - `dictionary-core.ts`: lemma（英語識別子）, type, category, valency（言語非依存）
+  - `dictionary-en.ts`: 英語 forms（活用形）+ ルックアップ関数（findVerb等）
+  - `dictionary-ja.ts`: 日本語 surface + forms（未実装）
+  - lemma は英語で固定（プログラミング言語が英語ベースなのと同様）
+  - ルックアップ時に Core + Forms をオンデマンドでマージ
+
+#### Output UI
+- [ ] 2パネル出力構成
+  - 左: Primary Output（ターゲット言語）
+  - 右: Reference Output（UI言語で意味確認）
+  - 例: 英語学習時 → 左:English / 右:日本語訳
+  - 例: 架空言語時 → 左:Conlang / 右:UI言語で意味確認
 
 #### 言語別レンダラー
 - [ ] 日本語レンダラー
   - 日本語辞書 (dictionary-ja.ts)
   - SOV語順、助詞選択、敬語処理
-- [ ] パラメータベースのレンダラー設計
+- [ ] パラメータベースのレンダラー設計（架空言語ビルダー）
   - チョムスキー「原理とパラメータ」理論に基づく
   - 語順パラメータ: SVO, SOV, VSO, VOS, OSV, OVS
   - 主要部位置: head-initial / head-final
@@ -106,21 +107,6 @@
 - [ ] LinguaScriptパーサー（双方向変換の基盤）
   - BNF文法に基づく実装
   - AST ↔ LinguaScript の等価変換
-
-### Linguistic AST Renderer（学術・教育向け）
-- [ ] 言語学的構文木レンダラー
-  - 内部AST → 言語学理論に基づく木構造を生成
-  - 理論選択オプション（教育目的で切り替え可能）
-  - **Note**: LinguaScriptは依存文法的（動詞中心＋意味役割引数）
-- [ ] 対応理論候補:
-  - X-bar Theory: Spec-Head-Comp の階層構造
-  - Dependency Grammar: 主辞間の依存関係（LinguaScriptに最も近い）
-  - Minimalist Program: 二項Merge、最小構造
-  - HPSG/LFG: 制約ベース、素性構造
-- [ ] 出力形式:
-  - テキスト（括弧表記）
-  - SVG/Canvas（視覚的な木構造）
-  - LaTeX (qtree, forest パッケージ)
 
 ### LinguaScript Syntax Enhancement
 - [x] メタ値記法: `plural`, `uncountable` （クォートなし = 出力されない制御値）
@@ -133,9 +119,6 @@
   - Prism.js によるカスタム言語定義
   - Solarized Light テーマ
   - 行番号表示、インデント付きフォーマット
-- [ ] Monaco Editor 統合（編集可能化）
-- [ ] 辞書連携オートコンプリート
-- [ ] 双方向同期（Blocks ↔ LinguaScript）
 
 ### Logic Extension（論理推論拡張）
 
@@ -202,6 +185,10 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 - Prolog - 論理プログラミング
 
 ### Deferred（設計検討が必要）
+- [ ] Passive（受動態）wrapper
+  - agent が指定されている場合は by 句を自動生成
+  - 仕様: `sentence(passive(eat(agent:'I, patient:'apple)))` → "The apple was eaten by me."
+- [ ] Causative（使役態）wrapper
 - [ ] Why疑問文（`?why`）の構文設計
   - 構文的には where/when/how と同様（Wh副詞、文頭移動）
   - 意味的に特殊: 答えが「because...」節（理由節）になる
@@ -215,11 +202,21 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - `not(frequency('never, ...))` は論理的に二重否定
   - 警告表示 or 禁止の実装が必要
   - 難易度: 高（スコープ解析が必要）
-- [ ] 命令文 + Wh疑問詞の意味的矛盾警告
-  - `imperative(sentence(...(?who...)))` は意味的に矛盾
-  - 現状: 命令文が優先され、疑問詞は無視される（"Run!"）
-  - 改善案: Grammar Console に警告を表示
-  - 難易度: 低（検出ロジックは実装済み）
+- [ ] Grammar Console 詳細表示モード
+  - DerivationStep を直接参照（toLegacyLogs() を経由しない）
+  - 形態論/統語論の区別、操作種類、位置情報を表示
+  - 折りたたみUIで「詳細を見る」オプション
+- [ ] LinguaScript Editor 編集機能
+  - Monaco Editor 統合（バンドルサイズ +2-3MB）
+  - 辞書連携オートコンプリート
+  - 双方向同期（Blocks ↔ LinguaScript）
+  - パーサー実装が前提
+- [ ] Linguistic AST Renderer（学術・教育向け）
+  - 言語学理論に基づく木構造表示（X-bar, 依存文法, Minimalist等）
+  - LinguaScript自体が依存文法的なので必要性は低い
+- [ ] TimeChip 3連プルダウン化（教育的UX改善）
+  - [Tense][Aspect][Time] の3スロット構成
+  - 現状の統合ブロックで十分機能している
 
 ### Out of Scope（単文スコープ外）
 - 関係節 (the man who ate...)
@@ -263,10 +260,15 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - `RenderContext` 型: レンダリング文脈を構造化
   - `DerivationDiff`: 前回との差分計算機能
 - [x] 英語ルールの分離
-  - `src/grammar/rules/english/morphology.ts`: agreement, tense, aspect, case, article
-  - `src/grammar/rules/english/syntax.ts`: do-support, inversion, wh-movement
+  - `src/renderer/english/rules/morphology.ts`: agreement, tense, aspect, case, article
+  - `src/renderer/english/rules/syntax.ts`: do-support, inversion, wh-movement
   - 将来の日本語レンダラー対応を考慮した設計
-- [x] `englishRenderer.ts` のリファクタリング
+- [x] 英語レンダラーのリファクタリング
+  - `src/renderer/english/` に英語固有コードを集約
+    - `renderer.ts`: 英語レンダラー本体
+    - `coordination.ts`: 等位接続ルール（Oxford comma, both/either）
+    - `conjugation.ts`: 動詞活用
+    - `nounPhrase.ts`: 名詞句レンダリング
   - `logCollector.log()` → `tracker.recordMorphology()` / `tracker.recordSyntax()`
   - `toLegacyLogs()` で既存UIとの後方互換性を維持
 

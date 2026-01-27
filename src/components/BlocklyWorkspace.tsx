@@ -2,8 +2,8 @@ import { useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 
 import * as Blockly from 'blockly';
 import '../blocks/definitions';
 import { createToolbox } from '../blocks/definitions';
-import { generateMultipleAST } from '../compiler/astGenerator';
-import { renderToEnglishWithLogs } from '../compiler/englishRenderer';
+import { generateMultipleAST } from '../renderer/astGenerator';
+import { renderToEnglishWithLogs } from '../renderer/english/renderer';
 import { TransformLog, BlockChange } from '../types/grammarLog';
 import { SentenceNode } from '../types/schema';
 import { useLocale } from '../locales';

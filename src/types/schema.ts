@@ -116,6 +116,80 @@ export interface AdverbEntry {
 }
 
 // ============================================
+// 分離辞書の型定義（Core: 言語非依存 / Forms: 言語固有）
+// ============================================
+
+// --- Core Types (言語非依存) ---
+
+export interface VerbCore {
+  lemma: string;
+  type: "action" | "stative" | "copula";
+  category: VerbCategory;
+  valency: ArgumentSlot[];
+}
+
+export interface NounCore {
+  lemma: string;
+  category: NounCategory;
+  countable: boolean;
+  proper?: boolean;
+  zeroArticle?: boolean;
+}
+
+export interface PronounCore {
+  lemma: string;
+  person: 1 | 2 | 3;
+  number: "singular" | "plural";
+  gender?: "masculine" | "feminine" | "neuter";
+  type: "personal" | "indefinite" | "demonstrative" | "possessive" | "interrogative";
+  polaritySensitive?: boolean;
+  correspondingPersonal?: string;
+}
+
+export interface AdjectiveCore {
+  lemma: string;
+  category: AdjectiveCategory;
+}
+
+export interface AdverbCore {
+  lemma: string;
+  type: "manner" | "frequency" | "degree" | "time" | "place";
+  polaritySensitive?: boolean;
+}
+
+// --- Forms Types (言語固有 - 英語) ---
+
+export interface VerbForms {
+  lemma: string;
+  forms: {
+    base: string;
+    past: string;
+    pp: string;
+    ing: string;
+    s: string;
+    irregular?: Record<string, string>;
+  };
+}
+
+export interface NounForms {
+  lemma: string;
+  plural: string;
+}
+
+export interface PronounForms {
+  lemma: string;
+  objectForm: string;
+  possessive?: string;
+  negativeForm?: string;
+}
+
+export interface AdjectiveForms {
+  lemma: string;
+  comparative?: string;
+  superlative?: string;
+}
+
+// ============================================
 // ASTノードの型定義
 // ============================================
 

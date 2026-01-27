@@ -6,8 +6,8 @@
  * 語順の組み立てだけを分離する。
  */
 
-import type { NounPhraseNode, CoordinatedNounPhraseNode, AdverbNode } from '../types/schema';
-import type { TransformationType } from './types';
+import type { NounPhraseNode, CoordinatedNounPhraseNode, AdverbNode } from '../../types/schema';
+import type { TransformationType } from '../types';
 
 // ============================================
 // Types

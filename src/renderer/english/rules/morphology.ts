@@ -11,7 +11,7 @@
 
 import type { RenderContext } from '../../types';
 import type { VerbEntry } from '../../../types/schema';
-import { findVerb, findPronoun } from '../../../data/dictionary';
+import { findVerb, findPronoun } from '../../../data/dictionary-en';
 
 // ============================================
 // Agreement (主語-動詞一致)

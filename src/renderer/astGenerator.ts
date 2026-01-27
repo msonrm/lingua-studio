@@ -14,8 +14,14 @@ import {
   ModalType,
   PropositionalOperator,
 } from '../types/schema';
-import { findVerb, findPronoun } from '../data/dictionary';
+import { verbCores, pronounCores } from '../data/dictionary-core';
 import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks/definitions';
+
+// ============================================
+// ヘルパー関数（dictionary-core.ts ベース）
+// ============================================
+const findVerbCore = (lemma: string) => verbCores.find(v => v.lemma === lemma);
+const findPronounCore = (lemma: string) => pronounCores.find(p => p.lemma === lemma);
 
 // ============================================
 // BlocklyワークスペースからAST生成
@@ -384,7 +390,7 @@ function hasInterrogativePronoun(filler: FilledArgumentSlot['filler']): boolean 
 function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
   const blockType = block.type;
 
-  // VerbChainResultをVerbPhraseNode（logicOp含む）に変換するヘルパー
+  // VerbChainResultをVerbPhraseNode（logicOp・coordinatedWith含む）に変換するヘルパー
   // 等位接続や論理演算のオペランドで使用
   const toVerbPhraseWithLogic = (result: VerbChainResult): VerbPhraseNode => {
     return {
@@ -401,6 +407,11 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
         ...result.verbPhrase.prepositionalPhrases,
       ],
       logicOp: result.logicOp,
+      // 内側の等位接続を保持（入れ子対応）
+      coordinatedWith: result.coordination ? {
+        conjunction: result.coordination.conjunction,
+        verbPhrase: result.coordination.rightVerbPhrase,
+      } : undefined,
     };
   };
 
@@ -751,12 +762,32 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     }
     // 右側も解析（logicOpを含めて完全なVerbPhraseNodeに変換）
     const rightResult = rightBlock ? parseVerbChain(rightBlock) : null;
+
+    // デフォルトの動詞句（欠損時は ___ マーカー）
+    const defaultVP: VerbPhraseNode = {
+      type: 'verbPhrase',
+      verb: { lemma: '___' },
+      arguments: [],
+      adverbs: [],
+      prepositionalPhrases: [],
+    };
+
+    // 左側を完全なVerbPhraseNodeに変換（内側の等位接続を含む）
+    // これにより or(and(A, B), C) で B が失われるバグを防ぐ
+    const leftVP = toVerbPhraseWithLogic(leftResult);
+
     return {
-      ...leftResult,
-      coordination: rightResult ? {
+      verbPhrase: leftVP,
+      polarity: leftResult.polarity,
+      frequencyAdverbs: [],  // leftVP に含まれている
+      mannerAdverbs: [],
+      locativeAdverbs: [],
+      timeAdverbs: [],
+      prepositionalPhrases: [],
+      coordination: {
         conjunction: conjValue,
-        rightVerbPhrase: toVerbPhraseWithLogic(rightResult),
-      } : undefined,
+        rightVerbPhrase: rightResult ? toVerbPhraseWithLogic(rightResult) : defaultVP,
+      },
     };
   }
 
@@ -866,7 +897,7 @@ function parseTimeChip(block: Blockly.Block | null): {
 
 function parseVerbBlock(block: Blockly.Block): VerbPhraseNode | null {
   const verbLemma = block.getFieldValue('VERB');
-  const verbEntry = findVerb(verbLemma);
+  const verbEntry = findVerbCore(verbLemma);
 
   if (!verbEntry) {
     return null;
@@ -926,7 +957,7 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode | Coordinate
   // Wh疑問詞プレースホルダーブロックの処理
   if (blockType === 'wh_placeholder_block') {
     const whValue = block.getFieldValue('WH_VALUE') as string;
-    const pronoun = findPronoun(whValue);
+    const pronoun = findPronounCore(whValue);
     if (pronoun) {
       return {
         type: 'nounPhrase',
@@ -1178,7 +1209,7 @@ function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseN
   }
 
   // 代名詞かどうかをチェック
-  const pronoun = findPronoun(value);
+  const pronoun = findPronounCore(value);
   if (pronoun) {
     const head: PronounHead = {
       type: 'pronoun',

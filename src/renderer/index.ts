@@ -1,7 +1,7 @@
 /**
- * Grammar Rule System - Main Exports
+ * Renderer System - Main Exports
  *
- * 文法ルールシステムのメインエクスポート。
+ * レンダラーシステムのメインエクスポート。
  * - Types: 型定義
  * - DerivationTracker: 変形記録クラス
  * - Rules: 言語別ルール
@@ -30,5 +30,5 @@ export type {
 export { DerivationTracker } from './DerivationTracker';
 
 // English Rules
-export * as EnglishMorphology from './rules/english/morphology';
-export * as EnglishSyntax from './rules/english/syntax';
+export * as EnglishMorphology from './english/rules/morphology';
+export * as EnglishSyntax from './english/rules/syntax';

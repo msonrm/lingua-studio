@@ -1,0 +1,581 @@
+/**
+ * dictionary-en.ts - 英語辞書（活用形 + ルックアップ関数）
+ *
+ * 役割:
+ * - 英語固有の活用形データ（動詞活用、名詞複数形、代名詞格変化など）
+ * - Core（言語非依存）と英語フォームをマージするルックアップ関数
+ *
+ * 参照元:
+ * - compiler/english/renderer.ts: 活用形取得
+ * - compiler/english/rules/morphology.ts: 形態論ルール
+ */
+
+import {
+  VerbForms, NounForms, PronounForms, AdjectiveForms,
+  VerbEntry, NounEntry, PronounEntry, AdjectiveEntry, AdverbEntry,
+  VerbCategory, NounCategory, AdjectiveCategory,
+} from '../types/schema';
+import { verbCores, nounCores, pronounCores, adjectiveCores, adverbCores } from './dictionary-core';
+
+// ============================================
+// 動詞活用形
+// ============================================
+export const verbFormsEn: VerbForms[] = [
+  // Motion
+  { lemma: "run", forms: { base: "run", past: "ran", pp: "run", ing: "running", s: "runs" } },
+  { lemma: "walk", forms: { base: "walk", past: "walked", pp: "walked", ing: "walking", s: "walks" } },
+  { lemma: "go", forms: { base: "go", past: "went", pp: "gone", ing: "going", s: "goes" } },
+  { lemma: "come", forms: { base: "come", past: "came", pp: "come", ing: "coming", s: "comes" } },
+  { lemma: "fly", forms: { base: "fly", past: "flew", pp: "flown", ing: "flying", s: "flies" } },
+  { lemma: "swim", forms: { base: "swim", past: "swam", pp: "swum", ing: "swimming", s: "swims" } },
+  { lemma: "jump", forms: { base: "jump", past: "jumped", pp: "jumped", ing: "jumping", s: "jumps" } },
+  { lemma: "fall", forms: { base: "fall", past: "fell", pp: "fallen", ing: "falling", s: "falls" } },
+  { lemma: "arrive", forms: { base: "arrive", past: "arrived", pp: "arrived", ing: "arriving", s: "arrives" } },
+  { lemma: "leave", forms: { base: "leave", past: "left", pp: "left", ing: "leaving", s: "leaves" } },
+
+  // Action
+  { lemma: "eat", forms: { base: "eat", past: "ate", pp: "eaten", ing: "eating", s: "eats" } },
+  { lemma: "make", forms: { base: "make", past: "made", pp: "made", ing: "making", s: "makes" } },
+  { lemma: "build", forms: { base: "build", past: "built", pp: "built", ing: "building", s: "builds" } },
+  { lemma: "break", forms: { base: "break", past: "broke", pp: "broken", ing: "breaking", s: "breaks" } },
+  { lemma: "cut", forms: { base: "cut", past: "cut", pp: "cut", ing: "cutting", s: "cuts" } },
+  { lemma: "open", forms: { base: "open", past: "opened", pp: "opened", ing: "opening", s: "opens" } },
+  { lemma: "close", forms: { base: "close", past: "closed", pp: "closed", ing: "closing", s: "closes" } },
+  { lemma: "write", forms: { base: "write", past: "wrote", pp: "written", ing: "writing", s: "writes" } },
+  { lemma: "read", forms: { base: "read", past: "read", pp: "read", ing: "reading", s: "reads" } },
+  { lemma: "drink", forms: { base: "drink", past: "drank", pp: "drunk", ing: "drinking", s: "drinks" } },
+  { lemma: "cook", forms: { base: "cook", past: "cooked", pp: "cooked", ing: "cooking", s: "cooks" } },
+  { lemma: "clean", forms: { base: "clean", past: "cleaned", pp: "cleaned", ing: "cleaning", s: "cleans" } },
+  { lemma: "wash", forms: { base: "wash", past: "washed", pp: "washed", ing: "washing", s: "washes" } },
+  { lemma: "buy", forms: { base: "buy", past: "bought", pp: "bought", ing: "buying", s: "buys" } },
+  { lemma: "sell", forms: { base: "sell", past: "sold", pp: "sold", ing: "selling", s: "sells" } },
+  { lemma: "play", forms: { base: "play", past: "played", pp: "played", ing: "playing", s: "plays" } },
+  { lemma: "work", forms: { base: "work", past: "worked", pp: "worked", ing: "working", s: "works" } },
+  { lemma: "study", forms: { base: "study", past: "studied", pp: "studied", ing: "studying", s: "studies" } },
+  { lemma: "sleep", forms: { base: "sleep", past: "slept", pp: "slept", ing: "sleeping", s: "sleeps" } },
+  { lemma: "sing", forms: { base: "sing", past: "sang", pp: "sung", ing: "singing", s: "sings" } },
+  { lemma: "dance", forms: { base: "dance", past: "danced", pp: "danced", ing: "dancing", s: "dances" } },
+  { lemma: "draw", forms: { base: "draw", past: "drew", pp: "drawn", ing: "drawing", s: "draws" } },
+  { lemma: "paint", forms: { base: "paint", past: "painted", pp: "painted", ing: "painting", s: "paints" } },
+  { lemma: "catch", forms: { base: "catch", past: "caught", pp: "caught", ing: "catching", s: "catches" } },
+  { lemma: "throw", forms: { base: "throw", past: "threw", pp: "thrown", ing: "throwing", s: "throws" } },
+  { lemma: "kick", forms: { base: "kick", past: "kicked", pp: "kicked", ing: "kicking", s: "kicks" } },
+  { lemma: "hit", forms: { base: "hit", past: "hit", pp: "hit", ing: "hitting", s: "hits" } },
+  { lemma: "push", forms: { base: "push", past: "pushed", pp: "pushed", ing: "pushing", s: "pushes" } },
+  { lemma: "pull", forms: { base: "pull", past: "pulled", pp: "pulled", ing: "pulling", s: "pulls" } },
+  { lemma: "carry", forms: { base: "carry", past: "carried", pp: "carried", ing: "carrying", s: "carries" } },
+  { lemma: "hold", forms: { base: "hold", past: "held", pp: "held", ing: "holding", s: "holds" } },
+  { lemma: "drop", forms: { base: "drop", past: "dropped", pp: "dropped", ing: "dropping", s: "drops" } },
+  { lemma: "pick", forms: { base: "pick", past: "picked", pp: "picked", ing: "picking", s: "picks" } },
+  { lemma: "put", forms: { base: "put", past: "put", pp: "put", ing: "putting", s: "puts" } },
+  { lemma: "place", forms: { base: "place", past: "placed", pp: "placed", ing: "placing", s: "places" } },
+  { lemma: "hang", forms: { base: "hang", past: "hung", pp: "hung", ing: "hanging", s: "hangs" } },
+  { lemma: "wear", forms: { base: "wear", past: "wore", pp: "worn", ing: "wearing", s: "wears" } },
+  { lemma: "use", forms: { base: "use", past: "used", pp: "used", ing: "using", s: "uses" } },
+  { lemma: "find", forms: { base: "find", past: "found", pp: "found", ing: "finding", s: "finds" } },
+  { lemma: "lose", forms: { base: "lose", past: "lost", pp: "lost", ing: "losing", s: "loses" } },
+  { lemma: "wait", forms: { base: "wait", past: "waited", pp: "waited", ing: "waiting", s: "waits" } },
+  { lemma: "help", forms: { base: "help", past: "helped", pp: "helped", ing: "helping", s: "helps" } },
+  { lemma: "meet", forms: { base: "meet", past: "met", pp: "met", ing: "meeting", s: "meets" } },
+  { lemma: "visit", forms: { base: "visit", past: "visited", pp: "visited", ing: "visiting", s: "visits" } },
+
+  // Transfer
+  { lemma: "give", forms: { base: "give", past: "gave", pp: "given", ing: "giving", s: "gives" } },
+  { lemma: "take", forms: { base: "take", past: "took", pp: "taken", ing: "taking", s: "takes" } },
+  { lemma: "send", forms: { base: "send", past: "sent", pp: "sent", ing: "sending", s: "sends" } },
+  { lemma: "receive", forms: { base: "receive", past: "received", pp: "received", ing: "receiving", s: "receives" } },
+  { lemma: "bring", forms: { base: "bring", past: "brought", pp: "brought", ing: "bringing", s: "brings" } },
+  { lemma: "get", forms: { base: "get", past: "got", pp: "gotten", ing: "getting", s: "gets" } },
+  { lemma: "show", forms: { base: "show", past: "showed", pp: "shown", ing: "showing", s: "shows" } },
+  { lemma: "teach", forms: { base: "teach", past: "taught", pp: "taught", ing: "teaching", s: "teaches" } },
+  { lemma: "learn", forms: { base: "learn", past: "learned", pp: "learned", ing: "learning", s: "learns" } },
+  { lemma: "lend", forms: { base: "lend", past: "lent", pp: "lent", ing: "lending", s: "lends" } },
+  { lemma: "borrow", forms: { base: "borrow", past: "borrowed", pp: "borrowed", ing: "borrowing", s: "borrows" } },
+  { lemma: "pay", forms: { base: "pay", past: "paid", pp: "paid", ing: "paying", s: "pays" } },
+
+  // Cognition
+  { lemma: "think", forms: { base: "think", past: "thought", pp: "thought", ing: "thinking", s: "thinks" } },
+  { lemma: "know", forms: { base: "know", past: "knew", pp: "known", ing: "knowing", s: "knows" } },
+  { lemma: "see", forms: { base: "see", past: "saw", pp: "seen", ing: "seeing", s: "sees" } },
+  { lemma: "hear", forms: { base: "hear", past: "heard", pp: "heard", ing: "hearing", s: "hears" } },
+  { lemma: "feel", forms: { base: "feel", past: "felt", pp: "felt", ing: "feeling", s: "feels" } },
+  { lemma: "believe", forms: { base: "believe", past: "believed", pp: "believed", ing: "believing", s: "believes" } },
+  { lemma: "understand", forms: { base: "understand", past: "understood", pp: "understood", ing: "understanding", s: "understands" } },
+  { lemma: "remember", forms: { base: "remember", past: "remembered", pp: "remembered", ing: "remembering", s: "remembers" } },
+  { lemma: "forget", forms: { base: "forget", past: "forgot", pp: "forgotten", ing: "forgetting", s: "forgets" } },
+  { lemma: "want", forms: { base: "want", past: "wanted", pp: "wanted", ing: "wanting", s: "wants" } },
+  { lemma: "need", forms: { base: "need", past: "needed", pp: "needed", ing: "needing", s: "needs" } },
+  { lemma: "like", forms: { base: "like", past: "liked", pp: "liked", ing: "liking", s: "likes" } },
+  { lemma: "love", forms: { base: "love", past: "loved", pp: "loved", ing: "loving", s: "loves" } },
+  { lemma: "hate", forms: { base: "hate", past: "hated", pp: "hated", ing: "hating", s: "hates" } },
+  { lemma: "hope", forms: { base: "hope", past: "hoped", pp: "hoped", ing: "hoping", s: "hopes" } },
+  { lemma: "expect", forms: { base: "expect", past: "expected", pp: "expected", ing: "expecting", s: "expects" } },
+  { lemma: "prefer", forms: { base: "prefer", past: "preferred", pp: "preferred", ing: "preferring", s: "prefers" } },
+
+  // Communication
+  { lemma: "say", forms: { base: "say", past: "said", pp: "said", ing: "saying", s: "says" } },
+  { lemma: "tell", forms: { base: "tell", past: "told", pp: "told", ing: "telling", s: "tells" } },
+  { lemma: "speak", forms: { base: "speak", past: "spoke", pp: "spoken", ing: "speaking", s: "speaks" } },
+  { lemma: "talk", forms: { base: "talk", past: "talked", pp: "talked", ing: "talking", s: "talks" } },
+  { lemma: "ask", forms: { base: "ask", past: "asked", pp: "asked", ing: "asking", s: "asks" } },
+  { lemma: "answer", forms: { base: "answer", past: "answered", pp: "answered", ing: "answering", s: "answers" } },
+  { lemma: "call", forms: { base: "call", past: "called", pp: "called", ing: "calling", s: "calls" } },
+  { lemma: "explain", forms: { base: "explain", past: "explained", pp: "explained", ing: "explaining", s: "explains" } },
+
+  // State
+  { lemma: "be", forms: { base: "be", past: "was", pp: "been", ing: "being", s: "is", irregular: { am: "am", are: "are", was: "was", were: "were" } } },
+  { lemma: "have", forms: { base: "have", past: "had", pp: "had", ing: "having", s: "has" } },
+  { lemma: "exist", forms: { base: "exist", past: "existed", pp: "existed", ing: "existing", s: "exists" } },
+  { lemma: "live", forms: { base: "live", past: "lived", pp: "lived", ing: "living", s: "lives" } },
+  { lemma: "reside", forms: { base: "reside", past: "resided", pp: "resided", ing: "residing", s: "resides" } },
+  { lemma: "stay", forms: { base: "stay", past: "stayed", pp: "stayed", ing: "staying", s: "stays" } },
+  { lemma: "belong", forms: { base: "belong", past: "belonged", pp: "belonged", ing: "belonging", s: "belongs" } },
+  { lemma: "seem", forms: { base: "seem", past: "seemed", pp: "seemed", ing: "seeming", s: "seems" } },
+];
+
+// ============================================
+// 代名詞格変化
+// ============================================
+export const pronounFormsEn: PronounForms[] = [
+  // Personal
+  { lemma: "I", objectForm: "me", possessive: "my" },
+  { lemma: "you", objectForm: "you", possessive: "your" },
+  { lemma: "he", objectForm: "him", possessive: "his" },
+  { lemma: "she", objectForm: "her", possessive: "her" },
+  { lemma: "it", objectForm: "it", possessive: "its" },
+  { lemma: "we", objectForm: "us", possessive: "our" },
+  { lemma: "they", objectForm: "them", possessive: "their" },
+  // Indefinite - polarity sensitive
+  { lemma: "someone", objectForm: "someone", negativeForm: "nobody" },
+  { lemma: "something", objectForm: "something", negativeForm: "nothing" },
+  // Indefinite - universal
+  { lemma: "everyone", objectForm: "everyone" },
+  { lemma: "everything", objectForm: "everything" },
+  // Demonstrative
+  { lemma: "this", objectForm: "this" },
+  { lemma: "that", objectForm: "that" },
+  { lemma: "these", objectForm: "these" },
+  { lemma: "those", objectForm: "those" },
+  // Interrogative
+  { lemma: "?who", objectForm: "?whom" },
+  { lemma: "?what", objectForm: "?what" },
+  // Possessive
+  { lemma: "mine", objectForm: "mine" },
+  { lemma: "yours", objectForm: "yours" },
+  { lemma: "his", objectForm: "his" },
+  { lemma: "hers", objectForm: "hers" },
+  { lemma: "ours", objectForm: "ours" },
+  { lemma: "theirs", objectForm: "theirs" },
+];
+
+// ============================================
+// 名詞複数形
+// ============================================
+export const nounFormsEn: NounForms[] = [
+  // Human
+  { lemma: "father", plural: "fathers" },
+  { lemma: "mother", plural: "mothers" },
+  { lemma: "brother", plural: "brothers" },
+  { lemma: "sister", plural: "sisters" },
+  { lemma: "son", plural: "sons" },
+  { lemma: "daughter", plural: "daughters" },
+  { lemma: "child", plural: "children" },
+  { lemma: "baby", plural: "babies" },
+  { lemma: "man", plural: "men" },
+  { lemma: "woman", plural: "women" },
+  { lemma: "boy", plural: "boys" },
+  { lemma: "girl", plural: "girls" },
+  { lemma: "friend", plural: "friends" },
+  { lemma: "teacher", plural: "teachers" },
+  { lemma: "student", plural: "students" },
+  { lemma: "doctor", plural: "doctors" },
+  { lemma: "person", plural: "people" },
+  { lemma: "people", plural: "people" },
+  // Proper nouns (no real plural, but for consistency)
+  { lemma: "John", plural: "Johns" },
+  { lemma: "Mary", plural: "Marys" },
+  { lemma: "Tokyo", plural: "Tokyos" },
+  { lemma: "London", plural: "Londons" },
+  // Animal
+  { lemma: "dog", plural: "dogs" },
+  { lemma: "cat", plural: "cats" },
+  { lemma: "bird", plural: "birds" },
+  { lemma: "fish", plural: "fish" },
+  { lemma: "horse", plural: "horses" },
+  { lemma: "cow", plural: "cows" },
+  { lemma: "pig", plural: "pigs" },
+  { lemma: "sheep", plural: "sheep" },
+  { lemma: "rabbit", plural: "rabbits" },
+  { lemma: "elephant", plural: "elephants" },
+  { lemma: "lion", plural: "lions" },
+  { lemma: "bear", plural: "bears" },
+  // Object
+  { lemma: "apple", plural: "apples" },
+  { lemma: "orange", plural: "oranges" },
+  { lemma: "banana", plural: "bananas" },
+  { lemma: "book", plural: "books" },
+  { lemma: "pen", plural: "pens" },
+  { lemma: "table", plural: "tables" },
+  { lemma: "chair", plural: "chairs" },
+  { lemma: "door", plural: "doors" },
+  { lemma: "window", plural: "windows" },
+  { lemma: "car", plural: "cars" },
+  { lemma: "bus", plural: "buses" },
+  { lemma: "train", plural: "trains" },
+  { lemma: "phone", plural: "phones" },
+  { lemma: "computer", plural: "computers" },
+  { lemma: "ball", plural: "balls" },
+  { lemma: "box", plural: "boxes" },
+  { lemma: "bag", plural: "bags" },
+  { lemma: "key", plural: "keys" },
+  { lemma: "cup", plural: "cups" },
+  { lemma: "glass", plural: "glasses" },
+  { lemma: "plate", plural: "plates" },
+  { lemma: "knife", plural: "knives" },
+  { lemma: "fork", plural: "forks" },
+  { lemma: "spoon", plural: "spoons" },
+  { lemma: "bed", plural: "beds" },
+  { lemma: "clock", plural: "clocks" },
+  { lemma: "picture", plural: "pictures" },
+  { lemma: "flower", plural: "flowers" },
+  { lemma: "tree", plural: "trees" },
+  { lemma: "letter", plural: "letters" },
+  { lemma: "gift", plural: "gifts" },
+  { lemma: "cake", plural: "cakes" },
+  { lemma: "pizza", plural: "pizzas" },
+  { lemma: "sandwich", plural: "sandwiches" },
+  // Uncountable (plural = singular for display purposes)
+  { lemma: "coffee", plural: "coffee" },
+  { lemma: "tea", plural: "tea" },
+  { lemma: "water", plural: "water" },
+  { lemma: "milk", plural: "milk" },
+  { lemma: "juice", plural: "juice" },
+  { lemma: "bread", plural: "bread" },
+  { lemma: "rice", plural: "rice" },
+  { lemma: "meat", plural: "meat" },
+  { lemma: "money", plural: "money" },
+  { lemma: "music", plural: "music" },
+  { lemma: "news", plural: "news" },
+  // Place
+  { lemma: "house", plural: "houses" },
+  { lemma: "home", plural: "homes" },
+  { lemma: "school", plural: "schools" },
+  { lemma: "office", plural: "offices" },
+  { lemma: "hospital", plural: "hospitals" },
+  { lemma: "store", plural: "stores" },
+  { lemma: "shop", plural: "shops" },
+  { lemma: "restaurant", plural: "restaurants" },
+  { lemma: "park", plural: "parks" },
+  { lemma: "garden", plural: "gardens" },
+  { lemma: "station", plural: "stations" },
+  { lemma: "airport", plural: "airports" },
+  { lemma: "library", plural: "libraries" },
+  { lemma: "museum", plural: "museums" },
+  { lemma: "church", plural: "churches" },
+  { lemma: "city", plural: "cities" },
+  { lemma: "country", plural: "countries" },
+  { lemma: "room", plural: "rooms" },
+  { lemma: "kitchen", plural: "kitchens" },
+  { lemma: "bathroom", plural: "bathrooms" },
+  { lemma: "bedroom", plural: "bedrooms" },
+  // Abstract
+  { lemma: "time", plural: "times" },
+  { lemma: "love", plural: "loves" },
+  { lemma: "happiness", plural: "happinesses" },
+  { lemma: "idea", plural: "ideas" },
+  { lemma: "problem", plural: "problems" },
+  { lemma: "question", plural: "questions" },
+  { lemma: "answer", plural: "answers" },
+  { lemma: "story", plural: "stories" },
+  { lemma: "game", plural: "games" },
+  { lemma: "movie", plural: "movies" },
+  { lemma: "song", plural: "songs" },
+  { lemma: "language", plural: "languages" },
+  { lemma: "word", plural: "words" },
+  { lemma: "name", plural: "names" },
+  { lemma: "job", plural: "jobs" },
+  { lemma: "work", plural: "work" },
+  { lemma: "information", plural: "information" },
+  { lemma: "advice", plural: "advice" },
+  { lemma: "help", plural: "help" },
+];
+
+// ============================================
+// 形容詞比較級・最上級
+// ============================================
+export const adjectiveFormsEn: AdjectiveForms[] = [
+  // Size
+  { lemma: "big", comparative: "bigger", superlative: "biggest" },
+  { lemma: "small", comparative: "smaller", superlative: "smallest" },
+  { lemma: "large", comparative: "larger", superlative: "largest" },
+  { lemma: "tall", comparative: "taller", superlative: "tallest" },
+  { lemma: "short", comparative: "shorter", superlative: "shortest" },
+  { lemma: "long", comparative: "longer", superlative: "longest" },
+  { lemma: "wide", comparative: "wider", superlative: "widest" },
+  { lemma: "narrow", comparative: "narrower", superlative: "narrowest" },
+  { lemma: "thick", comparative: "thicker", superlative: "thickest" },
+  { lemma: "thin", comparative: "thinner", superlative: "thinnest" },
+  { lemma: "deep", comparative: "deeper", superlative: "deepest" },
+  { lemma: "shallow", comparative: "shallower", superlative: "shallowest" },
+  { lemma: "high", comparative: "higher", superlative: "highest" },
+  { lemma: "low", comparative: "lower", superlative: "lowest" },
+  // Age
+  { lemma: "old", comparative: "older", superlative: "oldest" },
+  { lemma: "young", comparative: "younger", superlative: "youngest" },
+  { lemma: "new", comparative: "newer", superlative: "newest" },
+  { lemma: "ancient" },
+  { lemma: "modern" },
+  { lemma: "fresh", comparative: "fresher", superlative: "freshest" },
+  // Color (usually no comparative)
+  { lemma: "red" },
+  { lemma: "blue" },
+  { lemma: "green" },
+  { lemma: "yellow" },
+  { lemma: "orange" },
+  { lemma: "purple" },
+  { lemma: "pink" },
+  { lemma: "brown" },
+  { lemma: "black" },
+  { lemma: "white" },
+  { lemma: "gray" },
+  // Physical
+  { lemma: "hard", comparative: "harder", superlative: "hardest" },
+  { lemma: "soft", comparative: "softer", superlative: "softest" },
+  { lemma: "hot", comparative: "hotter", superlative: "hottest" },
+  { lemma: "cold", comparative: "colder", superlative: "coldest" },
+  { lemma: "warm", comparative: "warmer", superlative: "warmest" },
+  { lemma: "cool", comparative: "cooler", superlative: "coolest" },
+  { lemma: "wet", comparative: "wetter", superlative: "wettest" },
+  { lemma: "dry", comparative: "drier", superlative: "driest" },
+  { lemma: "heavy", comparative: "heavier", superlative: "heaviest" },
+  { lemma: "light", comparative: "lighter", superlative: "lightest" },
+  { lemma: "fast", comparative: "faster", superlative: "fastest" },
+  { lemma: "slow", comparative: "slower", superlative: "slowest" },
+  { lemma: "loud", comparative: "louder", superlative: "loudest" },
+  { lemma: "quiet", comparative: "quieter", superlative: "quietest" },
+  { lemma: "bright", comparative: "brighter", superlative: "brightest" },
+  { lemma: "dark", comparative: "darker", superlative: "darkest" },
+  { lemma: "clean", comparative: "cleaner", superlative: "cleanest" },
+  { lemma: "dirty", comparative: "dirtier", superlative: "dirtiest" },
+  { lemma: "smooth", comparative: "smoother", superlative: "smoothest" },
+  { lemma: "rough", comparative: "rougher", superlative: "roughest" },
+  { lemma: "sharp", comparative: "sharper", superlative: "sharpest" },
+  { lemma: "dull", comparative: "duller", superlative: "dullest" },
+  { lemma: "strong", comparative: "stronger", superlative: "strongest" },
+  { lemma: "weak", comparative: "weaker", superlative: "weakest" },
+  // Quality
+  { lemma: "good", comparative: "better", superlative: "best" },
+  { lemma: "bad", comparative: "worse", superlative: "worst" },
+  { lemma: "beautiful", comparative: "more beautiful", superlative: "most beautiful" },
+  { lemma: "ugly", comparative: "uglier", superlative: "ugliest" },
+  { lemma: "pretty", comparative: "prettier", superlative: "prettiest" },
+  { lemma: "handsome", comparative: "more handsome", superlative: "most handsome" },
+  { lemma: "nice", comparative: "nicer", superlative: "nicest" },
+  { lemma: "wonderful", comparative: "more wonderful", superlative: "most wonderful" },
+  { lemma: "terrible", comparative: "more terrible", superlative: "most terrible" },
+  { lemma: "excellent" },
+  { lemma: "perfect" },
+  { lemma: "amazing", comparative: "more amazing", superlative: "most amazing" },
+  { lemma: "great", comparative: "greater", superlative: "greatest" },
+  { lemma: "poor", comparative: "poorer", superlative: "poorest" },
+  { lemma: "rich", comparative: "richer", superlative: "richest" },
+  { lemma: "expensive", comparative: "more expensive", superlative: "most expensive" },
+  { lemma: "cheap", comparative: "cheaper", superlative: "cheapest" },
+  { lemma: "free", comparative: "freer", superlative: "freest" },
+  { lemma: "important", comparative: "more important", superlative: "most important" },
+  { lemma: "famous", comparative: "more famous", superlative: "most famous" },
+  { lemma: "popular", comparative: "more popular", superlative: "most popular" },
+  { lemma: "easy", comparative: "easier", superlative: "easiest" },
+  { lemma: "difficult", comparative: "more difficult", superlative: "most difficult" },
+  { lemma: "simple", comparative: "simpler", superlative: "simplest" },
+  { lemma: "complex", comparative: "more complex", superlative: "most complex" },
+  { lemma: "interesting", comparative: "more interesting", superlative: "most interesting" },
+  { lemma: "boring", comparative: "more boring", superlative: "most boring" },
+  { lemma: "fun", comparative: "more fun", superlative: "most fun" },
+  { lemma: "dangerous", comparative: "more dangerous", superlative: "most dangerous" },
+  { lemma: "safe", comparative: "safer", superlative: "safest" },
+  { lemma: "healthy", comparative: "healthier", superlative: "healthiest" },
+  { lemma: "sick", comparative: "sicker", superlative: "sickest" },
+  { lemma: "hungry", comparative: "hungrier", superlative: "hungriest" },
+  { lemma: "full", comparative: "fuller", superlative: "fullest" },
+  { lemma: "empty", comparative: "emptier", superlative: "emptiest" },
+  { lemma: "busy", comparative: "busier", superlative: "busiest" },
+  { lemma: "ready" },
+  { lemma: "late", comparative: "later", superlative: "latest" },
+  { lemma: "early", comparative: "earlier", superlative: "earliest" },
+  { lemma: "right" },
+  { lemma: "wrong" },
+  { lemma: "true", comparative: "truer", superlative: "truest" },
+  { lemma: "false" },
+  { lemma: "real" },
+  { lemma: "fake" },
+  { lemma: "possible" },
+  { lemma: "impossible" },
+  { lemma: "necessary" },
+  { lemma: "special" },
+  { lemma: "normal" },
+  { lemma: "strange", comparative: "stranger", superlative: "strangest" },
+  { lemma: "different" },
+  { lemma: "same" },
+  { lemma: "similar" },
+  // Emotion
+  { lemma: "happy", comparative: "happier", superlative: "happiest" },
+  { lemma: "sad", comparative: "sadder", superlative: "saddest" },
+  { lemma: "angry", comparative: "angrier", superlative: "angriest" },
+  { lemma: "afraid" },
+  { lemma: "scared", comparative: "more scared", superlative: "most scared" },
+  { lemma: "surprised" },
+  { lemma: "excited", comparative: "more excited", superlative: "most excited" },
+  { lemma: "tired", comparative: "more tired", superlative: "most tired" },
+  { lemma: "bored", comparative: "more bored", superlative: "most bored" },
+  { lemma: "worried", comparative: "more worried", superlative: "most worried" },
+  { lemma: "nervous", comparative: "more nervous", superlative: "most nervous" },
+  { lemma: "proud", comparative: "prouder", superlative: "proudest" },
+  { lemma: "lonely", comparative: "lonelier", superlative: "loneliest" },
+  { lemma: "lucky", comparative: "luckier", superlative: "luckiest" },
+  { lemma: "sorry" },
+  { lemma: "glad" },
+  { lemma: "kind", comparative: "kinder", superlative: "kindest" },
+  { lemma: "friendly", comparative: "friendlier", superlative: "friendliest" },
+  { lemma: "polite", comparative: "more polite", superlative: "most polite" },
+  { lemma: "rude", comparative: "ruder", superlative: "rudest" },
+  { lemma: "smart", comparative: "smarter", superlative: "smartest" },
+  { lemma: "stupid", comparative: "more stupid", superlative: "most stupid" },
+  { lemma: "crazy", comparative: "crazier", superlative: "craziest" },
+  { lemma: "serious", comparative: "more serious", superlative: "most serious" },
+  { lemma: "funny", comparative: "funnier", superlative: "funniest" },
+  { lemma: "careful", comparative: "more careful", superlative: "most careful" },
+  { lemma: "careless", comparative: "more careless", superlative: "most careless" },
+  { lemma: "lazy", comparative: "lazier", superlative: "laziest" },
+  { lemma: "brave", comparative: "braver", superlative: "bravest" },
+];
+
+// ============================================
+// 内部ヘルパー関数（フォーム検索）
+// ============================================
+const findVerbFormsEn = (lemma: string): VerbForms | undefined =>
+  verbFormsEn.find((v) => v.lemma === lemma);
+
+const findNounFormsEn = (lemma: string): NounForms | undefined =>
+  nounFormsEn.find((n) => n.lemma === lemma);
+
+const findPronounFormsEn = (lemma: string): PronounForms | undefined =>
+  pronounFormsEn.find((p) => p.lemma === lemma);
+
+const findAdjectiveFormsEn = (lemma: string): AdjectiveForms | undefined =>
+  adjectiveFormsEn.find((a) => a.lemma === lemma);
+
+// ============================================
+// ルックアップ関数（Core + En をマージ）
+// ============================================
+
+/**
+ * 動詞をルックアップ（Core + 英語活用形をマージ）
+ */
+export const findVerb = (lemma: string): VerbEntry | undefined => {
+  const core = verbCores.find((v) => v.lemma === lemma);
+  if (!core) return undefined;
+
+  const forms = findVerbFormsEn(lemma);
+  if (!forms) {
+    // フォールバック: 規則活用を生成
+    const base = core.lemma;
+    return {
+      ...core,
+      forms: {
+        base,
+        past: base + "ed",
+        pp: base + "ed",
+        ing: base + "ing",
+        s: base + "s",
+      },
+    };
+  }
+  return { ...core, forms: forms.forms };
+};
+
+/**
+ * 名詞をルックアップ（Core + 英語複数形をマージ）
+ */
+export const findNoun = (lemma: string): NounEntry | undefined => {
+  const core = nounCores.find((n) => n.lemma === lemma);
+  if (!core) return undefined;
+
+  const forms = findNounFormsEn(lemma);
+  return {
+    ...core,
+    plural: forms?.plural ?? core.lemma + "s",
+  };
+};
+
+/**
+ * 代名詞をルックアップ（Core + 英語格変化をマージ）
+ */
+export const findPronoun = (lemma: string): PronounEntry | undefined => {
+  const core = pronounCores.find((p) => p.lemma === lemma);
+  if (!core) return undefined;
+
+  const forms = findPronounFormsEn(lemma);
+  return {
+    ...core,
+    objectForm: forms?.objectForm ?? core.lemma,
+    possessive: forms?.possessive,
+    negativeForm: forms?.negativeForm,
+  };
+};
+
+/**
+ * 形容詞をルックアップ（Core + 英語比較級をマージ）
+ */
+export const findAdjective = (lemma: string): AdjectiveEntry | undefined => {
+  const core = adjectiveCores.find((a) => a.lemma === lemma);
+  if (!core) return undefined;
+
+  const forms = findAdjectiveFormsEn(lemma);
+  return {
+    ...core,
+    comparative: forms?.comparative,
+    superlative: forms?.superlative,
+  };
+};
+
+/**
+ * 副詞をルックアップ（副詞は活用なし）
+ */
+export const findAdverb = (lemma: string): AdverbEntry | undefined => {
+  const core = adverbCores.find((a) => a.lemma === lemma);
+  if (!core) return undefined;
+
+  return {
+    lemma: core.lemma,
+    type: core.type,
+    polaritySensitive: core.polaritySensitive,
+  };
+};
+
+// ============================================
+// カテゴリ別取得関数
+// ============================================
+
+export const getVerbsByCategory = (category: VerbCategory): VerbEntry[] =>
+  verbCores
+    .filter((v) => v.category === category)
+    .map((core) => findVerb(core.lemma)!)
+    .filter(Boolean);
+
+export const getNounsByCategory = (category: NounCategory): NounEntry[] =>
+  nounCores
+    .filter((n) => n.category === category)
+    .map((core) => findNoun(core.lemma)!)
+    .filter(Boolean);
+
+export const getAdjectivesByCategory = (category: AdjectiveCategory): AdjectiveEntry[] =>
+  adjectiveCores
+    .filter((a) => a.category === category)
+    .map((core) => findAdjective(core.lemma)!)
+    .filter(Boolean);
+
+export const isProperNoun = (lemma: string): boolean => {
+  const noun = findNoun(lemma);
+  return noun?.proper === true;
+};

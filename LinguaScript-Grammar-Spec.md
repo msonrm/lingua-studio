@@ -444,7 +444,7 @@ time('yesterday, manner('quickly, pp('in, 'park, eat(agent:'I, patient:'apple)))
 
 ```lisp
 ;; Yes/No疑問文: 疑問詞プレースホルダーなし
-question(sentence(past+simple(eat(agent:'you, theme:'apple))))
+question(sentence(past+simple(eat(agent:'you, theme:noun(det:'the, head:'apple)))))
 ;; → "Did you eat the apple?"
 
 ;; Wh疑問文: 疑問詞プレースホルダーあり
@@ -461,7 +461,7 @@ question(sentence(past+simple(eat(agent:'you, theme:?what))))
 
 | 空欄の位置 | 疑問詞 | 例 |
 |-----------|--------|-----|
-| `agent:?who` | Who | Who ate the apple? |
+| `agent:?who` | Who | Who ate an apple? |
 | `theme:?what` / `patient:?what` | What | What did you eat? |
 | `recipient:?whom` | Whom / To whom | Whom did you give the book to? |
 | `goal:?where` | Where (着点) | Where did you go? |
@@ -470,7 +470,7 @@ question(sentence(past+simple(eat(agent:'you, theme:?what))))
 ```lisp
 ;; 主語への疑問
 question(sentence(past+simple(eat(agent:?who, theme:'apple))))
-;; → "Who ate the apple?"
+;; → "Who ate an apple?"
 
 ;; 目的語への疑問
 question(sentence(past+simple(eat(agent:'you, theme:?what))))
@@ -499,7 +499,7 @@ sentence(past+simple(time(?when, arrive(agent:'they))))
 ;; → "When did they arrive?"
 
 ;; 様態への疑問
-sentence(past+simple(manner(?how, fix(agent:'you, theme:'car))))
+sentence(past+simple(manner(?how, fix(agent:'you, theme:noun(det:'the, head:'car)))))
 ;; → "How did you fix the car?"
 ```
 
@@ -641,7 +641,7 @@ sentence(past+simple(passive(eat(theme:'apple))))
 ### モダリティ付き
 
 ```lisp
-modal(certainty:must_have, sentence(past+perfect(eat(agent:'you, theme:'apple))))
+modal(certainty:must, sentence(present+perfect(eat(agent:'you, theme:'apple))))
 ;; → "You must have eaten an apple."
 ```
 
@@ -800,10 +800,10 @@ and('I, 'you, 'he)
 
 ```lisp
 ;; "I eat and drink."
-sentence(and(eat(agent:'I), drink(agent:'I)))
+sentence(present+simple(and(eat(agent:'I), drink(agent:'I))))
 
 ;; "I run or walk."
-sentence(or(run(agent:'I), walk(agent:'I)))
+sentence(present+simple(or(run(agent:'I), walk(agent:'I))))
 ```
 
 ### ネスト時の処理
@@ -880,10 +880,10 @@ be(theme:'mine, attribute:'bigger)
 主語位置と目的語位置で自動的に格が変化する。
 
 ```lisp
-see(agent:'I, theme:'he)
+sentence(present+simple(see(experiencer:'I, stimulus:'he)))
 ;; → "I see him."（heは目的語なのでhimに変化）
 
-see(agent:'he, theme:'I)
+sentence(present+simple(see(experiencer:'he, stimulus:'I)))
 ;; → "He sees me."（Iは目的語なのでmeに変化）
 ```
 
@@ -899,11 +899,11 @@ see(agent:'he, theme:'I)
 
 ```lisp
 ;; 肯定文
-sentence(see(agent:'I, theme:'someone))
+sentence(present+simple(see(experiencer:'I, stimulus:'someone)))
 ;; → "I see someone."
 
 ;; 否定文
-sentence(not(see(agent:'I, theme:'someone)))
+sentence(present+simple(not(see(experiencer:'I, stimulus:'someone))))
 ;; → "I see nobody."（自動変換）
 ;; または "I don't see anyone."（文脈による）
 ```
@@ -1636,20 +1636,20 @@ question(sentence(present+simple(like(agent:'you, theme:'coffee))))
 
 ;; Wh疑問文（意味役割）
 question(sentence(past+simple(eat(agent:?who, theme:'apple))))
-;; → "Who ate the apple?"
+;; → "Who ate an apple?"
 
 question(sentence(past+simple(eat(agent:'you, theme:?what))))
 ;; → "What did you eat?"
 
 ;; Wh疑問文（question()省略可 - 自動検出）
 sentence(past+simple(eat(agent:?who, theme:'apple)))
-;; → "Who ate the apple?"
+;; → "Who ate an apple?"
 
 ;; Wh疑問文（副詞疑問詞）
 sentence(past+simple(locative(?where, run(agent:'I))))
 ;; → "Where did I run?"
 
-sentence(past+simple(manner(?how, fix(agent:'you, theme:'car))))
+sentence(past+simple(manner(?how, fix(agent:'you, theme:noun(det:'the, head:'car)))))
 ;; → "How did you fix the car?"
 
 sentence(past+simple(time(?when, arrive(agent:'they))))

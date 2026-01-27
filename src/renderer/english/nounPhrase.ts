@@ -11,8 +11,9 @@ import type {
   PronounHead,
   PrepositionalPhraseNode,
   CoordinatedNounPhraseNode,
-} from '../types/schema';
-import type { TransformationType } from './types';
+} from '../../types/schema';
+import type { TransformationType } from '../types';
+import { renderCoordinationUnified, CoordElement } from './coordination';
 
 // ============================================
 // Types
@@ -343,44 +344,39 @@ export function renderCoordinatedNounPhraseUnified(
   deps: NounPhraseDependencies
 ): NounPhraseResult {
   const transforms: Transform[] = [];
-  // polarity is used through ctx passed to sub-calls
-  void ctx;
 
-  const parts: string[] = [];
-
-  for (let i = 0; i < cnp.conjuncts.length; i++) {
-    const conjunct = cnp.conjuncts[i];
-
-    // 等位接続の場合は再帰
+  // 各要素をレンダリングする関数
+  const renderConjunct = (conjunct: NounPhraseNode | CoordinatedNounPhraseNode): string => {
     if (conjunct.type === 'coordinatedNounPhrase') {
       const subResult = renderCoordinatedNounPhraseUnified(
         conjunct as CoordinatedNounPhraseNode,
         ctx,
         deps
       );
-      parts.push(subResult.form);
       transforms.push(...subResult.transforms);
+      return subResult.form;
     } else {
       const subResult = renderNounPhraseUnified(
         conjunct as NounPhraseNode,
         ctx,
         deps
       );
-      parts.push(subResult.form);
       transforms.push(...subResult.transforms);
+      return subResult.form;
     }
+  };
 
-    // 接続詞の挿入
-    if (i < cnp.conjuncts.length - 1) {
-      if (i === cnp.conjuncts.length - 2) {
-        // 最後の要素の前には "and"/"or"
-        parts.push(cnp.conjunction);
-      } else {
-        // それ以外は ","
-        parts[parts.length - 1] += ',';
-      }
-    }
-  }
+  // CoordElement配列に変換
+  // 名詞句は全て同じグループ（入れ子の場合は再帰で処理済み）
+  const elements: CoordElement<NounPhraseNode | CoordinatedNounPhraseNode>[] =
+    cnp.conjuncts.map((conjunct, index) => ({
+      value: conjunct,
+      groupId: 'np',  // 名詞句は全て同一グループ
+      conjunction: index === 0 ? null : cnp.conjunction,
+    }));
 
-  return { form: parts.join(' '), transforms };
+  // 統一等位接続モジュールを使用
+  const form = renderCoordinationUnified(elements, renderConjunct);
+
+  return { form, transforms };
 }

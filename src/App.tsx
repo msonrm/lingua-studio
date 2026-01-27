@@ -5,7 +5,7 @@ import { LinguaScriptView } from './components/LinguaScriptView';
 import { VisualizationPanel } from './components/VisualizationPanel';
 import { GrammarPanel } from './components/GrammarPanel';
 import { SentenceNode } from './types/schema';
-import { renderToLinguaScript } from './compiler/linguaScriptRenderer';
+import { renderToLinguaScript } from './renderer/linguaScriptRenderer';
 import { TransformLog, BlockChange } from './types/grammarLog';
 import {
   LocaleContext,

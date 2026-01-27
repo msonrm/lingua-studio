@@ -41,8 +41,8 @@ export const jaHira: LocaleData = {
     TIME_CHIP_ASPECTUAL_TOOLTIP: 'しているところ、おわったところ',
     TIME_CHIP_ABSTRACT_LABEL: 'いつ？どんなようす？',
     TIME_CHIP_ABSTRACT_TOOLTIP: 'いつのこと？どんなようす？',
-    TIME_CHIP_UNIFIED_LABEL: 'いつ？/ようす',
-    TIME_CHIP_UNIFIED_TOOLTIP: 'いつ？とようすをえらぶ',
+    TIME_CHIP_UNIFIED_LABEL: 'じかん/ようす',
+    TIME_CHIP_UNIFIED_TOOLTIP: 'じかんとようすをえらぶ',
 
     // Time options
     TIME_YESTERDAY: 'きのう',
@@ -257,7 +257,7 @@ export const jaHira: LocaleData = {
     TAB_AST: 'AST',
     TAB_COMING_SOON: 'もうすこしまってね',
     TAB_GRAMMAR: 'ことばのきまり',
-    TAB_TIMELINE: 'タイムライン',
+    TAB_TIMELINE: 'じかん/ようす',
 
     // Panels
     PANEL_OUTPUT: 'できたぶん',

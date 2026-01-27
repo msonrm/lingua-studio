@@ -10,16 +10,255 @@ import {
   SemanticRole,
   PrepositionalPhraseNode,
   CoordinatedNounPhraseNode,
-  CoordinationConjunct,
-  Conjunction,
   VerbPhraseNode,
   ModalType,
 } from '../types/schema';
 import { findVerb, findNoun, findPronoun } from '../data/dictionary';
-import { GrammarLogCollector, RenderResult } from '../types/grammarLog';
+import { RenderResult } from '../types/grammarLog';
+import { DerivationTracker } from '../grammar/DerivationTracker';
+import {
+  conjugateVerb,
+  ConjugationContext,
+  ConjugationResult,
+  Tense,
+  Aspect,
+  Polarity,
+  ModalType as ConjugationModalType,
+} from '../grammar/conjugation';
+import {
+  renderNounPhraseUnified,
+  renderCoordinatedNounPhraseUnified,
+  NounPhraseContext,
+  NounPhraseDependencies,
+} from '../grammar/nounPhrase';
 
-// Grammar log collector (module-level, reset on each render)
-let logCollector = new GrammarLogCollector();
+// Derivation tracker (module-level, reset on each render)
+let tracker = new DerivationTracker();
+
+// ============================================
+// Unified Conjugation Wrapper
+// ============================================
+
+/** 統一活用関数のラッパー - 依存関係を注入し、変形をトラッカーに記録 */
+function conjugateVerbUnified(
+  lemma: string,
+  tense: Tense,
+  aspect: Aspect,
+  polarity: Polarity,
+  frequencyAdverbs: AdverbNode[],
+  subject?: NounPhraseNode | CoordinatedNounPhraseNode,
+  modal?: ModalType,
+  modalPolarity?: Polarity
+): ConjugationResult {
+  const ctx: ConjugationContext = {
+    tense,
+    aspect,
+    polarity,
+    subject,
+    modal: modal as ConjugationModalType,
+    modalPolarity,
+    frequencyAdverbs,
+  };
+
+  const deps = {
+    findVerb: (l: string) => {
+      const entry = findVerb(l);
+      if (!entry) return undefined;
+      return {
+        lemma: entry.lemma,
+        forms: {
+          base: entry.forms.base,
+          past: entry.forms.past,
+          pp: entry.forms.pp,
+          ing: entry.forms.ing,
+          thirdSg: entry.forms.s,  // dictionary uses 's' not 'thirdSg'
+          irregular: entry.forms.irregular,
+        },
+      };
+    },
+    getPersonNumber: (s: NounPhraseNode | CoordinatedNounPhraseNode | undefined) => {
+      if (!s) return { person: 3 as const, number: 'singular' as const };
+      return getPersonNumber(s);
+    },
+    isThirdSingular: (s: NounPhraseNode | CoordinatedNounPhraseNode | undefined) => {
+      if (!s) return true;
+      return isThirdSingular(s);
+    },
+  };
+
+  const result = conjugateVerb(lemma, ctx, deps);
+
+  // 変形をトラッカーに記録
+  for (const t of result.transforms) {
+    tracker.recordMorphology(t.type, t.from, t.to, t.rule, t.description);
+  }
+
+  return result;
+}
+
+/**
+ * 平叙文用の動詞形を取得
+ * Simple aspect で否定でない場合は活用形を直接使用
+ */
+function getDeclarativeVerbForm(
+  lemma: string,
+  tense: Tense,
+  aspect: Aspect,
+  polarity: Polarity,
+  frequencyAdverbs: AdverbNode[],
+  subject?: NounPhraseNode | CoordinatedNounPhraseNode,
+  modal?: ModalType,
+  modalPolarity?: Polarity
+): string {
+  const result = conjugateVerbUnified(
+    lemma, tense, aspect, polarity, frequencyAdverbs, subject, modal, modalPolarity
+  );
+
+  const verbEntry = findVerb(lemma);
+  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
+  const is3sg = subject ? isThirdSingular(subject) : true;
+  const isNegative = polarity === 'negative';
+
+  // Simple aspect の平叙文では do-support を使わない（否定以外）
+  if (aspect === 'simple' && !modal && lemma !== 'be') {
+    if (tense === 'past' && !isNegative) {
+      // "He ate" - 直接過去形
+      return freqStr ? `${freqStr} ${verbEntry?.forms.past || lemma}` : (verbEntry?.forms.past || lemma);
+    }
+    if (tense === 'present' && !isNegative) {
+      // "He eats" / "They eat"
+      const form = is3sg ? (verbEntry?.forms.s || lemma) : (verbEntry?.forms.base || lemma);
+      return freqStr ? `${freqStr} ${form}` : form;
+    }
+    // 否定文: "He does not eat" / "He did not eat"
+    if (isNegative) {
+      return `${result.auxiliary} not ${result.mainVerb}`.trim();
+    }
+  }
+
+  // be動詞の特殊処理
+  if (lemma === 'be' && aspect === 'simple' && !modal) {
+    if (isNegative) {
+      return `${result.auxiliary} not ${result.mainVerb}`.trim();
+    }
+    return result.auxiliary || 'is';
+  }
+
+  // 他のケース: auxiliary + mainVerb
+  if (result.auxiliary) {
+    return `${result.auxiliary} ${result.mainVerb}`.trim();
+  }
+  return result.mainVerb;
+}
+
+/**
+ * 疑問文用の動詞形を取得（助動詞と本動詞を分離）
+ */
+function getInterrogativeVerbForm(
+  lemma: string,
+  tense: Tense,
+  aspect: Aspect,
+  polarity: Polarity,
+  frequencyAdverbs: AdverbNode[],
+  subject?: NounPhraseNode | CoordinatedNounPhraseNode,
+  modal?: ModalType,
+  modalPolarity?: Polarity
+): { auxiliary: string; mainVerb: string } {
+  const result = conjugateVerbUnified(
+    lemma, tense, aspect, polarity, frequencyAdverbs, subject, modal, modalPolarity
+  );
+
+  // Simple past/present で do-support が必要な場合
+  if (aspect === 'simple' && !modal && lemma !== 'be') {
+    // do-support をログ
+    const doForm = result.auxiliary || 'does';
+    tracker.recordSyntax('do-support', 'insert', 'DO_SUPPORT_QUESTION', 'DO_SUPPORT_QUESTION_DESC', {
+      element: 'do',
+      after: [`${doForm} [S V]`],
+    });
+  }
+
+  return {
+    auxiliary: result.auxiliary || 'does',
+    mainVerb: result.mainVerb,
+  };
+}
+
+// ============================================
+// Unified Noun Phrase Wrapper
+// ============================================
+
+/** 統一名詞句レンダリングの依存関係 */
+function getNounPhraseDeps(): NounPhraseDependencies {
+  return {
+    findNoun: (lemma: string) => {
+      const entry = findNoun(lemma);
+      if (!entry) return undefined;
+      return {
+        lemma: entry.lemma,
+        plural: entry.plural,
+        countable: entry.countable,
+        zeroArticle: entry.zeroArticle,
+      };
+    },
+    findPronoun: (lemma: string) => {
+      const entry = findPronoun(lemma);
+      if (!entry) return undefined;
+      return {
+        lemma: entry.lemma,
+        objectForm: entry.objectForm,
+        possessive: entry.possessive,
+        person: entry.person,
+        number: entry.number,
+        type: entry.type,
+        polaritySensitive: entry.polaritySensitive,
+        negativeForm: entry.negativeForm,
+      };
+    },
+    renderPrepositionalPhrase: (pp, polarity) => {
+      return renderPrepositionalPhrase(pp, polarity);
+    },
+    renderCoordinatedNounPhrase: (cnp, isSubject, polarity) => {
+      return renderCoordinatedNounPhrase(cnp, isSubject, polarity);
+    },
+  };
+}
+
+/** 名詞句をレンダリングし、変形をトラッカーに記録 */
+function renderNounPhrase(
+  np: NounPhraseNode,
+  isSubject: boolean = true,
+  polarity: 'affirmative' | 'negative' = 'affirmative'
+): string {
+  const ctx: NounPhraseContext = { isSubject, polarity };
+  const deps = getNounPhraseDeps();
+  const result = renderNounPhraseUnified(np, ctx, deps);
+
+  // 変形をトラッカーに記録
+  for (const t of result.transforms) {
+    tracker.recordMorphology(t.type, t.from, t.to, t.rule, t.description);
+  }
+
+  return result.form;
+}
+
+/** 等位接続名詞句をレンダリングし、変形をトラッカーに記録 */
+function renderCoordinatedNounPhrase(
+  cnp: CoordinatedNounPhraseNode,
+  isSubject: boolean = true,
+  polarity: 'affirmative' | 'negative' = 'affirmative'
+): string {
+  const ctx: NounPhraseContext = { isSubject, polarity };
+  const deps = getNounPhraseDeps();
+  const result = renderCoordinatedNounPhraseUnified(cnp, ctx, deps);
+
+  // 変形をトラッカーに記録
+  for (const t of result.transforms) {
+    tracker.recordMorphology(t.type, t.from, t.to, t.rule, t.description);
+  }
+
+  return result.form;
+}
 
 // 主語となりうるロール
 const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
@@ -114,8 +353,8 @@ export function renderToEnglish(ast: SentenceNode): string {
 }
 
 export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
-  // Reset log collector for fresh render
-  logCollector = new GrammarLogCollector();
+  // Reset tracker for fresh render
+  tracker = new DerivationTracker();
 
   let clause: string;
 
@@ -159,13 +398,13 @@ export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
   if (ast.sentenceType === 'fact') {
     return {
       output: `⊨ ${capitalized}${punctuation}`,
-      logs: logCollector.getLogs(),
+      logs: tracker.toLegacyLogs(),
     };
   }
 
   return {
     output: capitalized + punctuation,
-    logs: logCollector.getLogs(),
+    logs: tracker.toLegacyLogs(),
   };
 }
 
@@ -207,7 +446,7 @@ function renderClause(clause: ClauseNode): string {
     (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
     ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
     : undefined;
-  const verbForm = conjugateVerbWithAdverbs(
+  const verbForm = getDeclarativeVerbForm(
     verbPhrase.verb.lemma,
     tense,
     aspect,
@@ -385,6 +624,12 @@ function renderLogicExpression(clause: ClauseNode): string {
   } else if (logicOp.operator === 'OR') {
     // OR: "either P or Q" (論理的選択)
     return `either ${leftStr} or ${rightStr}`;
+  } else if (logicOp.operator === 'IF') {
+    // IF: "if P, then Q" (条件・含意)
+    return `if ${leftStr}, then ${rightStr}`;
+  } else if (logicOp.operator === 'BECAUSE') {
+    // BECAUSE: "Q because P" (因果関係 - 結果を先に)
+    return `${rightStr} because ${leftStr}`;
   }
 
   return leftStr;
@@ -446,7 +691,7 @@ function renderInterrogativeClause(clause: ClauseNode): string {
     : undefined;
 
   // 疑問文用の動詞活用（助動詞と本動詞を分離して返す）
-  const { auxiliary, mainVerb } = conjugateVerbForQuestion(
+  const { auxiliary, mainVerb } = getInterrogativeVerbForm(
     verbPhrase.verb.lemma,
     tense,
     aspect,
@@ -458,8 +703,10 @@ function renderInterrogativeClause(clause: ClauseNode): string {
   );
 
   // 倒置をログ（Yes/No疑問文）
-  logCollector.log('inversion', `${subject} ${auxiliary}`, `${auxiliary} ${subject}`,
-    'Question formation', 'subject-auxiliary inversion');
+  tracker.recordSyntax(
+    'inversion', 'reorder', 'INVERSION_QUESTION', 'INVERSION_QUESTION_DESC',
+    { before: [subject, auxiliary], after: [auxiliary, subject] }
+  );
 
   // その他の引数（目的語など）- 主語ロール以外
   // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
@@ -535,15 +782,17 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
     .join(' ');
 
   // Wh移動をログ
-  logCollector.log('wh-movement', `...${whInfo.whWord}...`, `${whInfo.whWord} ...`,
-    `Wh-word "${whInfo.whWord}" in ${whInfo.role}`, 'fronted to sentence start');
+  tracker.recordSyntax(
+    'wh-movement', 'move', 'WH_MOVEMENT_FRONT', 'WH_MOVEMENT_FRONT_DESC',
+    { element: whInfo.whWord, position: 'sentence start' }
+  );
 
   if (whInfo.isSubject) {
     // 主語Wh疑問文: Who ate the apple? (do-supportなし)
     // 語順: Wh + Verb(活用) + Objects + ...
 
     // 動詞を3人称単数として活用（疑問詞は3人称単数扱い）
-    const verbForm = conjugateVerbWithAdverbs(
+    const verbForm = getDeclarativeVerbForm(
       verbPhrase.verb.lemma,
       tense,
       aspect,
@@ -593,7 +842,7 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
       : undefined;
 
     // 疑問文用の動詞活用
-    const { auxiliary, mainVerb } = conjugateVerbForQuestion(
+    const { auxiliary, mainVerb } = getInterrogativeVerbForm(
       verbPhrase.verb.lemma,
       tense,
       aspect,
@@ -670,7 +919,7 @@ function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo):
   const timeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'time' && a !== whAdverbInfo.adverb);
 
   // 疑問文用の動詞活用（助動詞と本動詞を分離）
-  const { auxiliary, mainVerb } = conjugateVerbForQuestion(
+  const { auxiliary, mainVerb } = getInterrogativeVerbForm(
     verbPhrase.verb.lemma,
     tense,
     aspect,
@@ -941,7 +1190,7 @@ function renderCoordinatedVerbPhrase(
 
   // 動詞を活用（effectiveSubject で人称・数を決定）
   // 独自の主語がある場合はモーダルを繰り返す、ない場合はモーダルのスコープ内（原形）
-  const verbForm = conjugateVerbWithAdverbs(
+  const verbForm = getDeclarativeVerbForm(
     vp.verb.lemma,
     tense,
     aspect,
@@ -1016,143 +1265,6 @@ function renderFiller(
   return '';
 }
 
-function renderCoordinatedNounPhrase(
-  coordNP: CoordinatedNounPhraseNode,
-  isSubject: boolean,
-  polarity: 'affirmative' | 'negative'
-): string {
-  if (coordNP.conjuncts.length === 0) return '';
-  if (coordNP.conjuncts.length === 1) {
-    return renderConjunct(coordNP.conjuncts[0], isSubject, polarity, coordNP.conjunction);
-  }
-
-  // 各要素をレンダリング（入れ子の場合は相関接続詞付き）
-  const renderedParts = coordNP.conjuncts.map(conjunct =>
-    renderConjunct(conjunct, isSubject, polarity, coordNP.conjunction)
-  );
-
-  // 2つの場合: "A and B" または "A, and either B or C"
-  if (renderedParts.length === 2) {
-    // 入れ子に異なる接続詞がある場合、外側の接続詞の前にカンマを入れる
-    const hasNestedDifferent = coordNP.conjuncts.some(
-      c => c.type === 'coordinatedNounPhrase' && c.conjunction !== coordNP.conjunction
-    );
-    const separator = hasNestedDifferent ? `, ${coordNP.conjunction} ` : ` ${coordNP.conjunction} `;
-    return `${renderedParts[0]}${separator}${renderedParts[1]}`;
-  }
-
-  // 3つ以上: "A, B, and C" (Oxford comma)
-  const lastItem = renderedParts.pop()!;
-  return `${renderedParts.join(', ')}, ${coordNP.conjunction} ${lastItem}`;
-}
-
-// 等位接続の要素をレンダリング（入れ子の場合は相関接続詞を使用）
-function renderConjunct(
-  conjunct: CoordinationConjunct,
-  isSubject: boolean,
-  polarity: 'affirmative' | 'negative',
-  parentConjunction: Conjunction
-): string {
-  if (conjunct.type === 'nounPhrase') {
-    return renderNounPhrase(conjunct, isSubject, polarity);
-  }
-
-  // 入れ子のCoordinatedNounPhraseNode
-  const nested = conjunct;
-
-  // 同じ接続詞の場合は通常レンダリング（フラット化はAST側で済み）
-  if (nested.conjunction === parentConjunction) {
-    return renderCoordinatedNounPhrase(nested, isSubject, polarity);
-  }
-
-  // 異なる接続詞の場合は相関接続詞を使用
-  // and → "both A and B"
-  // or → "either A or B"
-  const correlative = nested.conjunction === 'and' ? 'both' : 'either';
-  const innerRendered = renderCoordinatedNounPhrase(nested, isSubject, polarity);
-  return `${correlative} ${innerRendered}`;
-}
-
-function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarity: 'affirmative' | 'negative' = 'affirmative'): string {
-  // 代名詞の処理
-  if (np.head.type === 'pronoun') {
-    const pronounHead = np.head as PronounHead;
-    let result = renderPronoun(pronounHead, isSubject, polarity);
-    // 不定代名詞 + 形容詞: "something good", "someone important"
-    // 形容詞は後置される
-    if (pronounHead.pronounType === 'indefinite' && np.adjectives.length > 0) {
-      const adjs = np.adjectives.map(adj => adj.lemma).join(' ');
-      result += ' ' + adjs;
-    }
-    // 前置詞句修飾（代名詞用）: "someone in the room"
-    if (np.prepModifier) {
-      result += ' ' + renderPrepositionalPhrase(np.prepModifier, polarity);
-    }
-    return result;
-  }
-
-  const parts: string[] = [];
-
-  // 前置限定詞（all, both, half）
-  if (np.preDeterminer) {
-    parts.push(np.preDeterminer);
-  }
-
-  // 中央限定詞（the, this, my, a/an, no）
-  if (np.determiner && np.determiner.lexeme) {
-    if (np.determiner.lexeme === 'a') {
-      // a/an の判定は後で行う
-      parts.push('INDEF');
-    } else {
-      parts.push(np.determiner.lexeme);
-    }
-  }
-
-  // 後置限定詞（one, two, many, few）
-  if (np.postDeterminer) {
-    parts.push(np.postDeterminer);
-  }
-
-  // 形容詞
-  np.adjectives.forEach(adj => {
-    parts.push(adj.lemma);
-  });
-
-  // 名詞
-  if (np.head.type === 'noun') {
-    const nounHead = np.head as NounHead;
-    const nounEntry = findNoun(nounHead.lemma);
-
-    if (nounHead.number === 'plural' && nounEntry) {
-      parts.push(nounEntry.plural);
-    } else {
-      parts.push(nounHead.lemma);
-    }
-  }
-
-  // a/an の処理
-  let result = parts.join(' ');
-  if (result.includes('INDEF ')) {
-    const idx = result.indexOf('INDEF ');
-    const before = result.slice(0, idx);
-    const after = result.slice(idx + 6);
-    const firstChar = after.charAt(0).toLowerCase();
-    const article = ['a', 'e', 'i', 'o', 'u'].includes(firstChar) ? 'an' : 'a';
-    if (article === 'an') {
-      logCollector.log('article', 'a', 'an',
-        `Next sound: vowel "${firstChar}"`, 'a → an');
-    }
-    result = before + article + ' ' + after;
-  }
-
-  // 前置詞句修飾（名詞用）: "the apple on the desk"
-  if (np.prepModifier) {
-    result += ' ' + renderPrepositionalPhrase(np.prepModifier, polarity);
-  }
-
-  return result;
-}
-
 function renderPrepositionalPhrase(pp: PrepositionalPhraseNode, polarity: 'affirmative' | 'negative'): string {
   const objectStr = pp.object.type === 'coordinatedNounPhrase'
     ? renderCoordinatedNounPhrase(pp.object as CoordinatedNounPhraseNode, false, polarity)
@@ -1177,227 +1289,23 @@ function renderLocativeAdverb(lemma: string, polarity: 'affirmative' | 'negative
   return lemma;
 }
 
-function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirmative' | 'negative'): string {
-  const pronoun = findPronoun(head.lemma);
-
-  if (!pronoun) {
-    // 疑問詞（?who, ?what）の場合、?を除去して返す
-    if (head.lemma.startsWith('?')) {
-      const stripped = head.lemma.slice(1);
-      // 目的格の場合は whom を使用
-      if (!isSubject && stripped === 'who') {
-        return 'whom';
-      }
-      return stripped;
-    }
-    return head.lemma;
-  }
-
-  // 疑問詞の場合
-  if (pronoun.type === 'interrogative') {
-    const lemma = pronoun.lemma.replace(/^\?/, '');
-    if (isSubject) {
-      return lemma;
-    } else {
-      return pronoun.objectForm.replace(/^\?/, '');
-    }
-  }
-
-  // 不定代名詞の極性による切り替え（someone → anyone / nobody）
-  if (pronoun.polaritySensitive) {
-    if (polarity === 'negative' && pronoun.negativeForm) {
-      // 否定文の場合は nobody/nothing を使用
-      return pronoun.negativeForm;
-    }
-    // 疑問文や否定コンテキストでは anyone/anything を使用（将来対応）
-    // 現時点では肯定形をそのまま使用
-  }
-
-  // 格変化: 主格 vs 目的格
-  if (isSubject) {
-    return pronoun.lemma;
-  } else {
-    if (pronoun.lemma !== pronoun.objectForm) {
-      logCollector.log('case', pronoun.lemma, pronoun.objectForm,
-        'Position: object', 'objective case');
-    }
-    return pronoun.objectForm;
-  }
-}
-
-// 否定と頻度副詞を含む動詞活用
-function conjugateVerbWithAdverbs(
-  lemma: string,
-  tense: 'past' | 'present' | 'future',
-  aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
-  polarity: 'affirmative' | 'negative',
-  frequencyAdverbs: AdverbNode[],
-  subject?: NounPhraseNode | CoordinatedNounPhraseNode,
-  modal?: ModalType,
-  modalPolarity?: 'affirmative' | 'negative'
-): string {
-  const verbEntry = findVerb(lemma);
-  if (!verbEntry) return lemma;
-
-  const isNegative = polarity === 'negative';
-  // 主語がない場合は "someone"（3人称単数）として扱う
-  const isThirdPersonSingular = subject ? isThirdSingular(subject) : true;
-  const personNumber = subject ? getPersonNumber(subject) : { person: 3 as const, number: 'singular' as const };
-  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
-
-  // モダリティがある場合の処理
-  if (modal) {
-    return conjugateWithModal(lemma, tense, aspect, polarity, frequencyAdverbs, modal, verbEntry, modalPolarity);
-  }
-
-  // 不規則動詞（be動詞など）の活用形を取得
-  const getIrregularForm = (t: 'past' | 'present'): string | undefined => {
-    if (verbEntry.forms.irregular) {
-      const key = getIrregularFormKey(t, personNumber);
-      return verbEntry.forms.irregular[key];
-    }
-    return undefined;
-  };
-
-  // be動詞の助動詞形を取得（進行形などで使用）
-  const getBeAuxiliary = (t: 'past' | 'present' | 'future'): string => {
-    if (t === 'future') return 'will be';
-    // be動詞の不規則活用を使用
-    const beVerb = findVerb('be');
-    if (beVerb?.forms.irregular) {
-      const key = getIrregularFormKey(t, personNumber);
-      const form = beVerb.forms.irregular[key];
-      if (form) return form;
-    }
-    // フォールバック
-    return t === 'past' ? 'was' : (isThirdPersonSingular ? 'is' : 'are');
-  };
-
-  // Simple aspect - 否定は do-support が必要（be動詞は例外）
-  if (aspect === 'simple') {
-    // be動詞の特別処理
-    if (lemma === 'be') {
-      const beForm = tense === 'future'
-        ? 'will be'
-        : getIrregularForm(tense as 'past' | 'present') || verbEntry.forms.base;
-
-      if (isNegative) {
-        // be + not: am not, is not, are not, was not, were not, will not be
-        if (tense === 'future') {
-          return freqStr ? `will ${freqStr} not be` : 'will not be';
-        }
-        return freqStr ? `${beForm} ${freqStr} not` : `${beForm} not`;
-      } else {
-        return freqStr ? `${beForm} ${freqStr}` : beForm;
-      }
-    }
-
-    if (isNegative) {
-      // 否定: do/does/did + not + [freq] + base
-      let doForm: string;
-      switch (tense) {
-        case 'past':
-          doForm = 'did';
-          logCollector.log('do-support', lemma, `did not ${verbEntry.forms.base}`,
-            'Negation + past', 'did + not + base');
-          break;
-        case 'present':
-          doForm = isThirdPersonSingular ? 'does' : 'do';
-          logCollector.log('do-support', lemma, `${doForm} not ${verbEntry.forms.base}`,
-            `Negation + present`, `${doForm} + not + base`);
-          break;
-        case 'future':
-          // will not [freq] base
-          logCollector.log('negation', lemma, `will not ${verbEntry.forms.base}`,
-            'Negation + future', 'will + not + base');
-          return freqStr
-            ? `will not ${freqStr} ${verbEntry.forms.base}`
-            : `will not ${verbEntry.forms.base}`;
-      }
-      return freqStr
-        ? `${doForm} not ${freqStr} ${verbEntry.forms.base}`
-        : `${doForm} not ${verbEntry.forms.base}`;
-    } else {
-      // 肯定: [freq] + verb (頻度副詞は動詞の前)
-      switch (tense) {
-        case 'past': {
-          const pastForm = getIrregularForm('past') || verbEntry.forms.past;
-          if (pastForm !== lemma) {
-            logCollector.log('tense', lemma, pastForm, 'Tense: past', '-ed');
-          }
-          return freqStr ? `${freqStr} ${pastForm}` : pastForm;
-        }
-        case 'present': {
-          const presentForm = getIrregularForm('present') ||
-            (isThirdPersonSingular ? verbEntry.forms.s : verbEntry.forms.base);
-          if (isThirdPersonSingular && presentForm !== verbEntry.forms.base) {
-            logCollector.log('agreement', verbEntry.forms.base, presentForm,
-              `Subject ${getSubjectDescription(subject)} is 3sg`, '+s');
-          }
-          return freqStr ? `${freqStr} ${presentForm}` : presentForm;
-        }
-        case 'future':
-          logCollector.log('tense', lemma, `will ${verbEntry.forms.base}`,
-            'Tense: future', 'will + base');
-          return freqStr
-            ? `will ${freqStr} ${verbEntry.forms.base}`
-            : `will ${verbEntry.forms.base}`;
-      }
-    }
-  }
-
-  // Progressive: aux + [not] + [freq] + verb-ing
-  if (aspect === 'progressive') {
-    const beForm = getBeAuxiliary(tense);
-    logCollector.log('aspect', lemma, `be ${verbEntry.forms.ing}`,
-      'Aspect: progressive', 'be + -ing');
-    const notPart = isNegative ? 'not' : '';
-    const parts = [beForm, notPart, freqStr, verbEntry.forms.ing].filter(p => p.length > 0);
-    return parts.join(' ');
-  }
-
-  // Perfect: aux + [not] + [freq] + verb-pp
-  if (aspect === 'perfect') {
-    const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
-    logCollector.log('aspect', lemma, `have ${verbEntry.forms.pp}`,
-      'Aspect: perfect', 'have + past participle');
-    const notPart = isNegative ? 'not' : '';
-    const parts = [haveForm, notPart, freqStr, verbEntry.forms.pp].filter(p => p.length > 0);
-    return parts.join(' ');
-  }
-
-  // Perfect Progressive: aux + [not] + [freq] + been + verb-ing
-  if (aspect === 'perfectProgressive') {
-    const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
-    logCollector.log('aspect', lemma, `have been ${verbEntry.forms.ing}`,
-      'Aspect: perfect progressive', 'have + been + -ing');
-    const notPart = isNegative ? 'not' : '';
-    const parts = [haveForm, notPart, freqStr, 'been', verbEntry.forms.ing].filter(p => p.length > 0);
-    return parts.join(' ');
-  }
-
-  return lemma;
-}
-
 // モダル概念から英語の実現形式を取得（時制連動）
 function getModalEnglishForm(
   modal: ModalType,
   tense: 'past' | 'present' | 'future'
 ): { auxiliary?: string; usePeriPhrastic?: 'was going to' | 'had to' } {
-  // 現在/未来は同じ形式、過去のみ変化
   if (tense === 'past') {
     switch (modal) {
       case 'ability':    return { auxiliary: 'could' };
       case 'permission': return { auxiliary: 'could' };
       case 'possibility': return { auxiliary: 'might' };
-      case 'obligation': return { usePeriPhrastic: 'had to' };  // 迂言形式
-      case 'certainty':  return { auxiliary: 'must' };  // must have で過去推量
+      case 'obligation': return { usePeriPhrastic: 'had to' };
+      case 'certainty':  return { auxiliary: 'must' };
       case 'advice':     return { auxiliary: 'should' };
-      case 'volition':   return { usePeriPhrastic: 'was going to' };  // 迂言形式
+      case 'volition':   return { usePeriPhrastic: 'was going to' };
       case 'prediction': return { auxiliary: 'would' };
     }
   }
-  // 現在/未来
   switch (modal) {
     case 'ability':    return { auxiliary: 'can' };
     case 'permission': return { auxiliary: 'may' };
@@ -1408,330 +1316,6 @@ function getModalEnglishForm(
     case 'volition':   return { auxiliary: 'will' };
     case 'prediction': return { auxiliary: 'will' };
   }
-}
-
-// モダル変換のログ出力（共通ヘルパー）
-// 平叙文・疑問文の両方から呼び出される
-function logModalTransformation(
-  modal: ModalType,
-  tense: 'past' | 'present' | 'future',
-  modalForm: { auxiliary?: string; usePeriPhrastic?: string }
-): void {
-  if (tense === 'past') {
-    const presentForm = getModalEnglishForm(modal, 'present');
-    const presentAux = presentForm.auxiliary || '';
-    const pastAux = modalForm.auxiliary || modalForm.usePeriPhrastic || '';
-    if (presentAux && pastAux && presentAux !== pastAux) {
-      logCollector.log('modal', presentAux, pastAux,
-        `Modal: ${modal} + past tense`, 'past form');
-    }
-  }
-}
-
-// モダリティ付きの動詞活用（時制連動）
-// modal + (not) + (aspect markers) + verb
-function conjugateWithModal(
-  _lemma: string,  // 将来の拡張用（不規則動詞の処理など）
-  tense: 'past' | 'present' | 'future',
-  aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
-  polarity: 'affirmative' | 'negative',
-  frequencyAdverbs: AdverbNode[],
-  modal: ModalType,
-  verbEntry: { forms: { base: string; pp: string; ing: string } },
-  modalPolarity?: 'affirmative' | 'negative'
-): string {
-  const isVerbNegative = polarity === 'negative';
-  const isModalNegative = modalPolarity === 'negative';
-  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
-
-  // モダリティ否定（NOT modal）の特殊処理
-  // 義務の否定 → don't have to / didn't have to
-  if (isModalNegative && modal === 'obligation') {
-    return conjugateNegatedObligation(tense, aspect, isVerbNegative, freqStr, verbEntry);
-  }
-
-  // 否定パート: モダリティ否定が優先、なければ動詞否定
-  const notPart = isModalNegative ? 'not' : (isVerbNegative ? 'not' : '');
-
-  const modalForm = getModalEnglishForm(modal, tense);
-
-  // モダル変換をログ（共通ヘルパー使用）
-  logModalTransformation(modal, tense, modalForm);
-
-  // 迂言形式（was going to, had to）の場合
-  if (modalForm.usePeriPhrastic) {
-    const peri = modalForm.usePeriPhrastic;
-    if (aspect === 'simple') {
-      const parts = [peri, notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
-      return parts.join(' ');
-    }
-    if (aspect === 'progressive') {
-      const parts = [peri, notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
-      return parts.join(' ');
-    }
-    if (aspect === 'perfect') {
-      const parts = [peri, notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
-      return parts.join(' ');
-    }
-    if (aspect === 'perfectProgressive') {
-      const parts = [peri, notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
-      return parts.join(' ');
-    }
-  }
-
-  const aux = modalForm.auxiliary || '';
-
-  // Simple: modal (+ not) + (freq) + base
-  if (aspect === 'simple') {
-    const parts = [aux, notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
-    return parts.join(' ');
-  }
-
-  // Progressive: modal (+ not) + (freq) + be + ing
-  if (aspect === 'progressive') {
-    const parts = [aux, notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
-    return parts.join(' ');
-  }
-
-  // Perfect: modal (+ not) + (freq) + have + pp
-  if (aspect === 'perfect') {
-    const parts = [aux, notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
-    return parts.join(' ');
-  }
-
-  // Perfect Progressive: modal (+ not) + (freq) + have been + ing
-  if (aspect === 'perfectProgressive') {
-    const parts = [aux, notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
-    return parts.join(' ');
-  }
-
-  return aux ? `${aux} ${verbEntry.forms.base}` : verbEntry.forms.base;
-}
-
-// 助動詞を否定形にする（疑問文用）
-function negateModalAuxiliary(aux: string): string {
-  const negationMap: Record<string, string> = {
-    'can': "can't",
-    'could': "couldn't",
-    'will': "won't",
-    'would': "wouldn't",
-    'shall': "shan't",
-    'should': "shouldn't",
-    'may': "may not",  // mayn't は古語
-    'might': "might not",
-    'must': "mustn't",
-  };
-  return negationMap[aux] || `${aux} not`;
-}
-
-// 疑問文用の動詞活用（助動詞と本動詞を分離）
-function conjugateVerbForQuestion(
-  lemma: string,
-  tense: 'past' | 'present' | 'future',
-  aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
-  polarity: 'affirmative' | 'negative',
-  frequencyAdverbs: AdverbNode[],
-  subject?: NounPhraseNode | CoordinatedNounPhraseNode,
-  modal?: ModalType,
-  modalPolarity?: 'affirmative' | 'negative'
-): { auxiliary: string; mainVerb: string } {
-  const verbEntry = findVerb(lemma);
-  if (!verbEntry) return { auxiliary: 'does', mainVerb: lemma };
-
-  const isNegative = polarity === 'negative';
-  const isThirdPersonSingular = subject ? isThirdSingular(subject) : true;
-  const personNumber = subject ? getPersonNumber(subject) : { person: 3 as const, number: 'singular' as const };
-  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
-
-  // モダリティがある場合
-  if (modal) {
-    const modalForm = getModalEnglishForm(modal, tense);
-    const isModalNegative = modalPolarity === 'negative';
-
-    // モダル変換をログ（共通ヘルパー使用）
-    logModalTransformation(modal, tense, modalForm);
-
-    // 義務の否定（特殊処理）
-    if (isModalNegative && modal === 'obligation') {
-      const haveToAux = tense === 'past' ? "didn't have to" : "don't have to";
-      const notPart = isNegative ? 'not' : '';
-      if (aspect === 'simple') {
-        const mainParts = [notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
-        return { auxiliary: haveToAux, mainVerb: mainParts.join(' ') };
-      }
-    }
-
-    // 迂言形式（was going to, had to）
-    if (modalForm.usePeriPhrastic) {
-      const peri = modalForm.usePeriPhrastic;
-      // 倒置: Was he going to eat? / Did he have to eat?
-      if (peri === 'was going to') {
-        const notPart = isNegative ? 'not' : '';
-        if (aspect === 'simple') {
-          const mainParts = ['going to', notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
-          return { auxiliary: 'was', mainVerb: mainParts.join(' ') };
-        }
-      } else if (peri === 'had to') {
-        const notPart = isNegative ? 'not' : '';
-        if (aspect === 'simple') {
-          const mainParts = ['have to', notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
-          return { auxiliary: 'did', mainVerb: mainParts.join(' ') };
-        }
-      }
-    }
-
-    // 通常のモダリティ
-    const aux = modalForm.auxiliary || '';
-    const notPart = isNegative ? 'not' : '';
-
-    // モダリティ否定の場合は助動詞を否定形にする
-    const negatedAux = isModalNegative ? negateModalAuxiliary(aux) : aux;
-
-    if (aspect === 'simple') {
-      const mainParts = [notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
-      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
-    }
-    if (aspect === 'progressive') {
-      const mainParts = [notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
-      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
-    }
-    if (aspect === 'perfect') {
-      const mainParts = [notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
-      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
-    }
-    if (aspect === 'perfectProgressive') {
-      const mainParts = [notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
-      return { auxiliary: negatedAux, mainVerb: mainParts.join(' ') };
-    }
-  }
-
-  // be動詞の助動詞形を取得（進行形などで使用）
-  const getBeAuxiliary = (t: 'past' | 'present' | 'future'): string => {
-    if (t === 'future') return 'will';
-    const beVerb = findVerb('be');
-    if (beVerb?.forms.irregular) {
-      const key = getIrregularFormKey(t, personNumber);
-      const form = beVerb.forms.irregular[key];
-      if (form) return form;
-    }
-    return t === 'past' ? 'was' : (isThirdPersonSingular ? 'is' : 'are');
-  };
-
-  // Simple aspect
-  if (aspect === 'simple') {
-    // be動詞の特別処理
-    if (lemma === 'be') {
-      const beAux = getBeAuxiliary(tense);
-      if (tense === 'future') {
-        const notPart = isNegative ? 'not' : '';
-        const mainParts = [notPart, freqStr, 'be'].filter(p => p.length > 0);
-        return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
-      }
-      const notPart = isNegative ? 'not' : '';
-      const mainParts = [notPart, freqStr].filter(p => p.length > 0);
-      return { auxiliary: beAux, mainVerb: mainParts.join(' ') };
-    }
-
-    // Do-support
-    let doForm: string;
-    switch (tense) {
-      case 'past':
-        doForm = 'did';
-        break;
-      case 'present':
-        doForm = isThirdPersonSingular ? 'does' : 'do';
-        break;
-      case 'future':
-        const notPart = isNegative ? 'not' : '';
-        const mainParts = [notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
-        return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
-    }
-    const notPart = isNegative ? 'not' : '';
-    const mainParts = [notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
-    return { auxiliary: doForm, mainVerb: mainParts.join(' ') };
-  }
-
-  // Progressive: Aux (is/are/was/were/will be) + [not] + [freq] + verb-ing
-  if (aspect === 'progressive') {
-    const beAux = getBeAuxiliary(tense);
-    const notPart = isNegative ? 'not' : '';
-    if (tense === 'future') {
-      const mainParts = [notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
-      return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
-    }
-    const mainParts = [notPart, freqStr, verbEntry.forms.ing].filter(p => p.length > 0);
-    return { auxiliary: beAux, mainVerb: mainParts.join(' ') };
-  }
-
-  // Perfect: Aux (have/has/had/will have) + [not] + [freq] + verb-pp
-  if (aspect === 'perfect') {
-    let haveAux: string;
-    if (tense === 'past') {
-      haveAux = 'had';
-    } else if (tense === 'future') {
-      const notPart = isNegative ? 'not' : '';
-      const mainParts = [notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
-      return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
-    } else {
-      haveAux = isThirdPersonSingular ? 'has' : 'have';
-    }
-    const notPart = isNegative ? 'not' : '';
-    const mainParts = [notPart, freqStr, verbEntry.forms.pp].filter(p => p.length > 0);
-    return { auxiliary: haveAux, mainVerb: mainParts.join(' ') };
-  }
-
-  // Perfect Progressive: Aux (have/has/had/will have) + [not] + [freq] + been + verb-ing
-  if (aspect === 'perfectProgressive') {
-    let haveAux: string;
-    if (tense === 'past') {
-      haveAux = 'had';
-    } else if (tense === 'future') {
-      const notPart = isNegative ? 'not' : '';
-      const mainParts = [notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
-      return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
-    } else {
-      haveAux = isThirdPersonSingular ? 'has' : 'have';
-    }
-    const notPart = isNegative ? 'not' : '';
-    const mainParts = [notPart, freqStr, 'been', verbEntry.forms.ing].filter(p => p.length > 0);
-    return { auxiliary: haveAux, mainVerb: mainParts.join(' ') };
-  }
-
-  return { auxiliary: 'does', mainVerb: lemma };
-}
-
-// 義務の否定: don't have to / didn't have to（義務なし＝しなくてよい）
-function conjugateNegatedObligation(
-  tense: 'past' | 'present' | 'future',
-  aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
-  isVerbNegative: boolean,
-  freqStr: string,
-  verbEntry: { forms: { base: string; pp: string; ing: string } }
-): string {
-  // 動詞否定も同時にある場合は二重否定となるが、ここではモダリティ否定を優先
-  const notPart = isVerbNegative ? 'not' : '';
-
-  // 時制に応じた "don't have to" / "didn't have to"
-  const haveToForm = tense === 'past' ? "didn't have to" : "don't have to";
-
-  if (aspect === 'simple') {
-    const parts = [haveToForm, notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
-    return parts.join(' ');
-  }
-  if (aspect === 'progressive') {
-    const parts = [haveToForm, notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
-    return parts.join(' ');
-  }
-  if (aspect === 'perfect') {
-    const parts = [haveToForm, notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
-    return parts.join(' ');
-  }
-  if (aspect === 'perfectProgressive') {
-    const parts = [haveToForm, notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
-    return parts.join(' ');
-  }
-
-  return `${haveToForm} ${verbEntry.forms.base}`;
 }
 
 function isThirdSingular(subject: NounPhraseNode | CoordinatedNounPhraseNode): boolean {
@@ -1773,26 +1357,6 @@ type PersonNumber = {
   number: 'singular' | 'plural';
 };
 
-// 主語の簡易説明を取得（ログ用）
-function getSubjectDescription(subject?: NounPhraseNode | CoordinatedNounPhraseNode): string {
-  if (!subject) return 'subject (default)';
-
-  if (subject.type === 'coordinatedNounPhrase') {
-    return `"${subject.conjuncts.length} items with ${subject.conjunction}"`;
-  }
-
-  const np = subject as NounPhraseNode;
-  if (np.head.type === 'pronoun') {
-    const pronounHead = np.head as PronounHead;
-    return `"${pronounHead.lemma}"`;
-  }
-  if (np.head.type === 'noun') {
-    const nounHead = np.head as NounHead;
-    return `"${nounHead.lemma}"`;
-  }
-  return 'subject';
-}
-
 function getPersonNumber(subject: NounPhraseNode | CoordinatedNounPhraseNode): PersonNumber {
   // 等位接続の場合
   if (subject.type === 'coordinatedNounPhrase') {
@@ -1830,16 +1394,4 @@ function getPersonNumberNP(np: NounPhraseNode): PersonNumber {
   }
 
   return { person: 3, number: 'singular' };
-}
-
-// 不規則動詞の活用形キーを取得
-function getIrregularFormKey(
-  tense: 'past' | 'present',
-  personNumber: PersonNumber
-): string {
-  const { person, number } = personNumber;
-  if (number === 'plural') {
-    return `${tense}_pl`;
-  }
-  return `${tense}_${person}sg`;
 }

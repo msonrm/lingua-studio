@@ -1367,6 +1367,44 @@ Blockly.Blocks['logic_not_block'] = {
 };
 
 // ============================================
+// Logic Extension: IF ブロック（条件・含意）
+// IF(P, then:Q) - 「PならばQ」
+// ============================================
+Blockly.Blocks['logic_if_block'] = {
+  init: function() {
+    this.appendStatementInput("CONDITION")
+        .setCheck(["verb", "logic"])
+        .appendField(msg('LOGIC_IF_LABEL', 'IF'));
+    this.appendStatementInput("CONSEQUENCE")
+        .setCheck(["verb", "logic"])
+        .appendField(msg('LOGIC_THEN_LABEL', 'THEN'));
+
+    this.setPreviousStatement(true, "logic");
+    this.setColour(COLORS.logicOp);
+    this.setTooltip(msg('LOGIC_IF_TOOLTIP', 'Conditional (IF...THEN): if the condition is true, the consequence follows'));
+  }
+};
+
+// ============================================
+// Logic Extension: BECAUSE ブロック（因果関係）
+// BECAUSE(P, effect:Q) - 「Pだから、Q」
+// ============================================
+Blockly.Blocks['logic_because_block'] = {
+  init: function() {
+    this.appendStatementInput("CAUSE")
+        .setCheck(["verb", "logic"])
+        .appendField(msg('LOGIC_BECAUSE_LABEL', 'BECAUSE'));
+    this.appendStatementInput("EFFECT")
+        .setCheck(["verb", "logic"])
+        .appendField(msg('LOGIC_EFFECT_LABEL', 'EFFECT'));
+
+    this.setPreviousStatement(true, "logic");
+    this.setColour(COLORS.logicOp);
+    this.setTooltip(msg('LOGIC_BECAUSE_TOOLTIP', 'Causation (BECAUSE...EFFECT): the cause leads to the effect'));
+  }
+};
+
+// ============================================
 // オプションのエクスポート（コンパイラ用）
 // ============================================
 export const TIME_CHIP_DATA = {
@@ -1585,6 +1623,9 @@ export function createToolbox() {
           { kind: "block", type: "logic_and_block" },
           { kind: "block", type: "logic_or_block" },
           { kind: "block", type: "logic_not_block" },
+          { kind: "label", text: msg('SECTION_CONDITIONAL', '── Conditional ──') },
+          { kind: "block", type: "logic_if_block" },
+          { kind: "block", type: "logic_because_block" },
         ]
       },
     ]

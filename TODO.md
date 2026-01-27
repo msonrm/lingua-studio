@@ -78,17 +78,18 @@
 ### Multilingual & Language Parameters
 
 #### 前提作業（多言語展開の基盤）
-- [ ] Grammar Console ログシステムのリファクタリング
-  - 現状: ログが活用コードの各所に散らばっており、漏れやすい
-  - 目標: 活用結果を一箇所で比較してログする設計に変更
-  - 理由: 他言語レンダラーで同じパターンを再現しやすくするため
-  ```typescript
-  function conjugateVerb(...): string {
-    const result = conjugateInternal(...);  // ログなし
-    logVerbConjugation(lemma, result, context);  // 一箇所でログ
-    return result;
-  }
-  ```
+- [x] Grammar Rule System アーキテクチャ
+  - `src/grammar/types.ts`: RenderContext, DerivationStep 等の型定義
+  - `src/grammar/DerivationTracker.ts`: 変形記録クラス（GrammarLogCollector を置換）
+  - `src/grammar/rules/english/`: 英語ルールの分離
+    - `morphology.ts`: 形態論（agreement, tense, aspect, case, article）
+    - `syntax.ts`: 統語論（do-support, inversion, wh-movement）
+  - `toLegacyLogs()`: 後方互換性のため既存UI形式に変換
+- [ ] Grammar Console UI の更新（新 DerivationTracker 対応）
+  - [x] i18n 対応（GrammarMessages によるメッセージキー翻訳）
+  - 変形ステップを順序付きで表示
+  - 前回との差分表示（DerivationDiff 活用）
+  - [x] サイドパネル移動 + タブ構成
 
 #### 言語別レンダラー
 - [ ] 日本語レンダラー
@@ -151,20 +152,20 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - 大文字 `AND()`/`OR()`/`NOT()` は命題論理（論理学的）
   - `fact()` 内でのみ使用可能（ブロックレベルで接続制限）
   - ネスト対応: `NOT(AND(P, OR(Q, R)))`
-- [ ] `if(P, then:Q)` - 条件・含意
+- [x] `IF(P, then:Q)` - 条件・含意（大文字、名前付き引数）
   - ルール定義: 前件が真なら後件も真
-  - 例: `if(give(agent:?A, theme:?T, recipient:?R), then:have(experiencer:?R, theme:?T))`
-- [ ] `because(cause:P, effect:Q)` - 因果関係
+  - 例: `IF(give(agent:?A, theme:?T, recipient:?R), then:have(experiencer:?R, theme:?T))`
+- [x] `BECAUSE(P, effect:Q)` - 因果関係（大文字、名前付き引数）
   - 原因→結果の因果推論
-  - 例: `because(cause:rain(), effect:wet(theme:'ground))`
+  - 例: `BECAUSE(rain(), effect:wet(theme:'ground))`
 
 #### Blocklyブロック
 - [x] `fact_wrapper` ブロック - 事実の宣言
 - [x] `logic_and_block`, `logic_or_block`, `logic_not_block` - 命題論理演算
   - Logic カテゴリとして Toolbox に追加（Question の下）
   - 接続タイプ制限: logic ブロックは fact_wrapper 内でのみ接続可能
-- [ ] `if_block` ブロック - 条件・ルール定義
-- [ ] `because_block` ブロック - 因果関係
+- [x] `logic_if_block` ブロック - 条件・ルール定義（IF...THEN形式）
+- [x] `logic_because_block` ブロック - 因果関係（BECAUSE...EFFECT形式）
 
 #### 英語レンダリング
 - [x] `⊨` マーカーで fact 出力を区別
@@ -172,10 +173,12 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 - [x] `OR(P, Q)` → "either P or Q"
 - [x] `NOT(P)` → "it is not the case that P"
 - [x] `NOT(OR(P, Q))` → "neither P nor Q" (De Morgan 対応)
+- [x] `IF(P, then:Q)` → "if P, then Q"
+- [x] `BECAUSE(P, effect:Q)` → "Q because P"
 
 #### ローカライズ
-- [x] 日本語 (ja): 事実, AND, OR, NOT, 論理
-- [x] ひらがな (ja-hira): ほんと, かつ, または, ちがう, ほんと？うそ？
+- [x] 日本語 (ja): 事実, AND, OR, NOT, IF, THEN, BECAUSE, EFFECT, 論理
+- [x] ひらがな (ja-hira): ほんと, かつ, または, ちがう, もし, ならば, なぜなら, けっか
 
 #### 推論機能（未実装）
 - [ ] LLM連携API - LinguaScriptをLLMに送信してクエリ結果を取得
@@ -225,6 +228,48 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 
 ## Completed
 
+### UI & i18n Improvements (2026-01)
+- [x] Grammar Log メッセージの i18n 対応
+  - `GrammarMessages` インターフェースで全変形ログメッセージキーを定義
+  - `LocaleContext` に grammar プロパティを追加
+  - conjugation.ts, nounPhrase.ts, englishRenderer.ts でメッセージキーを使用
+  - GrammarPanel.tsx で `translateKey()` 関数によるキー→翻訳変換
+- [x] UI カラーパレットの調整（威圧的→優しめに）
+  - アクセントカラー: `#e94560` (ピンク) → `#5c8bc4` / `#6c9bcf` (青系)
+  - 背景色: `#16213e` (暗い青紫) → `#252d3a` / `#2d3748` (暖かいグレー)
+  - インタラクティブ要素（ボタン、セレクタ）は青、ラベルは白で区別
+- [x] コピーボタンの改善
+  - ローカライズされたラベル追加（Copy / コピー / コピーしたよ）
+  - 青い枠線、アイコン + ラベルのUI
+  - `ui.COPY`, `ui.COPIED`, `ui.COPY_FOR_AI` キー追加
+- [x] サイドパネルタブのローカライズ
+  - `ui.TAB_GRAMMAR`, `ui.TAB_TIMELINE` キー追加
+  - ja-hira: 子供向け表現（ことばのきまり、じかん/ようす）
+- [x] Blockly ワークスペースの自動リサイズ
+  - `ResizeObserver` でコンテナサイズ変更を検知
+  - `Blockly.svgResize()` でワークスペースを再描画
+  - サイドパネル開閉時にメイン領域が適切に拡縮
+- [x] ja-hira ロケールの子供向け表現統一
+  - `TAB_GRAMMAR`: 'ぶんぽう' → 'ことばのきまり'
+  - `TAB_TIMELINE`: 'タイムライン' → 'じかん/ようす'
+  - `TIME_CHIP_UNIFIED_LABEL`: 'いつ？/ようす' → 'じかん/ようす'
+  - `SENTENCE_TA_LABEL`: 'いつ？:' → 'いつ？どんなようす？:'
+  - `APP_SUBTITLE`: 'ことばのIDE' → 'IDE for Natural Language'（全ロケール統一）
+
+### Grammar Rule System Refactoring (2026-01)
+- [x] 新アーキテクチャ設計・実装
+  - `DerivationTracker` クラス: GrammarLogCollector を置換
+  - 形態論（MorphologyStep）と統語論（SyntaxStep）を明確に分離
+  - `RenderContext` 型: レンダリング文脈を構造化
+  - `DerivationDiff`: 前回との差分計算機能
+- [x] 英語ルールの分離
+  - `src/grammar/rules/english/morphology.ts`: agreement, tense, aspect, case, article
+  - `src/grammar/rules/english/syntax.ts`: do-support, inversion, wh-movement
+  - 将来の日本語レンダラー対応を考慮した設計
+- [x] `englishRenderer.ts` のリファクタリング
+  - `logCollector.log()` → `tracker.recordMorphology()` / `tracker.recordSyntax()`
+  - `toLegacyLogs()` で既存UIとの後方互換性を維持
+
 ### Logic Extension - Phase 1 (2026-01)
 - [x] `fact()` wrapper と `AND()`/`OR()`/`NOT()` 命題論理ブロック実装
   - fact_wrapper: sentence/modal と排他的な事実宣言
@@ -244,6 +289,23 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 - [x] バグ修正
   - and()/or() 等位接続で内側の logicOp が失われる問題
   - ネストされた論理式で rightOperand の logicOp が失われる問題
+
+### Logic Extension - Phase 2 (2026-01)
+- [x] `IF(P, then:Q)` と `BECAUSE(P, effect:Q)` 実装
+  - 大文字で命題論理の一貫性を維持（AND/OR/NOT と同様）
+  - 名前付き引数で可読性向上（生成AI・人間両方に配慮）
+  - logic_if_block: IF...THEN形式のブロック
+  - logic_because_block: BECAUSE...EFFECT形式のブロック
+- [x] 英語レンダリング
+  - IF(P, then:Q) → "if P, then Q"
+  - BECAUSE(P, effect:Q) → "Q because P"（結果を先に配置）
+- [x] 再帰的ネスト対応
+  - IF(AND(P, Q), then:R) などの複合条件
+  - AND(P, IF(Q, then:R)) などの複合結果
+  - AND/OR と同じパターンで leftOperand を処理
+- [x] ローカライズ (ja, ja-hira)
+  - 日本語: IF, THEN, BECAUSE, EFFECT
+  - ひらがな: もし, ならば, なぜなら, けっか
 
 ### Screen Layout Refactor (2026-01)
 - [x] 3タブ構成: Blocks / LinguaScript / AST
@@ -271,7 +333,7 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - フィールド名・ブロックタイプを読みやすいラベルに変換
 - [x] 文法変換ログ
   - TransformType: agreement, tense, aspect, case, article, do-support, modal, negation, wh-movement, inversion
-  - `GrammarLogCollector` クラスで変換を収集
+  - ~~`GrammarLogCollector` クラスで変換を収集~~ → `DerivationTracker` に移行
   - `renderToEnglishWithLogs()` で RenderResult を返す
 - [x] 共通ヘルパー関数パターン
   - `logModalTransformation()`: 平叙文・疑問文の両方で使用
@@ -336,7 +398,7 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
     - ability + past → could
     - volition + past → was going to
     - obligation + past → had to
-  - LinguaScript: `modal('ability, sentence(...))`
+  - LinguaScript: `modal(ability:can, sentence(...))`
 - [x] Imperative（命令文）wrapper
   - 主語省略 + 動詞原形
   - 否定: "Do not eat!"
@@ -346,10 +408,12 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - 動詞否定（negation_wrapper）とは別ブロックとして実装
   - negation_sentence_wrapper: modal の外側に配置してモダリティ否定
   - 義務の否定 → "don't have to" / "didn't have to"（義務なし＝しなくてよい）
-  - LinguaScript: `not(modal('obligation, sentence(...)))`
+  - LinguaScript: `not(modal(obligation:must, sentence(...)))`
 
 ### Grammar Spec Review (2026-01)
 - [x] 仕様書とコードベースの比較・精査
+- [x] BNF文法の疑問詞定義を具体的な形式に統一 (`?` → `?who`, `?what`, `?which(...)`)
+- [x] 例文の記法を現行実装に合わせて修正 (`?()` → `question()`, `past(simple())` → `past+simple()`)
 - [x] 拡張意味役割の追加 (patient, experiencer, stimulus, beneficiary, possessor, attribute)
 - [x] 等位接続の仕様追加 (and/or for NP & VP)
 - [x] 限定詞3層システムの仕様化 (pre/det/post)

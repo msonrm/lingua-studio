@@ -163,6 +163,13 @@ export interface BlocklyMessages {
   LOGIC_OR_TOOLTIP: string;
   LOGIC_NOT_LABEL: string;
   LOGIC_NOT_TOOLTIP: string;
+  LOGIC_IF_LABEL: string;
+  LOGIC_THEN_LABEL: string;
+  LOGIC_IF_TOOLTIP: string;
+  LOGIC_BECAUSE_LABEL: string;
+  LOGIC_EFFECT_LABEL: string;
+  LOGIC_BECAUSE_TOOLTIP: string;
+  SECTION_CONDITIONAL: string;
   TOOLBOX_LOGIC: string;
 
   // Choice question
@@ -240,6 +247,75 @@ export interface BlocklyMessages {
   SECTION_WH_ADVERBS: string;
 }
 
+// Grammar log messages (for GrammarPanel)
+export interface GrammarMessages {
+  // Transform types
+  TYPE_AGREEMENT: string;
+  TYPE_TENSE: string;
+  TYPE_ASPECT: string;
+  TYPE_CASE: string;
+  TYPE_ARTICLE: string;
+  TYPE_MODAL: string;
+  TYPE_NEGATION: string;
+  TYPE_DO_SUPPORT: string;
+  TYPE_INVERSION: string;
+  TYPE_WH_MOVEMENT: string;
+
+  // Agreement rules
+  AGREEMENT_3SG: string;
+  AGREEMENT_3SG_DESC: string;
+  AGREEMENT_PLURAL: string;
+  AGREEMENT_PLURAL_DESC: string;
+
+  // Tense rules
+  TENSE_PAST: string;
+  TENSE_PAST_DESC: string;
+  TENSE_FUTURE: string;
+  TENSE_FUTURE_DESC: string;
+
+  // Aspect rules
+  ASPECT_PROGRESSIVE: string;
+  ASPECT_PROGRESSIVE_DESC: string;
+  ASPECT_PERFECT: string;
+  ASPECT_PERFECT_DESC: string;
+  ASPECT_PERF_PROG: string;
+  ASPECT_PERF_PROG_DESC: string;
+
+  // Case rules
+  CASE_OBJECTIVE: string;
+  CASE_OBJECTIVE_DESC: string;
+  CASE_WHO_WHOM: string;
+  CASE_WHO_WHOM_DESC: string;
+
+  // Article rules
+  ARTICLE_A_AN: string;
+  ARTICLE_A_AN_DESC: string;
+  ARTICLE_SILENT_H: string;
+
+  // Number rules
+  NUMBER_PLURAL: string;
+  NUMBER_PLURAL_DESC: string;
+
+  // Polarity rules
+  POLARITY_NEGATIVE: string;
+  POLARITY_NEGATIVE_DESC: string;
+
+  // Modal rules
+  MODAL_PAST: string;
+  MODAL_PAST_DESC: string;
+
+  // Syntax rules
+  DO_SUPPORT_QUESTION: string;
+  DO_SUPPORT_QUESTION_DESC: string;
+  INVERSION_QUESTION: string;
+  INVERSION_QUESTION_DESC: string;
+  WH_MOVEMENT_FRONT: string;
+  WH_MOVEMENT_FRONT_DESC: string;
+
+  // Empty state
+  EMPTY_NO_TRANSFORMATIONS: string;
+}
+
 // React UI message keys
 export interface UIMessages {
   // Header
@@ -251,6 +327,8 @@ export interface UIMessages {
   TAB_LINGUASCRIPT: string;
   TAB_AST: string;
   TAB_COMING_SOON: string;
+  TAB_GRAMMAR: string;
+  TAB_TIMELINE: string;
 
   // Panels
   PANEL_OUTPUT: string;
@@ -270,6 +348,11 @@ export interface UIMessages {
   // Settings
   SHOW_AST: string;
   LANGUAGE: string;
+
+  // Copy button
+  COPY: string;
+  COPIED: string;
+  COPY_FOR_AI: string;
 }
 
 export interface LocaleData {
@@ -277,4 +360,5 @@ export interface LocaleData {
   name: string;
   blockly: BlocklyMessages;
   ui: UIMessages;
+  grammar: GrammarMessages;
 }

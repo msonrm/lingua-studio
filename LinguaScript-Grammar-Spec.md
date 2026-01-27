@@ -626,15 +626,16 @@ sentence(present+perfect(eat(agent:'I, theme:'apple)))
 ### 疑問文
 
 ```lisp
-?(sentence(past(simple(eat(agent:'you, theme:'apple)))))
+question(sentence(past+simple(eat(agent:'you, theme:'apple))))
 ;; → "Did you eat an apple?"
 ```
 
 ### 受動態
 
 ```lisp
-sentence(past(simple(passive(eat(theme:'apple)))))
+sentence(past+simple(passive(eat(theme:'apple))))
 ;; → "The apple was eaten."
+;; 注: passive() は未実装
 ```
 
 ### モダリティ付き
@@ -654,8 +655,9 @@ sentence(past+simple(give(agent:'I, theme:'book, recipient:'you)))
 ### 複雑な例
 
 ```lisp
-?(not(modal(possibility:might, sentence(past+perfect(passive(not(eat(agent:'I, theme:'apple))))))))
+question(not(modal(possibility:might, sentence(past+perfect(passive(not(eat(agent:'I, theme:'apple))))))))
 ;; → "Might the apple not have been eaten?"
+;; 注: passive() は未実装
 ```
 
 ---
@@ -1049,11 +1051,12 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
                   | "beneficiary" | "possessor" | "attribute"
 
 ;; ============================================
-;; 値（名詞句・形容詞句・疑問）
+;; 値（名詞句・形容詞句・疑問詞）
 ;; ============================================
 
-<value>         ::= <noun-expr> | <adj-expr> | <question>
-<question>      ::= "?" | "?or(" <value> ", " <value> ")"
+<value>         ::= <noun-expr> | <adj-expr> | <wh-noun>
+<wh-noun>       ::= "?who" | "?whom" | "?what"
+                  | "?which(" <value> ", " <value> ")"   ;; 選択疑問
 
 ;; ============================================
 ;; 名詞句（等位接続対応）
@@ -1311,21 +1314,49 @@ fact(NOT(own(experiencer:'John, theme:'bike)))
 
 #### 含意・因果
 
+条件（含意）と因果関係は**大文字**で表記する。これはブール演算（AND/OR/NOT）と一貫性を持たせるため。
+
 ```bnf
 ;; 条件（含意）
-<conditional>   ::= "if(" <proposition> ", then:" <proposition> ")"
+<conditional>   ::= "IF(" <proposition> ", then:" <proposition> ")"
 
 ;; 因果関係
-<causal>        ::= "because(cause:" <proposition> ", effect:" <proposition> ")"
+<causal>        ::= "BECAUSE(" <proposition> ", effect:" <proposition> ")"
 ```
 
 ```lisp
 ;; ルール: 「誰かが誰かに何かを与えると、受け手はそれを持つ」
-if(give(agent:?A, theme:?T, recipient:?R),
+IF(give(agent:?A, theme:?T, recipient:?R),
    then:have(experiencer:?R, theme:?T))
 
 ;; 因果: 「雨が降ると地面が濡れる」
-because(cause:rain(), effect:wet(theme:'ground))
+BECAUSE(rain(), effect:wet(theme:'ground))
+```
+
+##### 英語出力
+
+```
+;; IF → "if P, then Q"
+IF(rain(), then:wet(theme:'ground))
+;; → "if it rains, then the ground is wet"
+
+;; BECAUSE → "Q because P"（結果を先に配置）
+BECAUSE(rain(), effect:wet(theme:'ground))
+;; → "the ground is wet because it rains"
+```
+
+##### ネスト対応
+
+IF/BECAUSE は AND/OR/NOT とネストできる。
+
+```lisp
+;; 複合条件
+IF(AND(rain(), cold()), then:stay(agent:'I, location:'home))
+;; → "if it rains AND it is cold, then I stay home"
+
+;; 複合結果
+AND(fact(rain()), IF(rain(), then:wet(theme:'ground)))
+;; → "it rains AND if it rains, then the ground is wet"
 ```
 
 #### クエリ（論理的解釈）
@@ -1423,7 +1454,7 @@ LinguaScriptの構造化されたクエリは、LLMに直接投げることで�
 fact(give(agent:'Mary, theme:'book, recipient:'John))
 
 ;; ルール
-if(give(agent:?A, theme:?T, recipient:?R),
+IF(give(agent:?A, theme:?T, recipient:?R),
    then:have(experiencer:?R, theme:?T))
 
 ;; クエリ
@@ -1450,8 +1481,8 @@ question(have(experiencer:'John, theme:?what))
 | `question(P)` | クエリ | P は真か？/ P を真にする値は？ |
 | `and`, `or` (小文字) | 等位接続 | NP/VPの接続 |
 | `AND`, `OR`, `NOT` (大文字) | ブール演算子 | 命題の論理演算 |
-| `if(A, then:B)` | 含意 | A → B |
-| `because(C, E)` | 因果 | C ⇒ E（因果的含意） |
+| `IF(A, then:B)` (大文字) | 含意 | A → B |
+| `BECAUSE(C, effect:E)` (大文字) | 因果 | C ⇒ E（因果的含意） |
 
 ##### 排他関係
 
@@ -1482,12 +1513,12 @@ question(have(experiencer:'John, theme:?what))
 ;; <noun-coord> ::= "and(" ... ")" | "or(" ... ")"
 ;; <verb-coord> ::= "and(" ... ")" | "or(" ... ")"
 
-;; 条件・因果
-<conditional>   ::= "if(" <proposition> ", then:" <proposition> ")"
-<causal>        ::= "because(cause:" <proposition> ", effect:" <proposition> ")"
+;; 条件・因果（大文字）
+<conditional>   ::= "IF(" <proposition> ", then:" <proposition> ")"
+<causal>        ::= "BECAUSE(" <proposition> ", effect:" <proposition> ")"
 
-;; 命題（時制なしの動詞句、または入れ子のブール式）
-<proposition>   ::= <verb-phrase> | <bool-expr>
+;; 命題（時制なしの動詞句、または入れ子の論理式）
+<proposition>   ::= <verb-phrase> | <bool-expr> | <conditional> | <causal>
 
 ;; 変数（疑問詞と共通）
 <variable>      ::= "?" <identifier>

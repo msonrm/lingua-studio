@@ -13,29 +13,36 @@
 
 .copy-button {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border: 1px solid #444;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #5c8bc4;
   border-radius: 6px;
-  background: #1a1a1a;
-  color: #888;
-  font-size: 1rem;
+  background: #2d3748;
+  color: #ccc;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.375rem;
 }
 
 .copy-button:hover:not(:disabled) {
-  background: #333;
+  background: #3d4a5c;
   color: #fff;
-  border-color: #666;
 }
 
 .copy-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  border-color: #444;
+}
+
+.copy-icon {
+  font-size: 1rem;
+}
+
+.copy-label {
+  font-size: 0.75rem;
 }
 
 .code-container {

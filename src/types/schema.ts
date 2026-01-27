@@ -147,8 +147,12 @@ export interface ClauseNode {
   modalPolarity?: "affirmative" | "negative";  // モダリティ否定: "I need NOT run"
 }
 
-// 命題レベルの論理演算子（AND, OR は二項、NOT は単項）
-export type PropositionalOperator = "AND" | "OR" | "NOT";
+// 命題レベルの論理演算子
+// - AND, OR: 二項（対称）
+// - NOT: 単項
+// - IF: 二項（非対称: 条件 → 結果）
+// - BECAUSE: 二項（非対称: 原因 → 結果）
+export type PropositionalOperator = "AND" | "OR" | "NOT" | "IF" | "BECAUSE";
 
 export interface VerbPhraseNode {
   type: "verbPhrase";

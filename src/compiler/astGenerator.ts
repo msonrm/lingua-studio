@@ -663,6 +663,80 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     };
   }
 
+  // Logic Extension: IF ブロック（条件・含意）
+  // IF(P, then:Q) - 「PならばQ」
+  if (blockType === 'logic_if_block') {
+    const conditionBlock = block.getInputTargetBlock('CONDITION');
+    const consequenceBlock = block.getInputTargetBlock('CONSEQUENCE');
+    if (!conditionBlock) {
+      return null;
+    }
+    const conditionResult = parseVerbChain(conditionBlock);
+    if (!conditionResult) {
+      return null;
+    }
+    const consequenceResult = consequenceBlock ? parseVerbChain(consequenceBlock) : null;
+    const consequenceVP = consequenceResult ? toVerbPhraseWithLogic(consequenceResult) : undefined;
+
+    // AND/OR と同じパターン: 左側が複合式の場合のみ leftOperand を設定
+    if (conditionResult.logicOp) {
+      const conditionVP = toVerbPhraseWithLogic(conditionResult);
+      return {
+        ...conditionResult,
+        logicOp: {
+          operator: 'IF' as PropositionalOperator,
+          leftOperand: conditionVP,
+          rightOperand: consequenceVP,
+        },
+      };
+    }
+
+    return {
+      ...conditionResult,
+      logicOp: {
+        operator: 'IF' as PropositionalOperator,
+        rightOperand: consequenceVP,
+      },
+    };
+  }
+
+  // Logic Extension: BECAUSE ブロック（因果関係）
+  // BECAUSE(P, effect:Q) - 「Pだから、Q」
+  if (blockType === 'logic_because_block') {
+    const causeBlock = block.getInputTargetBlock('CAUSE');
+    const effectBlock = block.getInputTargetBlock('EFFECT');
+    if (!causeBlock) {
+      return null;
+    }
+    const causeResult = parseVerbChain(causeBlock);
+    if (!causeResult) {
+      return null;
+    }
+    const effectResult = effectBlock ? parseVerbChain(effectBlock) : null;
+    const effectVP = effectResult ? toVerbPhraseWithLogic(effectResult) : undefined;
+
+    // AND/OR と同じパターン: 左側が複合式の場合のみ leftOperand を設定
+    if (causeResult.logicOp) {
+      const causeVP = toVerbPhraseWithLogic(causeResult);
+      return {
+        ...causeResult,
+        logicOp: {
+          operator: 'BECAUSE' as PropositionalOperator,
+          leftOperand: causeVP,
+          rightOperand: effectVP,
+        },
+      };
+    }
+
+    return {
+      ...causeResult,
+      logicOp: {
+        operator: 'BECAUSE' as PropositionalOperator,
+        rightOperand: effectVP,
+      },
+    };
+  }
+
   // 等位接続ラッパー（動詞用）の処理
   if (blockType === 'coordination_verb_and' || blockType === 'coordination_verb_or') {
     const conjValue: Conjunction = blockType === 'coordination_verb_and' ? 'and' : 'or';

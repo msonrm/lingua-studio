@@ -61,10 +61,6 @@
     - `GrammarLogCollector` クラス（モジュールレベル）
     - `renderToEnglishWithLogs()` → `RenderResult { output, logs, warnings }`
     - 共通ヘルパー関数パターン（他言語レンダラーの参考用）
-- [ ] TimeChip 3連プルダウン化（教育的UX改善）
-  - [Tense][Aspect][Time] の3スロット構成
-  - Time で "Yesterday" を選択 → [Past][Simple][Yesterday] に自動設定
-  - 非文法的な組み合わせに×印、自動修正機能
 
 ### Multilingual & Language Parameters
 
@@ -203,6 +199,9 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 - [ ] Linguistic AST Renderer（学術・教育向け）
   - 言語学理論に基づく木構造表示（X-bar, 依存文法, Minimalist等）
   - LinguaScript自体が依存文法的なので必要性は低い
+- [ ] TimeChip 3連プルダウン化（教育的UX改善）
+  - [Tense][Aspect][Time] の3スロット構成
+  - 現状の統合ブロックで十分機能している
 
 ### Out of Scope（単文スコープ外）
 - 関係節 (the man who ate...)

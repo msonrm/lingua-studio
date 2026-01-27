@@ -1026,11 +1026,16 @@ function renderSingleVerbPhrase(
     : undefined;
 
   const hasOwnSubject = ownSubjectSlot?.filler != null;
+
+  // 活用に使う主語を決定
+  // - 主語フィラーがあれば、それを使う
+  // - 主語フィラーがなく主語ロールがあれば、プレースホルダー表示なので3人称単数扱い（undefined）
+  // - 主語ロールがなければ、inheritedSubjectを使う（主語省略のケース）
   const effectiveSubject = hasOwnSubject
     ? (ownSubjectSlot!.filler!.type === 'nounPhrase' || ownSubjectSlot!.filler!.type === 'coordinatedNounPhrase'
         ? ownSubjectSlot!.filler as NounPhraseNode | CoordinatedNounPhraseNode
         : undefined)
-    : inheritedSubject;
+    : (subjectRole ? undefined : inheritedSubject);
 
   // 副詞を分類
   const frequencyAdverbs = vp.adverbs.filter(a => a.advType === 'frequency');

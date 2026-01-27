@@ -97,21 +97,6 @@
   - BNF文法に基づく実装
   - AST ↔ LinguaScript の等価変換
 
-### Linguistic AST Renderer（学術・教育向け）
-- [ ] 言語学的構文木レンダラー
-  - 内部AST → 言語学理論に基づく木構造を生成
-  - 理論選択オプション（教育目的で切り替え可能）
-  - **Note**: LinguaScriptは依存文法的（動詞中心＋意味役割引数）
-- [ ] 対応理論候補:
-  - X-bar Theory: Spec-Head-Comp の階層構造
-  - Dependency Grammar: 主辞間の依存関係（LinguaScriptに最も近い）
-  - Minimalist Program: 二項Merge、最小構造
-  - HPSG/LFG: 制約ベース、素性構造
-- [ ] 出力形式:
-  - テキスト（括弧表記）
-  - SVG/Canvas（視覚的な木構造）
-  - LaTeX (qtree, forest パッケージ)
-
 ### LinguaScript Syntax Enhancement
 - [x] メタ値記法: `plural`, `uncountable` （クォートなし = 出力されない制御値）
 - [x] 組み合わせ演算子: `past+perfect` （両方適用を明示）
@@ -215,6 +200,9 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - 辞書連携オートコンプリート
   - 双方向同期（Blocks ↔ LinguaScript）
   - パーサー実装が前提
+- [ ] Linguistic AST Renderer（学術・教育向け）
+  - 言語学理論に基づく木構造表示（X-bar, 依存文法, Minimalist等）
+  - LinguaScript自体が依存文法的なので必要性は低い
 
 ### Out of Scope（単文スコープ外）
 - 関係節 (the man who ate...)

@@ -209,6 +209,10 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - `not(frequency('never, ...))` は論理的に二重否定
   - 警告表示 or 禁止の実装が必要
   - 難易度: 高（スコープ解析が必要）
+- [ ] Grammar Console 詳細表示モード
+  - DerivationStep を直接参照（toLegacyLogs() を経由しない）
+  - 形態論/統語論の区別、操作種類、位置情報を表示
+  - 折りたたみUIで「詳細を見る」オプション
 
 ### Out of Scope（単文スコープ外）
 - 関係節 (the man who ate...)

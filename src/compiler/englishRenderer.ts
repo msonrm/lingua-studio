@@ -406,7 +406,8 @@ function appendCoordinatedVP(
   // 主語のグループIDを取得するヘルパー
   // シンプルなロジック:
   //   - 主語フィラーがある → JSON.stringify(filler)
-  //   - 主語フィラーがない → '__placeholder__'（別グループ）
+  //   - 主語フィラーがない → ユニークなプレースホルダーID
+  let placeholderCount = 0;
   const getSubjectGroupId = (vp: VerbPhraseNode): string => {
     const verbEntry = findVerb(vp.verb.lemma);
     for (const role of SUBJECT_ROLES) {
@@ -417,8 +418,8 @@ function appendCoordinatedVP(
         }
       }
     }
-    // 主語がない → プレースホルダー表示、別グループ
-    return '__placeholder__';
+    // 主語がない → 各プレースホルダーはユニーク（別グループ）
+    return `__placeholder_${placeholderCount++}__`;
   };
 
   // 全チェーンを収集

@@ -264,6 +264,145 @@ function renderCoordinatedNounPhrase(
 const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
 
 // ============================================
+// 共通コンテキスト（重複コード削減）
+// ============================================
+
+/** 節レンダリング用の共通コンテキスト */
+interface ClauseContext {
+  verbPhrase: VerbPhraseNode;
+  tense: Tense;
+  aspect: Aspect;
+  polarity: Polarity;
+  modal?: ModalType;
+  modalPolarity?: Polarity;
+  verbEntry: ReturnType<typeof findVerb>;
+  subjectRole: SemanticRole | undefined;
+  subjectSlot: FilledArgumentSlot | undefined;
+  subjectStr: string;
+  subjectForConjugation: NounPhraseNode | CoordinatedNounPhraseNode | undefined;
+  adverbs: {
+    frequency: AdverbNode[];
+    manner: AdverbNode[];
+    locative: AdverbNode[];
+    time: AdverbNode[];
+  };
+}
+
+/** ClauseNodeから共通コンテキストを準備 */
+function prepareClauseContext(clause: ClauseNode): ClauseContext {
+  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
+  const verbEntry = findVerb(verbPhrase.verb.lemma);
+
+  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
+  let subjectRole: SemanticRole | undefined;
+  for (const role of SUBJECT_ROLES) {
+    if (verbEntry?.valency.some(v => v.role === role)) {
+      subjectRole = role;
+      break;
+    }
+  }
+
+  // 主語スロットを取得
+  const subjectSlot = subjectRole
+    ? verbPhrase.arguments.find(a => a.role === subjectRole)
+    : undefined;
+
+  // 主語をレンダリング
+  const subjectStr = subjectSlot?.filler
+    ? renderFiller(subjectSlot.filler, true, polarity)
+    : '___';
+
+  // 活用用の主語（NounPhraseNode | CoordinatedNounPhraseNode のみ）
+  const subjectForConjugation = subjectSlot?.filler &&
+    (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
+    ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
+    : undefined;
+
+  // 副詞を種類別に分類
+  const adverbs = {
+    frequency: verbPhrase.adverbs.filter(a => a.advType === 'frequency'),
+    manner: verbPhrase.adverbs.filter(a => a.advType === 'manner'),
+    locative: verbPhrase.adverbs.filter(a => a.advType === 'place'),
+    time: verbPhrase.adverbs.filter(a => a.advType === 'time'),
+  };
+
+  return {
+    verbPhrase,
+    tense,
+    aspect,
+    polarity,
+    modal,
+    modalPolarity,
+    verbEntry,
+    subjectRole,
+    subjectSlot,
+    subjectStr,
+    subjectForConjugation,
+    adverbs,
+  };
+}
+
+/** 引数（目的語など）をレンダリング */
+function renderOtherArguments(
+  ctx: ClauseContext,
+  excludeRoles: SemanticRole[] = []
+): string {
+  const { verbEntry, subjectRole, verbPhrase, polarity } = ctx;
+  const allExcluded = subjectRole ? [subjectRole, ...excludeRoles] : excludeRoles;
+
+  return (verbEntry?.valency || [])
+    .filter(v => !allExcluded.includes(v.role))
+    .map(v => {
+      const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
+      const preposition = v.preposition;
+      const filled = argSlot?.filler;
+      const value = filled ? renderFiller(filled, false, polarity) : '___';
+      return {
+        text: preposition ? `${preposition} ${value}` : value,
+        skip: !v.required && !filled,
+      };
+    })
+    .filter(item => !item.skip)
+    .map(item => item.text)
+    .join(' ');
+}
+
+/** 副詞・前置詞句を文字列化 */
+function renderAdverbsAndPrepPhrases(ctx: ClauseContext): {
+  mannerStr: string;
+  locativeStr: string;
+  timeStr: string;
+  prepPhrasesStr: string;
+} {
+  const { adverbs, verbPhrase, polarity } = ctx;
+
+  return {
+    mannerStr: adverbs.manner.map(a => stripWhPrefix(a.lemma)).join(' '),
+    locativeStr: adverbs.locative.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' '),
+    timeStr: adverbs.time.map(a => stripWhPrefix(a.lemma)).join(' '),
+    prepPhrasesStr: verbPhrase.prepositionalPhrases
+      .map(pp => renderPrepositionalPhrase(pp, polarity))
+      .join(' '),
+  };
+}
+
+/** 等位接続動詞句を処理して結果に追加 */
+function appendCoordinatedVP(
+  result: string,
+  ctx: ClauseContext
+): string {
+  if (!ctx.verbPhrase.coordinatedWith) return result;
+
+  const coordVP = ctx.verbPhrase.coordinatedWith.verbPhrase;
+  const conjunction = ctx.verbPhrase.coordinatedWith.conjunction;
+  const coordVerbStr = renderCoordinatedVerbPhrase(
+    coordVP, ctx.tense, ctx.aspect, ctx.polarity,
+    ctx.subjectForConjugation, ctx.modal, ctx.modalPolarity
+  );
+  return `${result} ${conjunction} ${coordVerbStr}`;
+}
+
+// ============================================
 // Wh疑問詞検出ヘルパー
 // ============================================
 interface WhWordInfo {
@@ -409,103 +548,32 @@ export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
 }
 
 function renderClause(clause: ClauseNode): string {
-  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
+  const ctx = prepareClauseContext(clause);
 
-  // 動詞エントリを取得
-  const verbEntry = findVerb(verbPhrase.verb.lemma);
-
-  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
-  // これにより、動詞ごとに固定の主語ロールが決まる
-  let subjectRole: SemanticRole | undefined;
-  for (const role of SUBJECT_ROLES) {
-    if (verbEntry?.valency.some(v => v.role === role)) {
-      subjectRole = role;
-      break;
-    }
-  }
-
-  // 主語スロットを取得
-  const subjectSlot = subjectRole
-    ? verbPhrase.arguments.find(a => a.role === subjectRole)
-    : undefined;
-
-  // 主語をレンダリング（値があれば表示、なければ ___）
-  const subject = subjectSlot?.filler
-    ? renderFiller(subjectSlot.filler, true, polarity)
-    : '___';
-
-  // 副詞を種類別に分類
-  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
-  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
-  const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place');
-  const timeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'time');
-
-  // 動詞を活用（否定含む、頻度副詞を挿入位置で返す）
-  // 主語が NounPhraseNode か CoordinatedNounPhraseNode の場合のみ渡す
-  const subjectForConjugation = subjectSlot?.filler &&
-    (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
-    ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
-    : undefined;
+  // 動詞を活用
   const verbForm = getDeclarativeVerbForm(
-    verbPhrase.verb.lemma,
-    tense,
-    aspect,
-    polarity,
-    frequencyAdverbs,
-    subjectForConjugation,
-    modal,
-    modalPolarity
+    ctx.verbPhrase.verb.lemma,
+    ctx.tense,
+    ctx.aspect,
+    ctx.polarity,
+    ctx.adverbs.frequency,
+    ctx.subjectForConjugation,
+    ctx.modal,
+    ctx.modalPolarity
   );
 
-  // その他の引数（目的語など）- 主語ロール以外
-  // シンプルなアルゴリズム：
-  // 1. 全スロットに ___ を想定
-  // 2. フィラーがあれば値を代入
-  // 3. オプショナルな欠損は省略
-  const otherArgs = (verbEntry?.valency || [])
-    .filter(v => v.role !== subjectRole)
-    .map(v => {
-      const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
-      const preposition = v.preposition;
-      const filled = argSlot?.filler;
-      const value = filled ? renderFiller(filled, false, polarity) : '___';
-      return {
-        text: preposition ? `${preposition} ${value}` : value,
-        skip: !v.required && !filled,  // オプショナルかつ空なら省略
-      };
-    })
-    .filter(item => !item.skip)
-    .map(item => item.text)
-    .join(' ');
-
-  // 様態副詞は文末（Wh副詞は?を除去）
-  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
-
-  // 場所副詞は最後（極性感応: somewhere ↔ anywhere）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
-
-  // 時間副詞（Wh副詞は?を除去）
-  const timeStr = timeAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
-
-  // 前置詞句（動詞修飾）
-  const prepPhrases = verbPhrase.prepositionalPhrases
-    .map(pp => renderPrepositionalPhrase(pp, polarity))
-    .join(' ');
+  // 引数・副詞・前置詞句をレンダリング
+  const otherArgs = renderOtherArguments(ctx);
+  const { mannerStr, locativeStr, timeStr, prepPhrasesStr } = renderAdverbsAndPrepPhrases(ctx);
 
   // 語順: Subject + Verb(+neg+freq) + Objects + PrepPhrases + Manner + Location + Time
-  const parts = [subject, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr, timeStr].filter(p => p.length > 0);
+  const parts = [ctx.subjectStr, verbForm, otherArgs, prepPhrasesStr, mannerStr, locativeStr, timeStr]
+    .filter(p => p.length > 0);
 
   let result = parts.join(' ');
 
-  // 動詞の等位接続を処理
-  if (verbPhrase.coordinatedWith) {
-    const coordVP = verbPhrase.coordinatedWith.verbPhrase;
-    const conjunction = verbPhrase.coordinatedWith.conjunction;
-    const coordVerbStr = renderCoordinatedVerbPhrase(coordVP, tense, aspect, polarity, subjectForConjugation, modal, modalPolarity);
-    result += ` ${conjunction} ${coordVerbStr}`;
-  }
-
-  return result;
+  // 等位接続動詞句を処理
+  return appendCoordinatedVP(result, ctx);
 }
 
 // 事実宣言の節をレンダリング（Logic Extension）
@@ -531,255 +599,114 @@ function renderLogicExpression(clause: ClauseNode): string {
     return renderClause(clause);
   }
 
-  // leftOperandがある場合はネストされた論理式（例: NOT(AND(P, Q))）
-  // そうでなければ現在のverbPhraseを左側の命題として使用
-  let leftStr: string;
-  if (logicOp.leftOperand) {
-    // ネストされた論理式をレンダリング
-    const nestedClause: ClauseNode = {
-      type: 'clause',
-      verbPhrase: logicOp.leftOperand,
-      tense,
-      aspect,
-      polarity: 'affirmative',
-    };
-    // leftOperandがlogicOpを持つ場合は再帰的にrenderLogicExpressionを呼ぶ
-    leftStr = logicOp.leftOperand.logicOp
-      ? renderLogicExpression(nestedClause)
-      : renderClause(nestedClause);
-  } else {
-    // 現在のverbPhraseを左側として使用（論理演算を除去）
-    const leftClause: ClauseNode = {
-      ...clause,
-      verbPhrase: {
-        ...verbPhrase,
-        logicOp: undefined,
-      },
-    };
-    leftStr = renderClause(leftClause);
-  }
+  // VerbPhraseNodeからClauseNodeを作成するヘルパー
+  const makeClause = (vp: VerbPhraseNode): ClauseNode => ({
+    type: 'clause',
+    verbPhrase: vp,
+    tense,
+    aspect,
+    polarity: 'affirmative',
+  });
 
+  // VerbPhraseNodeをレンダリングするヘルパー（logicOpがあれば再帰）
+  const renderVerbPhrase = (vp: VerbPhraseNode): string => {
+    const vpClause = makeClause(vp);
+    return vp.logicOp ? renderLogicExpression(vpClause) : renderClause(vpClause);
+  };
+
+  // 左側の命題をレンダリング
+  // leftOperandがある場合はそれを使用、なければ現在のverbPhrase（logicOp除去）を使用
+  const leftVP: VerbPhraseNode = logicOp.leftOperand ?? { ...verbPhrase, logicOp: undefined };
+  const leftStr = renderVerbPhrase(leftVP);
+
+  // NOT演算子の特殊処理
   if (logicOp.operator === 'NOT') {
     // NOT(OR(P, Q)) → "neither P nor Q" (De Morgan対応)
     if (logicOp.leftOperand?.logicOp?.operator === 'OR') {
       const innerOr = logicOp.leftOperand.logicOp;
-      // 内側のORの左側をレンダリング
-      const innerLeftClause: ClauseNode = {
-        type: 'clause',
-        verbPhrase: {
-          ...logicOp.leftOperand,
-          logicOp: undefined,  // ORを除去
-        },
-        tense,
-        aspect,
-        polarity: 'affirmative',
-      };
-      const innerLeftStr = renderClause(innerLeftClause);
-
-      // 内側のORの右側をレンダリング
-      let innerRightStr: string;
-      if (innerOr.rightOperand) {
-        const innerRightClause: ClauseNode = {
-          type: 'clause',
-          verbPhrase: innerOr.rightOperand,
-          tense,
-          aspect,
-          polarity: 'affirmative',
-        };
-        innerRightStr = innerOr.rightOperand.logicOp
-          ? renderLogicExpression(innerRightClause)
-          : renderClause(innerRightClause);
-      } else {
-        innerRightStr = '___';
-      }
-
+      const innerLeftVP: VerbPhraseNode = { ...logicOp.leftOperand, logicOp: undefined };
+      const innerLeftStr = renderClause(makeClause(innerLeftVP));
+      const innerRightStr = innerOr.rightOperand
+        ? renderVerbPhrase(innerOr.rightOperand)
+        : '___';
       return `neither ${innerLeftStr} nor ${innerRightStr}`;
     }
-
-    // 通常のNOT: "It is not the case that P"
     return `it is not the case that ${leftStr}`;
   }
 
-  // AND / OR: 右側の命題もレンダリング
-  let rightStr: string;
-  if (logicOp.rightOperand) {
-    const rightClause: ClauseNode = {
-      type: 'clause',
-      verbPhrase: logicOp.rightOperand,
-      tense,
-      aspect,
-      polarity: 'affirmative',
-    };
-    // rightOperandがlogicOpを持つ場合は再帰的にrenderLogicExpressionを呼ぶ
-    rightStr = logicOp.rightOperand.logicOp
-      ? renderLogicExpression(rightClause)
-      : renderClause(rightClause);
-  } else {
-    rightStr = '___';  // 右側欠損
-  }
+  // 右側の命題をレンダリング
+  const rightStr = logicOp.rightOperand
+    ? renderVerbPhrase(logicOp.rightOperand)
+    : '___';
 
-  if (logicOp.operator === 'AND') {
-    // AND: "both P and Q" (論理的接続)
-    return `both ${leftStr} and ${rightStr}`;
-  } else if (logicOp.operator === 'OR') {
-    // OR: "either P or Q" (論理的選択)
-    return `either ${leftStr} or ${rightStr}`;
-  } else if (logicOp.operator === 'IF') {
-    // IF: "if P, then Q" (条件・含意)
-    return `if ${leftStr}, then ${rightStr}`;
-  } else if (logicOp.operator === 'BECAUSE') {
-    // BECAUSE: "Q because P" (因果関係 - 結果を先に)
-    return `${rightStr} because ${leftStr}`;
+  // 演算子に応じたフォーマット
+  switch (logicOp.operator) {
+    case 'AND':
+      return `both ${leftStr} and ${rightStr}`;
+    case 'OR':
+      return `either ${leftStr} or ${rightStr}`;
+    case 'IF':
+      return `if ${leftStr}, then ${rightStr}`;
+    case 'BECAUSE':
+      return `${rightStr} because ${leftStr}`;
+    default:
+      return leftStr;
   }
-
-  return leftStr;
 }
 
 // 疑問文の節をレンダリング（Yes/No疑問文 または Wh疑問文）
 function renderInterrogativeClause(clause: ClauseNode): string {
-  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
-
   // Wh疑問詞（名詞）を検出
   const whInfo = findInterrogativeInClause(clause);
-
-  // Wh疑問文（名詞）の場合は専用レンダリング
   if (whInfo) {
     return renderWhQuestion(clause, whInfo);
   }
 
   // Wh疑問副詞を検出
   const whAdverbInfo = findInterrogativeAdverbInClause(clause);
-
-  // Wh副詞疑問文の場合は専用レンダリング
   if (whAdverbInfo) {
     return renderWhAdverbQuestion(clause, whAdverbInfo);
   }
 
   // Yes/No疑問文の場合
+  const ctx = prepareClauseContext(clause);
 
-  // 動詞エントリを取得
-  const verbEntry = findVerb(verbPhrase.verb.lemma);
-
-  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
-  let subjectRole: SemanticRole | undefined;
-  for (const role of SUBJECT_ROLES) {
-    if (verbEntry?.valency.some(v => v.role === role)) {
-      subjectRole = role;
-      break;
-    }
-  }
-
-  // 主語スロットを取得
-  const subjectSlot = subjectRole
-    ? verbPhrase.arguments.find(a => a.role === subjectRole)
-    : undefined;
-
-  // 主語をレンダリング（値があれば表示、なければ ___）
-  const subject = subjectSlot?.filler
-    ? renderFiller(subjectSlot.filler, true, polarity)
-    : '___';
-
-  // 副詞を種類別に分類
-  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
-  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
-  const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place');
-
-  // 主語が NounPhraseNode か CoordinatedNounPhraseNode の場合のみ渡す
-  const subjectForConjugation = subjectSlot?.filler &&
-    (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
-    ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
-    : undefined;
-
-  // 疑問文用の動詞活用（助動詞と本動詞を分離して返す）
+  // 疑問文用の動詞活用（助動詞と本動詞を分離）
   const { auxiliary, mainVerb } = getInterrogativeVerbForm(
-    verbPhrase.verb.lemma,
-    tense,
-    aspect,
-    polarity,
-    frequencyAdverbs,
-    subjectForConjugation,
-    modal,
-    modalPolarity
+    ctx.verbPhrase.verb.lemma,
+    ctx.tense,
+    ctx.aspect,
+    ctx.polarity,
+    ctx.adverbs.frequency,
+    ctx.subjectForConjugation,
+    ctx.modal,
+    ctx.modalPolarity
   );
 
-  // 倒置をログ（Yes/No疑問文）
+  // 倒置をログ
   tracker.recordSyntax(
     'inversion', 'reorder', 'INVERSION_QUESTION', 'INVERSION_QUESTION_DESC',
-    { before: [subject, auxiliary], after: [auxiliary, subject] }
+    { before: [ctx.subjectStr, auxiliary], after: [auxiliary, ctx.subjectStr] }
   );
 
-  // その他の引数（目的語など）- 主語ロール以外
-  // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
-  const otherArgs = (verbEntry?.valency || [])
-    .filter(v => v.role !== subjectRole)
-    .map(v => {
-      const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
-      const preposition = v.preposition;
-      const filled = argSlot?.filler;
-      const value = filled ? renderFiller(filled, false, polarity) : '___';
-      return {
-        text: preposition ? `${preposition} ${value}` : value,
-        skip: !v.required && !filled,
-      };
-    })
-    .filter(item => !item.skip)
-    .map(item => item.text)
-    .join(' ');
-
-  // 様態副詞は文末（Wh副詞は?を除去）
-  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
-
-  // 場所副詞は最後（極性感応: somewhere ↔ anywhere、Wh副詞は?を除去）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
-
-  // 前置詞句（動詞修飾）
-  const prepPhrases = verbPhrase.prepositionalPhrases
-    .map(pp => renderPrepositionalPhrase(pp, polarity))
-    .join(' ');
+  // 引数・副詞・前置詞句をレンダリング
+  const otherArgs = renderOtherArguments(ctx);
+  const { mannerStr, locativeStr, prepPhrasesStr } = renderAdverbsAndPrepPhrases(ctx);
 
   // 語順: Auxiliary + Subject + MainVerb + Objects + PrepPhrases + Manner + Location
-  const parts = [auxiliary, subject, mainVerb, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
+  const parts = [auxiliary, ctx.subjectStr, mainVerb, otherArgs, prepPhrasesStr, mannerStr, locativeStr]
+    .filter(p => p.length > 0);
 
   let result = parts.join(' ');
 
-  // 動詞の等位接続を処理
-  if (verbPhrase.coordinatedWith) {
-    const coordVP = verbPhrase.coordinatedWith.verbPhrase;
-    const conjunction = verbPhrase.coordinatedWith.conjunction;
-    const coordVerbStr = renderCoordinatedVerbPhrase(coordVP, tense, aspect, polarity, subjectForConjugation, modal, modalPolarity);
-    result += ` ${conjunction} ${coordVerbStr}`;
-  }
-
-  return result;
+  // 等位接続動詞句を処理
+  return appendCoordinatedVP(result, ctx);
 }
 
 // Wh疑問文をレンダリング
 function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
-  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
-  const verbEntry = findVerb(verbPhrase.verb.lemma);
-
-  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
-  let subjectRole: SemanticRole | undefined;
-  for (const role of SUBJECT_ROLES) {
-    if (verbEntry?.valency.some(v => v.role === role)) {
-      subjectRole = role;
-      break;
-    }
-  }
-
-  // 副詞を種類別に分類
-  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
-  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
-  const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place');
-
-  // 様態副詞は文末（Wh副詞は?を除去）
-  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
-  // 場所副詞は最後（Wh副詞は?を除去）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
-  // 前置詞句（動詞修飾）
-  const prepPhrases = verbPhrase.prepositionalPhrases
-    .map(pp => renderPrepositionalPhrase(pp, polarity))
-    .join(' ');
+  const ctx = prepareClauseContext(clause);
+  const { mannerStr, locativeStr, prepPhrasesStr } = renderAdverbsAndPrepPhrases(ctx);
 
   // Wh移動をログ
   tracker.recordSyntax(
@@ -789,295 +716,134 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
 
   if (whInfo.isSubject) {
     // 主語Wh疑問文: Who ate the apple? (do-supportなし)
-    // 語順: Wh + Verb(活用) + Objects + ...
-
-    // 動詞を3人称単数として活用（疑問詞は3人称単数扱い）
     const verbForm = getDeclarativeVerbForm(
-      verbPhrase.verb.lemma,
-      tense,
-      aspect,
-      polarity,
-      frequencyAdverbs,
-      undefined, // 主語は疑問詞なので3人称単数
-      modal,
-      modalPolarity
+      ctx.verbPhrase.verb.lemma,
+      ctx.tense,
+      ctx.aspect,
+      ctx.polarity,
+      ctx.adverbs.frequency,
+      undefined, // 疑問詞は3人称単数扱い
+      ctx.modal,
+      ctx.modalPolarity
     );
 
-    // 疑問詞（主語）以外の引数
-    // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
-    const otherArgs = (verbEntry?.valency || [])
-      .filter(v => v.role !== subjectRole)
-      .map(v => {
-        const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
-        const preposition = v.preposition;
-        const filled = argSlot?.filler;
-        const value = filled ? renderFiller(filled, false, polarity) : '___';
-        return {
-          text: preposition ? `${preposition} ${value}` : value,
-          skip: !v.required && !filled,
-        };
-      })
-      .filter(item => !item.skip)
-      .map(item => item.text)
-      .join(' ');
-
-    const parts = [whInfo.whWord, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
+    const otherArgs = renderOtherArguments(ctx);
+    const parts = [whInfo.whWord, verbForm, otherArgs, prepPhrasesStr, mannerStr, locativeStr]
+      .filter(p => p.length > 0);
     return parts.join(' ');
   } else {
     // 目的語Wh疑問文: What did you eat? (do-support必要)
-    // 語順: Wh + Auxiliary + Subject + MainVerb + (他の目的語) + ...
-
-    // 主語スロットを取得
-    const subjectSlot = subjectRole
-      ? verbPhrase.arguments.find(a => a.role === subjectRole)
-      : undefined;
-
-    // 主語をレンダリング（値があれば表示、なければ ___）
-    const subject = subjectSlot?.filler
-      ? renderFiller(subjectSlot.filler, true, polarity)
-      : '___';
-    const subjectForConjugation = subjectSlot?.filler &&
-      (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
-      ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
-      : undefined;
-
-    // 疑問文用の動詞活用
     const { auxiliary, mainVerb } = getInterrogativeVerbForm(
-      verbPhrase.verb.lemma,
-      tense,
-      aspect,
-      polarity,
-      frequencyAdverbs,
-      subjectForConjugation,
-      modal,
-      modalPolarity
+      ctx.verbPhrase.verb.lemma,
+      ctx.tense,
+      ctx.aspect,
+      ctx.polarity,
+      ctx.adverbs.frequency,
+      ctx.subjectForConjugation,
+      ctx.modal,
+      ctx.modalPolarity
     );
 
-    // 疑問詞と主語以外の引数
-    // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
-    const whRole = whInfo.slot.role;
-    const otherArgs = (verbEntry?.valency || [])
-      .filter(v => v.role !== subjectRole && v.role !== whRole)
-      .map(v => {
-        const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
-        const preposition = v.preposition;
-        const filled = argSlot?.filler;
-        const value = filled ? renderFiller(filled, false, polarity) : '___';
-        return {
-          text: preposition ? `${preposition} ${value}` : value,
-          skip: !v.required && !filled,
-        };
-      })
-      .filter(item => !item.skip)
-      .map(item => item.text)
-      .join(' ');
+    // 疑問詞ロールも除外
+    const otherArgs = renderOtherArguments(ctx, [whInfo.slot.role]);
 
     // whom処理: 目的語位置の?whoは?whomになる
-    let whWord = whInfo.whWord;
-    if (whWord === 'who') {
-      // 目的語位置なので whom を使用（ただし口語では who も許容）
-      whWord = 'whom';
-    }
+    const whWord = whInfo.whWord === 'who' ? 'whom' : whInfo.whWord;
 
-    const parts = [whWord, auxiliary, subject, mainVerb, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
+    const parts = [whWord, auxiliary, ctx.subjectStr, mainVerb, otherArgs, prepPhrasesStr, mannerStr, locativeStr]
+      .filter(p => p.length > 0);
     return parts.join(' ');
   }
 }
 
 // Wh副詞疑問文をレンダリング（Where/When/How did you...?）
 function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo): string {
-  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
-  const verbEntry = findVerb(verbPhrase.verb.lemma);
+  const ctx = prepareClauseContext(clause);
 
-  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
-  let subjectRole: SemanticRole | undefined;
-  for (const role of SUBJECT_ROLES) {
-    if (verbEntry?.valency.some(v => v.role === role)) {
-      subjectRole = role;
-      break;
-    }
-  }
+  // Wh副詞を除外した副詞リストで上書き
+  const adverbsExcludingWh = {
+    ...ctx.adverbs,
+    manner: ctx.adverbs.manner.filter(a => a !== whAdverbInfo.adverb),
+    locative: ctx.adverbs.locative.filter(a => a !== whAdverbInfo.adverb),
+    time: ctx.adverbs.time.filter(a => a !== whAdverbInfo.adverb),
+  };
 
-  // 主語スロットを取得
-  const subjectSlot = subjectRole
-    ? verbPhrase.arguments.find(a => a.role === subjectRole)
-    : undefined;
-
-  // 主語をレンダリング（値があれば表示、なければ ___）
-  const subject = subjectSlot?.filler
-    ? renderFiller(subjectSlot.filler, true, polarity)
-    : '___';
-  const subjectForConjugation = subjectSlot?.filler &&
-    (subjectSlot.filler.type === 'nounPhrase' || subjectSlot.filler.type === 'coordinatedNounPhrase')
-    ? subjectSlot.filler as NounPhraseNode | CoordinatedNounPhraseNode
-    : undefined;
-
-  // 副詞を種類別に分類（Wh副詞は除外）
-  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
-  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner' && a !== whAdverbInfo.adverb);
-  const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place' && a !== whAdverbInfo.adverb);
-  const timeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'time' && a !== whAdverbInfo.adverb);
-
-  // 疑問文用の動詞活用（助動詞と本動詞を分離）
+  // 疑問文用の動詞活用
   const { auxiliary, mainVerb } = getInterrogativeVerbForm(
-    verbPhrase.verb.lemma,
-    tense,
-    aspect,
-    polarity,
-    frequencyAdverbs,
-    subjectForConjugation,
-    modal,
-    modalPolarity
+    ctx.verbPhrase.verb.lemma,
+    ctx.tense,
+    ctx.aspect,
+    ctx.polarity,
+    ctx.adverbs.frequency,
+    ctx.subjectForConjugation,
+    ctx.modal,
+    ctx.modalPolarity
   );
 
-  // その他の引数（目的語など）- 主語ロール以外
-  // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
-  const otherArgs = (verbEntry?.valency || [])
-    .filter(v => v.role !== subjectRole)
-    .map(v => {
-      const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
-      const preposition = v.preposition;
-      const filled = argSlot?.filler;
-      const value = filled ? renderFiller(filled, false, polarity) : '___';
-      return {
-        text: preposition ? `${preposition} ${value}` : value,
-        skip: !v.required && !filled,
-      };
-    })
-    .filter(item => !item.skip)
-    .map(item => item.text)
+  // 引数をレンダリング
+  const otherArgs = renderOtherArguments(ctx);
+
+  // Wh副詞を除いた副詞・前置詞句を文字列化
+  const mannerStr = adverbsExcludingWh.manner.map(a => stripWhPrefix(a.lemma)).join(' ');
+  const locativeStr = adverbsExcludingWh.locative.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), ctx.polarity)).join(' ');
+  const timeStr = adverbsExcludingWh.time.map(a => stripWhPrefix(a.lemma)).join(' ');
+  const prepPhrasesStr = ctx.verbPhrase.prepositionalPhrases
+    .map(pp => renderPrepositionalPhrase(pp, ctx.polarity))
     .join(' ');
 
-  // 様態副詞は文末（Wh副詞は?を除去）
-  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
-  // 場所副詞（Wh副詞は?を除去）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
-  // 時間副詞（Wh副詞は?を除去）
-  const timeStr = timeAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
-
-  // 前置詞句（動詞修飾）
-  const prepPhrases = verbPhrase.prepositionalPhrases
-    .map(pp => renderPrepositionalPhrase(pp, polarity))
-    .join(' ');
-
-  // Wh副詞を先頭に、その後は通常の疑問文語順
-  // Where + Auxiliary + Subject + MainVerb + Objects + PrepPhrases + Manner + Location + Time
-  const parts = [whAdverbInfo.whWord, auxiliary, subject, mainVerb, otherArgs, prepPhrases, mannerStr, locativeStr, timeStr].filter(p => p.length > 0);
+  // 語順: WhAdverb + Auxiliary + Subject + MainVerb + Objects + PrepPhrases + Manner + Location + Time
+  const parts = [whAdverbInfo.whWord, auxiliary, ctx.subjectStr, mainVerb, otherArgs, prepPhrasesStr, mannerStr, locativeStr, timeStr]
+    .filter(p => p.length > 0);
 
   let result = parts.join(' ');
 
-  // 動詞の等位接続を処理
-  if (verbPhrase.coordinatedWith) {
-    const coordVP = verbPhrase.coordinatedWith.verbPhrase;
-    const conjunction = verbPhrase.coordinatedWith.conjunction;
-    const coordVerbStr = renderCoordinatedVerbPhrase(coordVP, tense, aspect, polarity, subjectForConjugation, modal, modalPolarity);
-    result += ` ${conjunction} ${coordVerbStr}`;
-  }
-
-  return result;
+  // 等位接続動詞句を処理
+  return appendCoordinatedVP(result, ctx);
 }
 
 // 命令文の節をレンダリング（主語省略、動詞原形）
 function renderImperativeClause(clause: ClauseNode): string {
+  const ctx = prepareClauseContext(clause);
   const { verbPhrase, polarity, modal } = clause;
-  const verbEntry = findVerb(verbPhrase.verb.lemma);
-
-  // 副詞を種類別に分類
-  const frequencyAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'frequency');
-  const mannerAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'manner');
-  const locativeAdverbs = verbPhrase.adverbs.filter(a => a.advType === 'place');
 
   // 動詞形を決定（命令文は原形）
+  const freqStr = ctx.adverbs.frequency.map(a => a.lemma).join(' ');
+  const baseForm = ctx.verbEntry?.forms.base || verbPhrase.verb.lemma;
   let verbForm: string;
-  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
 
   if (modal) {
-    // modal付き命令文は珍しいが対応
+    // modal付き命令文
     const modalForm = getModalEnglishForm(modal, 'present');
     const aux = modalForm.auxiliary || modal;
-    const baseForm = verbEntry?.forms.base || verbPhrase.verb.lemma;
     if (polarity === 'negative') {
-      verbForm = freqStr
-        ? `${aux} not ${freqStr} ${baseForm}`
-        : `${aux} not ${baseForm}`;
+      verbForm = freqStr ? `${aux} not ${freqStr} ${baseForm}` : `${aux} not ${baseForm}`;
     } else {
-      verbForm = freqStr
-        ? `${aux} ${freqStr} ${baseForm}`
-        : `${aux} ${baseForm}`;
+      verbForm = freqStr ? `${aux} ${freqStr} ${baseForm}` : `${aux} ${baseForm}`;
     }
   } else if (polarity === 'negative') {
-    // 否定命令: "Don't eat" / "Do not eat"
-    const baseForm = verbEntry?.forms.base || verbPhrase.verb.lemma;
-    verbForm = freqStr
-      ? `do not ${freqStr} ${baseForm}`
-      : `do not ${baseForm}`;
+    verbForm = freqStr ? `do not ${freqStr} ${baseForm}` : `do not ${baseForm}`;
   } else {
-    // 肯定命令: 原形のみ
-    const baseForm = verbEntry?.forms.base || verbPhrase.verb.lemma;
     verbForm = freqStr ? `${freqStr} ${baseForm}` : baseForm;
-  }
-
-  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
-  // 命令文では主語は省略される（暗黙の "you"）
-  let subjectRole: SemanticRole | undefined;
-  for (const role of SUBJECT_ROLES) {
-    if (verbEntry?.valency.some(v => v.role === role)) {
-      subjectRole = role;
-      break;
-    }
   }
 
   // 命令文の主語省略をログに記録
   tracker.recordSyntax(
-    'imperative',
-    'delete',
-    'IMPERATIVE_SUBJECT_OMISSION',
-    'IMPERATIVE_SUBJECT_OMISSION_DESC',
-    {
-      element: 'you',
-      before: ['you', verbForm],
-      after: [verbForm],
-    }
+    'imperative', 'delete', 'IMPERATIVE_SUBJECT_OMISSION', 'IMPERATIVE_SUBJECT_OMISSION_DESC',
+    { element: 'you', before: ['you', verbForm], after: [verbForm] }
   );
 
-  // その他の引数（目的語など）- 主語ロール以外
-  // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
-  const otherArgs = (verbEntry?.valency || [])
-    .filter(v => v.role !== subjectRole)
-    .map(v => {
-      const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
-      const preposition = v.preposition;
-      const filled = argSlot?.filler;
-      const value = filled ? renderFiller(filled, false, polarity) : '___';
-      return {
-        text: preposition ? `${preposition} ${value}` : value,
-        skip: !v.required && !filled,
-      };
-    })
-    .filter(item => !item.skip)
-    .map(item => item.text)
-    .join(' ');
-
-  // 様態副詞は文末（Wh副詞は?を除去）
-  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
-
-  // 場所副詞は最後（極性感応: somewhere ↔ anywhere、Wh副詞は?を除去）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
-
-  // 前置詞句（動詞修飾）
-  const prepPhrases = verbPhrase.prepositionalPhrases
-    .map(pp => renderPrepositionalPhrase(pp, polarity))
-    .join(' ');
+  // 引数・副詞・前置詞句をレンダリング
+  const otherArgs = renderOtherArguments(ctx);
+  const { mannerStr, locativeStr, prepPhrasesStr } = renderAdverbsAndPrepPhrases(ctx);
 
   // 語順: Verb + Objects + PrepPhrases + Manner + Location（主語なし）
-  const parts = [verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
+  const parts = [verbForm, otherArgs, prepPhrasesStr, mannerStr, locativeStr].filter(p => p.length > 0);
   let result = parts.join(' ');
 
-  // 動詞の等位接続を処理（命令文でも対応）
+  // 等位接続を処理（命令文専用）
   if (verbPhrase.coordinatedWith) {
     const coordVP = verbPhrase.coordinatedWith.verbPhrase;
     const conjunction = verbPhrase.coordinatedWith.conjunction;
-    // 命令文の等位接続: 同じ形式で継続（原形、主語なし）
     const coordVerbStr = renderImperativeCoordinatedVP(coordVP, polarity, modal);
     result += ` ${conjunction} ${coordVerbStr}`;
   }

@@ -155,7 +155,7 @@ function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
     result = `${vp.coordinatedWith.conjunction}(${result}, ${coordScript})`;
   }
 
-  // 命題レベル論理演算をラップ（大文字 AND/OR/NOT - Logic Extension）
+  // 命題レベル論理演算をラップ（大文字 AND/OR/NOT/IF/BECAUSE - Logic Extension）
   // 注: ブロックレベルで fact_wrapper 内のみ接続可能に制限済み
   if (vp.logicOp) {
     const { operator, leftOperand, rightOperand } = vp.logicOp;
@@ -166,6 +166,14 @@ function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
     if (operator === 'NOT') {
       // 単項演算子: NOT(P) または NOT(AND(P, Q))
       result = `NOT(${leftScript})`;
+    } else if (operator === 'IF') {
+      // 条件・含意: IF(P, then:Q)
+      const rightScript = rightOperand ? renderVerbPhraseToScript(rightOperand) : '___';
+      result = `IF(${leftScript}, then:${rightScript})`;
+    } else if (operator === 'BECAUSE') {
+      // 因果関係: BECAUSE(P, effect:Q)
+      const rightScript = rightOperand ? renderVerbPhraseToScript(rightOperand) : '___';
+      result = `BECAUSE(${leftScript}, effect:${rightScript})`;
     } else {
       // 二項演算子: AND(P, Q), OR(P, Q)
       const rightScript = rightOperand ? renderVerbPhraseToScript(rightOperand) : '___';

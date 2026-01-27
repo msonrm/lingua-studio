@@ -163,6 +163,13 @@ export interface BlocklyMessages {
   LOGIC_OR_TOOLTIP: string;
   LOGIC_NOT_LABEL: string;
   LOGIC_NOT_TOOLTIP: string;
+  LOGIC_IF_LABEL: string;
+  LOGIC_THEN_LABEL: string;
+  LOGIC_IF_TOOLTIP: string;
+  LOGIC_BECAUSE_LABEL: string;
+  LOGIC_EFFECT_LABEL: string;
+  LOGIC_BECAUSE_TOOLTIP: string;
+  SECTION_CONDITIONAL: string;
   TOOLBOX_LOGIC: string;
 
   // Choice question

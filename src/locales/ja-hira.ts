@@ -163,6 +163,13 @@ export const jaHira: LocaleData = {
     LOGIC_OR_TOOLTIP: 'どちらかはほんと',
     LOGIC_NOT_LABEL: 'ちがう',
     LOGIC_NOT_TOOLTIP: 'ほんとじゃない',
+    LOGIC_IF_LABEL: 'もし',
+    LOGIC_THEN_LABEL: 'なら',
+    LOGIC_IF_TOOLTIP: 'もし〜なら（じょうけん）',
+    LOGIC_BECAUSE_LABEL: 'だから',
+    LOGIC_EFFECT_LABEL: 'けっか',
+    LOGIC_BECAUSE_TOOLTIP: '〜だから〜になる（いんが）',
+    SECTION_CONDITIONAL: '── もし〜なら ──',
     TOOLBOX_LOGIC: 'ほんと？うそ？',
 
     // Choice question

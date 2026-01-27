@@ -385,6 +385,12 @@ function renderLogicExpression(clause: ClauseNode): string {
   } else if (logicOp.operator === 'OR') {
     // OR: "either P or Q" (論理的選択)
     return `either ${leftStr} or ${rightStr}`;
+  } else if (logicOp.operator === 'IF') {
+    // IF: "if P, then Q" (条件・含意)
+    return `if ${leftStr}, then ${rightStr}`;
+  } else if (logicOp.operator === 'BECAUSE') {
+    // BECAUSE: "Q because P" (因果関係 - 結果を先に)
+    return `${rightStr} because ${leftStr}`;
   }
 
   return leftStr;

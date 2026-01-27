@@ -663,6 +663,58 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     };
   }
 
+  // Logic Extension: IF ブロック（条件・含意）
+  // IF(P, then:Q) - 「PならばQ」
+  if (blockType === 'logic_if_block') {
+    const conditionBlock = block.getInputTargetBlock('CONDITION');
+    const consequenceBlock = block.getInputTargetBlock('CONSEQUENCE');
+    if (!conditionBlock) {
+      return null;
+    }
+    const conditionResult = parseVerbChain(conditionBlock);
+    if (!conditionResult) {
+      return null;
+    }
+    const consequenceResult = consequenceBlock ? parseVerbChain(consequenceBlock) : null;
+    const conditionVP = toVerbPhraseWithLogic(conditionResult);
+    const consequenceVP = consequenceResult ? toVerbPhraseWithLogic(consequenceResult) : undefined;
+
+    return {
+      ...conditionResult,
+      logicOp: {
+        operator: 'IF' as PropositionalOperator,
+        leftOperand: conditionVP,
+        rightOperand: consequenceVP,
+      },
+    };
+  }
+
+  // Logic Extension: BECAUSE ブロック（因果関係）
+  // BECAUSE(P, effect:Q) - 「Pだから、Q」
+  if (blockType === 'logic_because_block') {
+    const causeBlock = block.getInputTargetBlock('CAUSE');
+    const effectBlock = block.getInputTargetBlock('EFFECT');
+    if (!causeBlock) {
+      return null;
+    }
+    const causeResult = parseVerbChain(causeBlock);
+    if (!causeResult) {
+      return null;
+    }
+    const effectResult = effectBlock ? parseVerbChain(effectBlock) : null;
+    const causeVP = toVerbPhraseWithLogic(causeResult);
+    const effectVP = effectResult ? toVerbPhraseWithLogic(effectResult) : undefined;
+
+    return {
+      ...causeResult,
+      logicOp: {
+        operator: 'BECAUSE' as PropositionalOperator,
+        leftOperand: causeVP,
+        rightOperand: effectVP,
+      },
+    };
+  }
+
   // 等位接続ラッパー（動詞用）の処理
   if (blockType === 'coordination_verb_and' || blockType === 'coordination_verb_or') {
     const conjValue: Conjunction = blockType === 'coordination_verb_and' ? 'and' : 'or';

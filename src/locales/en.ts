@@ -163,6 +163,13 @@ export const en: LocaleData = {
     LOGIC_OR_TOOLTIP: 'Logical disjunction (OR): at least one proposition must be true',
     LOGIC_NOT_LABEL: 'NOT',
     LOGIC_NOT_TOOLTIP: 'Logical negation (NOT): the proposition is false',
+    LOGIC_IF_LABEL: 'IF',
+    LOGIC_THEN_LABEL: 'THEN',
+    LOGIC_IF_TOOLTIP: 'Conditional (IF...THEN): if the condition is true, the consequence follows',
+    LOGIC_BECAUSE_LABEL: 'BECAUSE',
+    LOGIC_EFFECT_LABEL: 'EFFECT',
+    LOGIC_BECAUSE_TOOLTIP: 'Causation (BECAUSE...EFFECT): the cause leads to the effect',
+    SECTION_CONDITIONAL: '── Conditional ──',
     TOOLBOX_LOGIC: 'Logic',
 
     // Choice question

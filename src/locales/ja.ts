@@ -163,6 +163,13 @@ export const ja: LocaleData = {
     LOGIC_OR_TOOLTIP: '論理和（OR）: 少なくとも一方が真',
     LOGIC_NOT_LABEL: 'NOT',
     LOGIC_NOT_TOOLTIP: '論理否定（NOT）: 命題が偽',
+    LOGIC_IF_LABEL: 'IF',
+    LOGIC_THEN_LABEL: 'THEN',
+    LOGIC_IF_TOOLTIP: '条件（IF...THEN）: 条件が真なら結果が従う',
+    LOGIC_BECAUSE_LABEL: 'BECAUSE',
+    LOGIC_EFFECT_LABEL: 'EFFECT',
+    LOGIC_BECAUSE_TOOLTIP: '因果（BECAUSE...EFFECT）: 原因が結果をもたらす',
+    SECTION_CONDITIONAL: '── 条件 ──',
     TOOLBOX_LOGIC: '論理',
 
     // Choice question

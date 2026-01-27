@@ -1,8 +1,14 @@
 /**
- * dictionary.ts - 統合辞書（Core + 英語Forms のマージ）
+ * dictionary.ts - 統合辞書
  *
- * 既存コードとの後方互換性を維持するため、
- * VerbEntry, NounEntry 等の従来型でエクスポート
+ * 役割:
+ * - Core（言語非依存）+ Forms（英語）のマージ
+ * - ルックアップ関数（findVerb, findNoun 等）
+ *
+ * 参照元:
+ * - blocks/definitions.ts: ドロップダウン選択肢
+ * - compiler/englishRenderer.ts: 活用形取得
+ * - compiler/astGenerator.ts: 語彙情報取得
  */
 
 import { VerbEntry, NounEntry, AdjectiveEntry, AdverbEntry, PronounEntry, VerbCategory, AdjectiveCategory, NounCategory } from '../types/schema';

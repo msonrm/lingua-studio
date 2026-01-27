@@ -37,9 +37,11 @@ function App() {
 
   // Track previous logs for diff display
   const handleLogsChange = useCallback((newLogs: TransformLog[]) => {
-    setPreviousLogs(grammarLogs);
-    setGrammarLogs(newLogs);
-  }, [grammarLogs]);
+    setGrammarLogs(prevLogs => {
+      setPreviousLogs(prevLogs);
+      return newLogs;
+    });
+  }, []);
 
   // 現在のロケールデータ
   const currentLocale = useMemo(() => getLocale(localeCode), [localeCode]);

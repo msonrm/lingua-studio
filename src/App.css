@@ -260,9 +260,9 @@ body {
    ============================================ */
 .bottom-panel {
   display: flex;
-  height: 100px;
-  min-height: 80px;
-  max-height: 150px;
+  height: 70px;
+  min-height: 60px;
+  max-height: 100px;
   border-top: 1px solid #3a4556;
   background: #252d3a;
 }
@@ -300,10 +300,10 @@ body {
   font-size: 1.1rem;
   font-weight: 500;
   color: #fff;
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
   background: #2d3748;
   border-radius: 6px;
-  min-height: 80px;
+  min-height: 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;

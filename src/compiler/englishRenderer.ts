@@ -1049,9 +1049,11 @@ function renderSingleVerbPhrase(
     hasOwnSubject ? modalPolarity : undefined
   );
 
-  // 主語をレンダリング（独自の主語がある場合のみ）
-  const subjectStr = hasOwnSubject && ownSubjectSlot?.filler
-    ? renderFiller(ownSubjectSlot.filler, true, polarity)
+  // 主語をレンダリング（値がなければ___）
+  // 注: inheritedSubjectは活用用、表示はownSubjectSlotのみ
+  // 主語ロールがない動詞では空文字
+  const subjectStr = subjectRole
+    ? render(ownSubjectSlot?.filler, f => renderFiller(f, true, polarity))
     : '';
 
   // その他の引数

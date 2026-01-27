@@ -6,7 +6,7 @@ export const jaHira: LocaleData = {
   blockly: {
     // Sentence blocks
     SENTENCE_LABEL: 'ぶん',
-    SENTENCE_TA_LABEL: 'いつ？:',
+    SENTENCE_TA_LABEL: 'いつ？どんなようす？:',
     SENTENCE_PREDICATE_LABEL: 'なにをする？:',
     SENTENCE_TOOLTIP: 'ぶんをつくる',
 

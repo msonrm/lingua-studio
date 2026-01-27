@@ -171,64 +171,226 @@ function getPostDeterminers(): DeterminerOption[] {
 }
 
 // ============================================
-// 制約ルール（双方向）
+// DET排他ルール（新設計）
 // ============================================
-const DETERMINER_CONSTRAINTS = {
-  // PRE が選ばれた場合、CENTRAL で選べないもの
-  preBlocksCentral: {
-    'all': ['a', 'no'],
-    'both': ['a', 'no', 'this', 'that'],
-    'half': ['a', 'no'],
-  } as Record<string, string[]>,
+// 構造: { [変更された項目の値]: { [影響を受ける項目]: { excludes: 排他値[], resetTo: リセット先 } } }
 
-  // PRE が選ばれた場合、POST で選べないもの
-  preBlocksPost: {
-    'all': ['one'],
-    'both': ['one', 'three', 'many', 'few', 'some', 'several'],
-    'half': ['one'],
-  } as Record<string, string[]>,
+type DetField = 'PRE' | 'CENTRAL' | 'POST';
+interface ExclusionRule {
+  excludes: string[];  // 排他となる値のリスト
+  resetTo: string;     // リセット先の値
+}
 
-  // CENTRAL が選ばれた場合、PRE で選べないもの
-  centralBlocksPre: {
-    'a': ['all', 'both', 'half'],
-    'no': ['all', 'both', 'half'],
-    'this': ['both'],
-    'that': ['both'],
-  } as Record<string, string[]>,
-
-  // CENTRAL が選ばれた場合、POST で選べないもの
-  // 注意: "a few" は有効な英語表現なので 'few' は許可
-  centralBlocksPost: {
-    'a': ['one', 'two', 'three', 'many', 'some', 'several', '__plural__'],
-    'this': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],
-    'that': ['two', 'three', 'many', 'few', 'some', 'several', '__plural__'],
-  } as Record<string, string[]>,
-
-  // POST が選ばれた場合、PRE で選べないもの
-  postBlocksPre: {
-    'one': ['all', 'both', 'half'],
-    'two': ['half'],
-    'three': ['both', 'half'],
-    'many': ['both', 'half'],
-    'few': ['both', 'half'],
-    'some': ['both', 'half'],
-    'several': ['both', 'half'],
-    '__plural__': ['both'],
-  } as Record<string, string[]>,
-
-  // POST が選ばれた場合、CENTRAL で選べないもの
-  // 注意: "a few" は有効な英語表現なので 'few' + 'a' は許可
-  postBlocksCentral: {
-    'one': ['a'],
-    'two': ['a', 'this', 'that'],
-    'three': ['a', 'this', 'that'],
-    'many': ['a', 'this', 'that'],
-    'few': ['this', 'that'],
-    'some': ['a', 'this', 'that'],
-    'several': ['a', 'this', 'that'],
-    '__plural__': ['a', 'this', 'that'],
-  } as Record<string, string[]>,
+// PRE値が変更された時の、CENTRAL/POSTへの影響
+const PRE_EXCLUSIONS: Record<string, { CENTRAL?: ExclusionRule; POST?: ExclusionRule }> = {
+  'all': {
+    CENTRAL: { excludes: ['a', 'no'], resetTo: 'the' },
+    POST: { excludes: ['one'], resetTo: '__none__' },
+  },
+  'both': {
+    CENTRAL: { excludes: ['a', 'no', 'this', 'that'], resetTo: 'the' },
+    POST: { excludes: ['one', 'three', 'many', 'few', 'some', 'several', '__uncountable__'], resetTo: 'two' },
+  },
+  'half': {
+    CENTRAL: { excludes: ['a', 'no'], resetTo: 'the' },
+    POST: { excludes: ['one', '__uncountable__'], resetTo: '__none__' },
+  },
 };
+
+// CENTRAL値が変更された時の、PRE/POSTへの影響
+const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: ExclusionRule }> = {
+  'a': {
+    PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
+    POST: { excludes: ['one', 'two', 'three', 'many', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
+  },
+  'this': {
+    PRE: { excludes: ['both'], resetTo: '__none__' },
+    POST: { excludes: ['two', 'three', 'many', 'few', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
+  },
+  'that': {
+    PRE: { excludes: ['both'], resetTo: '__none__' },
+    POST: { excludes: ['two', 'three', 'many', 'few', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
+  },
+  'no': {
+    PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
+    POST: { excludes: ['some', '__uncountable__'], resetTo: '__none__' },
+  },
+  'my': {
+    POST: { excludes: ['__uncountable__'], resetTo: '__none__' },
+  },
+  'your': {
+    POST: { excludes: ['__uncountable__'], resetTo: '__none__' },
+  },
+};
+
+// POST値が変更された時の、PRE/CENTRALへの影響
+const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: ExclusionRule }> = {
+  'one': {
+    PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a'], resetTo: '__none__' },
+  },
+  'two': {
+    PRE: { excludes: ['half'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that'], resetTo: '__none__' },
+  },
+  'three': {
+    PRE: { excludes: ['both', 'half'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that'], resetTo: '__none__' },
+  },
+  'many': {
+    PRE: { excludes: ['both', 'half'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that'], resetTo: '__none__' },
+  },
+  'few': {
+    PRE: { excludes: ['both', 'half'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['this', 'that'], resetTo: '__none__' },  // 'a few' は有効
+  },
+  'some': {
+    PRE: { excludes: ['both', 'half'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that', 'no'], resetTo: '__none__' },
+  },
+  'several': {
+    PRE: { excludes: ['both', 'half'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that'], resetTo: '__none__' },
+  },
+  '__plural__': {
+    PRE: { excludes: ['both'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that'], resetTo: '__none__' },
+  },
+  '__uncountable__': {
+    PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that', 'my', 'your'], resetTo: '__none__' },
+  },
+};
+
+// ============================================
+// 名詞タイプ別制約
+// ============================================
+type NounType = 'countable' | 'uncountable' | 'proper' | 'zeroArticle';
+
+interface NounTypeConstraint {
+  default: { pre: string; central: string; post: string };
+  invalid: { pre: string[]; central: string[]; post: string[] };
+}
+
+const NOUN_TYPE_CONSTRAINTS: Record<NounType, NounTypeConstraint> = {
+  countable: {
+    default: { pre: '__none__', central: 'a', post: '__none__' },
+    invalid: { pre: [], central: [], post: ['__uncountable__'] },
+  },
+  uncountable: {
+    default: { pre: '__none__', central: '__none__', post: '__uncountable__' },
+    invalid: {
+      pre: ['both'],
+      central: ['a'],
+      post: ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'],
+    },
+  },
+  proper: {
+    default: { pre: '__none__', central: '__none__', post: '__none__' },
+    invalid: {
+      pre: ['all', 'both', 'half'],
+      central: ['the', 'this', 'that', 'a', 'my', 'your', 'no'],
+      post: ['one', 'two', 'three', 'many', 'few', 'some', 'several', '__plural__', '__uncountable__'],
+    },
+  },
+  zeroArticle: {
+    default: { pre: '__none__', central: '__none__', post: '__none__' },
+    invalid: { pre: [], central: [], post: ['__uncountable__'] },
+  },
+};
+
+// ============================================
+// 排他ルール適用ヘルパー関数
+// ============================================
+
+/**
+ * 指定されたフィールドの値が変更された時、他のフィールドを必要に応じてリセット
+ */
+function applyExclusionRules(
+  changedField: DetField,
+  newValue: string,
+  currentValues: { PRE: string; CENTRAL: string; POST: string },
+  setFieldValue: (field: DetField, value: string) => void
+): void {
+  let exclusions: { PRE?: ExclusionRule; CENTRAL?: ExclusionRule; POST?: ExclusionRule } | undefined;
+
+  if (changedField === 'PRE') {
+    exclusions = PRE_EXCLUSIONS[newValue];
+  } else if (changedField === 'CENTRAL') {
+    exclusions = CENTRAL_EXCLUSIONS[newValue];
+  } else if (changedField === 'POST') {
+    exclusions = POST_EXCLUSIONS[newValue];
+  }
+
+  if (!exclusions) return;
+
+  // 各フィールドをチェックしてリセット
+  for (const field of ['PRE', 'CENTRAL', 'POST'] as DetField[]) {
+    if (field === changedField) continue;
+    const rule = exclusions[field];
+    if (rule && rule.excludes.includes(currentValues[field])) {
+      setFieldValue(field, rule.resetTo);
+    }
+  }
+}
+
+/**
+ * 指定されたフィールドの値が、他のフィールドの現在値と排他かどうか判定
+ */
+function isExcludedByOthers(
+  field: DetField,
+  value: string,
+  currentValues: { PRE: string; CENTRAL: string; POST: string }
+): boolean {
+  if (value === '__none__') return false;
+
+  // 他の2つのフィールドからの排他をチェック
+  for (const otherField of ['PRE', 'CENTRAL', 'POST'] as DetField[]) {
+    if (otherField === field) continue;
+
+    let exclusions: { PRE?: ExclusionRule; CENTRAL?: ExclusionRule; POST?: ExclusionRule } | undefined;
+    if (otherField === 'PRE') {
+      exclusions = PRE_EXCLUSIONS[currentValues.PRE];
+    } else if (otherField === 'CENTRAL') {
+      exclusions = CENTRAL_EXCLUSIONS[currentValues.CENTRAL];
+    } else if (otherField === 'POST') {
+      exclusions = POST_EXCLUSIONS[currentValues.POST];
+    }
+
+    if (exclusions?.[field]?.excludes.includes(value)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * 名詞タイプに基づいてDET値をリセット
+ */
+function applyNounTypeConstraints(
+  nounType: NounType,
+  currentValues: { PRE: string; CENTRAL: string; POST: string },
+  setFieldValue: (field: DetField, value: string) => void
+): void {
+  const constraint = NOUN_TYPE_CONSTRAINTS[nounType];
+
+  // いずれかのフィールドが無効な値を持っていたら、デフォルトにリセット
+  const hasInvalidPre = constraint.invalid.pre.includes(currentValues.PRE);
+  const hasInvalidCentral = constraint.invalid.central.includes(currentValues.CENTRAL);
+  const hasInvalidPost = constraint.invalid.post.includes(currentValues.POST);
+
+  if (hasInvalidPre || hasInvalidCentral || hasInvalidPost) {
+    setFieldValue('PRE', constraint.default.pre);
+    setFieldValue('CENTRAL', constraint.default.central);
+    setFieldValue('POST', constraint.default.post);
+  } else if (nounType === 'countable') {
+    // 可算名詞で全て__none__なら自動でaを設定
+    if (currentValues.PRE === '__none__' && currentValues.CENTRAL === '__none__' && currentValues.POST === '__none__') {
+      setFieldValue('CENTRAL', 'a');
+    }
+  }
+}
 
 // ============================================
 // TimeFrame ブロック（ルート）
@@ -695,7 +857,7 @@ Blockly.Blocks['abstract_block'] = {
 };
 
 // ============================================
-// 統合限定詞ブロック（3つのプルダウン）- 動的ラベル版
+// 統合限定詞ブロック（3つのプルダウン）- 新設計版
 // ============================================
 Blockly.Blocks['determiner_unified'] = {
   init: function() {
@@ -730,123 +892,110 @@ Blockly.Blocks['determiner_unified'] = {
       };
     };
 
+    // 名詞タイプを判定
+    const getNounType = (): NounType | null => {
+      const nounInfo = getConnectedNounInfo();
+      if (!nounInfo) return null;
+      if (nounInfo.proper) return 'proper';
+      if (nounInfo.zeroArticle) return 'zeroArticle';
+      if (!nounInfo.countable) return 'uncountable';
+      return 'countable';
+    };
+
+    // 現在のDET値を取得
+    const getCurrentValues = () => ({
+      PRE: block.getFieldValue('PRE') || '__none__',
+      CENTRAL: block.getFieldValue('CENTRAL') || '__none__',
+      POST: block.getFieldValue('POST') || '__none__',
+    });
+
     // 無効マーク付きラベルを生成
     const markInvalid = (label: string) => `× ${label}`;
 
-    // PRE オプション生成（クリック時に呼ばれる）
-    const getPreOptions = (): [string, string][] => {
-      const central = block.getFieldValue('CENTRAL') || '__none__';
-      const post = block.getFieldValue('POST') || '__none__';
-      const nounInfo = getConnectedNounInfo();
+    // オプション生成（共通ロジック）
+    const getOptionsForField = (
+      field: DetField,
+      determiners: DeterminerOption[]
+    ): [string, string][] => {
+      const currentValues = getCurrentValues();
+      const nounType = getNounType();
 
-      return PRE_DETERMINERS.map(o => {
+      return determiners.map(o => {
         if (o.value === '__none__') return [o.label, o.value];
 
-        // 固有名詞：全て無効
-        if (nounInfo?.proper) return [markInvalid(o.label), o.value];
-        // 不可算名詞：both/half 無効
-        if (nounInfo && !nounInfo.countable && (o.value === 'both' || o.value === 'half')) {
+        // 名詞タイプによる制約
+        if (nounType) {
+          const constraint = NOUN_TYPE_CONSTRAINTS[nounType];
+          const invalidList = constraint.invalid[field.toLowerCase() as 'pre' | 'central' | 'post'];
+          if (invalidList.includes(o.value)) {
+            return [markInvalid(o.label), o.value];
+          }
+        }
+
+        // 他のフィールドとの排他チェック
+        if (isExcludedByOthers(field, o.value, currentValues)) {
           return [markInvalid(o.label), o.value];
         }
-        // CENTRAL による制約
-        if (DETERMINER_CONSTRAINTS.centralBlocksPre[central]?.includes(o.value)) {
-          return [markInvalid(o.label), o.value];
-        }
-        // POST による制約
-        if (DETERMINER_CONSTRAINTS.postBlocksPre[post]?.includes(o.value)) {
-          return [markInvalid(o.label), o.value];
-        }
+
         return [o.label, o.value];
       });
     };
 
-    // CENTRAL オプション生成
-    const getCentralOptions = (): [string, string][] => {
-      const pre = block.getFieldValue('PRE') || '__none__';
-      const post = block.getFieldValue('POST') || '__none__';
-      const nounInfo = getConnectedNounInfo();
+    // 各フィールドのオプション生成
+    const getPreOptions = (): [string, string][] =>
+      getOptionsForField('PRE', PRE_DETERMINERS);
 
-      return CENTRAL_DETERMINERS.map(o => {
-        if (o.value === '__none__') return [o.label, o.value];
+    const getCentralOptions = (): [string, string][] =>
+      getOptionsForField('CENTRAL', CENTRAL_DETERMINERS);
 
-        // 固有名詞：全て無効
-        if (nounInfo?.proper) return [markInvalid(o.label), o.value];
-        // 不可算名詞：a/an 無効
-        if (nounInfo && !nounInfo.countable && o.value === 'a') {
-          return [markInvalid(o.label), o.value];
-        }
-        // PRE による制約
-        if (DETERMINER_CONSTRAINTS.preBlocksCentral[pre]?.includes(o.value)) {
-          return [markInvalid(o.label), o.value];
-        }
-        // POST による制約
-        if (DETERMINER_CONSTRAINTS.postBlocksCentral[post]?.includes(o.value)) {
-          return [markInvalid(o.label), o.value];
-        }
-        return [o.label, o.value];
-      });
-    };
+    const getPostOptions = (): [string, string][] =>
+      getOptionsForField('POST', getPostDeterminers());
 
-    // POST オプション生成
-    const getPostOptions = (): [string, string][] => {
-      const pre = block.getFieldValue('PRE') || '__none__';
-      const central = block.getFieldValue('CENTRAL') || '__none__';
-      const nounInfo = getConnectedNounInfo();
-      const countableOnly = ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'];
-
-      return getPostDeterminers().map(o => {
-        if (o.value === '__none__') return [o.label, o.value];
-
-        // 固有名詞：全て無効
-        if (nounInfo?.proper) return [markInvalid(o.label), o.value];
-        // 不可算名詞：数量詞無効
-        if (nounInfo && !nounInfo.countable && countableOnly.includes(o.value)) {
-          return [markInvalid(o.label), o.value];
-        }
-        // 可算名詞：[uncountable]無効
-        if (nounInfo && nounInfo.countable && o.value === '__uncountable__') {
-          return [markInvalid(o.label), o.value];
-        }
-        // PRE による制約
-        if (DETERMINER_CONSTRAINTS.preBlocksPost[pre]?.includes(o.value)) {
-          return [markInvalid(o.label), o.value];
-        }
-        // CENTRAL による制約
-        if (DETERMINER_CONSTRAINTS.centralBlocksPost[central]?.includes(o.value)) {
-          return [markInvalid(o.label), o.value];
-        }
-        return [o.label, o.value];
-      });
-    };
-
-    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否
-    const createValidator = (getOptions: () => [string, string][]) => {
-      return function(newValue: string) {
+    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否、
+    // 有効な値なら排他ルールを適用
+    const createValidator = (
+      field: DetField,
+      getOptions: () => [string, string][]
+    ) => {
+      return function(this: Blockly.FieldDropdown, newValue: string) {
         const options = getOptions();
         const selected = options.find(([, v]) => v === newValue);
         if (selected && selected[0].startsWith('×')) {
           return null;  // 選択を拒否
         }
+
+        // 排他ルール適用（遅延実行で他のフィールドをリセット）
+        setTimeout(() => {
+          const currentValues = getCurrentValues();
+          applyExclusionRules(
+            field,
+            newValue,
+            currentValues,
+            (f, v) => block.setFieldValue(v, f)
+          );
+        }, 0);
+
         return newValue;
       };
     };
 
     this.appendValueInput("NOUN")
-        .setCheck(["noun", "adjective"])  // nounまたは形容詞付き名詞
+        .setCheck(["noun", "adjective"])
         .appendField(msg('DETERMINER_LABEL', 'DET'))
-        .appendField(new Blockly.FieldDropdown(getPreOptions, createValidator(getPreOptions)), "PRE")
-        .appendField(new Blockly.FieldDropdown(getCentralOptions, createValidator(getCentralOptions)), "CENTRAL")
-        .appendField(new Blockly.FieldDropdown(getPostOptions, createValidator(getPostOptions)), "POST");
+        .appendField(new Blockly.FieldDropdown(getPreOptions, createValidator('PRE', getPreOptions)), "PRE")
+        .appendField(new Blockly.FieldDropdown(getCentralOptions, createValidator('CENTRAL', getCentralOptions)), "CENTRAL")
+        .appendField(new Blockly.FieldDropdown(getPostOptions, createValidator('POST', getPostOptions)), "POST");
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.determiner);
     this.setTooltip(msg('DETERMINER_TOOLTIP', 'Determiner: pre + central + post'));
 
-    // 名詞情報取得関数を保存（onchangeで使用）
-    this._getConnectedNounInfo = getConnectedNounInfo;
+    // 内部関数を保存（onchangeで使用）
+    this._getNounType = getNounType;
+    this._getCurrentValues = getCurrentValues;
   },
 
-  // 接続変更・名詞変更時に無効な値をリセット
+  // 接続変更・名詞変更時に名詞タイプ制約を適用
   onchange: function(e: Blockly.Events.Abstract) {
     if (!this.workspace) return;
 
@@ -864,58 +1013,18 @@ Blockly.Blocks['determiner_unified'] = {
 
     if (!isRelevantEvent) return;
 
-    const nounInfo = this._getConnectedNounInfo?.();
-    if (!nounInfo) return;
+    const nounType = this._getNounType?.() as NounType | null;
+    if (!nounType) return;
 
-    const countableOnly = ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'];
+    const currentValues = this._getCurrentValues?.() as { PRE: string; CENTRAL: string; POST: string };
+    if (!currentValues) return;
 
-    // 固有名詞：全てリセット
-    if (nounInfo.proper) {
-      if (this.getFieldValue('PRE') !== '__none__') {
-        this.setFieldValue('__none__', 'PRE');
-      }
-      if (this.getFieldValue('CENTRAL') !== '__none__') {
-        this.setFieldValue('__none__', 'CENTRAL');
-      }
-      if (this.getFieldValue('POST') !== '__none__') {
-        this.setFieldValue('__none__', 'POST');
-      }
-      return;
-    }
-
-    // 不可算名詞：無効な値をリセット
-    if (!nounInfo.countable) {
-      const pre = this.getFieldValue('PRE');
-      if (pre === 'both' || pre === 'half') {
-        this.setFieldValue('__none__', 'PRE');
-      }
-      if (this.getFieldValue('CENTRAL') === 'a') {
-        this.setFieldValue('__none__', 'CENTRAL');
-      }
-      const post = this.getFieldValue('POST');
-      if (countableOnly.includes(post)) {
-        this.setFieldValue('__none__', 'POST');
-      }
-      return;
-    }
-
-    // 可算名詞：[uncountable]をリセット
-    if (nounInfo.countable) {
-      const post = this.getFieldValue('POST');
-      if (post === '__uncountable__') {
-        this.setFieldValue('__none__', 'POST');
-      }
-    }
-
-    // 可算名詞（zeroArticle以外）：全て__none__なら自動で 'a' を設定
-    if (nounInfo.countable && !nounInfo.zeroArticle) {
-      const pre = this.getFieldValue('PRE');
-      const central = this.getFieldValue('CENTRAL');
-      const post = this.getFieldValue('POST');
-      if (pre === '__none__' && central === '__none__' && post === '__none__') {
-        this.setFieldValue('a', 'CENTRAL');
-      }
-    }
+    // 名詞タイプ制約を適用
+    applyNounTypeConstraints(
+      nounType,
+      currentValues,
+      (field, value) => this.setFieldValue(value, field)
+    );
   },
 };
 

@@ -36,7 +36,7 @@ body {
 .header h1 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #6c9bcf;
+  color: #e8eaed;
 }
 
 .subtitle {
@@ -238,7 +238,7 @@ body {
 .side-panel-header h3 {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #6c9bcf;
+  color: #e8eaed;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -290,7 +290,7 @@ body {
 .output-section h2 {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6c9bcf;
+  color: #e8eaed;
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -445,7 +445,7 @@ body {
 .viz-section h4 {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6c9bcf;
+  color: #e8eaed;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.75rem;

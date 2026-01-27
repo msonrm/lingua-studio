@@ -34,7 +34,7 @@ import {
 import {
   renderCoordinationUnified,
   CoordElement,
-} from '../grammar/coordination';
+} from './englishCoordination';
 
 // Derivation tracker (module-level, reset on each render)
 let tracker = new DerivationTracker();

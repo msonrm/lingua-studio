@@ -13,7 +13,7 @@ import type {
   CoordinatedNounPhraseNode,
 } from '../types/schema';
 import type { TransformationType } from './types';
-import { renderCoordinationUnified, CoordElement } from './coordination';
+import { renderCoordinationUnified, CoordElement } from '../compiler/englishCoordination';
 
 // ============================================
 // Types

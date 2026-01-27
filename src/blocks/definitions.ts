@@ -1013,10 +1013,10 @@ const LOCATIVE_ADVERBS = adverbs.filter(a => a.type === 'place');
 // ============================================
 Blockly.Blocks['locative_wrapper'] = {
   init: function() {
-    // 通常の場所副詞 + 疑問副詞 ?where（homeは除外）
+    // 通常の場所副詞 + 疑問副詞 ?where
     const getOptions = (): [string, string][] => [
       [msg('GROUP_COMMON', '── Common ──'), '__label_common__'],
-      ...LOCATIVE_ADVERBS.filter(a => !a.lemma.startsWith('?') && a.lemma !== 'home').map(a => [a.lemma, a.lemma] as [string, string]),
+      ...LOCATIVE_ADVERBS.filter(a => !a.lemma.startsWith('?')).map(a => [a.lemma, a.lemma] as [string, string]),
       [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), '__label_interrogative__'],
       ['?where', '?where'],
     ];

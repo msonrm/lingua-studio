@@ -404,6 +404,10 @@ function appendCoordinatedVP(
   if (!ctx.verbPhrase.coordinatedWith) return result;
 
   // 主語のグループIDを取得するヘルパー
+  // 戻り値:
+  //   - フィラーがある → JSON.stringify(filler)
+  //   - 主語ロールがあるがフィラーがない → '__placeholder__'（別グループ）
+  //   - 主語ロールがない → '__no_subject_role__'（継承対象）
   const getSubjectGroupId = (vp: VerbPhraseNode): string => {
     const verbEntry = findVerb(vp.verb.lemma);
     for (const role of SUBJECT_ROLES) {
@@ -412,11 +416,15 @@ function appendCoordinatedVP(
         if (slot?.filler) {
           // 独自の主語がある場合、そのフィラーをIDとして使用
           return JSON.stringify(slot.filler);
+        } else {
+          // 主語スロットはあるがフィラーがない → プレースホルダー
+          // これは別グループとして扱う（継承しない）
+          return '__placeholder__';
         }
       }
     }
-    // 主語がない場合は親の主語を継承（同じグループ）
-    return '__inherited__';
+    // 主語ロール自体がない動詞（継承対象）
+    return '__no_subject_role__';
   };
 
   // 全チェーンを収集
@@ -444,10 +452,11 @@ function appendCoordinatedVP(
     const coord: { conjunction: 'and' | 'or'; verbPhrase: VerbPhraseNode } = currentVP.coordinatedWith;
     const nextVP: VerbPhraseNode = coord.verbPhrase;
     let groupId = getSubjectGroupId(nextVP);
-    const hasOwnSubject = groupId !== '__inherited__';
+    // プレースホルダーも「独自の主語」として扱う（継承しない）
+    const hasOwnSubject = groupId !== '__no_subject_role__';
 
-    // 主語がない場合は前の要素のグループを継承
-    if (groupId === '__inherited__') {
+    // 主語ロールがない場合のみ前の要素のグループを継承
+    if (groupId === '__no_subject_role__') {
       groupId = prevGroupId;
     }
 

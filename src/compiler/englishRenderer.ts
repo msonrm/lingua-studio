@@ -1701,15 +1701,28 @@ function conjugateVerbForQuestion(
     switch (tense) {
       case 'past':
         doForm = 'did';
+        // Log tense transformation
+        tracker.recordMorphology('tense', 'do', 'did', 'did', 'Tense: past');
         break;
       case 'present':
         doForm = isThirdPersonSingular ? 'does' : 'do';
+        // Log agreement if applicable
+        if (isThirdPersonSingular) {
+          tracker.recordMorphology('agreement', 'do', 'does', '+es', 'Subject is 3sg');
+        }
         break;
       case 'future':
+        // Log future tense
+        tracker.recordMorphology('tense', lemma, `will ${verbEntry.forms.base}`, 'will + base', 'Tense: future');
         const notPart = isNegative ? 'not' : '';
         const mainParts = [notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
         return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
     }
+    // Log do-support syntax
+    tracker.recordSyntax('do-support', 'insert', 'do', 'Question formation requires do-support', {
+      element: 'do',
+      after: [`${doForm} [S V]`],
+    });
     const notPart = isNegative ? 'not' : '';
     const mainParts = [notPart, freqStr, verbEntry.forms.base].filter(p => p.length > 0);
     return { auxiliary: doForm, mainVerb: mainParts.join(' ') };
@@ -1719,6 +1732,14 @@ function conjugateVerbForQuestion(
   if (aspect === 'progressive') {
     const beAux = getBeAuxiliary(tense);
     const notPart = isNegative ? 'not' : '';
+    // Log tense (auxiliary selection)
+    if (tense === 'future') {
+      tracker.recordMorphology('tense', 'be', 'will be', 'will + be', 'Tense: future');
+    } else if (tense === 'past') {
+      tracker.recordMorphology('tense', 'be', beAux, 'was/were', 'Tense: past');
+    }
+    // Log aspect
+    tracker.recordMorphology('aspect', lemma, `be ${verbEntry.forms.ing}`, 'be + -ing', 'Aspect: progressive');
     if (tense === 'future') {
       const mainParts = [notPart, freqStr, 'be', verbEntry.forms.ing].filter(p => p.length > 0);
       return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
@@ -1732,13 +1753,25 @@ function conjugateVerbForQuestion(
     let haveAux: string;
     if (tense === 'past') {
       haveAux = 'had';
+      // Log tense
+      tracker.recordMorphology('tense', 'have', 'had', 'had', 'Tense: past');
     } else if (tense === 'future') {
+      // Log tense
+      tracker.recordMorphology('tense', 'have', 'will have', 'will + have', 'Tense: future');
+      // Log aspect
+      tracker.recordMorphology('aspect', lemma, `have ${verbEntry.forms.pp}`, 'have + past participle', 'Aspect: perfect');
       const notPart = isNegative ? 'not' : '';
       const mainParts = [notPart, freqStr, 'have', verbEntry.forms.pp].filter(p => p.length > 0);
       return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
     } else {
       haveAux = isThirdPersonSingular ? 'has' : 'have';
+      // Log agreement if applicable
+      if (isThirdPersonSingular) {
+        tracker.recordMorphology('agreement', 'have', 'has', '+s', 'Subject is 3sg');
+      }
     }
+    // Log aspect
+    tracker.recordMorphology('aspect', lemma, `have ${verbEntry.forms.pp}`, 'have + past participle', 'Aspect: perfect');
     const notPart = isNegative ? 'not' : '';
     const mainParts = [notPart, freqStr, verbEntry.forms.pp].filter(p => p.length > 0);
     return { auxiliary: haveAux, mainVerb: mainParts.join(' ') };
@@ -1749,13 +1782,25 @@ function conjugateVerbForQuestion(
     let haveAux: string;
     if (tense === 'past') {
       haveAux = 'had';
+      // Log tense
+      tracker.recordMorphology('tense', 'have', 'had', 'had', 'Tense: past');
     } else if (tense === 'future') {
+      // Log tense
+      tracker.recordMorphology('tense', 'have', 'will have', 'will + have', 'Tense: future');
+      // Log aspect
+      tracker.recordMorphology('aspect', lemma, `have been ${verbEntry.forms.ing}`, 'have + been + -ing', 'Aspect: perfect progressive');
       const notPart = isNegative ? 'not' : '';
       const mainParts = [notPart, freqStr, 'have', 'been', verbEntry.forms.ing].filter(p => p.length > 0);
       return { auxiliary: 'will', mainVerb: mainParts.join(' ') };
     } else {
       haveAux = isThirdPersonSingular ? 'has' : 'have';
+      // Log agreement if applicable
+      if (isThirdPersonSingular) {
+        tracker.recordMorphology('agreement', 'have', 'has', '+s', 'Subject is 3sg');
+      }
     }
+    // Log aspect
+    tracker.recordMorphology('aspect', lemma, `have been ${verbEntry.forms.ing}`, 'have + been + -ing', 'Aspect: perfect progressive');
     const notPart = isNegative ? 'not' : '';
     const mainParts = [notPart, freqStr, 'been', verbEntry.forms.ing].filter(p => p.length > 0);
     return { auxiliary: haveAux, mainVerb: mainParts.join(' ') };

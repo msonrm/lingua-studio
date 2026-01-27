@@ -1,14 +1,15 @@
 /**
- * dictionary.ts - 統合辞書
+ * dictionary.ts - 統合辞書（英語レンダリング用）
  *
  * 役割:
  * - Core（言語非依存）+ Forms（英語）のマージ
  * - ルックアップ関数（findVerb, findNoun 等）
  *
  * 参照元:
- * - blocks/definitions.ts: ドロップダウン選択肢
  * - compiler/englishRenderer.ts: 活用形取得
  * - compiler/astGenerator.ts: 語彙情報取得
+ *
+ * 注: ブロック定義は dictionary-core.ts を直接参照
  */
 
 import { VerbEntry, NounEntry, AdjectiveEntry, AdverbEntry, PronounEntry, VerbCategory, AdjectiveCategory, NounCategory } from '../types/schema';

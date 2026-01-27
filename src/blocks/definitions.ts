@@ -1,6 +1,12 @@
 import * as Blockly from 'blockly';
-import { nouns, adjectives, adverbs, pronouns, findNoun, getVerbsByCategory } from '../data/dictionary';
+import { nounCores, adjectiveCores, adverbCores, pronounCores, verbCores } from '../data/dictionary-core';
 import type { VerbCategory, AdjectiveCategory } from '../types/schema';
+
+// ============================================
+// ヘルパー関数（dictionary-core.ts ベース）
+// ============================================
+const findNounCore = (lemma: string) => nounCores.find(n => n.lemma === lemma);
+const getVerbCoresByCategory = (category: VerbCategory) => verbCores.filter(v => v.category === category);
 
 // ============================================
 // ドロップダウンラベル用バリデーター
@@ -433,7 +439,7 @@ const VERB_CATEGORY_KEYS: Record<VerbCategory, { msgKey: string; fallback: strin
 // カテゴリ別動詞ブロック生成関数
 function createVerbCategoryBlock(category: VerbCategory) {
   const config = VERB_CATEGORY_KEYS[category];
-  const categoryVerbs = getVerbsByCategory(category);
+  const categoryVerbs = getVerbCoresByCategory(category);
 
   Blockly.Blocks[`verb_${category}`] = {
     init: function() {
@@ -489,10 +495,10 @@ function createVerbCategoryBlock(category: VerbCategory) {
 // ============================================
 // 代名詞ブロック（限定詞不要）
 // ============================================
-const personalPronouns = pronouns.filter(p => p.type === 'personal');
-const indefinitePronouns = pronouns.filter(p => p.type === 'indefinite');
-const demonstrativePronouns = pronouns.filter(p => p.type === 'demonstrative');
-const interrogativePronouns = pronouns.filter(p => p.type === 'interrogative');
+const personalPronouns = pronounCores.filter(p => p.type === 'personal');
+const indefinitePronouns = pronounCores.filter(p => p.type === 'indefinite');
+const demonstrativePronouns = pronounCores.filter(p => p.type === 'demonstrative');
+const interrogativePronouns = pronounCores.filter(p => p.type === 'interrogative');
 
 Blockly.Blocks['pronoun_block'] = {
   init: function() {
@@ -533,7 +539,7 @@ Blockly.Blocks['pronoun_block'] = {
 // ============================================
 // 所有代名詞ブロック（mine, yours, etc.）
 // ============================================
-const possessivePronouns = pronouns.filter(p => p.type === 'possessive');
+const possessivePronouns = pronounCores.filter(p => p.type === 'possessive');
 
 Blockly.Blocks['possessive_pronoun_block'] = {
   init: function() {
@@ -557,8 +563,8 @@ Blockly.Blocks['possessive_pronoun_block'] = {
 // ============================================
 // 人間ブロック (human)
 // ============================================
-const humanNouns = nouns.filter(n => n.category === 'human' && !n.proper);
-const humanProperNouns = nouns.filter(n => n.category === 'human' && n.proper);
+const humanNouns = nounCores.filter(n => n.category === 'human' && !n.proper);
+const humanProperNouns = nounCores.filter(n => n.category === 'human' && n.proper);
 
 Blockly.Blocks['human_block'] = {
   init: function() {
@@ -592,7 +598,7 @@ Blockly.Blocks['human_block'] = {
 // ============================================
 // 動物ブロック (animal)
 // ============================================
-const animalNouns = nouns.filter(n => n.category === 'animal');
+const animalNouns = nounCores.filter(n => n.category === 'animal');
 
 Blockly.Blocks['animal_block'] = {
   init: function() {
@@ -613,7 +619,7 @@ Blockly.Blocks['animal_block'] = {
 // ============================================
 // 物体ブロック (object)
 // ============================================
-const objectNouns = nouns.filter(n => n.category === 'object');
+const objectNouns = nounCores.filter(n => n.category === 'object');
 
 Blockly.Blocks['object_block'] = {
   init: function() {
@@ -634,8 +640,8 @@ Blockly.Blocks['object_block'] = {
 // ============================================
 // 場所ブロック (place)
 // ============================================
-const placeNouns = nouns.filter(n => n.category === 'place' && !n.proper);
-const placeProperNouns = nouns.filter(n => n.category === 'place' && n.proper);
+const placeNouns = nounCores.filter(n => n.category === 'place' && !n.proper);
+const placeProperNouns = nounCores.filter(n => n.category === 'place' && n.proper);
 // 場所副詞 (here, there) は一時削除 - 限定詞との相性問題のため
 
 Blockly.Blocks['place_block'] = {
@@ -670,7 +676,7 @@ Blockly.Blocks['place_block'] = {
 // ============================================
 // 抽象概念ブロック (abstract)
 // ============================================
-const abstractNouns = nouns.filter(n => n.category === 'abstract');
+const abstractNouns = nounCores.filter(n => n.category === 'abstract');
 
 Blockly.Blocks['abstract_block'] = {
   init: function() {
@@ -715,7 +721,7 @@ Blockly.Blocks['determiner_unified'] = {
       if (!fieldName) return null;
       const nounLemma = targetBlock.getFieldValue(fieldName);
       if (!nounLemma || nounLemma.startsWith('__')) return null;
-      const nounEntry = findNoun(nounLemma);
+      const nounEntry = findNounCore(nounLemma);
       if (!nounEntry) return null;
       return { countable: nounEntry.countable, proper: nounEntry.proper === true };
     };
@@ -901,7 +907,7 @@ const ADJECTIVE_CATEGORY_KEYS: Record<AdjectiveCategory, { msgKey: string; fallb
 // カテゴリ別形容詞ブロック生成関数
 function createAdjectiveCategoryBlock(category: AdjectiveCategory) {
   const config = ADJECTIVE_CATEGORY_KEYS[category];
-  const categoryAdjs = adjectives.filter(a => a.category === category);
+  const categoryAdjs = adjectiveCores.filter(a => a.category === category);
 
   Blockly.Blocks[`adjective_${category}`] = {
     init: function() {
@@ -938,7 +944,7 @@ const FREQUENCY_ADVERBS = [
 // ============================================
 // 様態副詞データ定義
 // ============================================
-const MANNER_ADVERBS = adverbs.filter(a => a.type === 'manner');
+const MANNER_ADVERBS = adverbCores.filter(a => a.type === 'manner');
 
 // ============================================
 // 否定ラッパーブロック（動詞修飾）
@@ -1006,7 +1012,7 @@ Blockly.Blocks['manner_wrapper'] = {
 // ============================================
 // 場所副詞データ定義
 // ============================================
-const LOCATIVE_ADVERBS = adverbs.filter(a => a.type === 'place');
+const LOCATIVE_ADVERBS = adverbCores.filter(a => a.type === 'place');
 
 // ============================================
 // 場所副詞ラッパーブロック（動詞修飾）

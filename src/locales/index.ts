@@ -12,13 +12,20 @@ export const locales: Record<LocaleCode, LocaleData> = {
   'ja-hira': jaHira,
 };
 
-// Get locale from localStorage or default to 'en'
+// Detect OS locale and return appropriate LocaleCode
+function detectOSLocale(): LocaleCode {
+  const browserLang = navigator.language || (navigator as { userLanguage?: string }).userLanguage || '';
+  // If Japanese, use 'ja'; otherwise default to 'en'
+  return browserLang.startsWith('ja') ? 'ja' : 'en';
+}
+
+// Get locale from localStorage or detect from OS
 export function getStoredLocale(): LocaleCode {
   const stored = localStorage.getItem('lingua-studio-locale');
   if (stored === 'en' || stored === 'ja' || stored === 'ja-hira') {
     return stored;
   }
-  return 'en';
+  return detectOSLocale();
 }
 
 // Store locale preference

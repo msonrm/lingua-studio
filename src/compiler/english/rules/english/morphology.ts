@@ -9,9 +9,9 @@
  * - Article (冠詞選択)
  */
 
-import type { RenderContext } from '../../types';
-import type { VerbEntry } from '../../../types/schema';
-import { findVerb, findPronoun } from '../../../data/dictionary';
+import type { RenderContext } from '../../../../grammar/types';
+import type { VerbEntry } from '../../../../types/schema';
+import { findVerb, findPronoun } from '../../../../data/dictionary';
 
 // ============================================
 // Agreement (主語-動詞一致)

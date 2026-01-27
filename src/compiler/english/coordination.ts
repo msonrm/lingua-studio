@@ -12,7 +12,7 @@
  * 4. 具体化（レンダリング）: 文字列生成
  */
 
-import { Conjunction } from '../types/schema';
+import { Conjunction } from '../../types/schema';
 
 // ============================================
 // 型定義

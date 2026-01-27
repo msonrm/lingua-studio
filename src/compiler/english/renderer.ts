@@ -12,10 +12,10 @@ import {
   CoordinatedNounPhraseNode,
   VerbPhraseNode,
   ModalType,
-} from '../types/schema';
-import { findVerb, findNoun, findPronoun } from '../data/dictionary';
-import { RenderResult } from '../types/grammarLog';
-import { DerivationTracker } from '../grammar/DerivationTracker';
+} from '../../types/schema';
+import { findVerb, findNoun, findPronoun } from '../../data/dictionary';
+import { RenderResult } from '../../types/grammarLog';
+import { DerivationTracker } from '../../grammar/DerivationTracker';
 import {
   conjugateVerb,
   ConjugationContext,
@@ -24,17 +24,17 @@ import {
   Aspect,
   Polarity,
   ModalType as ConjugationModalType,
-} from '../grammar/conjugation';
+} from './conjugation';
 import {
   renderNounPhraseUnified,
   renderCoordinatedNounPhraseUnified,
   NounPhraseContext,
   NounPhraseDependencies,
-} from '../grammar/nounPhrase';
+} from './nounPhrase';
 import {
   renderCoordinationUnified,
   CoordElement,
-} from './englishCoordination';
+} from './coordination';
 
 // Derivation tracker (module-level, reset on each render)
 let tracker = new DerivationTracker();

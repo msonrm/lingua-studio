@@ -3,7 +3,7 @@ import * as Blockly from 'blockly';
 import '../blocks/definitions';
 import { createToolbox } from '../blocks/definitions';
 import { generateMultipleAST } from '../compiler/astGenerator';
-import { renderToEnglishWithLogs } from '../compiler/englishRenderer';
+import { renderToEnglishWithLogs } from '../compiler/english/renderer';
 import { TransformLog, BlockChange } from '../types/grammarLog';
 import { SentenceNode } from '../types/schema';
 import { useLocale } from '../locales';

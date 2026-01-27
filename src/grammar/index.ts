@@ -29,6 +29,6 @@ export type {
 // Tracker
 export { DerivationTracker } from './DerivationTracker';
 
-// English Rules
-export * as EnglishMorphology from './rules/english/morphology';
-export * as EnglishSyntax from './rules/english/syntax';
+// English Rules (re-exported from compiler/english)
+export * as EnglishMorphology from '../compiler/english/rules/english/morphology';
+export * as EnglishSyntax from '../compiler/english/rules/english/syntax';

@@ -275,6 +275,7 @@ Blockly.Blocks['modal_wrapper'] = {
 
 // ============================================
 // Imperative ラッパーブロック（命令文）
+// 英語のモーダル動詞には命令形がないため、modalとの組み合わせは不可
 // ============================================
 Blockly.Blocks['imperative_wrapper'] = {
   init: function() {

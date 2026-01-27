@@ -10,24 +10,25 @@ import {
 } from '../types/schema';
 
 // ============================================
-// モダリティ → 英語表層形マッピング
+// モダリティ → 基本表層形マッピング
+// 時制に依存せず基本形のみ（実際の活用はレンダラーが処理）
+// LLM検証済み: 基本形から時制に応じた正しい表層形を推論可能
 // ============================================
 type ModalType = 'ability' | 'permission' | 'possibility' | 'obligation' | 'certainty' | 'advice' | 'volition' | 'prediction';
-type Tense = 'past' | 'present' | 'future';
 
-const modalSurfaceForms: Record<ModalType, Record<Tense, string>> = {
-  ability:     { past: 'could',        present: 'can',    future: 'can' },
-  permission:  { past: 'could',        present: 'may',    future: 'may' },
-  possibility: { past: 'might',        present: 'might',  future: 'might' },
-  obligation:  { past: 'had_to',       present: 'must',   future: 'must' },
-  certainty:   { past: 'must_have',    present: 'must',   future: 'must' },
-  advice:      { past: 'should_have',  present: 'should', future: 'should' },
-  volition:    { past: 'was_going_to', present: 'will',   future: 'will' },
-  prediction:  { past: 'would',        present: 'will',   future: 'will' },
+const modalBaseForms: Record<ModalType, string> = {
+  ability:     'can',
+  permission:  'may',
+  possibility: 'might',
+  obligation:  'must',
+  certainty:   'must',
+  advice:      'should',
+  volition:    'will',
+  prediction:  'will',
 };
 
-function getModalSurfaceForm(modal: ModalType, tense: Tense): string {
-  return modalSurfaceForms[modal]?.[tense] || modal;
+function getModalBaseForm(modal: ModalType): string {
+  return modalBaseForms[modal] || modal;
 }
 
 // ============================================
@@ -49,9 +50,8 @@ export function renderToLinguaScript(ast: SentenceNode): string {
   // モダリティがある場合は modal() でラップ（仕様: modal(ability:can, sentence(...))）
   if (ast.clause.modal) {
     const modal = ast.clause.modal as ModalType;
-    const tense = ast.clause.tense as Tense;
-    const surfaceForm = getModalSurfaceForm(modal, tense);
-    result = `modal(${modal}:${surfaceForm}, ${result})`;
+    const baseForm = getModalBaseForm(modal);
+    result = `modal(${modal}:${baseForm}, ${result})`;
 
     // モダリティ否定の場合は not() でラップ（仕様: not(modal(ability:can, ...))）
     if (ast.clause.modalPolarity === 'negative') {

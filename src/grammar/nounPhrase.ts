@@ -13,6 +13,7 @@ import type {
   CoordinatedNounPhraseNode,
 } from '../types/schema';
 import type { TransformationType } from './types';
+import { renderCoordination } from './coordination';
 
 // ============================================
 // Types
@@ -343,44 +344,40 @@ export function renderCoordinatedNounPhraseUnified(
   deps: NounPhraseDependencies
 ): NounPhraseResult {
   const transforms: Transform[] = [];
-  // polarity is used through ctx passed to sub-calls
-  void ctx;
 
-  const parts: string[] = [];
-
-  for (let i = 0; i < cnp.conjuncts.length; i++) {
-    const conjunct = cnp.conjuncts[i];
-
-    // 等位接続の場合は再帰
+  // 各要素をレンダリングする関数
+  const renderConjunct = (conjunct: NounPhraseNode | CoordinatedNounPhraseNode): string => {
     if (conjunct.type === 'coordinatedNounPhrase') {
       const subResult = renderCoordinatedNounPhraseUnified(
         conjunct as CoordinatedNounPhraseNode,
         ctx,
         deps
       );
-      parts.push(subResult.form);
       transforms.push(...subResult.transforms);
+      return subResult.form;
     } else {
       const subResult = renderNounPhraseUnified(
         conjunct as NounPhraseNode,
         ctx,
         deps
       );
-      parts.push(subResult.form);
       transforms.push(...subResult.transforms);
+      return subResult.form;
     }
+  };
 
-    // 接続詞の挿入
-    if (i < cnp.conjuncts.length - 1) {
-      if (i === cnp.conjuncts.length - 2) {
-        // 最後の要素の前には "and"/"or"
-        parts.push(cnp.conjunction);
-      } else {
-        // それ以外は ","
-        parts[parts.length - 1] += ',';
-      }
+  // 統一等位接続モジュールを使用
+  const result = renderCoordination(
+    cnp.conjuncts,
+    renderConjunct,
+    {
+      conjunction: cnp.conjunction,
+      isNegated: ctx.polarity === 'negative',
+      // 名詞句では相関接続詞を使用しない（主語省略との整合性）
+      useCorrelative: false,
+      useOxfordComma: true,
     }
-  }
+  );
 
-  return { form: parts.join(' '), transforms };
+  return { form: result.form, transforms };
 }

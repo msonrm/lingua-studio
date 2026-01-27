@@ -31,6 +31,8 @@ import {
   NounPhraseContext,
   NounPhraseDependencies,
 } from '../grammar/nounPhrase';
+// 統一等位接続モジュール（名詞句用 - 動詞句は直接処理）
+// import { renderCoordination } from '../grammar/coordination';
 
 // Derivation tracker (module-level, reset on each render)
 let tracker = new DerivationTracker();
@@ -399,12 +401,46 @@ function appendCoordinatedVP(
 ): string {
   if (!ctx.verbPhrase.coordinatedWith) return result;
 
-  const conjunction = ctx.verbPhrase.coordinatedWith.conjunction;
-  const coordVerbStr = render(ctx.verbPhrase.coordinatedWith.verbPhrase, vp =>
-    renderCoordinatedVerbPhrase(vp, ctx.tense, ctx.aspect, ctx.polarity,
-      ctx.subjectForConjugation, ctx.modal, ctx.modalPolarity)
-  );
-  return `${result} ${conjunction} ${coordVerbStr}`;
+  // チェーンを辿って全VPを収集
+  const vpStrings: string[] = [result];
+  const conjunctions: ('and' | 'or')[] = [];
+  let currentVP: VerbPhraseNode | undefined = ctx.verbPhrase;
+
+  while (currentVP?.coordinatedWith) {
+    const coordWith: { conjunction: 'and' | 'or'; verbPhrase: VerbPhraseNode } = currentVP.coordinatedWith;
+    conjunctions.push(coordWith.conjunction);
+
+    const nextVP: VerbPhraseNode | undefined = coordWith.verbPhrase;
+    const vpStr = render(nextVP, vp =>
+      renderCoordinatedVerbPhrase(vp, ctx.tense, ctx.aspect, ctx.polarity,
+        ctx.subjectForConjugation, ctx.modal, ctx.modalPolarity)
+    );
+    vpStrings.push(vpStr);
+    currentVP = nextVP;
+  }
+
+  // 接続詞が混在している場合は単純結合
+  const uniqueConjunctions = [...new Set(conjunctions)];
+  if (uniqueConjunctions.length > 1) {
+    let combined = result;
+    for (let i = 0; i < conjunctions.length; i++) {
+      combined += ` ${conjunctions[i]} ${vpStrings[i + 1]}`;
+    }
+    return combined;
+  }
+
+  // 単一接続詞: 統一フォーマット（both/either + オックスフォードカンマ）
+  const conjunction = uniqueConjunctions[0] || 'and';
+  if (vpStrings.length === 2) {
+    // 2項目: both A and B / either A or B
+    const correlative = conjunction === 'and' ? 'both' : 'either';
+    return `${correlative} ${vpStrings[0]} ${conjunction} ${vpStrings[1]}`;
+  } else {
+    // 3項目以上: A, B, and C (オックスフォードカンマ)
+    const allButLast = vpStrings.slice(0, -1);
+    const last = vpStrings[vpStrings.length - 1];
+    return `${allButLast.join(', ')}, ${conjunction} ${last}`;
+  }
 }
 
 // ============================================

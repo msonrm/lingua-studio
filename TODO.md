@@ -78,11 +78,12 @@
   - toLegacyLogs() で既存UIと後方互換
 
 #### 辞書アーキテクチャ
-- [ ] 辞書分離（言語非依存 / 言語固有）
+- [x] 辞書分離（言語非依存 / 言語固有）
   - `dictionary-core.ts`: lemma（英語識別子）, type, category, valency
   - `dictionary-en.ts`: 英語 forms（活用形）
-  - `dictionary-ja.ts`: 日本語 surface + forms
+  - `dictionary-ja.ts`: 日本語 surface + forms（未実装）
   - lemma は英語で固定（プログラミング言語が英語ベースなのと同様）
+  - `dictionary.ts` で Core + Forms をマージし後方互換性を維持
 
 #### Output UI
 - [ ] 2パネル出力構成

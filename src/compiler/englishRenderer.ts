@@ -404,27 +404,21 @@ function appendCoordinatedVP(
   if (!ctx.verbPhrase.coordinatedWith) return result;
 
   // 主語のグループIDを取得するヘルパー
-  // 戻り値:
-  //   - フィラーがある → JSON.stringify(filler)
-  //   - 主語ロールがあるがフィラーがない → '__placeholder__'（別グループ）
-  //   - 主語ロールがない → '__no_subject_role__'（継承対象）
+  // シンプルなロジック:
+  //   - 主語フィラーがある → JSON.stringify(filler)
+  //   - 主語フィラーがない → '__placeholder__'（別グループ）
   const getSubjectGroupId = (vp: VerbPhraseNode): string => {
     const verbEntry = findVerb(vp.verb.lemma);
     for (const role of SUBJECT_ROLES) {
       if (verbEntry?.valency.some((v: { role: SemanticRole }) => v.role === role)) {
         const slot = vp.arguments.find((a: FilledArgumentSlot) => a.role === role);
         if (slot?.filler) {
-          // 独自の主語がある場合、そのフィラーをIDとして使用
           return JSON.stringify(slot.filler);
-        } else {
-          // 主語スロットはあるがフィラーがない → プレースホルダー
-          // これは別グループとして扱う（継承しない）
-          return '__placeholder__';
         }
       }
     }
-    // 主語ロール自体がない動詞（継承対象）
-    return '__no_subject_role__';
+    // 主語がない → プレースホルダー表示、別グループ
+    return '__placeholder__';
   };
 
   // 全チェーンを収集
@@ -447,27 +441,18 @@ function appendCoordinatedVP(
 
   // チェーンを辿る
   let currentVP: VerbPhraseNode | undefined = ctx.verbPhrase;
-  let prevGroupId = firstGroupId;
   while (currentVP?.coordinatedWith) {
     const coord: { conjunction: 'and' | 'or'; verbPhrase: VerbPhraseNode } = currentVP.coordinatedWith;
     const nextVP: VerbPhraseNode = coord.verbPhrase;
-    let groupId = getSubjectGroupId(nextVP);
-    // プレースホルダーも「独自の主語」として扱う（継承しない）
-    const hasOwnSubject = groupId !== '__no_subject_role__';
-
-    // 主語ロールがない場合のみ前の要素のグループを継承
-    if (groupId === '__no_subject_role__') {
-      groupId = prevGroupId;
-    }
+    const groupId = getSubjectGroupId(nextVP);
 
     const rendered = renderSingleVerbPhrase(
       nextVP, ctx.tense, ctx.aspect, ctx.polarity,
-      hasOwnSubject ? undefined : ctx.subjectForConjugation,
+      undefined,  // 継承なし、各VPは独立してレンダリング
       ctx.modal, ctx.modalPolarity
     );
 
     vpInfos.push({ vp: nextVP, rendered, groupId });
-    prevGroupId = groupId;
     currentVP = nextVP;
   }
 

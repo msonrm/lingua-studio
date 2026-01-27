@@ -439,11 +439,17 @@ function appendCoordinatedVP(
 
   // チェーンを辿る
   let currentVP: VerbPhraseNode | undefined = ctx.verbPhrase;
+  let prevGroupId = firstGroupId;
   while (currentVP?.coordinatedWith) {
     const coord: { conjunction: 'and' | 'or'; verbPhrase: VerbPhraseNode } = currentVP.coordinatedWith;
     const nextVP: VerbPhraseNode = coord.verbPhrase;
-    const groupId = getSubjectGroupId(nextVP);
+    let groupId = getSubjectGroupId(nextVP);
     const hasOwnSubject = groupId !== '__inherited__';
+
+    // 主語がない場合は前の要素のグループを継承
+    if (groupId === '__inherited__') {
+      groupId = prevGroupId;
+    }
 
     const rendered = renderSingleVerbPhrase(
       nextVP, ctx.tense, ctx.aspect, ctx.polarity,
@@ -452,6 +458,7 @@ function appendCoordinatedVP(
     );
 
     vpInfos.push({ vp: nextVP, rendered, groupId });
+    prevGroupId = groupId;
     currentVP = nextVP;
   }
 

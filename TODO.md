@@ -31,9 +31,9 @@
   - "I saw the man with the telescope and the camera"
 
 ### Vocabulary
-- [ ] LOCATION副詞に「home」と同ジャンルの単語を追加
-  - 現在 home は一時的に除外
-  - 検討候補: home, abroad, indoors, outdoors, upstairs, downstairs 等
+- [x] LOCATION副詞に「home」と同ジャンルの単語を追加
+  - abroad, indoors, outdoors, upstairs, downstairs を追加済み
+  - home は一時的に除外（前置詞なしで使える特殊ケース）
 
 ### UI & Localization
 - [x] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）
@@ -77,11 +77,10 @@
     - `morphology.ts`: 形態論（agreement, tense, aspect, case, article）
     - `syntax.ts`: 統語論（do-support, inversion, wh-movement）
   - `toLegacyLogs()`: 後方互換性のため既存UI形式に変換
-- [ ] Grammar Console UI の更新（新 DerivationTracker 対応）
+- [x] Grammar Console UI の更新（新 DerivationTracker 対応）
   - [x] i18n 対応（GrammarMessages によるメッセージキー翻訳）
-  - 変形ステップを順序付きで表示
-  - 前回との差分表示（DerivationDiff 活用）
   - [x] サイドパネル移動 + タブ構成
+  - toLegacyLogs() で既存UIと後方互換
 
 #### 言語別レンダラー
 - [ ] 日本語レンダラー

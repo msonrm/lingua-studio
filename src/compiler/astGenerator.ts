@@ -757,12 +757,22 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
     }
     // 右側も解析（logicOpを含めて完全なVerbPhraseNodeに変換）
     const rightResult = rightBlock ? parseVerbChain(rightBlock) : null;
+
+    // デフォルトの動詞句（欠損時は ___ マーカー）
+    const defaultVP: VerbPhraseNode = {
+      type: 'verbPhrase',
+      verb: { lemma: '___' },
+      arguments: [],
+      adverbs: [],
+      prepositionalPhrases: [],
+    };
+
     return {
       ...leftResult,
-      coordination: rightResult ? {
+      coordination: {
         conjunction: conjValue,
-        rightVerbPhrase: toVerbPhraseWithLogic(rightResult),
-      } : undefined,
+        rightVerbPhrase: rightResult ? toVerbPhraseWithLogic(rightResult) : defaultVP,
+      },
     };
   }
 

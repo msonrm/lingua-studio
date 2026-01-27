@@ -1380,6 +1380,13 @@ function conjugateVerbWithAdverbs(
   // Progressive: aux + [not] + [freq] + verb-ing
   if (aspect === 'progressive') {
     const beForm = getBeAuxiliary(tense);
+    // Log tense (auxiliary selection)
+    if (tense === 'future') {
+      tracker.recordMorphology('tense', 'be', 'will be', 'will + be', 'Tense: future');
+    } else if (tense === 'past') {
+      tracker.recordMorphology('tense', 'be', beForm, 'was/were', 'Tense: past');
+    }
+    // Log aspect
     tracker.recordMorphology(
       'aspect', lemma, `be ${verbEntry.forms.ing}`,
       'be + -ing', 'Aspect: progressive'
@@ -1392,6 +1399,15 @@ function conjugateVerbWithAdverbs(
   // Perfect: aux + [not] + [freq] + verb-pp
   if (aspect === 'perfect') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
+    // Log tense (auxiliary selection)
+    if (tense === 'future') {
+      tracker.recordMorphology('tense', 'have', 'will have', 'will + have', 'Tense: future');
+    } else if (tense === 'past') {
+      tracker.recordMorphology('tense', 'have', 'had', 'had', 'Tense: past');
+    } else if (isThirdPersonSingular) {
+      tracker.recordMorphology('agreement', 'have', 'has', '+s', `Subject is 3sg`);
+    }
+    // Log aspect
     tracker.recordMorphology(
       'aspect', lemma, `have ${verbEntry.forms.pp}`,
       'have + past participle', 'Aspect: perfect'
@@ -1404,6 +1420,15 @@ function conjugateVerbWithAdverbs(
   // Perfect Progressive: aux + [not] + [freq] + been + verb-ing
   if (aspect === 'perfectProgressive') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
+    // Log tense (auxiliary selection)
+    if (tense === 'future') {
+      tracker.recordMorphology('tense', 'have', 'will have', 'will + have', 'Tense: future');
+    } else if (tense === 'past') {
+      tracker.recordMorphology('tense', 'have', 'had', 'had', 'Tense: past');
+    } else if (isThirdPersonSingular) {
+      tracker.recordMorphology('agreement', 'have', 'has', '+s', `Subject is 3sg`);
+    }
+    // Log aspect
     tracker.recordMorphology(
       'aspect', lemma, `have been ${verbEntry.forms.ing}`,
       'have + been + -ing', 'Aspect: perfect progressive'

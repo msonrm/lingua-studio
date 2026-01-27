@@ -25,7 +25,6 @@ function App() {
   const [asts, setASTs] = useState<SentenceNode[]>([]);
   const [sentences, setSentences] = useState<string[]>([]);
   const [grammarLogs, setGrammarLogs] = useState<TransformLog[]>([]);
-  const [previousLogs, setPreviousLogs] = useState<TransformLog[]>([]);
   const [_blockChanges, setBlockChanges] = useState<BlockChange[]>([]);
   const [editorMode, setEditorMode] = useState<EditorMode>('blocks');
   const [localeCode, setLocaleCode] = useState<LocaleCode>(getStoredLocale());
@@ -34,14 +33,6 @@ function App() {
   const [sidePanelTab, setSidePanelTab] = useState<SidePanelTab>('grammar');
   const [workspaceState, setWorkspaceState] = useState<object | null>(null);
   const workspaceRef = useRef<BlocklyWorkspaceHandle>(null);
-
-  // Track previous logs for diff display
-  const handleLogsChange = useCallback((newLogs: TransformLog[]) => {
-    setGrammarLogs(prevLogs => {
-      setPreviousLogs(prevLogs);
-      return newLogs;
-    });
-  }, []);
 
   // 現在のロケールデータ
   const currentLocale = useMemo(() => getLocale(localeCode), [localeCode]);
@@ -158,7 +149,7 @@ function App() {
                     key={workspaceKey}
                     onASTChange={setASTs}
                     onSentenceChange={setSentences}
-                    onLogsChange={handleLogsChange}
+                    onLogsChange={setGrammarLogs}
                     onBlockChanges={setBlockChanges}
                     initialState={workspaceState}
                   />
@@ -201,7 +192,7 @@ function App() {
                 </div>
                 <div className="side-panel-content">
                   {sidePanelTab === 'grammar' && (
-                    <GrammarPanel logs={grammarLogs} previousLogs={previousLogs} />
+                    <GrammarPanel logs={grammarLogs} />
                   )}
                   {sidePanelTab === 'timeline' && (
                     <VisualizationPanel asts={asts} />

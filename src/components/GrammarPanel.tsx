@@ -1,66 +1,9 @@
-import { useMemo } from 'react';
 import type { TransformLog } from '../types/grammarLog';
 import { useLocale } from '../locales';
 import type { GrammarMessages } from '../locales';
 
 interface GrammarPanelProps {
   logs: TransformLog[];
-  previousLogs?: TransformLog[];
-}
-
-// Determine the status of each log compared to previous
-type LogStatus = 'added' | 'unchanged' | 'changed' | 'removed';
-
-interface LogWithStatus {
-  log: TransformLog;
-  status: LogStatus;
-  previousLog?: TransformLog;
-}
-
-function computeLogDiff(
-  current: TransformLog[],
-  previous: TransformLog[]
-): LogWithStatus[] {
-  const result: LogWithStatus[] = [];
-  const previousMap = new Map<string, TransformLog>();
-
-  // Index previous logs by type+rule
-  for (const log of previous) {
-    const key = `${log.type}:${log.rule || ''}`;
-    previousMap.set(key, log);
-  }
-
-  // Track which previous logs were matched
-  const matchedKeys = new Set<string>();
-
-  // Process current logs
-  for (const log of current) {
-    const key = `${log.type}:${log.rule || ''}`;
-    const prevLog = previousMap.get(key);
-
-    if (!prevLog) {
-      // New rule application
-      result.push({ log, status: 'added' });
-    } else {
-      matchedKeys.add(key);
-      // Check if the transformation changed
-      if (prevLog.from === log.from && prevLog.to === log.to) {
-        result.push({ log, status: 'unchanged' });
-      } else {
-        result.push({ log, status: 'changed', previousLog: prevLog });
-      }
-    }
-  }
-
-  // Find removed logs (in previous but not in current)
-  for (const log of previous) {
-    const key = `${log.type}:${log.rule || ''}`;
-    if (!matchedKeys.has(key)) {
-      result.push({ log, status: 'removed' });
-    }
-  }
-
-  return result;
 }
 
 // Get color for transformation type
@@ -91,21 +34,6 @@ function getTypeColor(type: string): string {
   }
 }
 
-// Get status indicator
-function getStatusIndicator(status: LogStatus): { label: string; className: string } {
-  switch (status) {
-    case 'added':
-      return { label: '+', className: 'status-added' };
-    case 'changed':
-      return { label: '~', className: 'status-changed' };
-    case 'removed':
-      return { label: '×', className: 'status-removed' };
-    case 'unchanged':
-    default:
-      return { label: '', className: 'status-unchanged' };
-  }
-}
-
 // Translate message key to localized string
 function translateKey(key: string | undefined, grammar: GrammarMessages): string {
   if (!key) return '';
@@ -118,17 +46,8 @@ function translateKey(key: string | undefined, grammar: GrammarMessages): string
   return key;
 }
 
-export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
+export function GrammarPanel({ logs }: GrammarPanelProps) {
   const { grammar } = useLocale();
-
-  // Compute diff if we have previous logs
-  const logsWithStatus = useMemo((): LogWithStatus[] => {
-    if (previousLogs.length === 0) {
-      // No previous logs - all are "new" but don't show indicator
-      return logs.map(log => ({ log, status: 'unchanged' as LogStatus }));
-    }
-    return computeLogDiff(logs, previousLogs);
-  }, [logs, previousLogs]);
 
   // Translate type name
   const translateType = (type: string): string => {
@@ -136,7 +55,7 @@ export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
     return translateKey(typeKey, grammar) || type;
   };
 
-  if (logsWithStatus.length === 0) {
+  if (logs.length === 0) {
     return (
       <div className="grammar-panel">
         <div className="grammar-empty">
@@ -150,20 +69,15 @@ export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
   return (
     <div className="grammar-panel">
       <div className="grammar-steps">
-        {logsWithStatus.map((item, i) => {
-          const { log, status, previousLog } = item;
+        {logs.map((log, i) => {
           const typeColor = getTypeColor(log.type);
-          const statusIndicator = getStatusIndicator(status);
 
           // Translate rule and trigger
           const ruleText = translateKey(log.rule, grammar);
           const triggerText = translateKey(log.trigger, grammar);
 
           return (
-            <div
-              key={i}
-              className={`grammar-step ${statusIndicator.className}`}
-            >
+            <div key={i} className="grammar-step">
               <div className="step-header">
                 <span
                   className="step-type"
@@ -173,11 +87,6 @@ export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
                 </span>
                 {ruleText && (
                   <span className="step-rule">{ruleText}</span>
-                )}
-                {statusIndicator.label && (
-                  <span className={`step-status ${statusIndicator.className}`}>
-                    {statusIndicator.label}
-                  </span>
                 )}
               </div>
               <div className="step-content">
@@ -190,14 +99,6 @@ export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
                   <div className="step-trigger">{triggerText}</div>
                 )}
               </div>
-              {status === 'changed' && previousLog && (
-                <div className="step-previous">
-                  <span className="previous-label">was:</span>
-                  <span className="previous-value">
-                    {previousLog.from} → {previousLog.to}
-                  </span>
-                </div>
-              )}
             </div>
           );
         })}

@@ -347,6 +347,10 @@ export const en: LocaleData = {
     WH_MOVEMENT_FRONT: 'wh-fronting',
     WH_MOVEMENT_FRONT_DESC: 'Wh-word moves to front',
 
+    // Imperative rules
+    IMPERATIVE_SUBJECT_OMISSION: 'subject omission',
+    IMPERATIVE_SUBJECT_OMISSION_DESC: 'Imperative omits subject you',
+
     // Empty state
     EMPTY_NO_TRANSFORMATIONS: 'No transformations',
   },

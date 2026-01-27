@@ -312,6 +312,10 @@ export interface GrammarMessages {
   WH_MOVEMENT_FRONT: string;
   WH_MOVEMENT_FRONT_DESC: string;
 
+  // Imperative rules
+  IMPERATIVE_SUBJECT_OMISSION: string;
+  IMPERATIVE_SUBJECT_OMISSION_DESC: string;
+
   // Empty state
   EMPTY_NO_TRANSFORMATIONS: string;
 }

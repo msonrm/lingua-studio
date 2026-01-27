@@ -347,6 +347,10 @@ export const jaHira: LocaleData = {
     WH_MOVEMENT_FRONT: '疑問詞前置',
     WH_MOVEMENT_FRONT_DESC: '疑問詞が文頭に移動',
 
+    // Imperative rules
+    IMPERATIVE_SUBJECT_OMISSION: '主語省略',
+    IMPERATIVE_SUBJECT_OMISSION_DESC: '命令文では主語 you を省略',
+
     // Empty state
     EMPTY_NO_TRANSFORMATIONS: '変形なし',
   },

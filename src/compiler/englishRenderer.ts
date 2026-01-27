@@ -16,10 +16,11 @@ import {
   ModalType,
 } from '../types/schema';
 import { findVerb, findNoun, findPronoun } from '../data/dictionary';
-import { GrammarLogCollector, RenderResult } from '../types/grammarLog';
+import { RenderResult } from '../types/grammarLog';
+import { DerivationTracker } from '../grammar/DerivationTracker';
 
-// Grammar log collector (module-level, reset on each render)
-let logCollector = new GrammarLogCollector();
+// Derivation tracker (module-level, reset on each render)
+let tracker = new DerivationTracker();
 
 // 主語となりうるロール
 const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
@@ -114,8 +115,8 @@ export function renderToEnglish(ast: SentenceNode): string {
 }
 
 export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
-  // Reset log collector for fresh render
-  logCollector = new GrammarLogCollector();
+  // Reset tracker for fresh render
+  tracker = new DerivationTracker();
 
   let clause: string;
 
@@ -159,13 +160,13 @@ export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
   if (ast.sentenceType === 'fact') {
     return {
       output: `⊨ ${capitalized}${punctuation}`,
-      logs: logCollector.getLogs(),
+      logs: tracker.toLegacyLogs(),
     };
   }
 
   return {
     output: capitalized + punctuation,
-    logs: logCollector.getLogs(),
+    logs: tracker.toLegacyLogs(),
   };
 }
 
@@ -464,8 +465,11 @@ function renderInterrogativeClause(clause: ClauseNode): string {
   );
 
   // 倒置をログ（Yes/No疑問文）
-  logCollector.log('inversion', `${subject} ${auxiliary}`, `${auxiliary} ${subject}`,
-    'Question formation', 'subject-auxiliary inversion');
+  tracker.recordSyntax(
+    'inversion', 'reorder', 'subject-auxiliary inversion',
+    'Question formation',
+    { before: [subject, auxiliary], after: [auxiliary, subject] }
+  );
 
   // その他の引数（目的語など）- 主語ロール以外
   // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
@@ -541,8 +545,11 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
     .join(' ');
 
   // Wh移動をログ
-  logCollector.log('wh-movement', `...${whInfo.whWord}...`, `${whInfo.whWord} ...`,
-    `Wh-word "${whInfo.whWord}" in ${whInfo.role}`, 'fronted to sentence start');
+  tracker.recordSyntax(
+    'wh-movement', 'move', 'fronted to sentence start',
+    `Wh-word "${whInfo.whWord}" in ${whInfo.role}`,
+    { element: whInfo.whWord, position: 'sentence start' }
+  );
 
   if (whInfo.isSubject) {
     // 主語Wh疑問文: Who ate the apple? (do-supportなし)
@@ -1145,8 +1152,10 @@ function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarit
     const firstChar = after.charAt(0).toLowerCase();
     const article = ['a', 'e', 'i', 'o', 'u'].includes(firstChar) ? 'an' : 'a';
     if (article === 'an') {
-      logCollector.log('article', 'a', 'an',
-        `Next sound: vowel "${firstChar}"`, 'a → an');
+      tracker.recordMorphology(
+        'article', 'a', 'an', 'a → an',
+        `Next sound: vowel "${firstChar}"`
+      );
     }
     result = before + article + ' ' + after;
   }
@@ -1224,8 +1233,10 @@ function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirma
     return pronoun.lemma;
   } else {
     if (pronoun.lemma !== pronoun.objectForm) {
-      logCollector.log('case', pronoun.lemma, pronoun.objectForm,
-        'Position: object', 'objective case');
+      tracker.recordMorphology(
+        'case', pronoun.lemma, pronoun.objectForm,
+        'objective case', 'Position: object'
+      );
     }
     return pronoun.objectForm;
   }
@@ -1304,18 +1315,26 @@ function conjugateVerbWithAdverbs(
       switch (tense) {
         case 'past':
           doForm = 'did';
-          logCollector.log('do-support', lemma, `did not ${verbEntry.forms.base}`,
-            'Negation + past', 'did + not + base');
+          tracker.recordSyntax(
+            'do-support', 'insert', 'did + not + base',
+            'Negation + past',
+            { element: 'did not', after: ['did', 'not', verbEntry.forms.base] }
+          );
           break;
         case 'present':
           doForm = isThirdPersonSingular ? 'does' : 'do';
-          logCollector.log('do-support', lemma, `${doForm} not ${verbEntry.forms.base}`,
-            `Negation + present`, `${doForm} + not + base`);
+          tracker.recordSyntax(
+            'do-support', 'insert', `${doForm} + not + base`,
+            'Negation + present',
+            { element: `${doForm} not`, after: [doForm, 'not', verbEntry.forms.base] }
+          );
           break;
         case 'future':
           // will not [freq] base
-          logCollector.log('negation', lemma, `will not ${verbEntry.forms.base}`,
-            'Negation + future', 'will + not + base');
+          tracker.recordMorphology(
+            'negation', lemma, `will not ${verbEntry.forms.base}`,
+            'will + not + base', 'Negation + future'
+          );
           return freqStr
             ? `will not ${freqStr} ${verbEntry.forms.base}`
             : `will not ${verbEntry.forms.base}`;
@@ -1329,7 +1348,9 @@ function conjugateVerbWithAdverbs(
         case 'past': {
           const pastForm = getIrregularForm('past') || verbEntry.forms.past;
           if (pastForm !== lemma) {
-            logCollector.log('tense', lemma, pastForm, 'Tense: past', '-ed');
+            tracker.recordMorphology(
+              'tense', lemma, pastForm, '-ed', 'Tense: past'
+            );
           }
           return freqStr ? `${freqStr} ${pastForm}` : pastForm;
         }
@@ -1337,14 +1358,18 @@ function conjugateVerbWithAdverbs(
           const presentForm = getIrregularForm('present') ||
             (isThirdPersonSingular ? verbEntry.forms.s : verbEntry.forms.base);
           if (isThirdPersonSingular && presentForm !== verbEntry.forms.base) {
-            logCollector.log('agreement', verbEntry.forms.base, presentForm,
-              `Subject ${getSubjectDescription(subject)} is 3sg`, '+s');
+            tracker.recordMorphology(
+              'agreement', verbEntry.forms.base, presentForm,
+              '+s', `Subject ${getSubjectDescription(subject)} is 3sg`
+            );
           }
           return freqStr ? `${freqStr} ${presentForm}` : presentForm;
         }
         case 'future':
-          logCollector.log('tense', lemma, `will ${verbEntry.forms.base}`,
-            'Tense: future', 'will + base');
+          tracker.recordMorphology(
+            'tense', lemma, `will ${verbEntry.forms.base}`,
+            'will + base', 'Tense: future'
+          );
           return freqStr
             ? `will ${freqStr} ${verbEntry.forms.base}`
             : `will ${verbEntry.forms.base}`;
@@ -1355,8 +1380,10 @@ function conjugateVerbWithAdverbs(
   // Progressive: aux + [not] + [freq] + verb-ing
   if (aspect === 'progressive') {
     const beForm = getBeAuxiliary(tense);
-    logCollector.log('aspect', lemma, `be ${verbEntry.forms.ing}`,
-      'Aspect: progressive', 'be + -ing');
+    tracker.recordMorphology(
+      'aspect', lemma, `be ${verbEntry.forms.ing}`,
+      'be + -ing', 'Aspect: progressive'
+    );
     const notPart = isNegative ? 'not' : '';
     const parts = [beForm, notPart, freqStr, verbEntry.forms.ing].filter(p => p.length > 0);
     return parts.join(' ');
@@ -1365,8 +1392,10 @@ function conjugateVerbWithAdverbs(
   // Perfect: aux + [not] + [freq] + verb-pp
   if (aspect === 'perfect') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
-    logCollector.log('aspect', lemma, `have ${verbEntry.forms.pp}`,
-      'Aspect: perfect', 'have + past participle');
+    tracker.recordMorphology(
+      'aspect', lemma, `have ${verbEntry.forms.pp}`,
+      'have + past participle', 'Aspect: perfect'
+    );
     const notPart = isNegative ? 'not' : '';
     const parts = [haveForm, notPart, freqStr, verbEntry.forms.pp].filter(p => p.length > 0);
     return parts.join(' ');
@@ -1375,8 +1404,10 @@ function conjugateVerbWithAdverbs(
   // Perfect Progressive: aux + [not] + [freq] + been + verb-ing
   if (aspect === 'perfectProgressive') {
     const haveForm = tense === 'past' ? 'had' : (tense === 'future' ? 'will have' : (isThirdPersonSingular ? 'has' : 'have'));
-    logCollector.log('aspect', lemma, `have been ${verbEntry.forms.ing}`,
-      'Aspect: perfect progressive', 'have + been + -ing');
+    tracker.recordMorphology(
+      'aspect', lemma, `have been ${verbEntry.forms.ing}`,
+      'have + been + -ing', 'Aspect: perfect progressive'
+    );
     const notPart = isNegative ? 'not' : '';
     const parts = [haveForm, notPart, freqStr, 'been', verbEntry.forms.ing].filter(p => p.length > 0);
     return parts.join(' ');
@@ -1428,8 +1459,10 @@ function logModalTransformation(
     const presentAux = presentForm.auxiliary || '';
     const pastAux = modalForm.auxiliary || modalForm.usePeriPhrastic || '';
     if (presentAux && pastAux && presentAux !== pastAux) {
-      logCollector.log('modal', presentAux, pastAux,
-        `Modal: ${modal} + past tense`, 'past form');
+      tracker.recordMorphology(
+        'modal', presentAux, pastAux,
+        'past form', `Modal: ${modal} + past tense`
+      );
     }
   }
 }

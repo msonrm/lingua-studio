@@ -14,7 +14,7 @@ import {
   ModalType,
   PropositionalOperator,
 } from '../types/schema';
-import { verbCores, pronounCores } from '../data/dictionary-core';
+import { verbCores, pronounCores, nounCores } from '../data/dictionary-core';
 import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks/definitions';
 
 // ============================================
@@ -22,6 +22,7 @@ import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks/definitions';
 // ============================================
 const findVerbCore = (lemma: string) => verbCores.find(v => v.lemma === lemma);
 const findPronounCore = (lemma: string) => pronounCores.find(p => p.lemma === lemma);
+const findNounCore = (lemma: string) => nounCores.find(n => n.lemma === lemma);
 
 // ============================================
 // BlocklyワークスペースからAST生成
@@ -1020,7 +1021,15 @@ function parseDeterminerUnifiedBlock(block: Blockly.Block): NounPhraseNode | Coo
 
   // 文法数を決定（post > central > pre の優先順位）
   let grammaticalNumber: 'singular' | 'plural' = 'singular';
-  if (postOption?.number === 'plural' || postOption?.number === 'uncountable') {
+
+  // singularOnly の名詞（news など）は常に単数
+  const nounLemma = innerNP.head.type === 'noun' ? innerNP.head.lemma : null;
+  const nounCore = nounLemma ? findNounCore(nounLemma) : null;
+
+  if (nounCore?.singularOnly) {
+    // singularOnly は常に単数（限定詞に関係なく）
+    grammaticalNumber = 'singular';
+  } else if (postOption?.number === 'plural' || postOption?.number === 'uncountable') {
     grammaticalNumber = 'plural';
   } else if (postOption?.number === 'singular') {
     grammaticalNumber = 'singular';

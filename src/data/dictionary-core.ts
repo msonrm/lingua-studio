@@ -181,6 +181,15 @@ export const nounCores: NounCore[] = [
   { lemma: "doctor", category: "human", countable: true },
   { lemma: "person", category: "human", countable: true },
   { lemma: "people", category: "human", countable: true },
+  // Collective nouns (can take singular or plural verb agreement)
+  { lemma: "family", category: "human", countable: true, collective: true },
+  { lemma: "team", category: "human", countable: true, collective: true },
+  { lemma: "group", category: "human", countable: true, collective: true },
+  { lemma: "class", category: "human", countable: true, collective: true },
+  { lemma: "committee", category: "human", countable: true, collective: true },
+  { lemma: "audience", category: "human", countable: true, collective: true },
+  { lemma: "crowd", category: "human", countable: true, collective: true },
+  { lemma: "staff", category: "human", countable: true, collective: true },
   // Proper nouns
   { lemma: "John", category: "human", countable: true, proper: true },
   { lemma: "Mary", category: "human", countable: true, proper: true },
@@ -244,7 +253,7 @@ export const nounCores: NounCore[] = [
   { lemma: "meat", category: "object", countable: false },
   { lemma: "money", category: "object", countable: false },
   { lemma: "music", category: "abstract", countable: false },
-  { lemma: "news", category: "abstract", countable: false },
+  { lemma: "news", category: "abstract", countable: false, singularOnly: true },
   // Place
   { lemma: "house", category: "place", countable: true },
   { lemma: "home", category: "place", countable: true, zeroArticle: true },

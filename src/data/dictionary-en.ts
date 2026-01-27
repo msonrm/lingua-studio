@@ -191,6 +191,15 @@ export const nounFormsEn: NounForms[] = [
   { lemma: "doctor", plural: "doctors" },
   { lemma: "person", plural: "people" },
   { lemma: "people", plural: "people" },
+  // Collective nouns
+  { lemma: "family", plural: "families" },
+  { lemma: "team", plural: "teams" },
+  { lemma: "group", plural: "groups" },
+  { lemma: "class", plural: "classes" },
+  { lemma: "committee", plural: "committees" },
+  { lemma: "audience", plural: "audiences" },
+  { lemma: "crowd", plural: "crowds" },
+  { lemma: "staff", plural: "staff" },
   // Proper nouns (no real plural, but for consistency)
   { lemma: "John", plural: "Johns" },
   { lemma: "Mary", plural: "Marys" },

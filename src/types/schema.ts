@@ -134,6 +134,10 @@ export interface NounCore {
   countable: boolean;
   proper?: boolean;
   zeroArticle?: boolean;
+  /** Grammatically singular despite plural-looking form (e.g., news) */
+  singularOnly?: boolean;
+  /** Collective noun - can take singular or plural verb agreement (e.g., family, team) */
+  collective?: boolean;
 }
 
 export interface PronounCore {

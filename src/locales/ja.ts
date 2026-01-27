@@ -249,7 +249,7 @@ export const ja: LocaleData = {
   ui: {
     // Header
     APP_TITLE: 'Lingua Studio',
-    APP_SUBTITLE: '自然言語のためのIDE',
+    APP_SUBTITLE: 'IDE for Natural Language',
 
     // Tabs
     TAB_BLOCKS: 'ブロック',

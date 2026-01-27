@@ -249,7 +249,7 @@ export const jaHira: LocaleData = {
   ui: {
     // Header
     APP_TITLE: 'Lingua Studio',
-    APP_SUBTITLE: 'ことばのIDE',
+    APP_SUBTITLE: 'IDE for Natural Language',
 
     // Tabs
     TAB_BLOCKS: 'ブロック',

@@ -268,7 +268,7 @@ export interface NounPhraseNode {
 export interface NounHead {
   type: "noun";
   lemma: string;
-  number: "singular" | "plural";
+  number: "singular" | "plural" | "uncountable";
 }
 
 export interface PronounHead {

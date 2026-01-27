@@ -281,9 +281,12 @@ function renderNounPhraseToScript(np: NounPhraseNode): string {
     } else {
       parts.push(`post:'${postDet}`);
     }
-  } else if (nounHead.number === 'plural' && !np.determiner?.lexeme && !np.preDeterminer) {
-    // 限定詞なしの複数形
+  } else if (nounHead.number === 'plural') {
+    // 複数形マーカー（__plural__はoutput:nullなので、head.numberで判定）
     parts.push(`post:plural`);
+  } else if (nounHead.number === 'uncountable') {
+    // 非可算マーカー（__uncountable__はoutput:nullなので、head.numberで判定）
+    parts.push(`post:uncountable`);
   }
 
   // 形容詞

@@ -1019,11 +1019,13 @@ function parseDeterminerUnifiedBlock(block: Blockly.Block): NounPhraseNode | Coo
   const postOption = DETERMINER_DATA.post.find(o => o.value === postValue);
 
   // 文法数を決定（post > central > pre の優先順位）
-  // uncountable は単数扱い（"Water is..." not "*Water are..."）
-  let grammaticalNumber: 'singular' | 'plural' = 'singular';
+  // uncountable は動詞活用では単数扱いだが、LinguaScriptでは区別する
+  let grammaticalNumber: 'singular' | 'plural' | 'uncountable' = 'singular';
   if (postOption?.number === 'plural') {
     grammaticalNumber = 'plural';
-  } else if (postOption?.number === 'singular' || postOption?.number === 'uncountable') {
+  } else if (postOption?.number === 'uncountable') {
+    grammaticalNumber = 'uncountable';
+  } else if (postOption?.number === 'singular') {
     grammaticalNumber = 'singular';
   } else if (centralOption?.number === 'plural') {
     grammaticalNumber = 'plural';

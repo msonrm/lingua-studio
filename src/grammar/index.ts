@@ -30,5 +30,5 @@ export type {
 export { DerivationTracker } from './DerivationTracker';
 
 // English Rules (re-exported from compiler/english)
-export * as EnglishMorphology from '../compiler/english/rules/english/morphology';
-export * as EnglishSyntax from '../compiler/english/rules/english/syntax';
+export * as EnglishMorphology from '../compiler/english/rules/morphology';
+export * as EnglishSyntax from '../compiler/english/rules/syntax';

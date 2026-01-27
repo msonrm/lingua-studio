@@ -7,7 +7,7 @@
  *
  * 参照元:
  * - compiler/english/renderer.ts: 活用形取得
- * - compiler/english/rules/english/morphology.ts: 形態論ルール
+ * - compiler/english/rules/morphology.ts: 形態論ルール
  */
 
 import {

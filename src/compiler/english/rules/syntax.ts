@@ -7,7 +7,7 @@
  * - Wh-movement (Wh語の前置)
  */
 
-import type { RenderContext } from '../../../../grammar/types';
+import type { RenderContext } from '../../../grammar/types';
 
 // ============================================
 // Do-support (do挿入)

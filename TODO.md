@@ -151,20 +151,20 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - 大文字 `AND()`/`OR()`/`NOT()` は命題論理（論理学的）
   - `fact()` 内でのみ使用可能（ブロックレベルで接続制限）
   - ネスト対応: `NOT(AND(P, OR(Q, R)))`
-- [ ] `if(P, then:Q)` - 条件・含意
+- [x] `IF(P, then:Q)` - 条件・含意（大文字、名前付き引数）
   - ルール定義: 前件が真なら後件も真
-  - 例: `if(give(agent:?A, theme:?T, recipient:?R), then:have(experiencer:?R, theme:?T))`
-- [ ] `because(cause:P, effect:Q)` - 因果関係
+  - 例: `IF(give(agent:?A, theme:?T, recipient:?R), then:have(experiencer:?R, theme:?T))`
+- [x] `BECAUSE(P, effect:Q)` - 因果関係（大文字、名前付き引数）
   - 原因→結果の因果推論
-  - 例: `because(cause:rain(), effect:wet(theme:'ground))`
+  - 例: `BECAUSE(rain(), effect:wet(theme:'ground))`
 
 #### Blocklyブロック
 - [x] `fact_wrapper` ブロック - 事実の宣言
 - [x] `logic_and_block`, `logic_or_block`, `logic_not_block` - 命題論理演算
   - Logic カテゴリとして Toolbox に追加（Question の下）
   - 接続タイプ制限: logic ブロックは fact_wrapper 内でのみ接続可能
-- [ ] `if_block` ブロック - 条件・ルール定義
-- [ ] `because_block` ブロック - 因果関係
+- [x] `logic_if_block` ブロック - 条件・ルール定義（IF...THEN形式）
+- [x] `logic_because_block` ブロック - 因果関係（BECAUSE...EFFECT形式）
 
 #### 英語レンダリング
 - [x] `⊨` マーカーで fact 出力を区別
@@ -172,10 +172,12 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 - [x] `OR(P, Q)` → "either P or Q"
 - [x] `NOT(P)` → "it is not the case that P"
 - [x] `NOT(OR(P, Q))` → "neither P nor Q" (De Morgan 対応)
+- [x] `IF(P, then:Q)` → "if P, then Q"
+- [x] `BECAUSE(P, effect:Q)` → "Q because P"
 
 #### ローカライズ
-- [x] 日本語 (ja): 事実, AND, OR, NOT, 論理
-- [x] ひらがな (ja-hira): ほんと, かつ, または, ちがう, ほんと？うそ？
+- [x] 日本語 (ja): 事実, AND, OR, NOT, IF, THEN, BECAUSE, EFFECT, 論理
+- [x] ひらがな (ja-hira): ほんと, かつ, または, ちがう, もし, ならば, なぜなら, けっか
 
 #### 推論機能（未実装）
 - [ ] LLM連携API - LinguaScriptをLLMに送信してクエリ結果を取得
@@ -244,6 +246,23 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 - [x] バグ修正
   - and()/or() 等位接続で内側の logicOp が失われる問題
   - ネストされた論理式で rightOperand の logicOp が失われる問題
+
+### Logic Extension - Phase 2 (2026-01)
+- [x] `IF(P, then:Q)` と `BECAUSE(P, effect:Q)` 実装
+  - 大文字で命題論理の一貫性を維持（AND/OR/NOT と同様）
+  - 名前付き引数で可読性向上（生成AI・人間両方に配慮）
+  - logic_if_block: IF...THEN形式のブロック
+  - logic_because_block: BECAUSE...EFFECT形式のブロック
+- [x] 英語レンダリング
+  - IF(P, then:Q) → "if P, then Q"
+  - BECAUSE(P, effect:Q) → "Q because P"（結果を先に配置）
+- [x] 再帰的ネスト対応
+  - IF(AND(P, Q), then:R) などの複合条件
+  - AND(P, IF(Q, then:R)) などの複合結果
+  - AND/OR と同じパターンで leftOperand を処理
+- [x] ローカライズ (ja, ja-hira)
+  - 日本語: IF, THEN, BECAUSE, EFFECT
+  - ひらがな: もし, ならば, なぜなら, けっか
 
 ### Screen Layout Refactor (2026-01)
 - [x] 3タブ構成: Blocks / LinguaScript / AST

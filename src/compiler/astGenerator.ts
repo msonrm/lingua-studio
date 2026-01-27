@@ -676,14 +676,25 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
       return null;
     }
     const consequenceResult = consequenceBlock ? parseVerbChain(consequenceBlock) : null;
-    const conditionVP = toVerbPhraseWithLogic(conditionResult);
     const consequenceVP = consequenceResult ? toVerbPhraseWithLogic(consequenceResult) : undefined;
+
+    // AND/OR と同じパターン: 左側が複合式の場合のみ leftOperand を設定
+    if (conditionResult.logicOp) {
+      const conditionVP = toVerbPhraseWithLogic(conditionResult);
+      return {
+        ...conditionResult,
+        logicOp: {
+          operator: 'IF' as PropositionalOperator,
+          leftOperand: conditionVP,
+          rightOperand: consequenceVP,
+        },
+      };
+    }
 
     return {
       ...conditionResult,
       logicOp: {
         operator: 'IF' as PropositionalOperator,
-        leftOperand: conditionVP,
         rightOperand: consequenceVP,
       },
     };
@@ -702,14 +713,25 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
       return null;
     }
     const effectResult = effectBlock ? parseVerbChain(effectBlock) : null;
-    const causeVP = toVerbPhraseWithLogic(causeResult);
     const effectVP = effectResult ? toVerbPhraseWithLogic(effectResult) : undefined;
+
+    // AND/OR と同じパターン: 左側が複合式の場合のみ leftOperand を設定
+    if (causeResult.logicOp) {
+      const causeVP = toVerbPhraseWithLogic(causeResult);
+      return {
+        ...causeResult,
+        logicOp: {
+          operator: 'BECAUSE' as PropositionalOperator,
+          leftOperand: causeVP,
+          rightOperand: effectVP,
+        },
+      };
+    }
 
     return {
       ...causeResult,
       logicOp: {
         operator: 'BECAUSE' as PropositionalOperator,
-        leftOperand: causeVP,
         rightOperand: effectVP,
       },
     };

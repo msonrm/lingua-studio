@@ -327,6 +327,8 @@ export interface UIMessages {
   TAB_LINGUASCRIPT: string;
   TAB_AST: string;
   TAB_COMING_SOON: string;
+  TAB_GRAMMAR: string;
+  TAB_TIMELINE: string;
 
   // Panels
   PANEL_OUTPUT: string;

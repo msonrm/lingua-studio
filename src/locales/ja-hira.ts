@@ -256,6 +256,8 @@ export const jaHira: LocaleData = {
     TAB_LINGUASCRIPT: 'LinguaScript',
     TAB_AST: 'AST',
     TAB_COMING_SOON: 'もうすこしまってね',
+    TAB_GRAMMAR: 'ぶんぽう',
+    TAB_TIMELINE: 'タイムライン',
 
     // Panels
     PANEL_OUTPUT: 'できたぶん',

@@ -256,6 +256,8 @@ export const ja: LocaleData = {
     TAB_LINGUASCRIPT: 'LinguaScript',
     TAB_AST: 'AST',
     TAB_COMING_SOON: '準備中',
+    TAB_GRAMMAR: '文法',
+    TAB_TIMELINE: 'タイムライン',
 
     // Panels
     PANEL_OUTPUT: '出力',

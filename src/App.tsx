@@ -172,13 +172,13 @@ function App() {
                     className={`side-tab ${sidePanelTab === 'grammar' ? 'active' : ''}`}
                     onClick={() => setSidePanelTab('grammar')}
                   >
-                    Grammar
+                    {t.TAB_GRAMMAR}
                   </button>
                   <button
                     className={`side-tab ${sidePanelTab === 'timeline' ? 'active' : ''}`}
                     onClick={() => setSidePanelTab('timeline')}
                   >
-                    Timeline
+                    {t.TAB_TIMELINE}
                   </button>
                 </div>
                 <div className="side-panel-content">

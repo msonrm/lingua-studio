@@ -14,10 +14,10 @@
 .copy-button {
   flex-shrink: 0;
   padding: 0.375rem 0.75rem;
-  border: 1px solid #6c9bcf;
+  border: 1px solid #5c8bc4;
   border-radius: 6px;
-  background: #1a1a1a;
-  color: #888;
+  background: #2d3748;
+  color: #ccc;
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -27,7 +27,7 @@
 }
 
 .copy-button:hover:not(:disabled) {
-  background: #333;
+  background: #3d4a5c;
   color: #fff;
 }
 

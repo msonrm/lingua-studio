@@ -86,9 +86,10 @@
     - `syntax.ts`: 統語論（do-support, inversion, wh-movement）
   - `toLegacyLogs()`: 後方互換性のため既存UI形式に変換
 - [ ] Grammar Console UI の更新（新 DerivationTracker 対応）
+  - [x] i18n 対応（GrammarMessages によるメッセージキー翻訳）
   - 変形ステップを順序付きで表示
   - 前回との差分表示（DerivationDiff 活用）
-  - サイドパネル移動 + タブ構成
+  - [x] サイドパネル移動 + タブ構成
 
 #### 言語別レンダラー
 - [ ] 日本語レンダラー
@@ -226,6 +227,34 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 - 従属節 (if, when, although...)
 
 ## Completed
+
+### UI & i18n Improvements (2026-01)
+- [x] Grammar Log メッセージの i18n 対応
+  - `GrammarMessages` インターフェースで全変形ログメッセージキーを定義
+  - `LocaleContext` に grammar プロパティを追加
+  - conjugation.ts, nounPhrase.ts, englishRenderer.ts でメッセージキーを使用
+  - GrammarPanel.tsx で `translateKey()` 関数によるキー→翻訳変換
+- [x] UI カラーパレットの調整（威圧的→優しめに）
+  - アクセントカラー: `#e94560` (ピンク) → `#5c8bc4` / `#6c9bcf` (青系)
+  - 背景色: `#16213e` (暗い青紫) → `#252d3a` / `#2d3748` (暖かいグレー)
+  - インタラクティブ要素（ボタン、セレクタ）は青、ラベルは白で区別
+- [x] コピーボタンの改善
+  - ローカライズされたラベル追加（Copy / コピー / コピーしたよ）
+  - 青い枠線、アイコン + ラベルのUI
+  - `ui.COPY`, `ui.COPIED`, `ui.COPY_FOR_AI` キー追加
+- [x] サイドパネルタブのローカライズ
+  - `ui.TAB_GRAMMAR`, `ui.TAB_TIMELINE` キー追加
+  - ja-hira: 子供向け表現（ことばのきまり、じかん/ようす）
+- [x] Blockly ワークスペースの自動リサイズ
+  - `ResizeObserver` でコンテナサイズ変更を検知
+  - `Blockly.svgResize()` でワークスペースを再描画
+  - サイドパネル開閉時にメイン領域が適切に拡縮
+- [x] ja-hira ロケールの子供向け表現統一
+  - `TAB_GRAMMAR`: 'ぶんぽう' → 'ことばのきまり'
+  - `TAB_TIMELINE`: 'タイムライン' → 'じかん/ようす'
+  - `TIME_CHIP_UNIFIED_LABEL`: 'いつ？/ようす' → 'じかん/ようす'
+  - `SENTENCE_TA_LABEL`: 'いつ？:' → 'いつ？どんなようす？:'
+  - `APP_SUBTITLE`: 'ことばのIDE' → 'IDE for Natural Language'（全ロケール統一）
 
 ### Grammar Rule System Refactoring (2026-01)
 - [x] 新アーキテクチャ設計・実装

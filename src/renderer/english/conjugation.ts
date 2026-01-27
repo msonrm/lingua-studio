@@ -7,7 +7,7 @@
  */
 
 import type { NounPhraseNode, CoordinatedNounPhraseNode, AdverbNode } from '../../types/schema';
-import type { TransformationType } from '../../grammar/types';
+import type { TransformationType } from '../types';
 
 // ============================================
 // Types

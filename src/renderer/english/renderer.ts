@@ -15,7 +15,7 @@ import {
 } from '../../types/schema';
 import { findVerb, findNoun, findPronoun } from '../../data/dictionary-en';
 import { RenderResult } from '../../types/grammarLog';
-import { DerivationTracker } from '../../grammar/DerivationTracker';
+import { DerivationTracker } from '../DerivationTracker';
 import {
   conjugateVerb,
   ConjugationContext,

@@ -12,7 +12,7 @@ import type {
   PrepositionalPhraseNode,
   CoordinatedNounPhraseNode,
 } from '../../types/schema';
-import type { TransformationType } from '../../grammar/types';
+import type { TransformationType } from '../types';
 import { renderCoordinationUnified, CoordElement } from './coordination';
 
 // ============================================

@@ -3,9 +3,10 @@ import { BlocklyWorkspace, BlocklyWorkspaceHandle } from './components/BlocklyWo
 import { LinguaScriptBar } from './components/LinguaScriptBar';
 import { LinguaScriptView } from './components/LinguaScriptView';
 import { VisualizationPanel } from './components/VisualizationPanel';
+import { GrammarPanel } from './components/GrammarPanel';
 import { SentenceNode } from './types/schema';
 import { renderToLinguaScript } from './compiler/linguaScriptRenderer';
-import { TransformLog, BlockChange, formatLogStructured } from './types/grammarLog';
+import { TransformLog, BlockChange } from './types/grammarLog';
 import {
   LocaleContext,
   LocaleCode,
@@ -18,18 +19,27 @@ import {
 import './App.css';
 
 type EditorMode = 'blocks' | 'linguascript' | 'ast';
+type SidePanelTab = 'timeline' | 'grammar';
 
 function App() {
   const [asts, setASTs] = useState<SentenceNode[]>([]);
   const [sentences, setSentences] = useState<string[]>([]);
   const [grammarLogs, setGrammarLogs] = useState<TransformLog[]>([]);
-  const [blockChanges, setBlockChanges] = useState<BlockChange[]>([]);
+  const [previousLogs, setPreviousLogs] = useState<TransformLog[]>([]);
+  const [_blockChanges, setBlockChanges] = useState<BlockChange[]>([]);
   const [editorMode, setEditorMode] = useState<EditorMode>('blocks');
   const [localeCode, setLocaleCode] = useState<LocaleCode>(getStoredLocale());
   const [workspaceKey, setWorkspaceKey] = useState(0);
-  const [showSidePanel, setShowSidePanel] = useState(false);
+  const [showSidePanel, setShowSidePanel] = useState(true);
+  const [sidePanelTab, setSidePanelTab] = useState<SidePanelTab>('grammar');
   const [workspaceState, setWorkspaceState] = useState<object | null>(null);
   const workspaceRef = useRef<BlocklyWorkspaceHandle>(null);
+
+  // Track previous logs for diff display
+  const handleLogsChange = useCallback((newLogs: TransformLog[]) => {
+    setPreviousLogs(grammarLogs);
+    setGrammarLogs(newLogs);
+  }, [grammarLogs]);
 
   // 現在のロケールデータ
   const currentLocale = useMemo(() => getLocale(localeCode), [localeCode]);
@@ -127,7 +137,7 @@ function App() {
                     key={workspaceKey}
                     onASTChange={setASTs}
                     onSentenceChange={setSentences}
-                    onLogsChange={setGrammarLogs}
+                    onLogsChange={handleLogsChange}
                     onBlockChanges={setBlockChanges}
                     initialState={workspaceState}
                   />
@@ -154,8 +164,27 @@ function App() {
             {/* Side Panel */}
             {showSidePanel && (
               <div className="side-panel">
+                <div className="side-panel-tabs">
+                  <button
+                    className={`side-tab ${sidePanelTab === 'grammar' ? 'active' : ''}`}
+                    onClick={() => setSidePanelTab('grammar')}
+                  >
+                    Grammar
+                  </button>
+                  <button
+                    className={`side-tab ${sidePanelTab === 'timeline' ? 'active' : ''}`}
+                    onClick={() => setSidePanelTab('timeline')}
+                  >
+                    Timeline
+                  </button>
+                </div>
                 <div className="side-panel-content">
-                  <VisualizationPanel asts={asts} />
+                  {sidePanelTab === 'grammar' && (
+                    <GrammarPanel logs={grammarLogs} previousLogs={previousLogs} />
+                  )}
+                  {sidePanelTab === 'timeline' && (
+                    <VisualizationPanel asts={asts} />
+                  )}
                 </div>
               </div>
             )}
@@ -169,39 +198,6 @@ function App() {
                   {sentences.length > 0
                     ? sentences.map((s, i) => <div key={i}>{s}</div>)
                     : <span className="placeholder">{t.PLACEHOLDER_OUTPUT}</span>
-                  }
-                </div>
-              </div>
-            </div>
-
-            <div className="console-panel">
-              <div className="output-section console-section-changes">
-                <h3>Your Changes</h3>
-                <div className="console-output console-changes">
-                  {blockChanges.length > 0
-                    ? blockChanges.map((change, i) => (
-                        <div key={i} className="block-change">
-                          {change.field}: {change.from} → {change.to}
-                        </div>
-                      ))
-                    : <span className="console-placeholder">Make a change to see it here</span>
-                  }
-                </div>
-              </div>
-              <div className="output-section console-section-rules">
-                <h3>Applied Rules</h3>
-                <div className="console-output console-rules">
-                  {grammarLogs.length > 0
-                    ? grammarLogs.map((log, i) => {
-                        const formatted = formatLogStructured(log);
-                        return (
-                          <div key={i} className="grammar-log">
-                            <div className="log-condition">{formatted.condition}</div>
-                            <div className="log-result">{formatted.result}</div>
-                          </div>
-                        );
-                      })
-                    : <span className="console-placeholder">Grammar transformations will appear here</span>
                   }
                 </div>
               </div>

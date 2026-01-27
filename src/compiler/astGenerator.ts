@@ -390,7 +390,7 @@ function hasInterrogativePronoun(filler: FilledArgumentSlot['filler']): boolean 
 function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
   const blockType = block.type;
 
-  // VerbChainResultをVerbPhraseNode（logicOp含む）に変換するヘルパー
+  // VerbChainResultをVerbPhraseNode（logicOp・coordinatedWith含む）に変換するヘルパー
   // 等位接続や論理演算のオペランドで使用
   const toVerbPhraseWithLogic = (result: VerbChainResult): VerbPhraseNode => {
     return {
@@ -407,6 +407,11 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
         ...result.verbPhrase.prepositionalPhrases,
       ],
       logicOp: result.logicOp,
+      // 内側の等位接続を保持（入れ子対応）
+      coordinatedWith: result.coordination ? {
+        conjunction: result.coordination.conjunction,
+        verbPhrase: result.coordination.rightVerbPhrase,
+      } : undefined,
     };
   };
 
@@ -767,8 +772,18 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
       prepositionalPhrases: [],
     };
 
+    // 左側を完全なVerbPhraseNodeに変換（内側の等位接続を含む）
+    // これにより or(and(A, B), C) で B が失われるバグを防ぐ
+    const leftVP = toVerbPhraseWithLogic(leftResult);
+
     return {
-      ...leftResult,
+      verbPhrase: leftVP,
+      polarity: leftResult.polarity,
+      frequencyAdverbs: [],  // leftVP に含まれている
+      mannerAdverbs: [],
+      locativeAdverbs: [],
+      timeAdverbs: [],
+      prepositionalPhrases: [],
       coordination: {
         conjunction: conjValue,
         rightVerbPhrase: rightResult ? toVerbPhraseWithLogic(rightResult) : defaultVP,

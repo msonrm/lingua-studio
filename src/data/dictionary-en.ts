@@ -1,10 +1,21 @@
 /**
- * dictionary-en.ts - 英語固有の活用形データ
+ * dictionary-en.ts - 英語辞書（活用形 + ルックアップ関数）
  *
- * 動詞活用、名詞複数形、代名詞格変化、形容詞比較級など
+ * 役割:
+ * - 英語固有の活用形データ（動詞活用、名詞複数形、代名詞格変化など）
+ * - Core（言語非依存）と英語フォームをマージするルックアップ関数
+ *
+ * 参照元:
+ * - compiler/english/renderer.ts: 活用形取得
+ * - compiler/english/rules/english/morphology.ts: 形態論ルール
  */
 
-import { VerbForms, NounForms, PronounForms, AdjectiveForms } from '../types/schema';
+import {
+  VerbForms, NounForms, PronounForms, AdjectiveForms,
+  VerbEntry, NounEntry, PronounEntry, AdjectiveEntry, AdverbEntry,
+  VerbCategory, NounCategory, AdjectiveCategory,
+} from '../types/schema';
+import { verbCores, nounCores, pronounCores, adjectiveCores, adverbCores } from './dictionary-core';
 
 // ============================================
 // 動詞活用形
@@ -440,16 +451,131 @@ export const adjectiveFormsEn: AdjectiveForms[] = [
 ];
 
 // ============================================
-// ヘルパー関数
+// 内部ヘルパー関数（フォーム検索）
 // ============================================
-export const findVerbFormsEn = (lemma: string): VerbForms | undefined =>
+const findVerbFormsEn = (lemma: string): VerbForms | undefined =>
   verbFormsEn.find((v) => v.lemma === lemma);
 
-export const findNounFormsEn = (lemma: string): NounForms | undefined =>
+const findNounFormsEn = (lemma: string): NounForms | undefined =>
   nounFormsEn.find((n) => n.lemma === lemma);
 
-export const findPronounFormsEn = (lemma: string): PronounForms | undefined =>
+const findPronounFormsEn = (lemma: string): PronounForms | undefined =>
   pronounFormsEn.find((p) => p.lemma === lemma);
 
-export const findAdjectiveFormsEn = (lemma: string): AdjectiveForms | undefined =>
+const findAdjectiveFormsEn = (lemma: string): AdjectiveForms | undefined =>
   adjectiveFormsEn.find((a) => a.lemma === lemma);
+
+// ============================================
+// ルックアップ関数（Core + En をマージ）
+// ============================================
+
+/**
+ * 動詞をルックアップ（Core + 英語活用形をマージ）
+ */
+export const findVerb = (lemma: string): VerbEntry | undefined => {
+  const core = verbCores.find((v) => v.lemma === lemma);
+  if (!core) return undefined;
+
+  const forms = findVerbFormsEn(lemma);
+  if (!forms) {
+    // フォールバック: 規則活用を生成
+    const base = core.lemma;
+    return {
+      ...core,
+      forms: {
+        base,
+        past: base + "ed",
+        pp: base + "ed",
+        ing: base + "ing",
+        s: base + "s",
+      },
+    };
+  }
+  return { ...core, forms: forms.forms };
+};
+
+/**
+ * 名詞をルックアップ（Core + 英語複数形をマージ）
+ */
+export const findNoun = (lemma: string): NounEntry | undefined => {
+  const core = nounCores.find((n) => n.lemma === lemma);
+  if (!core) return undefined;
+
+  const forms = findNounFormsEn(lemma);
+  return {
+    ...core,
+    plural: forms?.plural ?? core.lemma + "s",
+  };
+};
+
+/**
+ * 代名詞をルックアップ（Core + 英語格変化をマージ）
+ */
+export const findPronoun = (lemma: string): PronounEntry | undefined => {
+  const core = pronounCores.find((p) => p.lemma === lemma);
+  if (!core) return undefined;
+
+  const forms = findPronounFormsEn(lemma);
+  return {
+    ...core,
+    objectForm: forms?.objectForm ?? core.lemma,
+    possessive: forms?.possessive,
+    negativeForm: forms?.negativeForm,
+  };
+};
+
+/**
+ * 形容詞をルックアップ（Core + 英語比較級をマージ）
+ */
+export const findAdjective = (lemma: string): AdjectiveEntry | undefined => {
+  const core = adjectiveCores.find((a) => a.lemma === lemma);
+  if (!core) return undefined;
+
+  const forms = findAdjectiveFormsEn(lemma);
+  return {
+    ...core,
+    comparative: forms?.comparative,
+    superlative: forms?.superlative,
+  };
+};
+
+/**
+ * 副詞をルックアップ（副詞は活用なし）
+ */
+export const findAdverb = (lemma: string): AdverbEntry | undefined => {
+  const core = adverbCores.find((a) => a.lemma === lemma);
+  if (!core) return undefined;
+
+  return {
+    lemma: core.lemma,
+    type: core.type,
+    polaritySensitive: core.polaritySensitive,
+  };
+};
+
+// ============================================
+// カテゴリ別取得関数
+// ============================================
+
+export const getVerbsByCategory = (category: VerbCategory): VerbEntry[] =>
+  verbCores
+    .filter((v) => v.category === category)
+    .map((core) => findVerb(core.lemma)!)
+    .filter(Boolean);
+
+export const getNounsByCategory = (category: NounCategory): NounEntry[] =>
+  nounCores
+    .filter((n) => n.category === category)
+    .map((core) => findNoun(core.lemma)!)
+    .filter(Boolean);
+
+export const getAdjectivesByCategory = (category: AdjectiveCategory): AdjectiveEntry[] =>
+  adjectiveCores
+    .filter((a) => a.category === category)
+    .map((core) => findAdjective(core.lemma)!)
+    .filter(Boolean);
+
+export const isProperNoun = (lemma: string): boolean => {
+  const noun = findNoun(lemma);
+  return noun?.proper === true;
+};

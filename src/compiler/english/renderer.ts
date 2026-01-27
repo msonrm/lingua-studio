@@ -13,7 +13,7 @@ import {
   VerbPhraseNode,
   ModalType,
 } from '../../types/schema';
-import { findVerb, findNoun, findPronoun } from '../../data/dictionary';
+import { findVerb, findNoun, findPronoun } from '../../data/dictionary-en';
 import { RenderResult } from '../../types/grammarLog';
 import { DerivationTracker } from '../../grammar/DerivationTracker';
 import {

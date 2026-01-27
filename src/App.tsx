@@ -59,6 +59,24 @@ function App() {
     setWorkspaceKey(prev => prev + 1);
   }, []);
 
+  // エディターモード切り替え（ブロック/LinguaScript）
+  const handleEditorModeChange = useCallback((newMode: EditorMode) => {
+    if (newMode === editorMode) return;
+
+    // blocksモードから離れる時、現在のワークスペース状態を保存
+    if (editorMode === 'blocks') {
+      const state = workspaceRef.current?.saveState() ?? null;
+      setWorkspaceState(state);
+    }
+
+    // blocksモードに戻る時、ワークスペースを再作成
+    if (newMode === 'blocks') {
+      setWorkspaceKey(prev => prev + 1);
+    }
+
+    setEditorMode(newMode);
+  }, [editorMode]);
+
   // UI用のショートカット
   const t = currentLocale.ui;
 
@@ -91,13 +109,13 @@ function App() {
             <div className="mode-tabs">
               <button
                 className={`mode-tab ${editorMode === 'blocks' ? 'active' : ''}`}
-                onClick={() => setEditorMode('blocks')}
+                onClick={() => handleEditorModeChange('blocks')}
               >
                 {t.TAB_BLOCKS}
               </button>
               <button
                 className={`mode-tab ${editorMode === 'linguascript' ? 'active' : ''}`}
-                onClick={() => setEditorMode('linguascript')}
+                onClick={() => handleEditorModeChange('linguascript')}
               >
                 {t.TAB_LINGUASCRIPT}
               </button>

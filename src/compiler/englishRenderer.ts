@@ -1025,15 +1025,164 @@ function renderCoordinatedVerbPhrase(
 
   let result = parts.join(' ');
 
-  // 再帰的に等位接続を処理
+  // 等位接続の処理: チェーンを収集してフォーマット
   if (vp.coordinatedWith) {
-    const coordVPInner = vp.coordinatedWith.verbPhrase;
-    const conjunctionInner = vp.coordinatedWith.conjunction;
-    const coordVerbStr = renderCoordinatedVerbPhrase(coordVPInner, tense, aspect, polarity, effectiveSubject, modal, modalPolarity);
-    result += ` ${conjunctionInner} ${coordVerbStr}`;
+    // 等位接続チェーンを収集
+    interface CoordItem {
+      rendered: string;
+      conjunction: 'and' | 'or';
+      hasOwnSubject: boolean;
+    }
+    const items: CoordItem[] = [];
+    let currentVP: VerbPhraseNode | undefined = vp;
+
+    while (currentVP?.coordinatedWith) {
+      const coord: { conjunction: 'and' | 'or'; verbPhrase: VerbPhraseNode } = currentVP.coordinatedWith;
+      const nextVP: VerbPhraseNode = coord.verbPhrase;
+
+      // 次のVPが独自の主語を持つか判定
+      const nextVerbEntry = findVerb(nextVP.verb.lemma);
+      let nextHasOwnSubject = false;
+      for (const role of SUBJECT_ROLES) {
+        if (nextVerbEntry?.valency.some((v: { role: SemanticRole }) => v.role === role)) {
+          const slot = nextVP.arguments.find((a: FilledArgumentSlot) => a.role === role);
+          if (slot?.filler) {
+            nextHasOwnSubject = true;
+            break;
+          }
+        }
+      }
+
+      // 次のVPをレンダリング（再帰せず、単一VPのみ）
+      const nextRendered = renderSingleVerbPhrase(
+        nextVP, tense, aspect, polarity,
+        nextHasOwnSubject ? undefined : effectiveSubject,
+        modal, modalPolarity
+      );
+
+      items.push({
+        rendered: nextRendered,
+        conjunction: coord.conjunction,
+        hasOwnSubject: nextHasOwnSubject,
+      });
+
+      currentVP = nextVP;
+    }
+
+    // フォーマット: 同質（同じ接続詞・主語なし）ならフラット化
+    const allSameConjunction = items.every(item => item.conjunction === items[0].conjunction);
+    const noneHasOwnSubject = items.every(item => !item.hasOwnSubject);
+
+    if (allSameConjunction && noneHasOwnSubject) {
+      // フラット化: A, B, and C
+      const conjunction = items[0].conjunction;
+      const allRendered = [result, ...items.map(i => i.rendered)];
+
+      if (allRendered.length === 2) {
+        // 2項目: both A and B / either A or B
+        const correlative = conjunction === 'and' ? 'both' : 'either';
+        result = `${correlative} ${allRendered[0]} ${conjunction} ${allRendered[1]}`;
+      } else {
+        // 3項目以上: A, B, and C
+        const allButLast = allRendered.slice(0, -1);
+        const last = allRendered[allRendered.length - 1];
+        result = `${allButLast.join(', ')}, ${conjunction} ${last}`;
+      }
+    } else {
+      // 異質: カンマ+接続詞で境界を示す
+      for (const item of items) {
+        if (item.hasOwnSubject || item.conjunction !== items[0]?.conjunction) {
+          // 境界: ", and" や ", or"
+          const correlative = item.conjunction === 'or' ? 'either ' : '';
+          result += `, ${item.conjunction} ${correlative}${item.rendered}`;
+        } else {
+          result += ` ${item.conjunction} ${item.rendered}`;
+        }
+      }
+    }
   }
 
   return result;
+}
+
+/** 単一の動詞句をレンダリング（等位接続を処理しない） */
+function renderSingleVerbPhrase(
+  vp: VerbPhraseNode,
+  tense: 'past' | 'present' | 'future',
+  aspect: 'simple' | 'progressive' | 'perfect' | 'perfectProgressive',
+  polarity: 'affirmative' | 'negative',
+  inheritedSubject?: NounPhraseNode | CoordinatedNounPhraseNode,
+  modal?: ModalType,
+  modalPolarity?: 'affirmative' | 'negative'
+): string {
+  const verbEntry = findVerb(vp.verb.lemma);
+
+  // 主語ロールを決定
+  let subjectRole: SemanticRole | undefined;
+  for (const role of SUBJECT_ROLES) {
+    if (verbEntry?.valency.some(v => v.role === role)) {
+      subjectRole = role;
+      break;
+    }
+  }
+
+  const ownSubjectSlot = subjectRole
+    ? vp.arguments.find(a => a.role === subjectRole)
+    : undefined;
+
+  const hasOwnSubject = ownSubjectSlot?.filler != null;
+  const effectiveSubject = hasOwnSubject
+    ? (ownSubjectSlot!.filler!.type === 'nounPhrase' || ownSubjectSlot!.filler!.type === 'coordinatedNounPhrase'
+        ? ownSubjectSlot!.filler as NounPhraseNode | CoordinatedNounPhraseNode
+        : undefined)
+    : inheritedSubject;
+
+  // 副詞を分類
+  const frequencyAdverbs = vp.adverbs.filter(a => a.advType === 'frequency');
+  const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
+  const locativeAdverbs = vp.adverbs.filter(a => a.advType === 'place');
+
+  // 動詞を活用
+  const verbForm = getDeclarativeVerbForm(
+    vp.verb.lemma,
+    tense,
+    aspect,
+    polarity,
+    frequencyAdverbs,
+    effectiveSubject,
+    hasOwnSubject ? modal : modal,
+    hasOwnSubject ? modalPolarity : undefined
+  );
+
+  // 主語をレンダリング（独自の主語がある場合のみ）
+  const subjectStr = hasOwnSubject && ownSubjectSlot?.filler
+    ? renderFiller(ownSubjectSlot.filler, true, polarity)
+    : '';
+
+  // その他の引数
+  const otherArgs = (verbEntry?.valency || [])
+    .filter(v => v.role !== subjectRole)
+    .map(v => {
+      const argSlot = vp.arguments.find(a => a.role === v.role);
+      const preposition = v.preposition;
+      const value = render(argSlot?.filler, f => renderFiller(f, false, polarity));
+      return {
+        text: preposition ? `${preposition} ${value}` : value,
+        skip: !v.required && !argSlot?.filler,
+      };
+    })
+    .filter(item => !item.skip)
+    .map(item => item.text)
+    .join(' ');
+
+  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
+  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
+  const prepPhrases = vp.prepositionalPhrases
+    .map(pp => renderPrepositionalPhrase(pp, polarity))
+    .join(' ');
+
+  const parts = [subjectStr, verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
+  return parts.join(' ');
 }
 
 function renderFiller(

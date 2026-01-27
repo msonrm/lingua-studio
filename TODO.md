@@ -12,10 +12,6 @@
     - Wh語検出による疑問文自動判定（`question()`不要）
     - LinguaScript: `sentence(past+simple(locative(?where, run(agent:'I))))` → "Where did I run?"
   - 仕様: `sentence(past+simple(eat(agent:?who, theme:'apple)))` → "Who ate the apple?"
-- [ ] Passive（受動態）wrapper
-  - agent が指定されている場合は by 句を自動生成
-  - 仕様: `sentence(passive(eat(agent:'I, patient:'apple)))` → "The apple was eaten by me."
-- [ ] Causative（使役態）wrapper
 
 ### Modality & Register
 - [ ] Register パラメータ（formal/casual）
@@ -66,10 +62,6 @@
     - `GrammarLogCollector` クラス（モジュールレベル）
     - `renderToEnglishWithLogs()` → `RenderResult { output, logs, warnings }`
     - 共通ヘルパー関数パターン（他言語レンダラーの参考用）
-  - [ ] 必須引数の欠落警告（警告表示は未実装）
-    - `⚠️ Missing required argument: patient (for verb 'cut')`
-    - ~~出力に `___` を表示（例: "I cut ___."）~~ ✅ 実装済み
-    - ~~agent の欠落も同様に扱う（現在の someone 補完をやめる）~~ ✅ 実装済み
 - [ ] TimeChip 3連プルダウン化（教育的UX改善）
   - [Tense][Aspect][Time] の3スロット構成
   - Time で "Yesterday" を選択 → [Past][Simple][Yesterday] に自動設定
@@ -202,6 +194,10 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 - Prolog - 論理プログラミング
 
 ### Deferred（設計検討が必要）
+- [ ] Passive（受動態）wrapper
+  - agent が指定されている場合は by 句を自動生成
+  - 仕様: `sentence(passive(eat(agent:'I, patient:'apple)))` → "The apple was eaten by me."
+- [ ] Causative（使役態）wrapper
 - [ ] Why疑問文（`?why`）の構文設計
   - 構文的には where/when/how と同様（Wh副詞、文頭移動）
   - 意味的に特殊: 答えが「because...」節（理由節）になる
@@ -215,11 +211,6 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - `not(frequency('never, ...))` は論理的に二重否定
   - 警告表示 or 禁止の実装が必要
   - 難易度: 高（スコープ解析が必要）
-- [ ] 命令文 + Wh疑問詞の意味的矛盾警告
-  - `imperative(sentence(...(?who...)))` は意味的に矛盾
-  - 現状: 命令文が優先され、疑問詞は無視される（"Run!"）
-  - 改善案: Grammar Console に警告を表示
-  - 難易度: 低（検出ロジックは実装済み）
 
 ### Out of Scope（単文スコープ外）
 - 関係節 (the man who ate...)

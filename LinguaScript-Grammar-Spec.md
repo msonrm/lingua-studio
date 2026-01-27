@@ -641,7 +641,7 @@ sentence(past+simple(passive(eat(theme:'apple))))
 ### モダリティ付き
 
 ```lisp
-modal(certainty:must_have, sentence(past+perfect(eat(agent:'you, theme:'apple))))
+modal(certainty:must, sentence(present+perfect(eat(agent:'you, theme:'apple))))
 ;; → "You must have eaten an apple."
 ```
 
@@ -800,10 +800,10 @@ and('I, 'you, 'he)
 
 ```lisp
 ;; "I eat and drink."
-sentence(and(eat(agent:'I), drink(agent:'I)))
+sentence(present+simple(and(eat(agent:'I), drink(agent:'I))))
 
 ;; "I run or walk."
-sentence(or(run(agent:'I), walk(agent:'I)))
+sentence(present+simple(or(run(agent:'I), walk(agent:'I))))
 ```
 
 ### ネスト時の処理
@@ -880,10 +880,10 @@ be(theme:'mine, attribute:'bigger)
 主語位置と目的語位置で自動的に格が変化する。
 
 ```lisp
-see(agent:'I, theme:'he)
+sentence(present+simple(see(experiencer:'I, stimulus:'he)))
 ;; → "I see him."（heは目的語なのでhimに変化）
 
-see(agent:'he, theme:'I)
+sentence(present+simple(see(experiencer:'he, stimulus:'I)))
 ;; → "He sees me."（Iは目的語なのでmeに変化）
 ```
 
@@ -899,11 +899,11 @@ see(agent:'he, theme:'I)
 
 ```lisp
 ;; 肯定文
-sentence(see(agent:'I, theme:'someone))
+sentence(present+simple(see(experiencer:'I, stimulus:'someone)))
 ;; → "I see someone."
 
 ;; 否定文
-sentence(not(see(agent:'I, theme:'someone)))
+sentence(present+simple(not(see(experiencer:'I, stimulus:'someone))))
 ;; → "I see nobody."（自動変換）
 ;; または "I don't see anyone."（文脈による）
 ```

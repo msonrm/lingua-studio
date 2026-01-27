@@ -66,9 +66,9 @@
 
 #### 前提作業（多言語展開の基盤）
 - [x] Grammar Rule System アーキテクチャ
-  - `src/grammar/types.ts`: RenderContext, DerivationStep 等の型定義
-  - `src/grammar/DerivationTracker.ts`: 変形記録クラス（GrammarLogCollector を置換）
-  - `src/compiler/english/rules/`: 英語ルールの分離
+  - `src/renderer/types.ts`: RenderContext, DerivationStep 等の型定義
+  - `src/renderer/DerivationTracker.ts`: 変形記録クラス（GrammarLogCollector を置換）
+  - `src/renderer/english/rules/`: 英語ルールの分離
     - `morphology.ts`: 形態論（agreement, tense, aspect, case, article）
     - `syntax.ts`: 統語論（do-support, inversion, wh-movement）
   - `toLegacyLogs()`: 後方互換性のため既存UI形式に変換
@@ -260,11 +260,11 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - `RenderContext` 型: レンダリング文脈を構造化
   - `DerivationDiff`: 前回との差分計算機能
 - [x] 英語ルールの分離
-  - `src/compiler/english/rules/morphology.ts`: agreement, tense, aspect, case, article
-  - `src/compiler/english/rules/syntax.ts`: do-support, inversion, wh-movement
+  - `src/renderer/english/rules/morphology.ts`: agreement, tense, aspect, case, article
+  - `src/renderer/english/rules/syntax.ts`: do-support, inversion, wh-movement
   - 将来の日本語レンダラー対応を考慮した設計
 - [x] 英語レンダラーのリファクタリング
-  - `src/compiler/english/` に英語固有コードを集約
+  - `src/renderer/english/` に英語固有コードを集約
     - `renderer.ts`: 英語レンダラー本体
     - `coordination.ts`: 等位接続ルール（Oxford comma, both/either）
     - `conjugation.ts`: 動詞活用

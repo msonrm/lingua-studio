@@ -101,6 +101,7 @@ export type TransformationType =
   | 'do-support'     // do挿入
   | 'inversion'      // 主語-助動詞倒置
   | 'wh-movement'    // Wh語の前置
+  | 'imperative'     // 命令文（主語省略など）
   | 'word-order';    // その他の語順変更
 
 /**

@@ -25,7 +25,6 @@ function App() {
   const [asts, setASTs] = useState<SentenceNode[]>([]);
   const [sentences, setSentences] = useState<string[]>([]);
   const [grammarLogs, setGrammarLogs] = useState<TransformLog[]>([]);
-  const [previousLogs, setPreviousLogs] = useState<TransformLog[]>([]);
   const [_blockChanges, setBlockChanges] = useState<BlockChange[]>([]);
   const [editorMode, setEditorMode] = useState<EditorMode>('blocks');
   const [localeCode, setLocaleCode] = useState<LocaleCode>(getStoredLocale());
@@ -34,14 +33,6 @@ function App() {
   const [sidePanelTab, setSidePanelTab] = useState<SidePanelTab>('grammar');
   const [workspaceState, setWorkspaceState] = useState<object | null>(null);
   const workspaceRef = useRef<BlocklyWorkspaceHandle>(null);
-
-  // Track previous logs for diff display
-  const handleLogsChange = useCallback((newLogs: TransformLog[]) => {
-    setGrammarLogs(prevLogs => {
-      setPreviousLogs(prevLogs);
-      return newLogs;
-    });
-  }, []);
 
   // 現在のロケールデータ
   const currentLocale = useMemo(() => getLocale(localeCode), [localeCode]);
@@ -58,6 +49,24 @@ function App() {
     // ワークスペースを再作成してブロックを更新
     setWorkspaceKey(prev => prev + 1);
   }, []);
+
+  // エディターモード切り替え（ブロック/LinguaScript）
+  const handleEditorModeChange = useCallback((newMode: EditorMode) => {
+    if (newMode === editorMode) return;
+
+    // blocksモードから離れる時、現在のワークスペース状態を保存
+    if (editorMode === 'blocks') {
+      const state = workspaceRef.current?.saveState() ?? null;
+      setWorkspaceState(state);
+    }
+
+    // blocksモードに戻る時、ワークスペースを再作成
+    if (newMode === 'blocks') {
+      setWorkspaceKey(prev => prev + 1);
+    }
+
+    setEditorMode(newMode);
+  }, [editorMode]);
 
   // UI用のショートカット
   const t = currentLocale.ui;
@@ -91,13 +100,13 @@ function App() {
             <div className="mode-tabs">
               <button
                 className={`mode-tab ${editorMode === 'blocks' ? 'active' : ''}`}
-                onClick={() => setEditorMode('blocks')}
+                onClick={() => handleEditorModeChange('blocks')}
               >
                 {t.TAB_BLOCKS}
               </button>
               <button
                 className={`mode-tab ${editorMode === 'linguascript' ? 'active' : ''}`}
-                onClick={() => setEditorMode('linguascript')}
+                onClick={() => handleEditorModeChange('linguascript')}
               >
                 {t.TAB_LINGUASCRIPT}
               </button>
@@ -140,7 +149,7 @@ function App() {
                     key={workspaceKey}
                     onASTChange={setASTs}
                     onSentenceChange={setSentences}
-                    onLogsChange={handleLogsChange}
+                    onLogsChange={setGrammarLogs}
                     onBlockChanges={setBlockChanges}
                     initialState={workspaceState}
                   />
@@ -183,7 +192,7 @@ function App() {
                 </div>
                 <div className="side-panel-content">
                   {sidePanelTab === 'grammar' && (
-                    <GrammarPanel logs={grammarLogs} previousLogs={previousLogs} />
+                    <GrammarPanel logs={grammarLogs} />
                   )}
                   {sidePanelTab === 'timeline' && (
                     <VisualizationPanel asts={asts} />

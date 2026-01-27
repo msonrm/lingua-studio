@@ -295,6 +295,7 @@ export const ja: LocaleData = {
     TYPE_DO_SUPPORT: 'do挿入',
     TYPE_INVERSION: '倒置',
     TYPE_WH_MOVEMENT: '疑問詞移動',
+    TYPE_IMPERATIVE: '命令',
 
     // Agreement rules
     AGREEMENT_3SG: '三単現の -s',
@@ -346,6 +347,10 @@ export const ja: LocaleData = {
     INVERSION_QUESTION_DESC: '主語と助動詞の倒置',
     WH_MOVEMENT_FRONT: '疑問詞前置',
     WH_MOVEMENT_FRONT_DESC: '疑問詞が文頭に移動',
+
+    // Imperative rules
+    IMPERATIVE_SUBJECT_OMISSION: '主語省略',
+    IMPERATIVE_SUBJECT_OMISSION_DESC: '命令文では主語 you を省略',
 
     // Empty state
     EMPTY_NO_TRANSFORMATIONS: '変形なし',

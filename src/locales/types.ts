@@ -260,6 +260,7 @@ export interface GrammarMessages {
   TYPE_DO_SUPPORT: string;
   TYPE_INVERSION: string;
   TYPE_WH_MOVEMENT: string;
+  TYPE_IMPERATIVE: string;
 
   // Agreement rules
   AGREEMENT_3SG: string;
@@ -311,6 +312,10 @@ export interface GrammarMessages {
   INVERSION_QUESTION_DESC: string;
   WH_MOVEMENT_FRONT: string;
   WH_MOVEMENT_FRONT_DESC: string;
+
+  // Imperative rules
+  IMPERATIVE_SUBJECT_OMISSION: string;
+  IMPERATIVE_SUBJECT_OMISSION_DESC: string;
 
   // Empty state
   EMPTY_NO_TRANSFORMATIONS: string;

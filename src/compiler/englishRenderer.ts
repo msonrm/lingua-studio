@@ -1027,6 +1027,19 @@ function renderImperativeClause(clause: ClauseNode): string {
     }
   }
 
+  // 命令文の主語省略をログに記録
+  tracker.recordSyntax(
+    'imperative',
+    'delete',
+    'IMPERATIVE_SUBJECT_OMISSION',
+    'IMPERATIVE_SUBJECT_OMISSION_DESC',
+    {
+      element: 'you',
+      before: ['you', verbForm],
+      after: [verbForm],
+    }
+  );
+
   // その他の引数（目的語など）- 主語ロール以外
   // シンプルなアルゴリズム：全スロット ___ → 値代入 → オプショナル欠損省略
   const otherArgs = (verbEntry?.valency || [])

@@ -237,7 +237,9 @@ Blockly.Blocks['time_frame'] = {
     this.appendStatementInput("ACTION")
         .setCheck("verb")
         .appendField(msg('SENTENCE_PREDICATE_LABEL', 'predicate:'));
-    this.setPreviousStatement(true, "sentence");  // modal_wrapperに接続可能
+    // "sentence": modal_wrapperに接続可能
+    // "basic_sentence": imperative_wrapperに接続可能（modalは不可）
+    this.setPreviousStatement(true, ["sentence", "basic_sentence"]);
     this.setColour(COLORS.timeFrame);
     this.setTooltip(msg('SENTENCE_TOOLTIP', 'The root of a sentence, specifying tense and aspect'));
   }
@@ -273,13 +275,14 @@ Blockly.Blocks['modal_wrapper'] = {
 
 // ============================================
 // Imperative ラッパーブロック（命令文）
+// 英語のモーダル動詞には命令形がないため、modalとの組み合わせは不可
 // ============================================
 Blockly.Blocks['imperative_wrapper'] = {
   init: function() {
     this.appendDummyInput()
         .appendField(msg('IMPERATIVE_LABEL', 'IMPERATIVE'));
     this.appendStatementInput("SENTENCE")
-        .setCheck("sentence");
+        .setCheck("basic_sentence");  // time_frameのみ接続可能（modalは不可）
     this.setColour(COLORS.imperative);
     this.setTooltip(msg('IMPERATIVE_TOOLTIP', "Imperative: creates a command (e.g., 'Eat the apple!')"));
   }
@@ -1010,10 +1013,10 @@ const LOCATIVE_ADVERBS = adverbs.filter(a => a.type === 'place');
 // ============================================
 Blockly.Blocks['locative_wrapper'] = {
   init: function() {
-    // 通常の場所副詞 + 疑問副詞 ?where（homeは除外）
+    // 通常の場所副詞 + 疑問副詞 ?where
     const getOptions = (): [string, string][] => [
       [msg('GROUP_COMMON', '── Common ──'), '__label_common__'],
-      ...LOCATIVE_ADVERBS.filter(a => !a.lemma.startsWith('?') && a.lemma !== 'home').map(a => [a.lemma, a.lemma] as [string, string]),
+      ...LOCATIVE_ADVERBS.filter(a => !a.lemma.startsWith('?')).map(a => [a.lemma, a.lemma] as [string, string]),
       [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), '__label_interrogative__'],
       ['?where', '?where'],
     ];

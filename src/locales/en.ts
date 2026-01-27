@@ -295,6 +295,7 @@ export const en: LocaleData = {
     TYPE_DO_SUPPORT: 'Do-support',
     TYPE_INVERSION: 'Inversion',
     TYPE_WH_MOVEMENT: 'Wh-movement',
+    TYPE_IMPERATIVE: 'Imperative',
 
     // Agreement rules
     AGREEMENT_3SG: '+s',
@@ -346,6 +347,10 @@ export const en: LocaleData = {
     INVERSION_QUESTION_DESC: 'Subject-auxiliary inversion',
     WH_MOVEMENT_FRONT: 'wh-fronting',
     WH_MOVEMENT_FRONT_DESC: 'Wh-word moves to front',
+
+    // Imperative rules
+    IMPERATIVE_SUBJECT_OMISSION: 'subject omission',
+    IMPERATIVE_SUBJECT_OMISSION_DESC: 'Imperative omits subject you',
 
     // Empty state
     EMPTY_NO_TRANSFORMATIONS: 'No transformations',

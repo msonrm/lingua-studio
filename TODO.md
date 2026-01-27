@@ -32,8 +32,7 @@
 
 ### Vocabulary
 - [x] LOCATION副詞に「home」と同ジャンルの単語を追加
-  - abroad, indoors, outdoors, upstairs, downstairs を追加済み
-  - home は一時的に除外（前置詞なしで使える特殊ケース）
+  - home, abroad, indoors, outdoors, upstairs, downstairs を追加済み
 
 ### UI & Localization
 - [x] ブロックラベルの切り替え機能（言語学的 / カジュアル / 日本語）

@@ -10,8 +10,6 @@ import {
   SemanticRole,
   PrepositionalPhraseNode,
   CoordinatedNounPhraseNode,
-  CoordinationConjunct,
-  Conjunction,
   VerbPhraseNode,
   ModalType,
 } from '../types/schema';
@@ -27,6 +25,12 @@ import {
   Polarity,
   ModalType as ConjugationModalType,
 } from '../grammar/conjugation';
+import {
+  renderNounPhraseUnified,
+  renderCoordinatedNounPhraseUnified,
+  NounPhraseContext,
+  NounPhraseDependencies,
+} from '../grammar/nounPhrase';
 
 // Derivation tracker (module-level, reset on each render)
 let tracker = new DerivationTracker();
@@ -178,6 +182,82 @@ function getInterrogativeVerbForm(
     auxiliary: result.auxiliary || 'does',
     mainVerb: result.mainVerb,
   };
+}
+
+// ============================================
+// Unified Noun Phrase Wrapper
+// ============================================
+
+/** 統一名詞句レンダリングの依存関係 */
+function getNounPhraseDeps(): NounPhraseDependencies {
+  return {
+    findNoun: (lemma: string) => {
+      const entry = findNoun(lemma);
+      if (!entry) return undefined;
+      return {
+        lemma: entry.lemma,
+        plural: entry.plural,
+        countable: entry.countable,
+        zeroArticle: entry.zeroArticle,
+      };
+    },
+    findPronoun: (lemma: string) => {
+      const entry = findPronoun(lemma);
+      if (!entry) return undefined;
+      return {
+        lemma: entry.lemma,
+        objectForm: entry.objectForm,
+        possessive: entry.possessive,
+        person: entry.person,
+        number: entry.number,
+        type: entry.type,
+        polaritySensitive: entry.polaritySensitive,
+        negativeForm: entry.negativeForm,
+      };
+    },
+    renderPrepositionalPhrase: (pp, polarity) => {
+      return renderPrepositionalPhrase(pp, polarity);
+    },
+    renderCoordinatedNounPhrase: (cnp, isSubject, polarity) => {
+      return renderCoordinatedNounPhrase(cnp, isSubject, polarity);
+    },
+  };
+}
+
+/** 名詞句をレンダリングし、変形をトラッカーに記録 */
+function renderNounPhrase(
+  np: NounPhraseNode,
+  isSubject: boolean = true,
+  polarity: 'affirmative' | 'negative' = 'affirmative'
+): string {
+  const ctx: NounPhraseContext = { isSubject, polarity };
+  const deps = getNounPhraseDeps();
+  const result = renderNounPhraseUnified(np, ctx, deps);
+
+  // 変形をトラッカーに記録
+  for (const t of result.transforms) {
+    tracker.recordMorphology(t.type, t.from, t.to, t.rule, t.description);
+  }
+
+  return result.form;
+}
+
+/** 等位接続名詞句をレンダリングし、変形をトラッカーに記録 */
+function renderCoordinatedNounPhrase(
+  cnp: CoordinatedNounPhraseNode,
+  isSubject: boolean = true,
+  polarity: 'affirmative' | 'negative' = 'affirmative'
+): string {
+  const ctx: NounPhraseContext = { isSubject, polarity };
+  const deps = getNounPhraseDeps();
+  const result = renderCoordinatedNounPhraseUnified(cnp, ctx, deps);
+
+  // 変形をトラッカーに記録
+  for (const t of result.transforms) {
+    tracker.recordMorphology(t.type, t.from, t.to, t.rule, t.description);
+  }
+
+  return result.form;
 }
 
 // 主語となりうるロール
@@ -1187,145 +1267,6 @@ function renderFiller(
   return '';
 }
 
-function renderCoordinatedNounPhrase(
-  coordNP: CoordinatedNounPhraseNode,
-  isSubject: boolean,
-  polarity: 'affirmative' | 'negative'
-): string {
-  if (coordNP.conjuncts.length === 0) return '';
-  if (coordNP.conjuncts.length === 1) {
-    return renderConjunct(coordNP.conjuncts[0], isSubject, polarity, coordNP.conjunction);
-  }
-
-  // 各要素をレンダリング（入れ子の場合は相関接続詞付き）
-  const renderedParts = coordNP.conjuncts.map(conjunct =>
-    renderConjunct(conjunct, isSubject, polarity, coordNP.conjunction)
-  );
-
-  // 2つの場合: "A and B" または "A, and either B or C"
-  if (renderedParts.length === 2) {
-    // 入れ子に異なる接続詞がある場合、外側の接続詞の前にカンマを入れる
-    const hasNestedDifferent = coordNP.conjuncts.some(
-      c => c.type === 'coordinatedNounPhrase' && c.conjunction !== coordNP.conjunction
-    );
-    const separator = hasNestedDifferent ? `, ${coordNP.conjunction} ` : ` ${coordNP.conjunction} `;
-    return `${renderedParts[0]}${separator}${renderedParts[1]}`;
-  }
-
-  // 3つ以上: "A, B, and C" (Oxford comma)
-  const lastItem = renderedParts.pop()!;
-  return `${renderedParts.join(', ')}, ${coordNP.conjunction} ${lastItem}`;
-}
-
-// 等位接続の要素をレンダリング（入れ子の場合は相関接続詞を使用）
-function renderConjunct(
-  conjunct: CoordinationConjunct,
-  isSubject: boolean,
-  polarity: 'affirmative' | 'negative',
-  parentConjunction: Conjunction
-): string {
-  if (conjunct.type === 'nounPhrase') {
-    return renderNounPhrase(conjunct, isSubject, polarity);
-  }
-
-  // 入れ子のCoordinatedNounPhraseNode
-  const nested = conjunct;
-
-  // 同じ接続詞の場合は通常レンダリング（フラット化はAST側で済み）
-  if (nested.conjunction === parentConjunction) {
-    return renderCoordinatedNounPhrase(nested, isSubject, polarity);
-  }
-
-  // 異なる接続詞の場合は相関接続詞を使用
-  // and → "both A and B"
-  // or → "either A or B"
-  const correlative = nested.conjunction === 'and' ? 'both' : 'either';
-  const innerRendered = renderCoordinatedNounPhrase(nested, isSubject, polarity);
-  return `${correlative} ${innerRendered}`;
-}
-
-function renderNounPhrase(np: NounPhraseNode, isSubject: boolean = true, polarity: 'affirmative' | 'negative' = 'affirmative'): string {
-  // 代名詞の処理
-  if (np.head.type === 'pronoun') {
-    const pronounHead = np.head as PronounHead;
-    let result = renderPronoun(pronounHead, isSubject, polarity);
-    // 不定代名詞 + 形容詞: "something good", "someone important"
-    // 形容詞は後置される
-    if (pronounHead.pronounType === 'indefinite' && np.adjectives.length > 0) {
-      const adjs = np.adjectives.map(adj => adj.lemma).join(' ');
-      result += ' ' + adjs;
-    }
-    // 前置詞句修飾（代名詞用）: "someone in the room"
-    if (np.prepModifier) {
-      result += ' ' + renderPrepositionalPhrase(np.prepModifier, polarity);
-    }
-    return result;
-  }
-
-  const parts: string[] = [];
-
-  // 前置限定詞（all, both, half）
-  if (np.preDeterminer) {
-    parts.push(np.preDeterminer);
-  }
-
-  // 中央限定詞（the, this, my, a/an, no）
-  if (np.determiner && np.determiner.lexeme) {
-    if (np.determiner.lexeme === 'a') {
-      // a/an の判定は後で行う
-      parts.push('INDEF');
-    } else {
-      parts.push(np.determiner.lexeme);
-    }
-  }
-
-  // 後置限定詞（one, two, many, few）
-  if (np.postDeterminer) {
-    parts.push(np.postDeterminer);
-  }
-
-  // 形容詞
-  np.adjectives.forEach(adj => {
-    parts.push(adj.lemma);
-  });
-
-  // 名詞
-  if (np.head.type === 'noun') {
-    const nounHead = np.head as NounHead;
-    const nounEntry = findNoun(nounHead.lemma);
-
-    if (nounHead.number === 'plural' && nounEntry) {
-      parts.push(nounEntry.plural);
-    } else {
-      parts.push(nounHead.lemma);
-    }
-  }
-
-  // a/an の処理
-  let result = parts.join(' ');
-  if (result.includes('INDEF ')) {
-    const idx = result.indexOf('INDEF ');
-    const before = result.slice(0, idx);
-    const after = result.slice(idx + 6);
-    const firstChar = after.charAt(0).toLowerCase();
-    const article = ['a', 'e', 'i', 'o', 'u'].includes(firstChar) ? 'an' : 'a';
-    if (article === 'an') {
-      tracker.recordMorphology(
-        'article', 'a', 'an', 'a → an',
-        `Next sound: vowel "${firstChar}"`
-      );
-    }
-    result = before + article + ' ' + after;
-  }
-
-  // 前置詞句修飾（名詞用）: "the apple on the desk"
-  if (np.prepModifier) {
-    result += ' ' + renderPrepositionalPhrase(np.prepModifier, polarity);
-  }
-
-  return result;
-}
-
 function renderPrepositionalPhrase(pp: PrepositionalPhraseNode, polarity: 'affirmative' | 'negative'): string {
   const objectStr = pp.object.type === 'coordinatedNounPhrase'
     ? renderCoordinatedNounPhrase(pp.object as CoordinatedNounPhraseNode, false, polarity)
@@ -1350,75 +1291,23 @@ function renderLocativeAdverb(lemma: string, polarity: 'affirmative' | 'negative
   return lemma;
 }
 
-function renderPronoun(head: PronounHead, isSubject: boolean, polarity: 'affirmative' | 'negative'): string {
-  const pronoun = findPronoun(head.lemma);
-
-  if (!pronoun) {
-    // 疑問詞（?who, ?what）の場合、?を除去して返す
-    if (head.lemma.startsWith('?')) {
-      const stripped = head.lemma.slice(1);
-      // 目的格の場合は whom を使用
-      if (!isSubject && stripped === 'who') {
-        return 'whom';
-      }
-      return stripped;
-    }
-    return head.lemma;
-  }
-
-  // 疑問詞の場合
-  if (pronoun.type === 'interrogative') {
-    const lemma = pronoun.lemma.replace(/^\?/, '');
-    if (isSubject) {
-      return lemma;
-    } else {
-      return pronoun.objectForm.replace(/^\?/, '');
-    }
-  }
-
-  // 不定代名詞の極性による切り替え（someone → anyone / nobody）
-  if (pronoun.polaritySensitive) {
-    if (polarity === 'negative' && pronoun.negativeForm) {
-      // 否定文の場合は nobody/nothing を使用
-      return pronoun.negativeForm;
-    }
-    // 疑問文や否定コンテキストでは anyone/anything を使用（将来対応）
-    // 現時点では肯定形をそのまま使用
-  }
-
-  // 格変化: 主格 vs 目的格
-  if (isSubject) {
-    return pronoun.lemma;
-  } else {
-    if (pronoun.lemma !== pronoun.objectForm) {
-      tracker.recordMorphology(
-        'case', pronoun.lemma, pronoun.objectForm,
-        'objective case', 'Position: object'
-      );
-    }
-    return pronoun.objectForm;
-  }
-}
-
 // モダル概念から英語の実現形式を取得（時制連動）
 function getModalEnglishForm(
   modal: ModalType,
   tense: 'past' | 'present' | 'future'
 ): { auxiliary?: string; usePeriPhrastic?: 'was going to' | 'had to' } {
-  // 現在/未来は同じ形式、過去のみ変化
   if (tense === 'past') {
     switch (modal) {
       case 'ability':    return { auxiliary: 'could' };
       case 'permission': return { auxiliary: 'could' };
       case 'possibility': return { auxiliary: 'might' };
-      case 'obligation': return { usePeriPhrastic: 'had to' };  // 迂言形式
-      case 'certainty':  return { auxiliary: 'must' };  // must have で過去推量
+      case 'obligation': return { usePeriPhrastic: 'had to' };
+      case 'certainty':  return { auxiliary: 'must' };
       case 'advice':     return { auxiliary: 'should' };
-      case 'volition':   return { usePeriPhrastic: 'was going to' };  // 迂言形式
+      case 'volition':   return { usePeriPhrastic: 'was going to' };
       case 'prediction': return { auxiliary: 'would' };
     }
   }
-  // 現在/未来
   switch (modal) {
     case 'ability':    return { auxiliary: 'can' };
     case 'permission': return { auxiliary: 'may' };

@@ -1,0 +1,386 @@
+/**
+ * Unified Noun Phrase Rendering System
+ *
+ * 名詞句レンダリングの計算と変形記録を一体化。
+ * 冠詞選択、複数形、格変化、極性変化を統一的に処理。
+ */
+
+import type {
+  NounPhraseNode,
+  NounHead,
+  PronounHead,
+  PrepositionalPhraseNode,
+  CoordinatedNounPhraseNode,
+} from '../types/schema';
+import type { TransformationType } from './types';
+
+// ============================================
+// Types
+// ============================================
+
+export type NumberValue = 'singular' | 'plural';
+export type Polarity = 'affirmative' | 'negative';
+
+/** 名詞句レンダリングコンテキスト */
+export interface NounPhraseContext {
+  /** 主語位置か（格変化に影響） */
+  isSubject: boolean;
+  /** 極性（極性感応代名詞に影響） */
+  polarity: Polarity;
+}
+
+/** 変形記録 */
+export interface Transform {
+  type: TransformationType;
+  from: string;
+  to: string;
+  rule: string;
+  description: string;
+}
+
+/** 名詞句レンダリング結果 */
+export interface NounPhraseResult {
+  /** レンダリングされた文字列 */
+  form: string;
+  /** 適用された変形リスト */
+  transforms: Transform[];
+}
+
+/** 名詞エントリ（辞書から） */
+interface NounEntry {
+  lemma: string;
+  plural: string;
+  countable: boolean;
+  zeroArticle?: boolean;
+}
+
+/** 代名詞エントリ（辞書から） */
+interface PronounEntry {
+  lemma: string;
+  objectForm: string;
+  possessive?: string;
+  person: 1 | 2 | 3;
+  number: NumberValue;
+  type: 'personal' | 'indefinite' | 'demonstrative' | 'possessive' | 'interrogative';
+  polaritySensitive?: boolean;
+  negativeForm?: string;
+}
+
+// ============================================
+// Dependencies (辞書アクセス)
+// ============================================
+
+type FindNounFn = (lemma: string) => NounEntry | undefined;
+type FindPronounFn = (lemma: string) => PronounEntry | undefined;
+type RenderPPFn = (pp: PrepositionalPhraseNode, polarity: Polarity) => string;
+type RenderCoordinatedNPFn = (
+  cnp: CoordinatedNounPhraseNode,
+  isSubject: boolean,
+  polarity: Polarity
+) => string;
+
+export interface NounPhraseDependencies {
+  findNoun: FindNounFn;
+  findPronoun: FindPronounFn;
+  renderPrepositionalPhrase: RenderPPFn;
+  renderCoordinatedNounPhrase: RenderCoordinatedNPFn;
+}
+
+// ============================================
+// Article Selection
+// ============================================
+
+/**
+ * 不定冠詞を選択（a/an）
+ */
+function selectIndefiniteArticle(
+  nextWord: string,
+  transforms: Transform[]
+): string {
+  const firstChar = nextWord.charAt(0).toLowerCase();
+
+  // Special cases for silent 'h'
+  const silentHWords = ['hour', 'honest', 'honor', 'honour', 'heir'];
+  if (silentHWords.some(w => nextWord.toLowerCase().startsWith(w))) {
+    transforms.push({
+      type: 'article',
+      from: 'a',
+      to: 'an',
+      rule: 'a → an',
+      description: `Silent 'h' in "${nextWord}"`,
+    });
+    return 'an';
+  }
+
+  // Special cases for /j/ sound in words starting with 'u'
+  const uConsonantWords = ['university', 'uniform', 'unique', 'unit', 'united', 'unicorn', 'use', 'useful', 'usual'];
+  if (uConsonantWords.some(w => nextWord.toLowerCase().startsWith(w))) {
+    return 'a';
+  }
+
+  // Standard vowel check
+  if (['a', 'e', 'i', 'o', 'u'].includes(firstChar)) {
+    transforms.push({
+      type: 'article',
+      from: 'a',
+      to: 'an',
+      rule: 'a → an',
+      description: `Next sound: vowel "${firstChar}"`,
+    });
+    return 'an';
+  }
+
+  return 'a';
+}
+
+// ============================================
+// Pronoun Rendering
+// ============================================
+
+/**
+ * 代名詞をレンダリング
+ */
+function renderPronounInternal(
+  head: PronounHead,
+  ctx: NounPhraseContext,
+  deps: NounPhraseDependencies,
+  transforms: Transform[]
+): string {
+  const { isSubject, polarity } = ctx;
+  const pronoun = deps.findPronoun(head.lemma);
+
+  // 疑問詞（?who, ?what）の場合
+  if (!pronoun) {
+    if (head.lemma.startsWith('?')) {
+      const stripped = head.lemma.slice(1);
+      if (!isSubject && stripped === 'who') {
+        transforms.push({
+          type: 'case',
+          from: 'who',
+          to: 'whom',
+          rule: 'who → whom',
+          description: 'Position: object',
+        });
+        return 'whom';
+      }
+      return stripped;
+    }
+    return head.lemma;
+  }
+
+  // 疑問詞の場合（辞書に登録されているもの）
+  if (pronoun.type === 'interrogative') {
+    const lemma = pronoun.lemma.replace(/^\?/, '');
+    if (isSubject) {
+      return lemma;
+    } else {
+      const objForm = pronoun.objectForm.replace(/^\?/, '');
+      if (lemma !== objForm) {
+        transforms.push({
+          type: 'case',
+          from: lemma,
+          to: objForm,
+          rule: 'who → whom',
+          description: 'Position: object',
+        });
+      }
+      return objForm;
+    }
+  }
+
+  // 不定代名詞の極性による切り替え（someone → nobody）
+  if (pronoun.polaritySensitive) {
+    if (polarity === 'negative' && pronoun.negativeForm) {
+      transforms.push({
+        type: 'negation',
+        from: pronoun.lemma,
+        to: pronoun.negativeForm,
+        rule: 'polarity',
+        description: 'Negative context',
+      });
+      return pronoun.negativeForm;
+    }
+  }
+
+  // 格変化: 主格 vs 目的格
+  if (isSubject) {
+    return pronoun.lemma;
+  } else {
+    if (pronoun.lemma !== pronoun.objectForm) {
+      transforms.push({
+        type: 'case',
+        from: pronoun.lemma,
+        to: pronoun.objectForm,
+        rule: 'objective case',
+        description: 'Position: object',
+      });
+    }
+    return pronoun.objectForm;
+  }
+}
+
+// ============================================
+// Core Noun Phrase Rendering
+// ============================================
+
+/**
+ * 統一された名詞句レンダリング関数
+ *
+ * NounPhraseNode から最終的な文字列を生成し、
+ * 適用されたすべての変形を記録する。
+ */
+export function renderNounPhraseUnified(
+  np: NounPhraseNode,
+  ctx: NounPhraseContext,
+  deps: NounPhraseDependencies
+): NounPhraseResult {
+  const transforms: Transform[] = [];
+  const { polarity } = ctx;
+
+  // ============================================
+  // 代名詞の処理
+  // ============================================
+  if (np.head.type === 'pronoun') {
+    const pronounHead = np.head as PronounHead;
+    let result = renderPronounInternal(pronounHead, ctx, deps, transforms);
+
+    // 不定代名詞 + 形容詞: "something good", "someone important"
+    // 形容詞は後置される
+    if (pronounHead.pronounType === 'indefinite' && np.adjectives.length > 0) {
+      const adjs = np.adjectives.map(adj => adj.lemma).join(' ');
+      result += ' ' + adjs;
+    }
+
+    // 前置詞句修飾（代名詞用）: "someone in the room"
+    if (np.prepModifier) {
+      result += ' ' + deps.renderPrepositionalPhrase(np.prepModifier, polarity);
+    }
+
+    return { form: result, transforms };
+  }
+
+  // ============================================
+  // 名詞の処理
+  // ============================================
+  const parts: string[] = [];
+
+  // 前置限定詞（all, both, half）
+  if (np.preDeterminer) {
+    parts.push(np.preDeterminer);
+  }
+
+  // 中央限定詞（the, this, my, a/an, no）
+  // 'INDEF' プレースホルダーを使用し、後で a/an を決定
+  let needsArticleSelection = false;
+  if (np.determiner && np.determiner.lexeme) {
+    if (np.determiner.lexeme === 'a') {
+      needsArticleSelection = true;
+      parts.push('INDEF');
+    } else {
+      parts.push(np.determiner.lexeme);
+    }
+  }
+
+  // 後置限定詞（one, two, many, few）
+  if (np.postDeterminer) {
+    parts.push(np.postDeterminer);
+  }
+
+  // 形容詞
+  np.adjectives.forEach(adj => {
+    parts.push(adj.lemma);
+  });
+
+  // 名詞（複数形処理）
+  if (np.head.type === 'noun') {
+    const nounHead = np.head as NounHead;
+    const nounEntry = deps.findNoun(nounHead.lemma);
+
+    if (nounHead.number === 'plural' && nounEntry) {
+      if (nounEntry.plural !== nounHead.lemma) {
+        transforms.push({
+          type: 'agreement',
+          from: nounHead.lemma,
+          to: nounEntry.plural,
+          rule: 'pluralization',
+          description: 'Number: plural',
+        });
+      }
+      parts.push(nounEntry.plural);
+    } else {
+      parts.push(nounHead.lemma);
+    }
+  }
+
+  // a/an の処理
+  let result = parts.join(' ');
+  if (needsArticleSelection && result.includes('INDEF ')) {
+    const idx = result.indexOf('INDEF ');
+    const before = result.slice(0, idx);
+    const after = result.slice(idx + 6);
+    const article = selectIndefiniteArticle(after, transforms);
+    result = before + article + ' ' + after;
+  }
+
+  // 前置詞句修飾（名詞用）: "the apple on the desk"
+  if (np.prepModifier) {
+    result += ' ' + deps.renderPrepositionalPhrase(np.prepModifier, polarity);
+  }
+
+  return { form: result, transforms };
+}
+
+// ============================================
+// Coordinated Noun Phrase Rendering
+// ============================================
+
+/**
+ * 等位接続名詞句をレンダリング
+ */
+export function renderCoordinatedNounPhraseUnified(
+  cnp: CoordinatedNounPhraseNode,
+  ctx: NounPhraseContext,
+  deps: NounPhraseDependencies
+): NounPhraseResult {
+  const transforms: Transform[] = [];
+  // polarity is used through ctx passed to sub-calls
+  void ctx;
+
+  const parts: string[] = [];
+
+  for (let i = 0; i < cnp.conjuncts.length; i++) {
+    const conjunct = cnp.conjuncts[i];
+
+    // 等位接続の場合は再帰
+    if (conjunct.type === 'coordinatedNounPhrase') {
+      const subResult = renderCoordinatedNounPhraseUnified(
+        conjunct as CoordinatedNounPhraseNode,
+        ctx,
+        deps
+      );
+      parts.push(subResult.form);
+      transforms.push(...subResult.transforms);
+    } else {
+      const subResult = renderNounPhraseUnified(
+        conjunct as NounPhraseNode,
+        ctx,
+        deps
+      );
+      parts.push(subResult.form);
+      transforms.push(...subResult.transforms);
+    }
+
+    // 接続詞の挿入
+    if (i < cnp.conjuncts.length - 1) {
+      if (i === cnp.conjuncts.length - 2) {
+        // 最後の要素の前には "and"/"or"
+        parts.push(cnp.conjunction);
+      } else {
+        // それ以外は ","
+        parts[parts.length - 1] += ',';
+      }
+    }
+  }
+
+  return { form: parts.join(' '), transforms };
+}

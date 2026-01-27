@@ -31,8 +31,10 @@ import {
   NounPhraseContext,
   NounPhraseDependencies,
 } from '../grammar/nounPhrase';
-// 統一等位接続モジュール（名詞句用 - 動詞句は直接処理）
-// import { renderCoordination } from '../grammar/coordination';
+import {
+  renderCoordinationUnified,
+  CoordElement,
+} from '../grammar/coordination';
 
 // Derivation tracker (module-level, reset on each render)
 let tracker = new DerivationTracker();
@@ -401,82 +403,74 @@ function appendCoordinatedVP(
 ): string {
   if (!ctx.verbPhrase.coordinatedWith) return result;
 
-  // 全チェーンを収集（トップレベルから末端まで）
-  interface CoordItem {
-    rendered: string;
-    conjunction: 'and' | 'or';
-    hasOwnSubject: boolean;
-  }
-  const items: CoordItem[] = [];
-  let currentVP: VerbPhraseNode | undefined = ctx.verbPhrase;
-
-  while (currentVP?.coordinatedWith) {
-    const coord: { conjunction: 'and' | 'or'; verbPhrase: VerbPhraseNode } = currentVP.coordinatedWith;
-    const nextVP: VerbPhraseNode = coord.verbPhrase;
-
-    // 次のVPが独自の主語を持つか判定
-    const nextVerbEntry = findVerb(nextVP.verb.lemma);
-    let nextHasOwnSubject = false;
+  // 主語のグループIDを取得するヘルパー
+  const getSubjectGroupId = (vp: VerbPhraseNode): string => {
+    const verbEntry = findVerb(vp.verb.lemma);
     for (const role of SUBJECT_ROLES) {
-      if (nextVerbEntry?.valency.some((v: { role: SemanticRole }) => v.role === role)) {
-        const slot = nextVP.arguments.find((a: FilledArgumentSlot) => a.role === role);
+      if (verbEntry?.valency.some((v: { role: SemanticRole }) => v.role === role)) {
+        const slot = vp.arguments.find((a: FilledArgumentSlot) => a.role === role);
         if (slot?.filler) {
-          nextHasOwnSubject = true;
-          break;
+          // 独自の主語がある場合、そのフィラーをIDとして使用
+          return JSON.stringify(slot.filler);
         }
       }
     }
+    // 主語がない場合は親の主語を継承（同じグループ）
+    return '__inherited__';
+  };
 
-    // 単一VPをレンダリング（再帰なし）
-    const nextRendered = renderSingleVerbPhrase(
+  // 全チェーンを収集
+  interface VPInfo {
+    vp: VerbPhraseNode;
+    rendered: string;
+    groupId: string;
+  }
+
+  const vpInfos: VPInfo[] = [];
+
+  // 最初の要素（既にレンダリング済み）
+  vpInfos.push({
+    vp: ctx.verbPhrase,
+    rendered: result,
+    groupId: '__inherited__',  // 最初の要素は親の主語
+  });
+
+  // チェーンを辿る
+  let currentVP: VerbPhraseNode | undefined = ctx.verbPhrase;
+  while (currentVP?.coordinatedWith) {
+    const coord: { conjunction: 'and' | 'or'; verbPhrase: VerbPhraseNode } = currentVP.coordinatedWith;
+    const nextVP: VerbPhraseNode = coord.verbPhrase;
+    const groupId = getSubjectGroupId(nextVP);
+    const hasOwnSubject = groupId !== '__inherited__';
+
+    const rendered = renderSingleVerbPhrase(
       nextVP, ctx.tense, ctx.aspect, ctx.polarity,
-      nextHasOwnSubject ? undefined : ctx.subjectForConjugation,
+      hasOwnSubject ? undefined : ctx.subjectForConjugation,
       ctx.modal, ctx.modalPolarity
     );
 
-    items.push({
-      rendered: nextRendered,
-      conjunction: coord.conjunction,
-      hasOwnSubject: nextHasOwnSubject,
-    });
-
+    vpInfos.push({ vp: nextVP, rendered, groupId });
     currentVP = nextVP;
   }
 
-  // フォーマット: 同質（同じ接続詞・主語なし）ならフラット化
-  const allSameConjunction = items.every(item => item.conjunction === items[0].conjunction);
-  const noneHasOwnSubject = items.every(item => !item.hasOwnSubject);
-
-  if (allSameConjunction && noneHasOwnSubject) {
-    // 完全にフラット化: A, B, and C
-    const conjunction = items[0].conjunction;
-    const allRendered = [result, ...items.map(i => i.rendered)];
-
-    if (allRendered.length === 2) {
-      // 2項目: both A and B / either A or B
-      const correlative = conjunction === 'and' ? 'both' : 'either';
-      return `${correlative} ${allRendered[0]} ${conjunction} ${allRendered[1]}`;
-    } else {
-      // 3項目以上: A, B, and C
-      const allButLast = allRendered.slice(0, -1);
-      const last = allRendered[allRendered.length - 1];
-      return `${allButLast.join(', ')}, ${conjunction} ${last}`;
+  // CoordElement配列に変換
+  const elements: CoordElement<string>[] = vpInfos.map((info, index) => {
+    // 接続詞を取得（最初の要素はnull、それ以降は前の要素のcoordinatedWithから）
+    let conjunction: 'and' | 'or' | null = null;
+    if (index > 0) {
+      const prevVP = vpInfos[index - 1].vp;
+      conjunction = prevVP.coordinatedWith?.conjunction || 'and';
     }
-  } else {
-    // 異質: 同じ主語の連続はフラット化、異なる主語で境界
-    let output = result;
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.hasOwnSubject) {
-        // 異なる主語: カンマ+接続詞で境界
-        output += `, ${item.conjunction} ${item.rendered}`;
-      } else {
-        // 同じ主語: 単純に接続
-        output += ` ${item.conjunction} ${item.rendered}`;
-      }
-    }
-    return output;
-  }
+
+    return {
+      value: info.rendered,
+      groupId: info.groupId,
+      conjunction,
+    };
+  });
+
+  // 統一モジュールでレンダリング
+  return renderCoordinationUnified(elements, s => s);
 }
 
 // ============================================

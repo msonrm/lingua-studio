@@ -1,10 +1,15 @@
 /**
  * 統一等位接続レンダリングモジュール
  *
- * 名詞句・動詞句・論理演算で共通の等位接続処理を提供
- * - プレースホルダー表示（欠損時）
- * - オックスフォードカンマ（3項目以上）
- * - both/either/neither（2項目）
+ * 名詞句・動詞句で共通の等位接続処理を提供
+ *
+ * 設計原則:
+ * 1. 収集（抽象化）: 要素をグループ情報と共に収集
+ * 2. グルーピング: 同じグループ・接続詞でまとめる
+ * 3. フォーマット規則の適用:
+ *    - 1階層 → 素の接続詞（A and B, A, B, and C）
+ *    - 複数階層 → correlative で構造明示（both A and B, either A or B）
+ * 4. 具体化（レンダリング）: 文字列生成
  */
 
 import { Conjunction } from '../types/schema';
@@ -13,173 +18,179 @@ import { Conjunction } from '../types/schema';
 // 型定義
 // ============================================
 
-/** 等位接続のコンテキスト */
-export interface CoordinationContext {
-  /** 接続詞 ('and' | 'or') */
+/** 等位接続の要素 */
+export interface CoordElement<T> {
+  /** 要素の値 */
+  value: T;
+  /** グループID（同じIDは同一グループ、例: 主語が同じ） */
+  groupId: string;
+  /** この要素への接続詞（最初の要素はnull） */
+  conjunction: Conjunction | null;
+}
+
+/** グルーピング結果 */
+interface CoordGroup<T> {
+  /** グループ内の要素 */
+  elements: T[];
+  /** グループの接続詞 */
   conjunction: Conjunction;
-  /** 否定コンテキストか（neither...nor用） */
-  isNegated?: boolean;
-  /** both/either/neitherを使用するか（デフォルト: true） */
-  useCorrelative?: boolean;
-  /** オックスフォードカンマを使用するか（デフォルト: true） */
-  useOxfordComma?: boolean;
+  /** グループID */
+  groupId: string;
 }
 
-/** レンダリング結果 */
-export interface CoordinationResult {
-  /** レンダリングされた文字列 */
-  form: string;
-  /** 相関接続詞が使われたか */
-  usedCorrelative: boolean;
+/** フォーマット済みグループ */
+interface FormattedGroup {
+  /** レンダリング済み文字列 */
+  text: string;
+  /** 次のグループへの接続詞 */
+  conjunction: Conjunction | null;
 }
 
 // ============================================
-// 統一等位接続レンダリング
+// メイン関数
 // ============================================
 
 /**
- * 等位接続された要素をレンダリング
+ * 等位接続をレンダリング
  *
- * @param items - 接続する要素の配列（null/undefinedは___に変換）
- * @param renderItem - 各要素をレンダリングする関数
- * @param ctx - 等位接続コンテキスト
- * @returns レンダリング結果
- *
- * @example
- * // 2項目: "both A and B", "either A or B"
- * renderCoordination([a, b], render, { conjunction: 'and' })
+ * @param elements - 接続する要素の配列
+ * @param renderElement - 各要素をレンダリングする関数
+ * @returns フォーマット済み文字列
  *
  * @example
- * // 3項目以上: "A, B, and C" (オックスフォードカンマ)
- * renderCoordination([a, b, c], render, { conjunction: 'and' })
+ * // 1階層（フラット）: "A and B" or "A, B, and C"
+ * renderCoordinationUnified([
+ *   { value: a, groupId: 'x', conjunction: null },
+ *   { value: b, groupId: 'x', conjunction: 'and' },
+ * ], render)
  *
  * @example
- * // 欠損: "both A and ___"
- * renderCoordination([a, null], render, { conjunction: 'and' })
+ * // 複数階層: "both A and B, and C"
+ * renderCoordinationUnified([
+ *   { value: a, groupId: 'x', conjunction: null },
+ *   { value: b, groupId: 'x', conjunction: 'and' },
+ *   { value: c, groupId: 'y', conjunction: 'and' },
+ * ], render)
  */
-export function renderCoordination<T>(
-  items: (T | null | undefined)[],
-  renderItem: (item: T) => string,
-  ctx: CoordinationContext
-): CoordinationResult {
-  const {
-    conjunction,
-    isNegated = false,
-    useCorrelative = true,
-    useOxfordComma = true,
-  } = ctx;
+export function renderCoordinationUnified<T>(
+  elements: CoordElement<T>[],
+  renderElement: (elem: T) => string
+): string {
+  if (elements.length === 0) return '___';
+  if (elements.length === 1) return renderElement(elements[0].value);
 
-  // 各要素をレンダリング（欠損は___）
-  const rendered = items.map(item =>
-    item != null ? renderItem(item) : '___'
-  );
+  // 1. グルーピング: 連続する同一グループ・同一接続詞をまとめる
+  const groups = groupElements(elements);
 
-  // 要素数に応じた処理
-  if (rendered.length === 0) {
-    return { form: '___', usedCorrelative: false };
-  }
+  // 2. 階層判定: 複数グループがあるか
+  const isNested = groups.length > 1;
 
-  if (rendered.length === 1) {
-    return { form: rendered[0], usedCorrelative: false };
-  }
+  // 3. 各グループをフォーマット
+  const formattedGroups: FormattedGroup[] = groups.map((group, index) => {
+    const renderedElements = group.elements.map(renderElement);
+    const text = formatGroup(renderedElements, group.conjunction, isNested);
 
-  if (rendered.length === 2) {
-    // 2項目: 相関接続詞を使用
-    const [first, second] = rendered;
+    // 次のグループへの接続詞（最後のグループはnull）
+    const nextConjunction = index < groups.length - 1
+      ? groups[index + 1].conjunction
+      : null;
 
-    if (useCorrelative) {
-      if (isNegated && conjunction === 'or') {
-        // neither...nor
-        return { form: `neither ${first} nor ${second}`, usedCorrelative: true };
-      } else if (conjunction === 'and') {
-        // both...and
-        return { form: `both ${first} and ${second}`, usedCorrelative: true };
-      } else {
-        // either...or
-        return { form: `either ${first} or ${second}`, usedCorrelative: true };
-      }
-    } else {
-      return { form: `${first} ${conjunction} ${second}`, usedCorrelative: false };
-    }
-  }
-
-  // 3項目以上: オックスフォードカンマ
-  const allButLast = rendered.slice(0, -1);
-  const last = rendered[rendered.length - 1];
-
-  if (useOxfordComma) {
-    // A, B, and C
-    return {
-      form: `${allButLast.join(', ')}, ${conjunction} ${last}`,
-      usedCorrelative: false,
-    };
-  } else {
-    // A, B and C (オックスフォードカンマなし)
-    return {
-      form: `${allButLast.join(', ')} ${conjunction} ${last}`,
-      usedCorrelative: false,
-    };
-  }
-}
-
-// ============================================
-// チェーン形式の等位接続レンダリング
-// ============================================
-
-/**
- * チェーン形式（coordinatedWith）の等位接続をフラット化してレンダリング
- *
- * VerbPhraseNodeのcoordinatedWithのような、チェーン形式の構造を
- * フラットな配列として処理し、統一的にレンダリング
- *
- * @param first - 最初の要素
- * @param getNext - 次の要素と接続詞を取得する関数
- * @param renderItem - 各要素をレンダリングする関数
- * @param defaultCtx - デフォルトの等位接続コンテキスト
- * @returns レンダリング結果
- */
-export function renderCoordinationChain<T>(
-  first: T | null | undefined,
-  getNext: (item: T) => { conjunction: Conjunction; next: T | null | undefined } | undefined,
-  renderItem: (item: T) => string,
-  defaultCtx: Partial<CoordinationContext> = {}
-): CoordinationResult {
-  // チェーンをフラット化
-  const items: (T | null | undefined)[] = [first];
-  let conjunctions: Conjunction[] = [];
-
-  let current = first;
-  while (current != null) {
-    const next = getNext(current);
-    if (!next) break;
-
-    conjunctions.push(next.conjunction);
-    items.push(next.next);
-    current = next.next ?? undefined;
-  }
-
-  // 接続詞が混在している場合（and + or）は単純結合
-  const uniqueConjunctions = [...new Set(conjunctions)];
-  if (uniqueConjunctions.length > 1) {
-    // 混在: 単純に順番に結合
-    const parts: string[] = [];
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const rendered = item != null ? renderItem(item) : '___';
-      parts.push(rendered);
-      if (i < conjunctions.length) {
-        parts.push(conjunctions[i]);
-      }
-    }
-    return { form: parts.join(' '), usedCorrelative: false };
-  }
-
-  // 単一の接続詞: 統一レンダリング
-  const conjunction = uniqueConjunctions[0] || 'and';
-  return renderCoordination(items, renderItem, {
-    ...defaultCtx,
-    conjunction,
+    return { text, conjunction: nextConjunction };
   });
+
+  // 4. グループを結合
+  return joinGroups(formattedGroups);
+}
+
+// ============================================
+// ヘルパー関数
+// ============================================
+
+/**
+ * 要素をグループにまとめる
+ * 連続する同一groupId・同一conjunctionの要素を1グループに
+ */
+function groupElements<T>(elements: CoordElement<T>[]): CoordGroup<T>[] {
+  const groups: CoordGroup<T>[] = [];
+
+  let currentGroup: CoordGroup<T> | null = null;
+
+  for (const elem of elements) {
+    const conjunction = elem.conjunction || 'and'; // 最初の要素はデフォルト'and'
+
+    if (
+      currentGroup &&
+      currentGroup.groupId === elem.groupId &&
+      currentGroup.conjunction === conjunction
+    ) {
+      // 同じグループに追加
+      currentGroup.elements.push(elem.value);
+    } else {
+      // 新しいグループ開始
+      if (currentGroup) {
+        groups.push(currentGroup);
+      }
+      currentGroup = {
+        elements: [elem.value],
+        conjunction,
+        groupId: elem.groupId,
+      };
+    }
+  }
+
+  if (currentGroup) {
+    groups.push(currentGroup);
+  }
+
+  return groups;
+}
+
+/**
+ * グループ内の要素をフォーマット
+ *
+ * @param elements - レンダリング済み要素
+ * @param conjunction - 接続詞
+ * @param useCorrelative - correlative（both/either）を使うか
+ */
+function formatGroup(
+  elements: string[],
+  conjunction: Conjunction,
+  useCorrelative: boolean
+): string {
+  if (elements.length === 0) return '___';
+  if (elements.length === 1) return elements[0];
+
+  if (elements.length === 2) {
+    if (useCorrelative) {
+      // 複数階層: both A and B / either A or B
+      const correlative = conjunction === 'and' ? 'both' : 'either';
+      return `${correlative} ${elements[0]} ${conjunction} ${elements[1]}`;
+    } else {
+      // 1階層: A and B
+      return `${elements[0]} ${conjunction} ${elements[1]}`;
+    }
+  }
+
+  // 3要素以上: A, B, and C（オックスフォードカンマ）
+  const allButLast = elements.slice(0, -1);
+  const last = elements[elements.length - 1];
+  return `${allButLast.join(', ')}, ${conjunction} ${last}`;
+}
+
+/**
+ * フォーマット済みグループを結合
+ */
+function joinGroups(groups: FormattedGroup[]): string {
+  if (groups.length === 0) return '___';
+  if (groups.length === 1) return groups[0].text;
+
+  let result = groups[0].text;
+  for (let i = 1; i < groups.length; i++) {
+    const prevConjunction = groups[i - 1].conjunction || 'and';
+    result += `, ${prevConjunction} ${groups[i].text}`;
+  }
+
+  return result;
 }
 
 // ============================================
@@ -187,17 +198,26 @@ export function renderCoordinationChain<T>(
 // ============================================
 
 /**
- * 相関接続詞のペアを取得
+ * プレースホルダーを含む要素配列を生成
+ * null/undefined は '___' としてレンダリングされる
  */
-export function getCorrelativePair(
-  conjunction: Conjunction,
-  isNegated: boolean = false
-): { first: string; second: string } {
-  if (isNegated && conjunction === 'or') {
-    return { first: 'neither', second: 'nor' };
-  } else if (conjunction === 'and') {
-    return { first: 'both', second: 'and' };
-  } else {
-    return { first: 'either', second: 'or' };
-  }
+export function withPlaceholders<T>(
+  items: (T | null | undefined)[],
+  getGroupId: (item: T) => string,
+  getConjunction: (index: number) => Conjunction | null
+): CoordElement<T | null>[] {
+  return items.map((item, index) => ({
+    value: item ?? null,
+    groupId: item ? getGroupId(item) : `__placeholder_${index}`,
+    conjunction: index === 0 ? null : (getConjunction(index) || 'and'),
+  }));
+}
+
+/**
+ * レンダリング関数をプレースホルダー対応にラップ
+ */
+export function withPlaceholderRendering<T>(
+  renderFn: (item: T) => string
+): (item: T | null) => string {
+  return (item: T | null) => item !== null ? renderFn(item) : '___';
 }

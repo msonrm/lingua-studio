@@ -401,46 +401,19 @@ function appendCoordinatedVP(
 ): string {
   if (!ctx.verbPhrase.coordinatedWith) return result;
 
-  // チェーンを辿って全VPを収集
-  const vpStrings: string[] = [result];
-  const conjunctions: ('and' | 'or')[] = [];
-  let currentVP: VerbPhraseNode | undefined = ctx.verbPhrase;
+  // トップレベルの等位接続のみ処理
+  // 内部の入れ子は renderCoordinatedVerbPhrase が再帰的に処理
+  const coordWith = ctx.verbPhrase.coordinatedWith;
+  const conjunction = coordWith.conjunction;
 
-  while (currentVP?.coordinatedWith) {
-    const coordWith: { conjunction: 'and' | 'or'; verbPhrase: VerbPhraseNode } = currentVP.coordinatedWith;
-    conjunctions.push(coordWith.conjunction);
+  const coordVerbStr = render(coordWith.verbPhrase, vp =>
+    renderCoordinatedVerbPhrase(vp, ctx.tense, ctx.aspect, ctx.polarity,
+      ctx.subjectForConjugation, ctx.modal, ctx.modalPolarity)
+  );
 
-    const nextVP: VerbPhraseNode | undefined = coordWith.verbPhrase;
-    const vpStr = render(nextVP, vp =>
-      renderCoordinatedVerbPhrase(vp, ctx.tense, ctx.aspect, ctx.polarity,
-        ctx.subjectForConjugation, ctx.modal, ctx.modalPolarity)
-    );
-    vpStrings.push(vpStr);
-    currentVP = nextVP;
-  }
-
-  // 接続詞が混在している場合は単純結合
-  const uniqueConjunctions = [...new Set(conjunctions)];
-  if (uniqueConjunctions.length > 1) {
-    let combined = result;
-    for (let i = 0; i < conjunctions.length; i++) {
-      combined += ` ${conjunctions[i]} ${vpStrings[i + 1]}`;
-    }
-    return combined;
-  }
-
-  // 単一接続詞: 統一フォーマット（both/either + オックスフォードカンマ）
-  const conjunction = uniqueConjunctions[0] || 'and';
-  if (vpStrings.length === 2) {
-    // 2項目: both A and B / either A or B
-    const correlative = conjunction === 'and' ? 'both' : 'either';
-    return `${correlative} ${vpStrings[0]} ${conjunction} ${vpStrings[1]}`;
-  } else {
-    // 3項目以上: A, B, and C (オックスフォードカンマ)
-    const allButLast = vpStrings.slice(0, -1);
-    const last = vpStrings[vpStrings.length - 1];
-    return `${allButLast.join(', ')}, ${conjunction} ${last}`;
-  }
+  // 2項目: both A and B / either A or B
+  const correlative = conjunction === 'and' ? 'both' : 'either';
+  return `${correlative} ${result} ${conjunction} ${coordVerbStr}`;
 }
 
 // ============================================

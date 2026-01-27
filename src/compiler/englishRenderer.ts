@@ -1029,7 +1029,7 @@ function renderImperativeClause(clause: ClauseNode): string {
 
   // 命令文の主語省略をログに記録
   tracker.recordSyntax(
-    'word-order',
+    'imperative',
     'delete',
     'IMPERATIVE_SUBJECT_OMISSION',
     'IMPERATIVE_SUBJECT_OMISSION_DESC',

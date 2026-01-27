@@ -260,6 +260,7 @@ export interface GrammarMessages {
   TYPE_DO_SUPPORT: string;
   TYPE_INVERSION: string;
   TYPE_WH_MOVEMENT: string;
+  TYPE_IMPERATIVE: string;
 
   // Agreement rules
   AGREEMENT_3SG: string;

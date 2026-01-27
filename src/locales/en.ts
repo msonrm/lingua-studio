@@ -295,6 +295,7 @@ export const en: LocaleData = {
     TYPE_DO_SUPPORT: 'Do-support',
     TYPE_INVERSION: 'Inversion',
     TYPE_WH_MOVEMENT: 'Wh-movement',
+    TYPE_IMPERATIVE: 'Imperative',
 
     // Agreement rules
     AGREEMENT_3SG: '+s',

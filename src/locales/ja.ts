@@ -295,6 +295,7 @@ export const ja: LocaleData = {
     TYPE_DO_SUPPORT: 'do挿入',
     TYPE_INVERSION: '倒置',
     TYPE_WH_MOVEMENT: '疑問詞移動',
+    TYPE_IMPERATIVE: '命令',
 
     // Agreement rules
     AGREEMENT_3SG: '三単現の -s',

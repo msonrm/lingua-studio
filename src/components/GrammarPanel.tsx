@@ -29,6 +29,8 @@ function getTypeColor(type: string): string {
       return '#00BCD4'; // Cyan - movement
     case 'inversion':
       return '#009688'; // Teal - swap
+    case 'imperative':
+      return '#4A148C'; // Dark purple - imperative
     default:
       return '#607D8B'; // Grey - default
   }

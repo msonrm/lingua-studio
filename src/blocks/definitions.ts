@@ -702,7 +702,7 @@ Blockly.Blocks['determiner_unified'] = {
     const block = this;
 
     // 接続された名詞のプロパティを取得
-    const getConnectedNounInfo = (): { countable: boolean; proper: boolean } | null => {
+    const getConnectedNounInfo = (): { countable: boolean; proper: boolean; zeroArticle: boolean } | null => {
       const nounInput = block.getInput('NOUN');
       if (!nounInput) return null;
       const connection = nounInput.connection;
@@ -723,7 +723,11 @@ Blockly.Blocks['determiner_unified'] = {
       if (!nounLemma || nounLemma.startsWith('__')) return null;
       const nounEntry = findNounCore(nounLemma);
       if (!nounEntry) return null;
-      return { countable: nounEntry.countable, proper: nounEntry.proper === true };
+      return {
+        countable: nounEntry.countable,
+        proper: nounEntry.proper === true,
+        zeroArticle: nounEntry.zeroArticle === true,
+      };
     };
 
     // 無効マーク付きラベルを生成
@@ -887,6 +891,17 @@ Blockly.Blocks['determiner_unified'] = {
       const post = this.getFieldValue('POST');
       if (countableOnly.includes(post)) {
         this.setFieldValue('__none__', 'POST');
+      }
+      return;
+    }
+
+    // 可算名詞（zeroArticle以外）：全て__none__なら自動で 'a' を設定
+    if (nounInfo.countable && !nounInfo.zeroArticle) {
+      const pre = this.getFieldValue('PRE');
+      const central = this.getFieldValue('CENTRAL');
+      const post = this.getFieldValue('POST');
+      if (pre === '__none__' && central === '__none__' && post === '__none__') {
+        this.setFieldValue('a', 'CENTRAL');
       }
     }
   },

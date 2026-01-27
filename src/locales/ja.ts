@@ -275,6 +275,11 @@ export const ja: LocaleData = {
     // Settings
     SHOW_AST: 'AST',
     LANGUAGE: '言語',
+
+    // Copy button
+    COPY: 'コピー',
+    COPIED: 'コピー完了',
+    COPY_FOR_AI: 'AIにコピー',
   },
   grammar: {
     // Transform types

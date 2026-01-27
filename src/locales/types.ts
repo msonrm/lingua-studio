@@ -346,6 +346,11 @@ export interface UIMessages {
   // Settings
   SHOW_AST: string;
   LANGUAGE: string;
+
+  // Copy button
+  COPY: string;
+  COPIED: string;
+  COPY_FOR_AI: string;
 }
 
 export interface LocaleData {

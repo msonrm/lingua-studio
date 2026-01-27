@@ -275,6 +275,11 @@ export const jaHira: LocaleData = {
     // Settings
     SHOW_AST: 'AST',
     LANGUAGE: 'ことば',
+
+    // Copy button
+    COPY: 'コピー',
+    COPIED: 'コピーしたよ',
+    COPY_FOR_AI: 'AIにコピー',
   },
   grammar: {
     // Transform types

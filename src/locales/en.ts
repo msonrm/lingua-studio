@@ -275,6 +275,11 @@ export const en: LocaleData = {
     // Settings
     SHOW_AST: 'AST',
     LANGUAGE: 'Language',
+
+    // Copy button
+    COPY: 'Copy',
+    COPIED: 'Copied!',
+    COPY_FOR_AI: 'Copy for AI',
   },
   grammar: {
     // Transform types

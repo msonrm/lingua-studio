@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useLocale } from '../locales';
 import './LinguaScriptBar.css';
 
 interface LinguaScriptBarProps {
@@ -8,6 +9,7 @@ interface LinguaScriptBarProps {
 
 export function LinguaScriptBar({ code, placeholder = '// Build a sentence...' }: LinguaScriptBarProps) {
   const [copied, setCopied] = useState(false);
+  const { ui } = useLocale();
 
   // クリップボードにコピー
   const handleCopy = useCallback(async () => {
@@ -22,6 +24,7 @@ export function LinguaScriptBar({ code, placeholder = '// Build a sentence...' }
   }, [code]);
 
   const isEmpty = !code;
+  const copyLabel = copied ? ui.COPIED : ui.COPY;
 
   return (
     <div className="linguascript-bar">
@@ -29,9 +32,10 @@ export function LinguaScriptBar({ code, placeholder = '// Build a sentence...' }
         className="copy-button"
         onClick={handleCopy}
         disabled={isEmpty}
-        title={copied ? 'Copied!' : 'Copy for AI'}
+        title={copied ? ui.COPIED : ui.COPY_FOR_AI}
       >
-        {copied ? '✓' : '📋'}
+        <span className="copy-icon">{copied ? '✓' : '📋'}</span>
+        <span className="copy-label">{copyLabel}</span>
       </button>
       <div className="code-container">
         {isEmpty ? (

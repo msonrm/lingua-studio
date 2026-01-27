@@ -803,6 +803,10 @@ Blockly.Blocks['determiner_unified'] = {
         if (nounInfo && !nounInfo.countable && countableOnly.includes(o.value)) {
           return [markInvalid(o.label), o.value];
         }
+        // 可算名詞：[uncountable]無効
+        if (nounInfo && nounInfo.countable && o.value === '__uncountable__') {
+          return [markInvalid(o.label), o.value];
+        }
         // PRE による制約
         if (DETERMINER_CONSTRAINTS.preBlocksPost[pre]?.includes(o.value)) {
           return [markInvalid(o.label), o.value];
@@ -893,6 +897,14 @@ Blockly.Blocks['determiner_unified'] = {
         this.setFieldValue('__none__', 'POST');
       }
       return;
+    }
+
+    // 可算名詞：[uncountable]をリセット
+    if (nounInfo.countable) {
+      const post = this.getFieldValue('POST');
+      if (post === '__uncountable__') {
+        this.setFieldValue('__none__', 'POST');
+      }
     }
 
     // 可算名詞（zeroArticle以外）：全て__none__なら自動で 'a' を設定

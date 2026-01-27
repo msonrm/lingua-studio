@@ -258,8 +258,8 @@ export interface FilledArgumentSlot {
 export interface NounPhraseNode {
   type: "nounPhrase";
   preDeterminer?: string;  // all, both, half
-  determiner?: { kind: "definite" | "indefinite" | "none"; lexeme?: string };
-  postDeterminer?: string;  // one, two, many, few, some, several
+  determiner?: string;     // the, a, this, that, my, your, no（単純な文字列）
+  postDeterminer?: string; // one, two, many, few, some, several, plural, uncountable
   adjectives: { lemma: string }[];
   head: NounHead | PronounHead;
   prepModifier?: PrepositionalPhraseNode;  // 前置詞句修飾 ("the apple ON THE DESK")

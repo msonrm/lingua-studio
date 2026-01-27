@@ -263,30 +263,19 @@ function renderNounPhraseToScript(np: NounPhraseNode): string {
     parts.push(`pre:'${np.preDeterminer}`);
   }
 
-  // 中央限定詞
-  if (np.determiner?.lexeme) {
-    const det = np.determiner.lexeme;
-    // a/an は 'a に統一
-    parts.push(`det:'${det === 'an' ? 'a' : det}`);
+  // 中央限定詞（単純な文字列）
+  if (np.determiner) {
+    parts.push(`det:'${np.determiner}`);
   }
 
-  // 後置限定詞（複数形マーカー含む）
+  // 後置限定詞
   if (np.postDeterminer) {
-    // メタ値はクォートなし（Lisp慣習: 非リテラル）、リテラルはクォート付き
-    const postDet = np.postDeterminer;
-    if (postDet === '[plural]' || postDet === '__plural__') {
-      parts.push(`post:plural`);
-    } else if (postDet === '[uncountable]' || postDet === '__uncountable__') {
-      parts.push(`post:uncountable`);
+    // plural/uncountable はメタ値（クォートなし）、それ以外はリテラル（クォート付き）
+    if (np.postDeterminer === 'plural' || np.postDeterminer === 'uncountable') {
+      parts.push(`post:${np.postDeterminer}`);
     } else {
-      parts.push(`post:'${postDet}`);
+      parts.push(`post:'${np.postDeterminer}`);
     }
-  } else if (nounHead.number === 'plural') {
-    // 複数形マーカー（__plural__はoutput:nullなので、head.numberで判定）
-    parts.push(`post:plural`);
-  } else if (nounHead.number === 'uncountable') {
-    // 非可算マーカー（__uncountable__はoutput:nullなので、head.numberで判定）
-    parts.push(`post:uncountable`);
   }
 
   // 形容詞

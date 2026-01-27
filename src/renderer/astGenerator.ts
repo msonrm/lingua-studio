@@ -1013,13 +1013,24 @@ function parseDeterminerUnifiedBlock(block: Blockly.Block): NounPhraseNode | Coo
 
   const innerNP = innerResult as NounPhraseNode;
 
-  // 各データから出力と文法数を取得
-  const preOption = DETERMINER_DATA.pre.find(o => o.value === preValue);
-  const centralOption = DETERMINER_DATA.central.find(o => o.value === centralValue);
-  const postOption = DETERMINER_DATA.post.find(o => o.value === postValue);
+  // 値を正規化（__none__ → undefined, __plural__ → plural, __uncountable__ → uncountable）
+  const normalizeDet = (val: string | null): string | undefined => {
+    if (!val || val === '__none__') return undefined;
+    if (val === '__plural__') return 'plural';
+    if (val === '__uncountable__') return 'uncountable';
+    return val;
+  };
 
-  // 文法数を決定（post > central > pre の優先順位）
-  // uncountable は動詞活用では単数扱いだが、LinguaScriptでは区別する
+  const pre = normalizeDet(preValue);
+  const central = normalizeDet(centralValue);
+  const post = normalizeDet(postValue);
+
+  // 文法数を決定（動詞活用用）
+  // DETERMINER_DATA を参照して number プロパティを取得
+  const postOption = DETERMINER_DATA.post.find(o => o.value === postValue);
+  const centralOption = DETERMINER_DATA.central.find(o => o.value === centralValue);
+  const preOption = DETERMINER_DATA.pre.find(o => o.value === preValue);
+
   let grammaticalNumber: 'singular' | 'plural' | 'uncountable' = 'singular';
   if (postOption?.number === 'plural') {
     grammaticalNumber = 'plural';
@@ -1040,24 +1051,12 @@ function parseDeterminerUnifiedBlock(block: Blockly.Block): NounPhraseNode | Coo
     ? { ...innerNP.head, number: grammaticalNumber }
     : innerNP.head;
 
-  // 限定詞の種類を決定
-  let determiner: NounPhraseNode['determiner'] = undefined;
-  if (centralOption?.output) {
-    if (centralValue === 'the') {
-      determiner = { kind: 'definite', lexeme: 'the' };
-    } else if (centralValue === 'a') {
-      determiner = { kind: 'indefinite', lexeme: 'a' };
-    } else {
-      determiner = { kind: 'definite', lexeme: centralOption.output };
-    }
-  }
-
   return {
     ...innerNP,
     head: updatedHead,
-    preDeterminer: preOption?.output ?? undefined,
-    determiner,
-    postDeterminer: postOption?.output ?? undefined,
+    preDeterminer: pre,
+    determiner: central,
+    postDeterminer: post,
   };
 }
 

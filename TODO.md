@@ -123,9 +123,6 @@
   - Prism.js によるカスタム言語定義
   - Solarized Light テーマ
   - 行番号表示、インデント付きフォーマット
-- [ ] Monaco Editor 統合（編集可能化）
-- [ ] 辞書連携オートコンプリート
-- [ ] 双方向同期（Blocks ↔ LinguaScript）
 
 ### Logic Extension（論理推論拡張）
 
@@ -213,6 +210,11 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - DerivationStep を直接参照（toLegacyLogs() を経由しない）
   - 形態論/統語論の区別、操作種類、位置情報を表示
   - 折りたたみUIで「詳細を見る」オプション
+- [ ] LinguaScript Editor 編集機能
+  - Monaco Editor 統合（バンドルサイズ +2-3MB）
+  - 辞書連携オートコンプリート
+  - 双方向同期（Blocks ↔ LinguaScript）
+  - パーサー実装が前提
 
 ### Out of Scope（単文スコープ外）
 - 関係節 (the man who ate...)

@@ -78,6 +78,7 @@ function App() {
       code: localeCode,
       ui: currentLocale.ui,
       blockly: currentLocale.blockly,
+      grammar: currentLocale.grammar,
       setLocale: handleLocaleChange,
     }}>
       <div className="app">

@@ -209,7 +209,7 @@ export function conjugateVerb(
       const presentAux = presentForm.auxiliary || '';
       const pastAux = modalForm.auxiliary || modalForm.usePeriPhrastic || '';
       if (presentAux && pastAux && presentAux !== pastAux) {
-        record('modal', presentAux, pastAux, 'past form', `Modal: ${modal} + past tense`);
+        record('modal', presentAux, pastAux, 'MODAL_PAST', 'MODAL_PAST_DESC');
       }
     }
 
@@ -264,7 +264,7 @@ export function conjugateVerb(
       };
     }
     if (aspect === 'progressive') {
-      record('aspect', lemma, `be ${verbEntry.forms.ing}`, 'be + -ing', 'Aspect: progressive');
+      record('aspect', lemma, `be ${verbEntry.forms.ing}`, 'ASPECT_PROGRESSIVE', 'ASPECT_PROGRESSIVE_DESC');
       return {
         auxiliary: negatedAux,
         mainVerb: join(notPart, freqStr, 'be', verbEntry.forms.ing),
@@ -272,7 +272,7 @@ export function conjugateVerb(
       };
     }
     if (aspect === 'perfect') {
-      record('aspect', lemma, `have ${verbEntry.forms.pp}`, 'have + past participle', 'Aspect: perfect');
+      record('aspect', lemma, `have ${verbEntry.forms.pp}`, 'ASPECT_PERFECT', 'ASPECT_PERFECT_DESC');
       return {
         auxiliary: negatedAux,
         mainVerb: join(notPart, freqStr, 'have', verbEntry.forms.pp),
@@ -280,7 +280,7 @@ export function conjugateVerb(
       };
     }
     if (aspect === 'perfectProgressive') {
-      record('aspect', lemma, `have been ${verbEntry.forms.ing}`, 'have + been + -ing', 'Aspect: perfect progressive');
+      record('aspect', lemma, `have been ${verbEntry.forms.ing}`, 'ASPECT_PERF_PROG', 'ASPECT_PERF_PROG_DESC');
       return {
         auxiliary: negatedAux,
         mainVerb: join(notPart, freqStr, 'have', 'been', verbEntry.forms.ing),
@@ -300,7 +300,7 @@ export function conjugateVerb(
       const beForm = getBeForm(tense);
 
       if (tense === 'future') {
-        record('tense', 'be', 'will be', 'will + be', 'Tense: future');
+        record('tense', 'be', 'will be', 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
         return {
           auxiliary: 'will',
           mainVerb: join(notPart, freqStr, 'be'),
@@ -309,9 +309,9 @@ export function conjugateVerb(
       }
 
       if (tense === 'past') {
-        record('tense', 'be', beForm, 'was/were', 'Tense: past');
+        record('tense', 'be', beForm, 'TENSE_PAST', 'TENSE_PAST_DESC');
       } else if (isThirdPersonSingular) {
-        record('agreement', 'be', beForm, 'is/am/are', `Subject is ${personNumber.person}${personNumber.number === 'singular' ? 'sg' : 'pl'}`);
+        record('agreement', 'be', beForm, 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
       }
 
       return {
@@ -323,7 +323,7 @@ export function conjugateVerb(
 
     // 一般動詞
     if (tense === 'future') {
-      record('tense', lemma, `will ${verbEntry.forms.base}`, 'will + base', 'Tense: future');
+      record('tense', lemma, `will ${verbEntry.forms.base}`, 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
       return {
         auxiliary: 'will',
         mainVerb: join(notPart, freqStr, verbEntry.forms.base),
@@ -332,7 +332,7 @@ export function conjugateVerb(
     }
 
     if (tense === 'past') {
-      record('tense', verbEntry.forms.base, verbEntry.forms.past, '-ed', 'Tense: past');
+      record('tense', verbEntry.forms.base, verbEntry.forms.past, 'TENSE_PAST', 'TENSE_PAST_DESC');
       // 平叙文では活用形を直接使用、疑問文では do-support
       return {
         auxiliary: 'did',  // 疑問文用
@@ -345,7 +345,7 @@ export function conjugateVerb(
 
     // present
     if (isThirdPersonSingular) {
-      record('agreement', verbEntry.forms.base, verbEntry.forms.thirdSg, '+s', 'Subject is 3sg');
+      record('agreement', verbEntry.forms.base, verbEntry.forms.thirdSg, 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
     }
     const doForm = isThirdPersonSingular ? 'does' : 'do';
     return {
@@ -363,11 +363,11 @@ export function conjugateVerb(
     const beForm = getBeForm(tense);
 
     if (tense === 'future') {
-      record('tense', 'be', 'will be', 'will + be', 'Tense: future');
+      record('tense', 'be', 'will be', 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
     } else if (tense === 'past') {
-      record('tense', 'be', beForm, 'was/were', 'Tense: past');
+      record('tense', 'be', beForm, 'TENSE_PAST', 'TENSE_PAST_DESC');
     }
-    record('aspect', lemma, `be ${verbEntry.forms.ing}`, 'be + -ing', 'Aspect: progressive');
+    record('aspect', lemma, `be ${verbEntry.forms.ing}`, 'ASPECT_PROGRESSIVE', 'ASPECT_PROGRESSIVE_DESC');
 
     if (tense === 'future') {
       return {
@@ -392,13 +392,13 @@ export function conjugateVerb(
     const haveForm = getHaveForm(tense);
 
     if (tense === 'future') {
-      record('tense', 'have', 'will have', 'will + have', 'Tense: future');
+      record('tense', 'have', 'will have', 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
     } else if (tense === 'past') {
-      record('tense', 'have', 'had', 'had', 'Tense: past');
+      record('tense', 'have', 'had', 'TENSE_PAST', 'TENSE_PAST_DESC');
     } else if (isThirdPersonSingular) {
-      record('agreement', 'have', 'has', '+s', 'Subject is 3sg');
+      record('agreement', 'have', 'has', 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
     }
-    record('aspect', lemma, `have ${verbEntry.forms.pp}`, 'have + past participle', 'Aspect: perfect');
+    record('aspect', lemma, `have ${verbEntry.forms.pp}`, 'ASPECT_PERFECT', 'ASPECT_PERFECT_DESC');
 
     if (tense === 'future') {
       return {
@@ -423,13 +423,13 @@ export function conjugateVerb(
     const haveForm = getHaveForm(tense);
 
     if (tense === 'future') {
-      record('tense', 'have', 'will have', 'will + have', 'Tense: future');
+      record('tense', 'have', 'will have', 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
     } else if (tense === 'past') {
-      record('tense', 'have', 'had', 'had', 'Tense: past');
+      record('tense', 'have', 'had', 'TENSE_PAST', 'TENSE_PAST_DESC');
     } else if (isThirdPersonSingular) {
-      record('agreement', 'have', 'has', '+s', 'Subject is 3sg');
+      record('agreement', 'have', 'has', 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
     }
-    record('aspect', lemma, `have been ${verbEntry.forms.ing}`, 'have + been + -ing', 'Aspect: perfect progressive');
+    record('aspect', lemma, `have been ${verbEntry.forms.ing}`, 'ASPECT_PERF_PROG', 'ASPECT_PERF_PROG_DESC');
 
     if (tense === 'future') {
       return {

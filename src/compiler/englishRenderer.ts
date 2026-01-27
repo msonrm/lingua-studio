@@ -172,7 +172,7 @@ function getInterrogativeVerbForm(
   if (aspect === 'simple' && !modal && lemma !== 'be') {
     // do-support をログ
     const doForm = result.auxiliary || 'does';
-    tracker.recordSyntax('do-support', 'insert', 'do', 'Question formation requires do-support', {
+    tracker.recordSyntax('do-support', 'insert', 'DO_SUPPORT_QUESTION', 'DO_SUPPORT_QUESTION_DESC', {
       element: 'do',
       after: [`${doForm} [S V]`],
     });
@@ -704,8 +704,7 @@ function renderInterrogativeClause(clause: ClauseNode): string {
 
   // 倒置をログ（Yes/No疑問文）
   tracker.recordSyntax(
-    'inversion', 'reorder', 'subject-auxiliary inversion',
-    'Question formation',
+    'inversion', 'reorder', 'INVERSION_QUESTION', 'INVERSION_QUESTION_DESC',
     { before: [subject, auxiliary], after: [auxiliary, subject] }
   );
 
@@ -784,8 +783,7 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
 
   // Wh移動をログ
   tracker.recordSyntax(
-    'wh-movement', 'move', 'fronted to sentence start',
-    `Wh-word "${whInfo.whWord}" in ${whInfo.role}`,
+    'wh-movement', 'move', 'WH_MOVEMENT_FRONT', 'WH_MOVEMENT_FRONT_DESC',
     { element: whInfo.whWord, position: 'sentence start' }
   );
 

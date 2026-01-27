@@ -106,8 +106,8 @@ function selectIndefiniteArticle(
       type: 'article',
       from: 'a',
       to: 'an',
-      rule: 'a → an',
-      description: `Silent 'h' in "${nextWord}"`,
+      rule: 'ARTICLE_A_AN',
+      description: 'ARTICLE_SILENT_H',
     });
     return 'an';
   }
@@ -124,8 +124,8 @@ function selectIndefiniteArticle(
       type: 'article',
       from: 'a',
       to: 'an',
-      rule: 'a → an',
-      description: `Next sound: vowel "${firstChar}"`,
+      rule: 'ARTICLE_A_AN',
+      description: 'ARTICLE_A_AN_DESC',
     });
     return 'an';
   }
@@ -158,8 +158,8 @@ function renderPronounInternal(
           type: 'case',
           from: 'who',
           to: 'whom',
-          rule: 'who → whom',
-          description: 'Position: object',
+          rule: 'CASE_WHO_WHOM',
+          description: 'CASE_WHO_WHOM_DESC',
         });
         return 'whom';
       }
@@ -180,8 +180,8 @@ function renderPronounInternal(
           type: 'case',
           from: lemma,
           to: objForm,
-          rule: 'who → whom',
-          description: 'Position: object',
+          rule: 'CASE_WHO_WHOM',
+          description: 'CASE_WHO_WHOM_DESC',
         });
       }
       return objForm;
@@ -195,8 +195,8 @@ function renderPronounInternal(
         type: 'negation',
         from: pronoun.lemma,
         to: pronoun.negativeForm,
-        rule: 'polarity',
-        description: 'Negative context',
+        rule: 'POLARITY_NEGATIVE',
+        description: 'POLARITY_NEGATIVE_DESC',
       });
       return pronoun.negativeForm;
     }
@@ -211,8 +211,8 @@ function renderPronounInternal(
         type: 'case',
         from: pronoun.lemma,
         to: pronoun.objectForm,
-        rule: 'objective case',
-        description: 'Position: object',
+        rule: 'CASE_OBJECTIVE',
+        description: 'CASE_OBJECTIVE_DESC',
       });
     }
     return pronoun.objectForm;
@@ -302,8 +302,8 @@ export function renderNounPhraseUnified(
           type: 'agreement',
           from: nounHead.lemma,
           to: nounEntry.plural,
-          rule: 'pluralization',
-          description: 'Number: plural',
+          rule: 'NUMBER_PLURAL',
+          description: 'NUMBER_PLURAL_DESC',
         });
       }
       parts.push(nounEntry.plural);

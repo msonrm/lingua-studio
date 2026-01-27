@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import type { TransformLog } from '../types/grammarLog';
+import { useLocale } from '../locales';
+import type { GrammarMessages } from '../locales';
 
 interface GrammarPanelProps {
   logs: TransformLog[];
@@ -104,7 +106,21 @@ function getStatusIndicator(status: LogStatus): { label: string; className: stri
   }
 }
 
+// Translate message key to localized string
+function translateKey(key: string | undefined, grammar: GrammarMessages): string {
+  if (!key) return '';
+  // Check if it's a message key (UPPERCASE_WITH_UNDERSCORES)
+  if (/^[A-Z][A-Z0-9_]+$/.test(key)) {
+    const translated = (grammar as unknown as Record<string, string>)[key];
+    if (translated) return translated;
+  }
+  // Return as-is if not a key or not found
+  return key;
+}
+
 export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
+  const { grammar } = useLocale();
+
   // Compute diff if we have previous logs
   const logsWithStatus = useMemo((): LogWithStatus[] => {
     if (previousLogs.length === 0) {
@@ -114,12 +130,18 @@ export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
     return computeLogDiff(logs, previousLogs);
   }, [logs, previousLogs]);
 
+  // Translate type name
+  const translateType = (type: string): string => {
+    const typeKey = `TYPE_${type.toUpperCase().replace(/-/g, '_')}`;
+    return translateKey(typeKey, grammar) || type;
+  };
+
   if (logsWithStatus.length === 0) {
     return (
       <div className="grammar-panel">
         <div className="grammar-empty">
           <span className="empty-icon">∅</span>
-          <span className="empty-text">No transformations</span>
+          <span className="empty-text">{grammar.EMPTY_NO_TRANSFORMATIONS}</span>
         </div>
       </div>
     );
@@ -133,6 +155,10 @@ export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
           const typeStyle = getTypeStyle(log.type);
           const statusIndicator = getStatusIndicator(status);
 
+          // Translate rule and trigger
+          const ruleText = translateKey(log.rule, grammar);
+          const triggerText = translateKey(log.trigger, grammar);
+
           return (
             <div
               key={i}
@@ -143,8 +169,11 @@ export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
                   className="step-type"
                   style={{ backgroundColor: typeStyle.color }}
                 >
-                  {log.type}
+                  {translateType(log.type)}
                 </span>
+                {ruleText && (
+                  <span className="step-rule">{ruleText}</span>
+                )}
                 {statusIndicator.label && (
                   <span className={`step-status ${statusIndicator.className}`}>
                     {statusIndicator.label}
@@ -157,8 +186,8 @@ export function GrammarPanel({ logs, previousLogs = [] }: GrammarPanelProps) {
                   <span className="step-arrow">→</span>
                   <span className="step-after">{log.to}</span>
                 </div>
-                {log.trigger && (
-                  <div className="step-trigger">{log.trigger}</div>
+                {triggerText && (
+                  <div className="step-trigger">{triggerText}</div>
                 )}
               </div>
               {status === 'changed' && previousLog && (

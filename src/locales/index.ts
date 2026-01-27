@@ -1,6 +1,6 @@
 import * as Blockly from 'blockly/core';
 import { createContext, useContext } from 'react';
-import type { LocaleCode, LocaleData, UIMessages, BlocklyMessages } from './types';
+import type { LocaleCode, LocaleData, UIMessages, BlocklyMessages, GrammarMessages } from './types';
 import { en } from './en';
 import { ja } from './ja';
 import { jaHira } from './ja-hira';
@@ -47,6 +47,7 @@ interface LocaleContextValue {
   code: LocaleCode;
   ui: UIMessages;
   blockly: BlocklyMessages;
+  grammar: GrammarMessages;
   setLocale: (code: LocaleCode) => void;
 }
 
@@ -54,6 +55,7 @@ export const LocaleContext = createContext<LocaleContextValue>({
   code: 'en',
   ui: en.ui,
   blockly: en.blockly,
+  grammar: en.grammar,
   setLocale: () => {},
 });
 
@@ -62,4 +64,4 @@ export function useLocale() {
 }
 
 // Export types
-export type { LocaleCode, LocaleData, UIMessages, BlocklyMessages };
+export type { LocaleCode, LocaleData, UIMessages, BlocklyMessages, GrammarMessages };

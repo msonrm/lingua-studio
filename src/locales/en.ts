@@ -276,4 +276,71 @@ export const en: LocaleData = {
     SHOW_AST: 'AST',
     LANGUAGE: 'Language',
   },
+  grammar: {
+    // Transform types
+    TYPE_AGREEMENT: 'Agreement',
+    TYPE_TENSE: 'Tense',
+    TYPE_ASPECT: 'Aspect',
+    TYPE_CASE: 'Case',
+    TYPE_ARTICLE: 'Article',
+    TYPE_MODAL: 'Modal',
+    TYPE_NEGATION: 'Negation',
+    TYPE_DO_SUPPORT: 'Do-support',
+    TYPE_INVERSION: 'Inversion',
+    TYPE_WH_MOVEMENT: 'Wh-movement',
+
+    // Agreement rules
+    AGREEMENT_3SG: '+s',
+    AGREEMENT_3SG_DESC: 'Subject is 3rd person singular',
+    AGREEMENT_PLURAL: 'plural',
+    AGREEMENT_PLURAL_DESC: 'Subject is plural',
+
+    // Tense rules
+    TENSE_PAST: '-ed',
+    TENSE_PAST_DESC: 'Past tense',
+    TENSE_FUTURE: 'will + base',
+    TENSE_FUTURE_DESC: 'Future tense',
+
+    // Aspect rules
+    ASPECT_PROGRESSIVE: 'be + -ing',
+    ASPECT_PROGRESSIVE_DESC: 'Progressive aspect',
+    ASPECT_PERFECT: 'have + past participle',
+    ASPECT_PERFECT_DESC: 'Perfect aspect',
+    ASPECT_PERF_PROG: 'have + been + -ing',
+    ASPECT_PERF_PROG_DESC: 'Perfect progressive aspect',
+
+    // Case rules
+    CASE_OBJECTIVE: 'objective case',
+    CASE_OBJECTIVE_DESC: 'Object position',
+    CASE_WHO_WHOM: 'who → whom',
+    CASE_WHO_WHOM_DESC: 'Object position',
+
+    // Article rules
+    ARTICLE_A_AN: 'a → an',
+    ARTICLE_A_AN_DESC: 'Before vowel sound',
+    ARTICLE_SILENT_H: 'Silent h',
+
+    // Number rules
+    NUMBER_PLURAL: 'pluralization',
+    NUMBER_PLURAL_DESC: 'Number: plural',
+
+    // Polarity rules
+    POLARITY_NEGATIVE: 'polarity',
+    POLARITY_NEGATIVE_DESC: 'Negative context',
+
+    // Modal rules
+    MODAL_PAST: 'past form',
+    MODAL_PAST_DESC: 'Modal in past tense',
+
+    // Syntax rules
+    DO_SUPPORT_QUESTION: 'do',
+    DO_SUPPORT_QUESTION_DESC: 'Question formation requires do-support',
+    INVERSION_QUESTION: 'inversion',
+    INVERSION_QUESTION_DESC: 'Subject-auxiliary inversion',
+    WH_MOVEMENT_FRONT: 'wh-fronting',
+    WH_MOVEMENT_FRONT_DESC: 'Wh-word moves to front',
+
+    // Empty state
+    EMPTY_NO_TRANSFORMATIONS: 'No transformations',
+  },
 };

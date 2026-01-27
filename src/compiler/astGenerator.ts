@@ -14,8 +14,14 @@ import {
   ModalType,
   PropositionalOperator,
 } from '../types/schema';
-import { findVerb, findPronoun } from '../data/dictionary';
+import { verbCores, pronounCores } from '../data/dictionary-core';
 import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks/definitions';
+
+// ============================================
+// ヘルパー関数（dictionary-core.ts ベース）
+// ============================================
+const findVerbCore = (lemma: string) => verbCores.find(v => v.lemma === lemma);
+const findPronounCore = (lemma: string) => pronounCores.find(p => p.lemma === lemma);
 
 // ============================================
 // BlocklyワークスペースからAST生成
@@ -866,7 +872,7 @@ function parseTimeChip(block: Blockly.Block | null): {
 
 function parseVerbBlock(block: Blockly.Block): VerbPhraseNode | null {
   const verbLemma = block.getFieldValue('VERB');
-  const verbEntry = findVerb(verbLemma);
+  const verbEntry = findVerbCore(verbLemma);
 
   if (!verbEntry) {
     return null;
@@ -926,7 +932,7 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode | Coordinate
   // Wh疑問詞プレースホルダーブロックの処理
   if (blockType === 'wh_placeholder_block') {
     const whValue = block.getFieldValue('WH_VALUE') as string;
-    const pronoun = findPronoun(whValue);
+    const pronoun = findPronounCore(whValue);
     if (pronoun) {
       return {
         type: 'nounPhrase',
@@ -1178,7 +1184,7 @@ function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseN
   }
 
   // 代名詞かどうかをチェック
-  const pronoun = findPronoun(value);
+  const pronoun = findPronounCore(value);
   if (pronoun) {
     const head: PronounHead = {
       type: 'pronoun',

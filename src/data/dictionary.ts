@@ -7,9 +7,8 @@
  *
  * 参照元:
  * - compiler/englishRenderer.ts: 活用形取得
- * - compiler/astGenerator.ts: 語彙情報取得
  *
- * 注: ブロック定義は dictionary-core.ts を直接参照
+ * 注: ブロック定義・AST生成は dictionary-core.ts を直接参照
  */
 
 import { VerbEntry, NounEntry, AdjectiveEntry, AdverbEntry, PronounEntry, VerbCategory, AdjectiveCategory, NounCategory } from '../types/schema';

@@ -429,10 +429,12 @@ function appendCoordinatedVP(
   const vpInfos: VPInfo[] = [];
 
   // 最初の要素（既にレンダリング済み）
+  // 最初の要素も同じロジックでgroupIdを計算
+  const firstGroupId = getSubjectGroupId(ctx.verbPhrase);
   vpInfos.push({
     vp: ctx.verbPhrase,
     rendered: result,
-    groupId: '__inherited__',  // 最初の要素は親の主語
+    groupId: firstGroupId,
   });
 
   // チェーンを辿る

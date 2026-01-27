@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { BlocklyWorkspace, BlocklyWorkspaceHandle } from './components/BlocklyWorkspace';
 import { LinguaScriptBar } from './components/LinguaScriptBar';
 import { LinguaScriptView } from './components/LinguaScriptView';
@@ -21,6 +21,25 @@ import './App.css';
 type EditorMode = 'blocks' | 'linguascript' | 'ast';
 type SidePanelTab = 'timeline' | 'grammar';
 
+const WORKSPACE_STORAGE_KEY = 'lingua-studio-workspace';
+
+// Load workspace state from localStorage
+function getStoredWorkspace(): object | null {
+  try {
+    const stored = localStorage.getItem(WORKSPACE_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Save workspace state to localStorage
+function setStoredWorkspace(state: object | null): void {
+  if (state) {
+    localStorage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(state));
+  }
+}
+
 function App() {
   const [asts, setASTs] = useState<SentenceNode[]>([]);
   const [sentences, setSentences] = useState<string[]>([]);
@@ -31,17 +50,43 @@ function App() {
   const [workspaceKey, setWorkspaceKey] = useState(0);
   const [showSidePanel, setShowSidePanel] = useState(true);
   const [sidePanelTab, setSidePanelTab] = useState<SidePanelTab>('grammar');
-  const [workspaceState, setWorkspaceState] = useState<object | null>(null);
+  const [workspaceState, setWorkspaceState] = useState<object | null>(getStoredWorkspace);
   const workspaceRef = useRef<BlocklyWorkspaceHandle>(null);
+  const saveTimeoutRef = useRef<number | null>(null);
 
   // 現在のロケールデータ
   const currentLocale = useMemo(() => getLocale(localeCode), [localeCode]);
+
+  // ワークスペース状態を自動保存（デバウンス付き）
+  useEffect(() => {
+    if (editorMode !== 'blocks' || !workspaceRef.current) return;
+
+    // 前回のタイマーをクリア
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // 500ms後に保存
+    saveTimeoutRef.current = window.setTimeout(() => {
+      const state = workspaceRef.current?.saveState();
+      if (state) {
+        setStoredWorkspace(state);
+      }
+    }, 500);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [asts, editorMode]);
 
   // ロケール切り替え
   const handleLocaleChange = useCallback((code: LocaleCode) => {
     // 現在のワークスペース状態を保存
     const state = workspaceRef.current?.saveState() ?? null;
     setWorkspaceState(state);
+    setStoredWorkspace(state);
 
     setStoredLocale(code);
     applyBlocklyLocale(code);
@@ -58,6 +103,7 @@ function App() {
     if (editorMode === 'blocks') {
       const state = workspaceRef.current?.saveState() ?? null;
       setWorkspaceState(state);
+      setStoredWorkspace(state);
     }
 
     // blocksモードに戻る時、ワークスペースを再作成

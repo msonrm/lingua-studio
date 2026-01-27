@@ -77,11 +77,25 @@
   - [x] サイドパネル移動 + タブ構成
   - toLegacyLogs() で既存UIと後方互換
 
+#### 辞書アーキテクチャ
+- [ ] 辞書分離（言語非依存 / 言語固有）
+  - `dictionary-core.ts`: lemma（英語識別子）, type, category, valency
+  - `dictionary-en.ts`: 英語 forms（活用形）
+  - `dictionary-ja.ts`: 日本語 surface + forms
+  - lemma は英語で固定（プログラミング言語が英語ベースなのと同様）
+
+#### Output UI
+- [ ] 2パネル出力構成
+  - 左: Primary Output（ターゲット言語）
+  - 右: Reference Output（UI言語で意味確認）
+  - 例: 英語学習時 → 左:English / 右:日本語訳
+  - 例: 架空言語時 → 左:Conlang / 右:UI言語で意味確認
+
 #### 言語別レンダラー
 - [ ] 日本語レンダラー
   - 日本語辞書 (dictionary-ja.ts)
   - SOV語順、助詞選択、敬語処理
-- [ ] パラメータベースのレンダラー設計
+- [ ] パラメータベースのレンダラー設計（架空言語ビルダー）
   - チョムスキー「原理とパラメータ」理論に基づく
   - 語順パラメータ: SVO, SOV, VSO, VOS, OSV, OVS
   - 主要部位置: head-initial / head-final

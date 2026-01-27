@@ -444,7 +444,7 @@ time('yesterday, manner('quickly, pp('in, 'park, eat(agent:'I, patient:'apple)))
 
 ```lisp
 ;; Yes/No疑問文: 疑問詞プレースホルダーなし
-question(sentence(past+simple(eat(agent:'you, theme:'apple))))
+question(sentence(past+simple(eat(agent:'you, theme:noun(det:'the, head:'apple)))))
 ;; → "Did you eat the apple?"
 
 ;; Wh疑問文: 疑問詞プレースホルダーあり
@@ -461,7 +461,7 @@ question(sentence(past+simple(eat(agent:'you, theme:?what))))
 
 | 空欄の位置 | 疑問詞 | 例 |
 |-----------|--------|-----|
-| `agent:?who` | Who | Who ate the apple? |
+| `agent:?who` | Who | Who ate an apple? |
 | `theme:?what` / `patient:?what` | What | What did you eat? |
 | `recipient:?whom` | Whom / To whom | Whom did you give the book to? |
 | `goal:?where` | Where (着点) | Where did you go? |
@@ -470,7 +470,7 @@ question(sentence(past+simple(eat(agent:'you, theme:?what))))
 ```lisp
 ;; 主語への疑問
 question(sentence(past+simple(eat(agent:?who, theme:'apple))))
-;; → "Who ate the apple?"
+;; → "Who ate an apple?"
 
 ;; 目的語への疑問
 question(sentence(past+simple(eat(agent:'you, theme:?what))))
@@ -499,7 +499,7 @@ sentence(past+simple(time(?when, arrive(agent:'they))))
 ;; → "When did they arrive?"
 
 ;; 様態への疑問
-sentence(past+simple(manner(?how, fix(agent:'you, theme:'car))))
+sentence(past+simple(manner(?how, fix(agent:'you, theme:noun(det:'the, head:'car)))))
 ;; → "How did you fix the car?"
 ```
 
@@ -1636,20 +1636,20 @@ question(sentence(present+simple(like(agent:'you, theme:'coffee))))
 
 ;; Wh疑問文（意味役割）
 question(sentence(past+simple(eat(agent:?who, theme:'apple))))
-;; → "Who ate the apple?"
+;; → "Who ate an apple?"
 
 question(sentence(past+simple(eat(agent:'you, theme:?what))))
 ;; → "What did you eat?"
 
 ;; Wh疑問文（question()省略可 - 自動検出）
 sentence(past+simple(eat(agent:?who, theme:'apple)))
-;; → "Who ate the apple?"
+;; → "Who ate an apple?"
 
 ;; Wh疑問文（副詞疑問詞）
 sentence(past+simple(locative(?where, run(agent:'I))))
 ;; → "Where did I run?"
 
-sentence(past+simple(manner(?how, fix(agent:'you, theme:'car))))
+sentence(past+simple(manner(?how, fix(agent:'you, theme:noun(det:'the, head:'car)))))
 ;; → "How did you fix the car?"
 
 sentence(past+simple(time(?when, arrive(agent:'they))))

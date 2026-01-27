@@ -219,7 +219,14 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       // 初期状態を反映させるため、最初に一度呼び出す
       handleWorkspaceChange();
 
+      // コンテナサイズ変更時にBlocklyをリサイズ
+      const resizeObserver = new ResizeObserver(() => {
+        Blockly.svgResize(workspace);
+      });
+      resizeObserver.observe(blocklyDiv.current);
+
       return () => {
+        resizeObserver.disconnect();
         workspace.dispose();
       };
     }, [handleWorkspaceChange, handleBlockChange, initialState]);

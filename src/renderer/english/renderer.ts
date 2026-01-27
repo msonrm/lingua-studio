@@ -14,6 +14,7 @@ import {
   ModalType,
 } from '../../types/schema';
 import { findVerb, findNoun, findPronoun } from '../../data/dictionary-en';
+import { nounCores } from '../../data/dictionary-core';
 import { RenderResult } from '../../types/grammarLog';
 import { DerivationTracker } from '../DerivationTracker';
 import {
@@ -1171,6 +1172,11 @@ function isThirdSingular(subject: NounPhraseNode | CoordinatedNounPhraseNode): b
 function isThirdSingularNP(np: NounPhraseNode): boolean {
   if (np.head.type === 'noun') {
     const nounHead = np.head as NounHead;
+    // singularOnly の名詞（news など）は文法的に常に単数扱い
+    const nounCore = nounCores.find(n => n.lemma === nounHead.lemma);
+    if (nounCore?.singularOnly) {
+      return true;
+    }
     return nounHead.number === 'singular';
   }
 
@@ -1219,6 +1225,11 @@ function getPersonNumberNP(np: NounPhraseNode): PersonNumber {
   // 普通名詞は3人称
   if (np.head.type === 'noun') {
     const nounHead = np.head as NounHead;
+    // singularOnly の名詞（news など）は文法的に常に単数扱い
+    const nounCore = nounCores.find(n => n.lemma === nounHead.lemma);
+    if (nounCore?.singularOnly) {
+      return { person: 3, number: 'singular' };
+    }
     return {
       person: 3,
       number: nounHead.number || 'singular',

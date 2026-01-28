@@ -52,62 +52,72 @@ interface NounTypeConstraint {
 // 限定詞データ
 // ============================================
 
-// 前置限定詞（predeterminer）
-export const PRE_DETERMINERS: DeterminerOption[] = [
-  { label: '─', value: '__none__', output: null },
-  { label: 'all', value: 'all', output: 'all' },
-  { label: 'both', value: 'both', number: 'plural', output: 'both' },
-  { label: 'half', value: 'half', output: 'half' },
-];
+// 前置限定詞（predeterminer）- ローカライズ可能
+export function getPreDeterminers(): DeterminerOption[] {
+  return [
+    { label: msg('DET_NONE', '[∅]'), value: '__none__', output: null },
+    { label: 'all', value: 'all', output: 'all' },
+    { label: 'both', value: 'both', number: 'plural', output: 'both' },
+    { label: 'half', value: 'half', output: 'half' },
+  ];
+}
 
-// 中央限定詞（central determiner）- カテゴリ分類付き
-export const CENTRAL_DETERMINERS: DeterminerOption[] = [
-  // デフォルト値（最初に配置）
-  { label: '─', value: '__none__', output: null },
-  // 冠詞（Article）
-  { label: '── Article ──', value: '__label_article__', output: null },
-  { label: 'the', value: 'the', output: 'the' },
-  { label: 'a/an', value: 'a', number: 'singular', output: 'a' },
-  // 指示詞（Demonstrative）
-  { label: '── Demonstrative ──', value: '__label_demonstrative__', output: null },
-  { label: 'this', value: 'this', number: 'singular', output: 'this' },
-  { label: 'that', value: 'that', number: 'singular', output: 'that' },
-  { label: 'these', value: 'these', number: 'plural', output: 'these' },
-  { label: 'those', value: 'those', number: 'plural', output: 'those' },
-  // 所有詞（Possessive）
-  { label: '── Possessive ──', value: '__label_possessive__', output: null },
-  { label: 'my', value: 'my', output: 'my' },
-  { label: 'your', value: 'your', output: 'your' },
-  { label: 'his', value: 'his', output: 'his' },
-  { label: 'her', value: 'her', output: 'her' },
-  { label: 'its', value: 'its', output: 'its' },
-  { label: 'our', value: 'our', output: 'our' },
-  { label: 'their', value: 'their', output: 'their' },
-  // 分配詞・否定詞（Distributive & Negative）
-  { label: '── Distributive ──', value: '__label_distributive__', output: null },
-  { label: 'no', value: 'no', output: 'no' },
-  { label: 'each', value: 'each', number: 'singular', output: 'each' },
-  { label: 'every', value: 'every', number: 'singular', output: 'every' },
-  { label: 'either', value: 'either', number: 'singular', output: 'either' },
-  { label: 'neither', value: 'neither', number: 'singular', output: 'neither' },
-  { label: 'any', value: 'any', output: 'any' },
-  // 複合量化詞（Compound Quantifiers）
-  { label: '── Quantity ──', value: '__label_quantity__', output: null },
-  { label: 'a few', value: 'a_few', number: 'plural', output: 'a few' },
-  { label: 'a little', value: 'a_little', number: 'uncountable', output: 'a little' },
-  { label: 'a lot of', value: 'a_lot_of', output: 'a lot of' },
-  { label: 'plenty of', value: 'plenty_of', output: 'plenty of' },
-  { label: 'a number of', value: 'a_number_of', number: 'plural', output: 'a number of' },
-  { label: 'a couple of', value: 'a_couple_of', number: 'plural', output: 'a couple of' },
-  { label: 'a great deal of', value: 'a_great_deal_of', number: 'uncountable', output: 'a great deal of' },
-  { label: 'many a', value: 'many_a', number: 'singular', output: 'many a' },
-  { label: 'quite a few', value: 'quite_a_few', number: 'plural', output: 'quite a few' },
-];
+// 後方互換性のため（リスト生成用）
+export const PRE_DETERMINERS = getPreDeterminers();
+
+// 中央限定詞（central determiner）- カテゴリ分類付き・ローカライズ可能
+export function getCentralDeterminers(): DeterminerOption[] {
+  return [
+    // デフォルト値（最初に配置）
+    { label: msg('DET_NONE', '[∅]'), value: '__none__', output: null },
+    // 冠詞（Article）
+    { label: msg('DET_LABEL_ARTICLE', '── Article ──'), value: '__label_article__', output: null },
+    { label: 'the', value: 'the', output: 'the' },
+    { label: 'a/an', value: 'a', number: 'singular', output: 'a' },
+    // 指示詞（Demonstrative）
+    { label: msg('DET_LABEL_DEMONSTRATIVE', '── Demonstrative ──'), value: '__label_demonstrative__', output: null },
+    { label: 'this', value: 'this', number: 'singular', output: 'this' },
+    { label: 'that', value: 'that', number: 'singular', output: 'that' },
+    { label: 'these', value: 'these', number: 'plural', output: 'these' },
+    { label: 'those', value: 'those', number: 'plural', output: 'those' },
+    // 所有詞（Possessive）
+    { label: msg('DET_LABEL_POSSESSIVE', '── Possessive ──'), value: '__label_possessive__', output: null },
+    { label: 'my', value: 'my', output: 'my' },
+    { label: 'your', value: 'your', output: 'your' },
+    { label: 'his', value: 'his', output: 'his' },
+    { label: 'her', value: 'her', output: 'her' },
+    { label: 'its', value: 'its', output: 'its' },
+    { label: 'our', value: 'our', output: 'our' },
+    { label: 'their', value: 'their', output: 'their' },
+    // 分配詞・否定詞（Distributive & Negative）
+    { label: msg('DET_LABEL_DISTRIBUTIVE', '── Distributive ──'), value: '__label_distributive__', output: null },
+    { label: 'no', value: 'no', output: 'no' },
+    { label: 'each', value: 'each', number: 'singular', output: 'each' },
+    { label: 'every', value: 'every', number: 'singular', output: 'every' },
+    { label: 'either', value: 'either', number: 'singular', output: 'either' },
+    { label: 'neither', value: 'neither', number: 'singular', output: 'neither' },
+    { label: 'any', value: 'any', output: 'any' },
+    // 複合量化詞（Compound Quantifiers）
+    { label: msg('DET_LABEL_QUANTITY', '── Quantity ──'), value: '__label_quantity__', output: null },
+    { label: 'a few', value: 'a_few', number: 'plural', output: 'a few' },
+    { label: 'a little', value: 'a_little', number: 'uncountable', output: 'a little' },
+    { label: 'a lot of', value: 'a_lot_of', output: 'a lot of' },
+    { label: 'plenty of', value: 'plenty_of', output: 'plenty of' },
+    { label: 'a number of', value: 'a_number_of', number: 'plural', output: 'a number of' },
+    { label: 'a couple of', value: 'a_couple_of', number: 'plural', output: 'a couple of' },
+    { label: 'a great deal of', value: 'a_great_deal_of', number: 'uncountable', output: 'a great deal of' },
+    { label: 'many a', value: 'many_a', number: 'singular', output: 'many a' },
+    { label: 'quite a few', value: 'quite_a_few', number: 'plural', output: 'quite a few' },
+  ];
+}
+
+// 後方互換性のため（リスト生成用）
+export const CENTRAL_DETERMINERS = getCentralDeterminers();
 
 // 後置限定詞（postdeterminer）- ローカライズ可能なラベルを動的に生成
 export function getPostDeterminers(): DeterminerOption[] {
   return [
-    { label: '─', value: '__none__', output: null },
+    { label: msg('DET_NONE', '[∅]'), value: '__none__', output: null },
     { label: 'one', value: 'one', number: 'singular', output: 'one' },
     { label: 'two', value: 'two', number: 'plural', output: 'two' },
     { label: 'three', value: 'three', number: 'plural', output: 'three' },

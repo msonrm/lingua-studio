@@ -2,8 +2,8 @@ import * as Blockly from 'blockly';
 import { nounCores, adjectiveCores, adverbCores, pronounCores, verbCores } from '../data/dictionary-core';
 import type { VerbCategory, AdjectiveCategory } from '../types/schema';
 import {
-  PRE_DETERMINERS,
-  CENTRAL_DETERMINERS,
+  getPreDeterminers,
+  getCentralDeterminers,
   getPostDeterminers,
   calculateNounTypeValues,
   wouldBeValidCombination,
@@ -685,10 +685,10 @@ Blockly.Blocks['determiner_unified'] = {
 
     // 各フィールドのオプション生成
     const getPreOptions = (): [string, string][] =>
-      getOptionsForField('PRE', PRE_DETERMINERS);
+      getOptionsForField('PRE', getPreDeterminers());
 
     const getCentralOptions = (): [string, string][] =>
-      getOptionsForField('CENTRAL', CENTRAL_DETERMINERS);
+      getOptionsForField('CENTRAL', getCentralDeterminers());
 
     const getPostOptions = (): [string, string][] =>
       getOptionsForField('POST', getPostDeterminers());
@@ -1338,8 +1338,8 @@ export const TIME_CHIP_DATA = {
 };
 
 export const DETERMINER_DATA = {
-  pre: PRE_DETERMINERS,
-  central: CENTRAL_DETERMINERS,
+  pre: getPreDeterminers(),
+  central: getCentralDeterminers(),
   post: getPostDeterminers(),
 };
 

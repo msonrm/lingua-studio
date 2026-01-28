@@ -5,7 +5,8 @@
  * - PRE（前置限定詞）: all, both, half
  * - CENTRAL（中央限定詞）: the, a, this/that/these/those, 所有格(my,your,his,her,its,our,their),
  *                        no, each, every, either, neither, any,
- *                        複合量化詞(a few, a little, a lot of, many a, a great deal of, quite a few)
+ *                        複合量化詞(a few, a little, a lot of, plenty of, a number of,
+ *                                  a couple of, a great deal of, many a, quite a few)
  * - POST（後置限定詞）: 数詞(one,two,three)、数量詞(many,few,little,much,some,several)、
  *                      plural/uncountableマーカー
  *
@@ -85,8 +86,11 @@ export const CENTRAL_DETERMINERS: DeterminerOption[] = [
   { label: 'a few', value: 'a_few', number: 'plural', output: 'a few' },
   { label: 'a little', value: 'a_little', number: 'uncountable', output: 'a little' },
   { label: 'a lot of', value: 'a_lot_of', output: 'a lot of' },  // 可算/不可算両方
-  { label: 'many a', value: 'many_a', number: 'singular', output: 'many a' },  // 文語的
+  { label: 'plenty of', value: 'plenty_of', output: 'plenty of' },  // 可算/不可算両方
+  { label: 'a number of', value: 'a_number_of', number: 'plural', output: 'a number of' },
+  { label: 'a couple of', value: 'a_couple_of', number: 'plural', output: 'a couple of' },
   { label: 'a great deal of', value: 'a_great_deal_of', number: 'uncountable', output: 'a great deal of' },
+  { label: 'many a', value: 'many_a', number: 'singular', output: 'many a' },  // 文語的
   { label: 'quite a few', value: 'quite_a_few', number: 'plural', output: 'quite a few' },
 ];
 
@@ -113,6 +117,9 @@ export function getPostDeterminers(): DeterminerOption[] {
 // 構造: { [変更された項目の値]: { [影響を受ける項目]: { excludes: 排他値[], resetTo: リセット先 } } }
 // ============================================
 
+// 複合量化詞リスト（再利用用）
+const COMPOUND_QUANTIFIERS = ['a_few', 'a_little', 'a_lot_of', 'plenty_of', 'a_number_of', 'a_couple_of', 'a_great_deal_of', 'many_a', 'quite_a_few'];
+
 // PRE値が変更された時の、CENTRAL/POSTへの影響
 export const PRE_EXCLUSIONS: Record<string, { CENTRAL?: ExclusionRule; POST?: ExclusionRule }> = {
   'all': {
@@ -120,7 +127,7 @@ export const PRE_EXCLUSIONS: Record<string, { CENTRAL?: ExclusionRule; POST?: Ex
     POST: { excludes: ['one'], resetTo: '__none__' },
   },
   'both': {
-    CENTRAL: { excludes: ['a', 'no', 'this', 'that', 'these', 'those', 'each', 'every', 'either', 'neither', 'a_few', 'a_little', 'a_lot_of', 'many_a', 'a_great_deal_of', 'quite_a_few'], resetTo: 'the' },
+    CENTRAL: { excludes: ['a', 'no', 'this', 'that', 'these', 'those', 'each', 'every', 'either', 'neither', ...COMPOUND_QUANTIFIERS], resetTo: 'the' },
     POST: { excludes: ['one', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__uncountable__'], resetTo: 'two' },
   },
   'half': {
@@ -186,6 +193,18 @@ export const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: Ex
     PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
     POST: { excludes: ['one', 'two', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
   },
+  'plenty_of': {
+    PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
+    POST: { excludes: ['one', 'two', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
+  },
+  'a_number_of': {
+    PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
+    POST: { excludes: ['one', 'two', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
+  },
+  'a_couple_of': {
+    PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
+    POST: { excludes: ['one', 'two', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
+  },
   'many_a': {
     PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
     POST: { excludes: ['one', 'two', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
@@ -201,9 +220,6 @@ export const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: Ex
 };
 
 // POST値が変更された時の、PRE/CENTRALへの影響
-// 複合量化詞リスト（再利用用）
-const COMPOUND_QUANTIFIERS = ['a_few', 'a_little', 'a_lot_of', 'many_a', 'a_great_deal_of', 'quite_a_few'];
-
 export const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: ExclusionRule }> = {
   'one': {
     PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
@@ -239,15 +255,15 @@ export const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: Ex
   },
   '__uncountable__': {
     PRE: { excludes: ['both'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'these', 'those', 'each', 'every', 'either', 'neither', 'a_few', 'many_a', 'quite_a_few'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'these', 'those', 'each', 'every', 'either', 'neither', 'a_few', 'a_number_of', 'a_couple_of', 'many_a', 'quite_a_few'], resetTo: '__none__' },
   },
   'little': {
     PRE: { excludes: ['both'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'these', 'those', 'each', 'every', 'either', 'neither', 'a_few', 'many_a', 'quite_a_few'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'these', 'those', 'each', 'every', 'either', 'neither', 'a_few', 'a_number_of', 'a_couple_of', 'many_a', 'quite_a_few'], resetTo: '__none__' },
   },
   'much': {
     PRE: { excludes: ['both'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'these', 'those', 'each', 'every', 'either', 'neither', 'a_few', 'many_a', 'quite_a_few'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'these', 'those', 'each', 'every', 'either', 'neither', 'a_few', 'a_number_of', 'a_couple_of', 'many_a', 'quite_a_few'], resetTo: '__none__' },
   },
 };
 
@@ -263,7 +279,7 @@ export const NOUN_TYPE_CONSTRAINTS: Record<NounType, NounTypeConstraint> = {
     default: { pre: '__none__', central: '__none__', post: '__uncountable__' },
     invalid: {
       pre: ['both'],
-      central: ['a', 'each', 'every', 'either', 'neither', 'a_few', 'many_a', 'quite_a_few'],
+      central: ['a', 'each', 'every', 'either', 'neither', 'a_few', 'a_number_of', 'a_couple_of', 'many_a', 'quite_a_few'],
       post: ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'],
     },
   },

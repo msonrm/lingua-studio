@@ -124,9 +124,14 @@ export const jaHira: LocaleData = {
     // Determiner
     DETERMINER_LABEL: 'どの？いくつ？',
     DETERMINER_TOOLTIP: 'どの？いくつ？をきめる',
-    DETERMINER_NONE: '─',
+    DET_NONE: '[なし]',
     DET_PLURAL: '[たくさん]',
     DET_UNCOUNTABLE: '[かぞえない]',
+    DET_LABEL_ARTICLE: '── a / the ──',
+    DET_LABEL_DEMONSTRATIVE: '── これ・あれ ──',
+    DET_LABEL_POSSESSIVE: '── わたしの・あなたの ──',
+    DET_LABEL_DISTRIBUTIVE: '── ひとつずつ ──',
+    DET_LABEL_QUANTITY: '── いくつ？ ──',
 
     // Verb modifiers
     NEGATION_LABEL: '〜ない',

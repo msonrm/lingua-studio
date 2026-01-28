@@ -124,9 +124,14 @@ export interface BlocklyMessages {
   // Determiner
   DETERMINER_LABEL: string;
   DETERMINER_TOOLTIP: string;
-  DETERMINER_NONE: string;
+  DET_NONE: string;
   DET_PLURAL: string;
   DET_UNCOUNTABLE: string;
+  DET_LABEL_ARTICLE: string;
+  DET_LABEL_DEMONSTRATIVE: string;
+  DET_LABEL_POSSESSIVE: string;
+  DET_LABEL_DISTRIBUTIVE: string;
+  DET_LABEL_QUANTITY: string;
 
   // Verb modifiers
   NEGATION_LABEL: string;

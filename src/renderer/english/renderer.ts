@@ -1177,7 +1177,8 @@ function isThirdSingularNP(np: NounPhraseNode): boolean {
     if (nounCore?.singularOnly) {
       return true;
     }
-    return nounHead.number === 'singular';
+    // uncountable も単数扱い（"Water is..." not "*Water are..."）
+    return nounHead.number === 'singular' || nounHead.number === 'uncountable';
   }
 
   if (np.head.type === 'pronoun') {
@@ -1230,9 +1231,11 @@ function getPersonNumberNP(np: NounPhraseNode): PersonNumber {
     if (nounCore?.singularOnly) {
       return { person: 3, number: 'singular' };
     }
+    // uncountable も動詞活用では単数扱い
+    const number = nounHead.number === 'uncountable' ? 'singular' : (nounHead.number || 'singular');
     return {
       person: 3,
-      number: nounHead.number || 'singular',
+      number,
     };
   }
 

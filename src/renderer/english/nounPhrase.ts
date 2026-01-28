@@ -273,17 +273,18 @@ export function renderNounPhraseUnified(
   // 中央限定詞（the, this, my, a/an, no）
   // 'INDEF' プレースホルダーを使用し、後で a/an を決定
   let needsArticleSelection = false;
-  if (np.determiner && np.determiner.lexeme) {
-    if (np.determiner.lexeme === 'a') {
+  if (np.determiner) {
+    if (np.determiner === 'a') {
       needsArticleSelection = true;
       parts.push('INDEF');
     } else {
-      parts.push(np.determiner.lexeme);
+      parts.push(np.determiner);
     }
   }
 
   // 後置限定詞（one, two, many, few）
-  if (np.postDeterminer) {
+  // plural/uncountable はマーカーなので出力しない
+  if (np.postDeterminer && np.postDeterminer !== 'plural' && np.postDeterminer !== 'uncountable') {
     parts.push(np.postDeterminer);
   }
 

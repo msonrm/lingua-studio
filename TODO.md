@@ -466,6 +466,26 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 - [x] 形容詞カテゴリ追加（Dixon's semantic types: size, age, color, physical, quality, emotion）
 - [x] 形容詞ブロックをカテゴリ別に分離（adjective_size, adjective_age, adjective_color, adjective_physical, adjective_quality, adjective_emotion）
 
+### DET Rules Refactoring (2026-01)
+- [x] 英語DETルールを独立モジュールに抽出 (`det-rules-en.ts`)
+  - PRE/CENTRAL/POST の3層構造
+  - 排他ルール（PRE_EXCLUSIONS, CENTRAL_EXCLUSIONS, POST_EXCLUSIONS）
+  - 名詞タイプ別制約（countable, uncountable, proper, zeroArticle）
+- [x] 限定詞の追加
+  - 指示詞: these, those
+  - 所有格: his, her, its, our, their
+  - 量化詞: each, every, either, neither, any
+  - 複合量化詞: a few, a little, a lot of, plenty of, a number of,
+                a couple of, a great deal of, many a, quite a few
+- [x] POST限定詞の追加
+  - little, much（不可算用）
+- [x] 排他ルールのバグ修正
+  - my/your/this/that + uncountable の誤った排他を削除
+  - `all` から `number: 'plural'` を削除（"all the apple" も有効）
+- [x] LinguaScript/AST の簡素化
+  - determiner を複雑なオブジェクトから単純な文字列に変更
+  - 値をそのまま通過させる設計（言語非依存層）
+
 ### Bug Fixes
 - [x] "The a something runs." - レガシーquantifierフィールドを削除し、限定詞システムに統合
 - [x] "a few" の組み合わせが禁止されていた問題を修正

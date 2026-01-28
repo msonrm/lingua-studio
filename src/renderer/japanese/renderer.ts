@@ -19,7 +19,7 @@ import {
   CoordinationConjunct,
   SemanticRole,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb } from './particles';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb, translateAdjective } from './particles';
 
 // ============================================
 // Main Entry Points
@@ -181,9 +181,9 @@ function renderNounPhrase(np: NounPhraseNode): string {
     }
   }
 
-  // Adjectives
+  // Adjectives（日本語に変換）
   for (const adj of np.adjectives) {
-    parts.push(adj.lemma);
+    parts.push(translateAdjective(adj.lemma));
   }
 
   // Head (noun or pronoun)

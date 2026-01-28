@@ -3,4 +3,4 @@
  */
 
 export { renderToJapanese } from './renderer';
-export { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb } from './particles';
+export { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb, translateAdjective } from './particles';

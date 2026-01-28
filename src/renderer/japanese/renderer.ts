@@ -47,29 +47,29 @@ export function renderToJapanese(ast: SentenceNode): string {
 
 /**
  * 平叙文: SOV語順
- * "the catは the fishを eat"
+ * "the catは the fishを eat。"
  */
 function renderDeclarative(clause: ClauseNode): string {
   const parts = buildSOVParts(clause);
-  return parts.filter(Boolean).join(' ');
+  return parts.filter(Boolean).join(' ') + '。';
 }
 
 /**
  * 疑問文: SOV語順 + 「か」
- * "the catは the fishを eat か"
+ * "the catは the fishを eatか？"
  */
 function renderInterrogative(clause: ClauseNode): string {
   const parts = buildSOVParts(clause);
-  return parts.filter(Boolean).join(' ') + ' か';
+  return parts.filter(Boolean).join(' ') + 'か？';
 }
 
 /**
  * 命令文: OV語順（主語省略）
- * "the fishを eat"
+ * "the fishを eat。"
  */
 function renderImperative(clause: ClauseNode): string {
   const parts = buildSOVParts(clause, { omitSubject: true });
-  return parts.filter(Boolean).join(' ');
+  return parts.filter(Boolean).join(' ') + '。';
 }
 
 // ============================================

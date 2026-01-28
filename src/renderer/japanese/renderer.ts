@@ -3,8 +3,9 @@
  *
  * AST → 日本語語順（SOV）+ 格助詞
  * 単語は英語のまま、語順と格マーキングのみ日本語化
+ * 代名詞は日本語に変換
  *
- * 例: "The cat eats the fish" → "the catは the fishを eat"
+ * 例: "I eat the apple" → "私は the appleを eat。"
  */
 
 import {
@@ -18,7 +19,7 @@ import {
   CoordinationConjunct,
   SemanticRole,
 } from '../../types/schema';
-import { roleToParticle, isSubjectRole } from './particles';
+import { getParticle, isSubjectRole, translatePronoun } from './particles';
 
 // ============================================
 // Main Entry Points
@@ -47,7 +48,7 @@ export function renderToJapanese(ast: SentenceNode): string {
 
 /**
  * 平叙文: SOV語順
- * "the catは the fishを eat。"
+ * "私は the appleを eat。"
  */
 function renderDeclarative(clause: ClauseNode): string {
   const parts = buildSOVParts(clause);
@@ -56,7 +57,7 @@ function renderDeclarative(clause: ClauseNode): string {
 
 /**
  * 疑問文: SOV語順 + 「か」
- * "the catは the fishを eatか？"
+ * "私は 何を eatか？"
  */
 function renderInterrogative(clause: ClauseNode): string {
   const parts = buildSOVParts(clause);
@@ -65,7 +66,7 @@ function renderInterrogative(clause: ClauseNode): string {
 
 /**
  * 命令文: OV語順（主語省略）
- * "the fishを eat。"
+ * "the appleを eat。"
  */
 function renderImperative(clause: ClauseNode): string {
   const parts = buildSOVParts(clause, { omitSubject: true });
@@ -87,6 +88,7 @@ interface BuildOptions {
 function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[] {
   const { verbPhrase } = clause;
   const args = verbPhrase.arguments;
+  const verbLemma = verbPhrase.verb.lemma;
 
   // 引数を格助詞付きでレンダリング
   const argParts: { role: SemanticRole; text: string; isSubject: boolean }[] = [];
@@ -94,19 +96,20 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   for (const arg of args) {
     if (!arg.filler) continue;
 
-    const particle = roleToParticle[arg.role];
+    // 動的に格助詞を決定
+    const particle = getParticle(arg.role, verbLemma);
     if (!particle) continue; // マッピングがない役割はスキップ
 
     const np = renderFiller(arg.filler);
-    const isSubject = isSubjectRole(arg.role);
+    const subjectFlag = isSubjectRole(arg.role, verbLemma);
 
     // 主語省略オプション
-    if (options.omitSubject && isSubject) continue;
+    if (options.omitSubject && subjectFlag) continue;
 
     argParts.push({
       role: arg.role,
       text: `${np}${particle}`,
-      isSubject,
+      isSubject: subjectFlag,
     });
   }
 
@@ -115,7 +118,7 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   const others = argParts.filter(p => !p.isSubject);
 
   // 動詞（原形のまま）
-  const verb = verbPhrase.verb.lemma;
+  const verb = verbLemma;
 
   // SOV順で組み立て
   const result: string[] = [];
@@ -129,12 +132,11 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
 }
 
 // ============================================
-// Filler Rendering (英語のまま)
+// Filler Rendering
 // ============================================
 
 /**
  * フィラー（名詞句/形容詞句/等位接続）をレンダリング
- * 英語の単語をそのまま使用
  */
 function renderFiller(
   filler: NounPhraseNode | AdjectivePhraseNode | CoordinatedNounPhraseNode
@@ -152,8 +154,9 @@ function renderFiller(
 }
 
 /**
- * 名詞句をレンダリング（英語のまま）
- * determiner + adjectives + head
+ * 名詞句をレンダリング
+ * - 代名詞は日本語に変換
+ * - 名詞はそのまま（将来的に日本語化）
  */
 function renderNounPhrase(np: NounPhraseNode): string {
   const parts: string[] = [];
@@ -189,8 +192,8 @@ function renderNounPhrase(np: NounPhraseNode): string {
     parts.push(noun.lemma);
   } else {
     const pronoun = np.head as PronounHead;
-    // 疑問代名詞の?プレフィックスを除去
-    parts.push(pronoun.lemma.replace(/^\?/, ''));
+    // 代名詞は日本語に変換
+    parts.push(translatePronoun(pronoun.lemma));
   }
 
   return parts.join(' ');

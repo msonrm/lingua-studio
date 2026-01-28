@@ -5,9 +5,9 @@ import {
   PRE_DETERMINERS,
   CENTRAL_DETERMINERS,
   getPostDeterminers,
-  applyExclusionRules,
   calculateNounTypeValues,
   wouldBeValidCombination,
+  calculateResetIfNeeded,
   type DetField,
   type NounType,
   type DeterminerOption,
@@ -694,7 +694,7 @@ Blockly.Blocks['determiner_unified'] = {
     // 一括更新モードフラグ（バリデーターをバイパスするため）
     let bulkUpdateMode = false;
 
-    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否
+    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否、必要ならリセット
     const createValidator = (
       field: DetField,
       getOptions: () => [string, string][]
@@ -711,34 +711,19 @@ Blockly.Blocks['determiner_unified'] = {
           return null;  // 選択を拒否
         }
 
-        // 排他ルール適用：変更後の値を使って計算し、一括適用
-        // （バリデーター実行時点ではまだ値が確定していないため、newValueを使用）
+        // リストベースのリセット判定
         const currentValues = getCurrentValues();
-        const valuesWithChange = { ...currentValues, [field]: newValue };
+        const nounType = getNounType();
+        const resetResult = calculateResetIfNeeded(field, newValue, currentValues, nounType);
 
-        // 他のフィールドへの影響を計算
-        const newValues = { ...valuesWithChange };
-        applyExclusionRules(
-          field,
-          newValue,
-          valuesWithChange,
-          (f, v) => { newValues[f] = v; }
-        );
-
-        // 変更があれば一括適用（変更されたフィールド以外）
-        if (newValues.PRE !== valuesWithChange.PRE ||
-            newValues.CENTRAL !== valuesWithChange.CENTRAL ||
-            newValues.POST !== valuesWithChange.POST) {
-          // 遅延実行で他のフィールドを更新（自分自身は除く）
+        if (resetResult.needed) {
+          // リセットが必要 → デフォルト値を適用
           setTimeout(() => {
-            bulkUpdateMode = true;
-            try {
-              if (field !== 'PRE') block.setFieldValue(newValues.PRE, 'PRE');
-              if (field !== 'CENTRAL') block.setFieldValue(newValues.CENTRAL, 'CENTRAL');
-              if (field !== 'POST') block.setFieldValue(newValues.POST, 'POST');
-            } finally {
-              bulkUpdateMode = false;
-            }
+            block._bulkSetValues?.(resetResult.newValues);
+
+            // リセット理由をブロックに保存（Grammarパネルで読み取り可能）
+            (block as unknown as Record<string, unknown>)._lastResetReason = resetResult.reason;
+            (block as unknown as Record<string, unknown>)._lastResetTime = Date.now();
           }, 0);
         }
 

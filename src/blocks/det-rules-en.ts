@@ -531,3 +531,70 @@ export function wouldBeValidCombination(
   const testValues = { ...currentValues, [field]: newValue };
   return isValidCombination(testValues.PRE, testValues.CENTRAL, testValues.POST, nounType);
 }
+
+/**
+ * 名詞タイプに応じたデフォルト値を取得
+ */
+export function getDefaultValues(nounType: NounType | null): { PRE: string; CENTRAL: string; POST: string } {
+  if (nounType) {
+    const constraint = NOUN_TYPE_CONSTRAINTS[nounType];
+    return {
+      PRE: constraint.default.pre,
+      CENTRAL: constraint.default.central,
+      POST: constraint.default.post,
+    };
+  }
+  // 名詞なしの場合は全て none
+  return { PRE: '__none__', CENTRAL: '__none__', POST: '__none__' };
+}
+
+/**
+ * リセット判定結果の型
+ */
+export interface ResetResult {
+  needed: boolean;
+  newValues: { PRE: string; CENTRAL: string; POST: string };
+  reason?: string;
+}
+
+/**
+ * ユーザーが値を変更した後、リセットが必要かどうか判定
+ * - 変更後の組み合わせが有効リストにない場合、デフォルト値へのリセットが必要
+ */
+export function calculateResetIfNeeded(
+  changedField: DetField,
+  newValue: string,
+  currentValues: { PRE: string; CENTRAL: string; POST: string },
+  nounType: NounType | null
+): ResetResult {
+  const valuesWithChange = { ...currentValues, [changedField]: newValue };
+
+  // 変更後の組み合わせが有効かチェック
+  if (isValidCombination(valuesWithChange.PRE, valuesWithChange.CENTRAL, valuesWithChange.POST, nounType)) {
+    // 有効なのでリセット不要
+    return { needed: false, newValues: valuesWithChange };
+  }
+
+  // 無効なのでデフォルト値にリセット
+  const defaults = getDefaultValues(nounType);
+
+  // 理由を生成
+  let reason: string;
+  if (nounType === 'countable') {
+    reason = '可算名詞の既定値にリセット';
+  } else if (nounType === 'uncountable') {
+    reason = '不可算名詞の既定値にリセット';
+  } else if (nounType === 'proper') {
+    reason = '固有名詞の既定値にリセット';
+  } else if (nounType === 'zeroArticle') {
+    reason = 'ゼロ冠詞名詞の既定値にリセット';
+  } else {
+    reason = '既定値にリセット';
+  }
+
+  return {
+    needed: true,
+    newValues: defaults,
+    reason,
+  };
+}

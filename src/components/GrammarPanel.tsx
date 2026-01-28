@@ -4,6 +4,7 @@ import type { GrammarMessages } from '../locales';
 
 interface GrammarPanelProps {
   logs: TransformLog[];
+  notification?: string | null;
 }
 
 // Get color for transformation type
@@ -48,7 +49,7 @@ function translateKey(key: string | undefined, grammar: GrammarMessages): string
   return key;
 }
 
-export function GrammarPanel({ logs }: GrammarPanelProps) {
+export function GrammarPanel({ logs, notification }: GrammarPanelProps) {
   const { grammar } = useLocale();
 
   // Translate type name
@@ -60,6 +61,12 @@ export function GrammarPanel({ logs }: GrammarPanelProps) {
   if (logs.length === 0) {
     return (
       <div className="grammar-panel">
+        {notification && (
+          <div className="grammar-notification">
+            <span className="notification-icon">⚠</span>
+            <span className="notification-text">{notification}</span>
+          </div>
+        )}
         <div className="grammar-empty">
           <span className="empty-icon">∅</span>
           <span className="empty-text">{grammar.EMPTY_NO_TRANSFORMATIONS}</span>
@@ -70,6 +77,12 @@ export function GrammarPanel({ logs }: GrammarPanelProps) {
 
   return (
     <div className="grammar-panel">
+      {notification && (
+        <div className="grammar-notification">
+          <span className="notification-icon">⚠</span>
+          <span className="notification-text">{notification}</span>
+        </div>
+      )}
       <div className="grammar-steps">
         {logs.map((log, i) => {
           const typeColor = getTypeColor(log.type);

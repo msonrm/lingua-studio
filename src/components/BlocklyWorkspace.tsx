@@ -13,6 +13,7 @@ interface BlocklyWorkspaceProps {
   onSentenceChange: (sentences: string[]) => void;
   onLogsChange: (logs: TransformLog[]) => void;
   onBlockChanges: (changes: BlockChange[]) => void;
+  onResetNotice?: (notice: string | null) => void;
   initialState?: object | null;
 }
 
@@ -21,7 +22,7 @@ export interface BlocklyWorkspaceHandle {
 }
 
 export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorkspaceProps>(
-  function BlocklyWorkspace({ onASTChange, onSentenceChange, onLogsChange, onBlockChanges, initialState }, ref) {
+  function BlocklyWorkspace({ onASTChange, onSentenceChange, onLogsChange, onBlockChanges, onResetNotice, initialState }, ref) {
     const blocklyDiv = useRef<HTMLDivElement>(null);
     const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
     const pendingChangesRef = useRef<BlockChange[]>([]);
@@ -150,7 +151,37 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
         pendingChangesRef.current = [];
       }
       // Note: Don't clear blockChanges when empty - keep showing last change
-    }, [onASTChange, onSentenceChange, onLogsChange, onBlockChanges, ui.ERROR_INCOMPLETE]);
+
+      // DETブロックのリセット通知をチェック
+      if (onResetNotice) {
+        const allBlocks = workspaceRef.current.getAllBlocks(false);
+        let latestReset: { reason: string; time: number } | null = null;
+
+        for (const block of allBlocks) {
+          if (block.type === 'determiner_unified') {
+            const blockAny = block as unknown as Record<string, unknown>;
+            const resetTime = blockAny._lastResetTime as number | undefined;
+            const resetReason = blockAny._lastResetReason as string | undefined;
+
+            if (resetTime && resetReason) {
+              // 1秒以内のリセットのみ表示
+              if (Date.now() - resetTime < 1000) {
+                if (!latestReset || resetTime > latestReset.time) {
+                  latestReset = { reason: resetReason, time: resetTime };
+                }
+              }
+              // 古いリセット情報をクリア
+              if (Date.now() - resetTime > 1000) {
+                blockAny._lastResetReason = undefined;
+                blockAny._lastResetTime = undefined;
+              }
+            }
+          }
+        }
+
+        onResetNotice(latestReset?.reason ?? null);
+      }
+    }, [onASTChange, onSentenceChange, onLogsChange, onBlockChanges, onResetNotice, ui.ERROR_INCOMPLETE]);
 
     useEffect(() => {
       if (!blocklyDiv.current) return;

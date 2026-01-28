@@ -552,6 +552,27 @@ body {
   height: 100%;
 }
 
+.grammar-notification {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  background: #422006;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  color: #fbbf24;
+  font-size: 0.85rem;
+}
+
+.grammar-notification .notification-icon {
+  font-size: 1rem;
+}
+
+.grammar-notification .notification-text {
+  flex: 1;
+}
+
 .grammar-empty {
   display: flex;
   flex-direction: column;

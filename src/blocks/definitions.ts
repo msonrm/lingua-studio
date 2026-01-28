@@ -8,7 +8,7 @@ import {
   NOUN_TYPE_CONSTRAINTS,
   applyExclusionRules,
   isExcludedByOthers,
-  applyNounTypeConstraints,
+  calculateNounTypeValues,
   type DetField,
   type NounType,
   type DeterminerOption,
@@ -694,29 +694,56 @@ Blockly.Blocks['determiner_unified'] = {
     const getPostOptions = (): [string, string][] =>
       getOptionsForField('POST', getPostDeterminers());
 
-    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否、
-    // 有効な値なら排他ルールを適用
+    // 一括更新モードフラグ（バリデーターをバイパスするため）
+    let bulkUpdateMode = false;
+
+    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否
     const createValidator = (
       field: DetField,
       getOptions: () => [string, string][]
     ) => {
       return function(this: Blockly.FieldDropdown, newValue: string) {
+        // 一括更新モード中はバリデーションをスキップ
+        if (bulkUpdateMode) {
+          return newValue;
+        }
+
         const options = getOptions();
         const selected = options.find(([, v]) => v === newValue);
         if (selected && selected[0].startsWith('×')) {
           return null;  // 選択を拒否
         }
 
-        // 排他ルール適用（遅延実行で他のフィールドをリセット）
-        setTimeout(() => {
-          const currentValues = getCurrentValues();
-          applyExclusionRules(
-            field,
-            newValue,
-            currentValues,
-            (f, v) => block.setFieldValue(v, f)
-          );
-        }, 0);
+        // 排他ルール適用：変更後の値を使って計算し、一括適用
+        // （バリデーター実行時点ではまだ値が確定していないため、newValueを使用）
+        const currentValues = getCurrentValues();
+        const valuesWithChange = { ...currentValues, [field]: newValue };
+
+        // 他のフィールドへの影響を計算
+        const newValues = { ...valuesWithChange };
+        applyExclusionRules(
+          field,
+          newValue,
+          valuesWithChange,
+          (f, v) => { newValues[f] = v; }
+        );
+
+        // 変更があれば一括適用（変更されたフィールド以外）
+        if (newValues.PRE !== valuesWithChange.PRE ||
+            newValues.CENTRAL !== valuesWithChange.CENTRAL ||
+            newValues.POST !== valuesWithChange.POST) {
+          // 遅延実行で他のフィールドを更新（自分自身は除く）
+          setTimeout(() => {
+            bulkUpdateMode = true;
+            try {
+              if (field !== 'PRE') block.setFieldValue(newValues.PRE, 'PRE');
+              if (field !== 'CENTRAL') block.setFieldValue(newValues.CENTRAL, 'CENTRAL');
+              if (field !== 'POST') block.setFieldValue(newValues.POST, 'POST');
+            } finally {
+              bulkUpdateMode = false;
+            }
+          }, 0);
+        }
 
         return newValue;
       };
@@ -736,6 +763,18 @@ Blockly.Blocks['determiner_unified'] = {
     // 内部関数を保存（onchangeで使用）
     this._getNounType = getNounType;
     this._getCurrentValues = getCurrentValues;
+
+    // 一括更新関数（バリデーションをスキップして値をまとめて設定）
+    this._bulkSetValues = (values: { PRE: string; CENTRAL: string; POST: string }) => {
+      bulkUpdateMode = true;
+      try {
+        block.setFieldValue(values.PRE, 'PRE');
+        block.setFieldValue(values.CENTRAL, 'CENTRAL');
+        block.setFieldValue(values.POST, 'POST');
+      } finally {
+        bulkUpdateMode = false;
+      }
+    };
   },
 
   // 接続変更・名詞変更時に名詞タイプ制約を適用
@@ -762,12 +801,12 @@ Blockly.Blocks['determiner_unified'] = {
     const currentValues = this._getCurrentValues?.() as { PRE: string; CENTRAL: string; POST: string };
     if (!currentValues) return;
 
-    // 名詞タイプ制約を適用
-    applyNounTypeConstraints(
-      nounType,
-      currentValues,
-      (field, value) => this.setFieldValue(value, field)
-    );
+    // 名詞タイプに基づいて新しい値を計算
+    const newValues = calculateNounTypeValues(nounType, currentValues);
+    if (newValues) {
+      // 計算した値を一括で適用（バリデーションをバイパス）
+      this._bulkSetValues?.(newValues);
+    }
   },
 };
 

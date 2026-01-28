@@ -363,13 +363,13 @@ export function isExcludedByOthers(
 }
 
 /**
- * 名詞タイプに基づいてDET値をリセット
+ * 名詞タイプに基づいて適切なDET値を計算（副作用なし）
+ * @returns 新しい値のセット、または変更不要の場合null
  */
-export function applyNounTypeConstraints(
+export function calculateNounTypeValues(
   nounType: NounType,
-  currentValues: { PRE: string; CENTRAL: string; POST: string },
-  setFieldValue: (field: DetField, value: string) => void
-): void {
+  currentValues: { PRE: string; CENTRAL: string; POST: string }
+): { PRE: string; CENTRAL: string; POST: string } | null {
   const constraint = NOUN_TYPE_CONSTRAINTS[nounType];
 
   // いずれかのフィールドが無効な値を持っていたら、デフォルトにリセット
@@ -378,13 +378,37 @@ export function applyNounTypeConstraints(
   const hasInvalidPost = constraint.invalid.post.includes(currentValues.POST);
 
   if (hasInvalidPre || hasInvalidCentral || hasInvalidPost) {
-    setFieldValue('PRE', constraint.default.pre);
-    setFieldValue('CENTRAL', constraint.default.central);
-    setFieldValue('POST', constraint.default.post);
+    return {
+      PRE: constraint.default.pre,
+      CENTRAL: constraint.default.central,
+      POST: constraint.default.post,
+    };
   } else if (nounType === 'countable') {
     // 可算名詞で全て__none__なら自動でaを設定
     if (currentValues.PRE === '__none__' && currentValues.CENTRAL === '__none__' && currentValues.POST === '__none__') {
-      setFieldValue('CENTRAL', 'a');
+      return {
+        PRE: '__none__',
+        CENTRAL: 'a',
+        POST: '__none__',
+      };
     }
+  }
+
+  return null; // 変更不要
+}
+
+/**
+ * 名詞タイプに基づいてDET値をリセット（後方互換性のため維持）
+ */
+export function applyNounTypeConstraints(
+  nounType: NounType,
+  currentValues: { PRE: string; CENTRAL: string; POST: string },
+  setFieldValue: (field: DetField, value: string) => void
+): void {
+  const newValues = calculateNounTypeValues(nounType, currentValues);
+  if (newValues) {
+    setFieldValue('PRE', newValues.PRE);
+    setFieldValue('CENTRAL', newValues.CENTRAL);
+    setFieldValue('POST', newValues.POST);
   }
 }

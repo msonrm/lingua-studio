@@ -4,6 +4,7 @@ import '../blocks/definitions';
 import { createToolbox } from '../blocks/definitions';
 import { generateMultipleAST } from '../renderer/astGenerator';
 import { renderToEnglishWithLogs } from '../renderer/english/renderer';
+import { renderToJapanese } from '../renderer/japanese';
 import { TransformLog, BlockChange } from '../types/grammarLog';
 import { SentenceNode } from '../types/schema';
 import { useLocale } from '../locales';
@@ -11,6 +12,7 @@ import { useLocale } from '../locales';
 interface BlocklyWorkspaceProps {
   onASTChange: (asts: SentenceNode[]) => void;
   onSentenceChange: (sentences: string[]) => void;
+  onJapaneseSentenceChange: (sentences: string[]) => void;
   onLogsChange: (logs: TransformLog[]) => void;
   onBlockChanges: (changes: BlockChange[]) => void;
   onResetNotice?: (notice: string | null) => void;
@@ -22,7 +24,7 @@ export interface BlocklyWorkspaceHandle {
 }
 
 export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorkspaceProps>(
-  function BlocklyWorkspace({ onASTChange, onSentenceChange, onLogsChange, onBlockChanges, onResetNotice, initialState }, ref) {
+  function BlocklyWorkspace({ onASTChange, onSentenceChange, onJapaneseSentenceChange, onLogsChange, onBlockChanges, onResetNotice, initialState }, ref) {
     const blocklyDiv = useRef<HTMLDivElement>(null);
     const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
     const pendingChangesRef = useRef<BlockChange[]>([]);
@@ -143,6 +145,17 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
         }
       });
       onSentenceChange(sentences);
+
+      // 日本語（統語論のみ）をレンダリング
+      const japaneseSentences = asts.map(ast => {
+        try {
+          return renderToJapanese(ast);
+        } catch {
+          return '___';
+        }
+      });
+      onJapaneseSentenceChange(japaneseSentences);
+
       onLogsChange(allLogs);
 
       // Send pending block changes and clear (only update if there are changes)
@@ -181,7 +194,7 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
 
         onResetNotice(latestReset?.reason ?? null);
       }
-    }, [onASTChange, onSentenceChange, onLogsChange, onBlockChanges, onResetNotice, ui.ERROR_INCOMPLETE]);
+    }, [onASTChange, onSentenceChange, onJapaneseSentenceChange, onLogsChange, onBlockChanges, onResetNotice, ui.ERROR_INCOMPLETE]);
 
     useEffect(() => {
       if (!blocklyDiv.current) return;

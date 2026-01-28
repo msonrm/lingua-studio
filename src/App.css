@@ -277,6 +277,13 @@ body {
   overflow: auto;
 }
 
+.output-panel.dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+}
+
 /* ============================================
    Output Sections
    ============================================ */
@@ -285,11 +292,17 @@ body {
   border-bottom: 1px solid #3a4556;
 }
 
+.output-panel.dual .output-section {
+  padding: 0;
+  border-bottom: none;
+}
+
 .output-section:last-child {
   border-bottom: none;
 }
 
-.output-section h2 {
+.output-section h2,
+.output-section h3 {
   font-size: 0.7rem;
   font-weight: 600;
   color: #e8eaed;

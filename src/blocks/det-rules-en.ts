@@ -51,7 +51,7 @@ export interface NounTypeConstraint {
 // 前置限定詞（predeterminer）
 export const PRE_DETERMINERS: DeterminerOption[] = [
   { label: '─', value: '__none__', output: null },
-  { label: 'all', value: 'all', number: 'plural', output: 'all' },
+  { label: 'all', value: 'all', output: 'all' },
   { label: 'both', value: 'both', number: 'plural', output: 'both' },
   { label: 'half', value: 'half', output: 'half' },
 ];
@@ -60,11 +60,18 @@ export const PRE_DETERMINERS: DeterminerOption[] = [
 export const CENTRAL_DETERMINERS: DeterminerOption[] = [
   { label: '─', value: '__none__', output: null },
   { label: 'the', value: 'the', output: 'the' },
+  { label: 'a/an', value: 'a', number: 'singular', output: 'a' },
   { label: 'this', value: 'this', number: 'singular', output: 'this' },
   { label: 'that', value: 'that', number: 'singular', output: 'that' },
-  { label: 'a/an', value: 'a', number: 'singular', output: 'a' },
+  { label: 'these', value: 'these', number: 'plural', output: 'these' },
+  { label: 'those', value: 'those', number: 'plural', output: 'those' },
   { label: 'my', value: 'my', output: 'my' },
   { label: 'your', value: 'your', output: 'your' },
+  { label: 'his', value: 'his', output: 'his' },
+  { label: 'her', value: 'her', output: 'her' },
+  { label: 'its', value: 'its', output: 'its' },
+  { label: 'our', value: 'our', output: 'our' },
+  { label: 'their', value: 'their', output: 'their' },
   { label: 'no', value: 'no', output: 'no' },
 ];
 
@@ -96,7 +103,7 @@ export const PRE_EXCLUSIONS: Record<string, { CENTRAL?: ExclusionRule; POST?: Ex
     POST: { excludes: ['one'], resetTo: '__none__' },
   },
   'both': {
-    CENTRAL: { excludes: ['a', 'no', 'this', 'that'], resetTo: 'the' },
+    CENTRAL: { excludes: ['a', 'no', 'this', 'that', 'these', 'those'], resetTo: 'the' },
     POST: { excludes: ['one', 'three', 'many', 'few', 'some', 'several', '__uncountable__'], resetTo: 'two' },
   },
   'half': {
@@ -119,15 +126,17 @@ export const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: Ex
     PRE: { excludes: ['both'], resetTo: '__none__' },
     POST: { excludes: ['two', 'three', 'many', 'few', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
   },
+  'these': {
+    PRE: { excludes: ['both'], resetTo: '__none__' },
+    POST: { excludes: ['one', '__uncountable__'], resetTo: '__none__' },
+  },
+  'those': {
+    PRE: { excludes: ['both'], resetTo: '__none__' },
+    POST: { excludes: ['one', '__uncountable__'], resetTo: '__none__' },
+  },
   'no': {
     PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
     POST: { excludes: ['some', '__uncountable__'], resetTo: '__none__' },
-  },
-  'my': {
-    POST: { excludes: ['__uncountable__'], resetTo: '__none__' },
-  },
-  'your': {
-    POST: { excludes: ['__uncountable__'], resetTo: '__none__' },
   },
 };
 
@@ -135,7 +144,7 @@ export const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: Ex
 export const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: ExclusionRule }> = {
   'one': {
     PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'these', 'those'], resetTo: '__none__' },
   },
   'two': {
     PRE: { excludes: ['half'], resetTo: '__none__' },
@@ -166,8 +175,8 @@ export const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: Ex
     CENTRAL: { excludes: ['a', 'this', 'that'], resetTo: '__none__' },
   },
   '__uncountable__': {
-    PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'this', 'that', 'my', 'your'], resetTo: '__none__' },
+    PRE: { excludes: ['both'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'these', 'those'], resetTo: '__none__' },
   },
 };
 

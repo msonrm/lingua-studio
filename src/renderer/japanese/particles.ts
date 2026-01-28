@@ -280,3 +280,130 @@ export const nounToJapanese: Record<string, string> = {
 export function translateNoun(lemma: string): string {
   return nounToJapanese[lemma] || lemma;
 }
+
+// ============================================
+// 動詞の日本語マッピング（辞書形のみ）
+// ============================================
+
+/**
+ * 英語動詞 → 日本語（辞書形）
+ */
+export const verbToJapanese: Record<string, string> = {
+  // Motion（移動）
+  'run': '走る',
+  'walk': '歩く',
+  'go': '行く',
+  'come': '来る',
+  'fly': '飛ぶ',
+  'swim': '泳ぐ',
+  'jump': '跳ぶ',
+  'fall': '落ちる',
+  'arrive': '着く',
+  'leave': '出る',
+
+  // Action（動作・創造）
+  'eat': '食べる',
+  'make': '作る',
+  'build': '建てる',
+  'break': '壊す',
+  'cut': '切る',
+  'open': '開ける',
+  'close': '閉める',
+  'write': '書く',
+  'read': '読む',
+  'drink': '飲む',
+  'cook': '料理する',
+  'clean': '掃除する',
+  'wash': '洗う',
+  'buy': '買う',
+  'sell': '売る',
+  'play': '遊ぶ',
+  'work': '働く',
+  'study': '勉強する',
+  'sleep': '眠る',
+  'sing': '歌う',
+  'dance': '踊る',
+  'draw': '描く',
+  'paint': '塗る',
+  'catch': '捕まえる',
+  'throw': '投げる',
+  'kick': '蹴る',
+  'hit': '打つ',
+  'push': '押す',
+  'pull': '引く',
+  'carry': '運ぶ',
+  'hold': '持つ',
+  'drop': '落とす',
+  'pick': '拾う',
+  'put': '置く',
+  'place': '置く',
+  'hang': '掛ける',
+  'wear': '着る',
+  'use': '使う',
+  'find': '見つける',
+  'lose': '失う',
+  'wait': '待つ',
+  'help': '助ける',
+  'meet': '会う',
+  'visit': '訪ねる',
+
+  // Transfer（授受・移転）
+  'give': 'あげる',
+  'take': '取る',
+  'send': '送る',
+  'receive': '受け取る',
+  'bring': '持って来る',
+  'get': '得る',
+  'show': '見せる',
+  'teach': '教える',
+  'learn': '学ぶ',
+  'lend': '貸す',
+  'borrow': '借りる',
+  'pay': '払う',
+
+  // Cognition（認知・知覚）
+  'think': '考える',
+  'know': '知る',
+  'see': '見る',
+  'hear': '聞く',
+  'feel': '感じる',
+  'believe': '信じる',
+  'understand': '理解する',
+  'remember': '覚える',
+  'forget': '忘れる',
+  'want': '欲しい',
+  'need': '必要とする',
+  'like': '好む',
+  'love': '愛する',
+  'hate': '嫌う',
+  'hope': '望む',
+  'expect': '期待する',
+  'prefer': '好む',
+
+  // Communication（伝達）
+  'say': '言う',
+  'tell': '伝える',
+  'speak': '話す',
+  'talk': '話す',
+  'ask': '尋ねる',
+  'answer': '答える',
+  'call': '呼ぶ',
+  'explain': '説明する',
+
+  // State（状態・存在）
+  'be': 'である',
+  'have': '持つ',
+  'exist': '存在する',
+  'live': '住む',
+  'reside': '居住する',
+  'stay': '滞在する',
+  'belong': '属する',
+  'seem': '見える',
+};
+
+/**
+ * 動詞を日本語に変換（見つからなければそのまま返す）
+ */
+export function translateVerb(lemma: string): string {
+  return verbToJapanese[lemma] || lemma;
+}

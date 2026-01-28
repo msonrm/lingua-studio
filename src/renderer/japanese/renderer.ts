@@ -19,7 +19,7 @@ import {
   CoordinationConjunct,
   SemanticRole,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun } from './particles';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb } from './particles';
 
 // ============================================
 // Main Entry Points
@@ -117,8 +117,8 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   const subject = argParts.find(p => p.isSubject);
   const others = argParts.filter(p => !p.isSubject);
 
-  // 動詞（原形のまま）
-  const verb = verbLemma;
+  // 動詞（日本語に変換）
+  const verb = translateVerb(verbLemma);
 
   // SOV順で組み立て
   const result: string[] = [];

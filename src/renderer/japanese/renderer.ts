@@ -19,7 +19,7 @@ import {
   CoordinationConjunct,
   SemanticRole,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun } from './particles';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun } from './particles';
 
 // ============================================
 // Main Entry Points
@@ -189,7 +189,8 @@ function renderNounPhrase(np: NounPhraseNode): string {
   // Head (noun or pronoun)
   if (np.head.type === 'noun') {
     const noun = np.head as NounHead;
-    parts.push(noun.lemma);
+    // 名詞は日本語に変換
+    parts.push(translateNoun(noun.lemma));
   } else {
     const pronoun = np.head as PronounHead;
     // 代名詞は日本語に変換

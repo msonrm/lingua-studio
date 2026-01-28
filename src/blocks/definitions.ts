@@ -1436,11 +1436,6 @@ export function createToolbox() {
               NOUN: {
                 block: { type: "human_block" }
               }
-            },
-            fields: {
-              PRE: "__none__",
-              CENTRAL: "a",
-              POST: "__none__"
             }
           },
           { kind: "label", text: msg('SECTION_ANIMALS', '── Animals ──') },
@@ -1451,11 +1446,6 @@ export function createToolbox() {
               NOUN: {
                 block: { type: "animal_block" }
               }
-            },
-            fields: {
-              PRE: "__none__",
-              CENTRAL: "a",
-              POST: "__none__"
             }
           },
           { kind: "label", text: msg('SECTION_OBJECTS', '── Objects ──') },
@@ -1466,11 +1456,6 @@ export function createToolbox() {
               NOUN: {
                 block: { type: "object_block" }
               }
-            },
-            fields: {
-              PRE: "__none__",
-              CENTRAL: "a",
-              POST: "__none__"
             }
           },
           { kind: "label", text: msg('SECTION_PLACES', '── Places ──') },
@@ -1481,11 +1466,6 @@ export function createToolbox() {
               NOUN: {
                 block: { type: "place_block" }
               }
-            },
-            fields: {
-              PRE: "__none__",
-              CENTRAL: "the",
-              POST: "__none__"
             }
           },
           { kind: "label", text: msg('SECTION_ABSTRACT', '── Abstract ──') },
@@ -1496,11 +1476,6 @@ export function createToolbox() {
               NOUN: {
                 block: { type: "abstract_block" }
               }
-            },
-            fields: {
-              PRE: "__none__",
-              CENTRAL: "a",
-              POST: "__none__"
             }
           },
         ]

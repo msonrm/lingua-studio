@@ -691,7 +691,7 @@ Blockly.Blocks['determiner_unified'] = {
     // 一括更新モードフラグ（バリデーターをバイパスするため）
     let bulkUpdateMode = false;
 
-    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否
+    // バリデータ：無効なオプション（×マーク付き）とラベル行を選んだら拒否
     const createValidator = (
       getOptions: () => [string, string][]
     ) => {
@@ -699,6 +699,11 @@ Blockly.Blocks['determiner_unified'] = {
         // 一括更新モード中はバリデーションをスキップ
         if (bulkUpdateMode) {
           return newValue;
+        }
+
+        // ラベル行（__label_で始まる）の選択を拒否
+        if (newValue.startsWith('__label_')) {
+          return null;
         }
 
         const options = getOptions();

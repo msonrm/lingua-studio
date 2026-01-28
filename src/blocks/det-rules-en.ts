@@ -62,9 +62,10 @@ export const PRE_DETERMINERS: DeterminerOption[] = [
 
 // 中央限定詞（central determiner）- カテゴリ分類付き
 export const CENTRAL_DETERMINERS: DeterminerOption[] = [
+  // デフォルト値（最初に配置）
+  { label: '─', value: '__none__', output: null },
   // 冠詞（Article）
   { label: '── Article ──', value: '__label_article__', output: null },
-  { label: '─', value: '__none__', output: null },
   { label: 'the', value: 'the', output: 'the' },
   { label: 'a/an', value: 'a', number: 'singular', output: 'a' },
   // 指示詞（Demonstrative）

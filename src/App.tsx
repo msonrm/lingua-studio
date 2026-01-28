@@ -45,6 +45,7 @@ function App() {
   const [sentences, setSentences] = useState<string[]>([]);
   const [grammarLogs, setGrammarLogs] = useState<TransformLog[]>([]);
   const [_blockChanges, setBlockChanges] = useState<BlockChange[]>([]);
+  const [resetNotice, setResetNotice] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>('blocks');
   const [localeCode, setLocaleCode] = useState<LocaleCode>(getStoredLocale());
   const [workspaceKey, setWorkspaceKey] = useState(0);
@@ -197,6 +198,7 @@ function App() {
                     onSentenceChange={setSentences}
                     onLogsChange={setGrammarLogs}
                     onBlockChanges={setBlockChanges}
+                    onResetNotice={setResetNotice}
                     initialState={workspaceState}
                   />
                 </div>
@@ -238,7 +240,7 @@ function App() {
                 </div>
                 <div className="side-panel-content">
                   {sidePanelTab === 'grammar' && (
-                    <GrammarPanel logs={grammarLogs} />
+                    <GrammarPanel logs={grammarLogs} notification={resetNotice} />
                   )}
                   {sidePanelTab === 'timeline' && (
                     <VisualizationPanel asts={asts} />

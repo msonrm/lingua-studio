@@ -523,3 +523,21 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
   - 全レンダリング関数で統一（declarative, interrogative, wh-question, imperative, coordinated VP）
 - [x] 前置詞プルダウンのデフォルト値を `in` に修正
   - グループヘッダーではなく実際の値をデフォルトに
+
+### DET Dropdown UX Improvements (2026-01)
+- [x] CENTRAL限定詞にカテゴリラベル追加
+  - Article, Demonstrative, Possessive, Distributive, Quantity
+  - ラベル行は選択不可（`__label_*` 値で判定）
+- [x] noneオプションの表記改善
+  - `─` → `[∅]`（言語学的ゼロ記号）
+- [x] ドロップダウンラベルの国際化対応
+  - `msg()` 関数で動的ローカライズ
+  - 配列からゲッター関数に変換（`getCentralDeterminers()`）
+  - ja: 冠詞, 指示詞, 所有詞, 分配詞, 数量詞
+  - ja-hira: 子供向け表現（これ・あれ, わたしの・あなたの, etc.）
+- [x] バリデータ簡素化
+  - リスト型検証への統一で不要コード削除（~150行）
+  - X印とラベルの拒否のみに簡素化
+- [x] 名詞タイプ変更時のX印表示バグ修正
+  - `getOptions(false)` + `setValue` でBlocklyキャッシュをバイパス
+  - GitHub issue #3099 のワークアラウンド適用

@@ -2,13 +2,11 @@ import * as Blockly from 'blockly';
 import { nounCores, adjectiveCores, adverbCores, pronounCores, verbCores } from '../data/dictionary-core';
 import type { VerbCategory, AdjectiveCategory } from '../types/schema';
 import {
-  PRE_DETERMINERS,
-  CENTRAL_DETERMINERS,
+  getPreDeterminers,
+  getCentralDeterminers,
   getPostDeterminers,
-  NOUN_TYPE_CONSTRAINTS,
-  applyExclusionRules,
-  isExcludedByOthers,
-  applyNounTypeConstraints,
+  calculateNounTypeValues,
+  wouldBeValidCombination,
   type DetField,
   type NounType,
   type DeterminerOption,
@@ -655,28 +653,29 @@ Blockly.Blocks['determiner_unified'] = {
     // 無効マーク付きラベルを生成
     const markInvalid = (label: string) => `× ${label}`;
 
+    // 一括更新中の目標値（更新完了まで参照用）
+    let targetValues: { PRE: string; CENTRAL: string; POST: string } | null = null;
+
+    // オプション生成時に使う値を取得（更新中は目標値を優先）
+    const getValuesForOptions = () => targetValues ?? getCurrentValues();
+
     // オプション生成（共通ロジック）
+    // 名詞タイプ別の有効リストを使って判定（単一の真実のソース）
     const getOptionsForField = (
       field: DetField,
       determiners: DeterminerOption[]
     ): [string, string][] => {
-      const currentValues = getCurrentValues();
+      const values = getValuesForOptions();
       const nounType = getNounType();
 
       return determiners.map(o => {
-        if (o.value === '__none__') return [o.label, o.value];
-
-        // 名詞タイプによる制約
-        if (nounType) {
-          const constraint = NOUN_TYPE_CONSTRAINTS[nounType];
-          const invalidList = constraint.invalid[field.toLowerCase() as 'pre' | 'central' | 'post'];
-          if (invalidList.includes(o.value)) {
-            return [markInvalid(o.label), o.value];
-          }
+        // ラベル行は有効性チェックをスキップ（そのまま表示）
+        if (o.value.startsWith('__label_')) {
+          return [o.label, o.value];
         }
 
-        // 他のフィールドとの排他チェック
-        if (isExcludedByOthers(field, o.value, currentValues)) {
+        // 組み合わせの有効性チェック（名詞タイプ別リストに基づく）
+        if (!wouldBeValidCombination(field, o.value, values, nounType)) {
           return [markInvalid(o.label), o.value];
         }
 
@@ -686,37 +685,37 @@ Blockly.Blocks['determiner_unified'] = {
 
     // 各フィールドのオプション生成
     const getPreOptions = (): [string, string][] =>
-      getOptionsForField('PRE', PRE_DETERMINERS);
+      getOptionsForField('PRE', getPreDeterminers());
 
     const getCentralOptions = (): [string, string][] =>
-      getOptionsForField('CENTRAL', CENTRAL_DETERMINERS);
+      getOptionsForField('CENTRAL', getCentralDeterminers());
 
     const getPostOptions = (): [string, string][] =>
       getOptionsForField('POST', getPostDeterminers());
 
-    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否、
-    // 有効な値なら排他ルールを適用
+    // 一括更新モードフラグ（バリデーターをバイパスするため）
+    let bulkUpdateMode = false;
+
+    // バリデータ：無効なオプション（×マーク付き）とラベル行を選んだら拒否
     const createValidator = (
-      field: DetField,
       getOptions: () => [string, string][]
     ) => {
       return function(this: Blockly.FieldDropdown, newValue: string) {
+        // 一括更新モード中はバリデーションをスキップ
+        if (bulkUpdateMode) {
+          return newValue;
+        }
+
+        // ラベル行（__label_で始まる）の選択を拒否
+        if (newValue.startsWith('__label_')) {
+          return null;
+        }
+
         const options = getOptions();
         const selected = options.find(([, v]) => v === newValue);
         if (selected && selected[0].startsWith('×')) {
           return null;  // 選択を拒否
         }
-
-        // 排他ルール適用（遅延実行で他のフィールドをリセット）
-        setTimeout(() => {
-          const currentValues = getCurrentValues();
-          applyExclusionRules(
-            field,
-            newValue,
-            currentValues,
-            (f, v) => block.setFieldValue(v, f)
-          );
-        }, 0);
 
         return newValue;
       };
@@ -725,9 +724,9 @@ Blockly.Blocks['determiner_unified'] = {
     this.appendValueInput("NOUN")
         .setCheck(["noun", "adjective"])
         .appendField(msg('DETERMINER_LABEL', 'DET'))
-        .appendField(new Blockly.FieldDropdown(getPreOptions, createValidator('PRE', getPreOptions)), "PRE")
-        .appendField(new Blockly.FieldDropdown(getCentralOptions, createValidator('CENTRAL', getCentralOptions)), "CENTRAL")
-        .appendField(new Blockly.FieldDropdown(getPostOptions, createValidator('POST', getPostOptions)), "POST");
+        .appendField(new Blockly.FieldDropdown(getPreOptions, createValidator(getPreOptions)), "PRE")
+        .appendField(new Blockly.FieldDropdown(getCentralOptions, createValidator(getCentralOptions)), "CENTRAL")
+        .appendField(new Blockly.FieldDropdown(getPostOptions, createValidator(getPostOptions)), "POST");
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.determiner);
@@ -736,6 +735,20 @@ Blockly.Blocks['determiner_unified'] = {
     // 内部関数を保存（onchangeで使用）
     this._getNounType = getNounType;
     this._getCurrentValues = getCurrentValues;
+
+    // 一括更新関数（バリデーションをスキップして値をまとめて設定）
+    this._bulkSetValues = (values: { PRE: string; CENTRAL: string; POST: string }) => {
+      targetValues = values;  // 更新中は目標値を参照させる
+      bulkUpdateMode = true;
+      try {
+        block.setFieldValue(values.PRE, 'PRE');
+        block.setFieldValue(values.CENTRAL, 'CENTRAL');
+        block.setFieldValue(values.POST, 'POST');
+      } finally {
+        bulkUpdateMode = false;
+        targetValues = null;  // 更新完了後はクリア
+      }
+    };
   },
 
   // 接続変更・名詞変更時に名詞タイプ制約を適用
@@ -762,12 +775,35 @@ Blockly.Blocks['determiner_unified'] = {
     const currentValues = this._getCurrentValues?.() as { PRE: string; CENTRAL: string; POST: string };
     if (!currentValues) return;
 
-    // 名詞タイプ制約を適用
-    applyNounTypeConstraints(
-      nounType,
-      currentValues,
-      (field, value) => this.setFieldValue(value, field)
-    );
+    // 名詞タイプに基づいて新しい値を計算
+    const newValues = calculateNounTypeValues(nounType, currentValues);
+    if (newValues) {
+      // 計算した値を一括で適用（バリデーションをバイパス）
+      this._bulkSetValues?.(newValues);
+    }
+
+    // ドロップダウンの表示を強制更新（×マーク状態が変わる可能性があるため）
+    // 値が変わらなくても、名詞タイプ変更で有効/無効が変わることがある
+    const forceRefreshDropdowns = () => {
+      const preField = this.getField('PRE') as Blockly.FieldDropdown;
+      const centralField = this.getField('CENTRAL') as Blockly.FieldDropdown;
+      const postField = this.getField('POST') as Blockly.FieldDropdown;
+
+      // キャッシュをバイパスしてオプションを再取得し、setValue で表示を更新
+      // 参考: https://github.com/google/blockly/issues/3099
+      [preField, centralField, postField].forEach(field => {
+        if (field) {
+          field.getOptions(false);  // キャッシュをクリア
+          const currentValue = field.getValue();
+          if (currentValue) {
+            field.setValue(currentValue);  // 同じ値を再設定して表示を更新
+          }
+        }
+      });
+    };
+
+    // 値の変更後にUIを更新（setTimeoutで確実に値の反映後に実行）
+    setTimeout(forceRefreshDropdowns, 0);
   },
 };
 
@@ -1302,8 +1338,8 @@ export const TIME_CHIP_DATA = {
 };
 
 export const DETERMINER_DATA = {
-  pre: PRE_DETERMINERS,
-  central: CENTRAL_DETERMINERS,
+  pre: getPreDeterminers(),
+  central: getCentralDeterminers(),
   post: getPostDeterminers(),
 };
 
@@ -1397,11 +1433,6 @@ export function createToolbox() {
               NOUN: {
                 block: { type: "human_block" }
               }
-            },
-            fields: {
-              PRE: "__none__",
-              CENTRAL: "a",
-              POST: "__none__"
             }
           },
           { kind: "label", text: msg('SECTION_ANIMALS', '── Animals ──') },
@@ -1412,11 +1443,6 @@ export function createToolbox() {
               NOUN: {
                 block: { type: "animal_block" }
               }
-            },
-            fields: {
-              PRE: "__none__",
-              CENTRAL: "a",
-              POST: "__none__"
             }
           },
           { kind: "label", text: msg('SECTION_OBJECTS', '── Objects ──') },
@@ -1427,11 +1453,6 @@ export function createToolbox() {
               NOUN: {
                 block: { type: "object_block" }
               }
-            },
-            fields: {
-              PRE: "__none__",
-              CENTRAL: "a",
-              POST: "__none__"
             }
           },
           { kind: "label", text: msg('SECTION_PLACES', '── Places ──') },
@@ -1442,11 +1463,6 @@ export function createToolbox() {
               NOUN: {
                 block: { type: "place_block" }
               }
-            },
-            fields: {
-              PRE: "__none__",
-              CENTRAL: "the",
-              POST: "__none__"
             }
           },
           { kind: "label", text: msg('SECTION_ABSTRACT', '── Abstract ──') },
@@ -1457,11 +1473,6 @@ export function createToolbox() {
               NOUN: {
                 block: { type: "abstract_block" }
               }
-            },
-            fields: {
-              PRE: "__none__",
-              CENTRAL: "a",
-              POST: "__none__"
             }
           },
         ]

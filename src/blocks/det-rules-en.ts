@@ -36,14 +36,14 @@ export interface DeterminerOption {
 
 export type DetField = 'PRE' | 'CENTRAL' | 'POST';
 
-export interface ExclusionRule {
+interface ExclusionRule {
   excludes: string[];  // 排他となる値のリスト
   resetTo: string;     // リセット先の値
 }
 
 export type NounType = 'countable' | 'uncountable' | 'proper' | 'zeroArticle';
 
-export interface NounTypeConstraint {
+interface NounTypeConstraint {
   default: { pre: string; central: string; post: string };
   invalid: { pre: string[]; central: string[]; post: string[] };
 }
@@ -52,52 +52,72 @@ export interface NounTypeConstraint {
 // 限定詞データ
 // ============================================
 
-// 前置限定詞（predeterminer）
-export const PRE_DETERMINERS: DeterminerOption[] = [
-  { label: '─', value: '__none__', output: null },
-  { label: 'all', value: 'all', output: 'all' },
-  { label: 'both', value: 'both', number: 'plural', output: 'both' },
-  { label: 'half', value: 'half', output: 'half' },
-];
+// 前置限定詞（predeterminer）- ローカライズ可能
+export function getPreDeterminers(): DeterminerOption[] {
+  return [
+    { label: msg('DET_NONE', '[∅]'), value: '__none__', output: null },
+    { label: 'all', value: 'all', output: 'all' },
+    { label: 'both', value: 'both', number: 'plural', output: 'both' },
+    { label: 'half', value: 'half', output: 'half' },
+  ];
+}
 
-// 中央限定詞（central determiner）
-export const CENTRAL_DETERMINERS: DeterminerOption[] = [
-  { label: '─', value: '__none__', output: null },
-  { label: 'the', value: 'the', output: 'the' },
-  { label: 'a/an', value: 'a', number: 'singular', output: 'a' },
-  { label: 'this', value: 'this', number: 'singular', output: 'this' },
-  { label: 'that', value: 'that', number: 'singular', output: 'that' },
-  { label: 'these', value: 'these', number: 'plural', output: 'these' },
-  { label: 'those', value: 'those', number: 'plural', output: 'those' },
-  { label: 'my', value: 'my', output: 'my' },
-  { label: 'your', value: 'your', output: 'your' },
-  { label: 'his', value: 'his', output: 'his' },
-  { label: 'her', value: 'her', output: 'her' },
-  { label: 'its', value: 'its', output: 'its' },
-  { label: 'our', value: 'our', output: 'our' },
-  { label: 'their', value: 'their', output: 'their' },
-  { label: 'no', value: 'no', output: 'no' },
-  { label: 'each', value: 'each', number: 'singular', output: 'each' },
-  { label: 'every', value: 'every', number: 'singular', output: 'every' },
-  { label: 'either', value: 'either', number: 'singular', output: 'either' },
-  { label: 'neither', value: 'neither', number: 'singular', output: 'neither' },
-  { label: 'any', value: 'any', output: 'any' },
-  // 複合量化詞（compound quantifiers）
-  { label: 'a few', value: 'a_few', number: 'plural', output: 'a few' },
-  { label: 'a little', value: 'a_little', number: 'uncountable', output: 'a little' },
-  { label: 'a lot of', value: 'a_lot_of', output: 'a lot of' },  // 可算/不可算両方
-  { label: 'plenty of', value: 'plenty_of', output: 'plenty of' },  // 可算/不可算両方
-  { label: 'a number of', value: 'a_number_of', number: 'plural', output: 'a number of' },
-  { label: 'a couple of', value: 'a_couple_of', number: 'plural', output: 'a couple of' },
-  { label: 'a great deal of', value: 'a_great_deal_of', number: 'uncountable', output: 'a great deal of' },
-  { label: 'many a', value: 'many_a', number: 'singular', output: 'many a' },  // 文語的
-  { label: 'quite a few', value: 'quite_a_few', number: 'plural', output: 'quite a few' },
-];
+// 後方互換性のため（リスト生成用）
+export const PRE_DETERMINERS = getPreDeterminers();
+
+// 中央限定詞（central determiner）- カテゴリ分類付き・ローカライズ可能
+export function getCentralDeterminers(): DeterminerOption[] {
+  return [
+    // デフォルト値（最初に配置）
+    { label: msg('DET_NONE', '[∅]'), value: '__none__', output: null },
+    // 冠詞（Article）
+    { label: msg('DET_LABEL_ARTICLE', '── Article ──'), value: '__label_article__', output: null },
+    { label: 'the', value: 'the', output: 'the' },
+    { label: 'a/an', value: 'a', number: 'singular', output: 'a' },
+    // 指示詞（Demonstrative）
+    { label: msg('DET_LABEL_DEMONSTRATIVE', '── Demonstrative ──'), value: '__label_demonstrative__', output: null },
+    { label: 'this', value: 'this', number: 'singular', output: 'this' },
+    { label: 'that', value: 'that', number: 'singular', output: 'that' },
+    { label: 'these', value: 'these', number: 'plural', output: 'these' },
+    { label: 'those', value: 'those', number: 'plural', output: 'those' },
+    // 所有詞（Possessive）
+    { label: msg('DET_LABEL_POSSESSIVE', '── Possessive ──'), value: '__label_possessive__', output: null },
+    { label: 'my', value: 'my', output: 'my' },
+    { label: 'your', value: 'your', output: 'your' },
+    { label: 'his', value: 'his', output: 'his' },
+    { label: 'her', value: 'her', output: 'her' },
+    { label: 'its', value: 'its', output: 'its' },
+    { label: 'our', value: 'our', output: 'our' },
+    { label: 'their', value: 'their', output: 'their' },
+    // 分配詞・否定詞（Distributive & Negative）
+    { label: msg('DET_LABEL_DISTRIBUTIVE', '── Distributive ──'), value: '__label_distributive__', output: null },
+    { label: 'no', value: 'no', output: 'no' },
+    { label: 'each', value: 'each', number: 'singular', output: 'each' },
+    { label: 'every', value: 'every', number: 'singular', output: 'every' },
+    { label: 'either', value: 'either', number: 'singular', output: 'either' },
+    { label: 'neither', value: 'neither', number: 'singular', output: 'neither' },
+    { label: 'any', value: 'any', output: 'any' },
+    // 複合量化詞（Compound Quantifiers）
+    { label: msg('DET_LABEL_QUANTITY', '── Quantity ──'), value: '__label_quantity__', output: null },
+    { label: 'a few', value: 'a_few', number: 'plural', output: 'a few' },
+    { label: 'a little', value: 'a_little', number: 'uncountable', output: 'a little' },
+    { label: 'a lot of', value: 'a_lot_of', output: 'a lot of' },
+    { label: 'plenty of', value: 'plenty_of', output: 'plenty of' },
+    { label: 'a number of', value: 'a_number_of', number: 'plural', output: 'a number of' },
+    { label: 'a couple of', value: 'a_couple_of', number: 'plural', output: 'a couple of' },
+    { label: 'a great deal of', value: 'a_great_deal_of', number: 'uncountable', output: 'a great deal of' },
+    { label: 'many a', value: 'many_a', number: 'singular', output: 'many a' },
+    { label: 'quite a few', value: 'quite_a_few', number: 'plural', output: 'quite a few' },
+  ];
+}
+
+// 後方互換性のため（リスト生成用）
+export const CENTRAL_DETERMINERS = getCentralDeterminers();
 
 // 後置限定詞（postdeterminer）- ローカライズ可能なラベルを動的に生成
 export function getPostDeterminers(): DeterminerOption[] {
   return [
-    { label: '─', value: '__none__', output: null },
+    { label: msg('DET_NONE', '[∅]'), value: '__none__', output: null },
     { label: 'one', value: 'one', number: 'singular', output: 'one' },
     { label: 'two', value: 'two', number: 'plural', output: 'two' },
     { label: 'three', value: 'three', number: 'plural', output: 'three' },
@@ -121,7 +141,7 @@ export function getPostDeterminers(): DeterminerOption[] {
 const COMPOUND_QUANTIFIERS = ['a_few', 'a_little', 'a_lot_of', 'plenty_of', 'a_number_of', 'a_couple_of', 'a_great_deal_of', 'many_a', 'quite_a_few'];
 
 // PRE値が変更された時の、CENTRAL/POSTへの影響
-export const PRE_EXCLUSIONS: Record<string, { CENTRAL?: ExclusionRule; POST?: ExclusionRule }> = {
+const PRE_EXCLUSIONS: Record<string, { CENTRAL?: ExclusionRule; POST?: ExclusionRule }> = {
   'all': {
     CENTRAL: { excludes: ['a', 'no'], resetTo: 'the' },
     POST: { excludes: ['one'], resetTo: '__none__' },
@@ -137,7 +157,7 @@ export const PRE_EXCLUSIONS: Record<string, { CENTRAL?: ExclusionRule; POST?: Ex
 };
 
 // CENTRAL値が変更された時の、PRE/POSTへの影響
-export const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: ExclusionRule }> = {
+const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: ExclusionRule }> = {
   'a': {
     PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
     POST: { excludes: ['one', 'two', 'three', 'many', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
@@ -220,7 +240,7 @@ export const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: Ex
 };
 
 // POST値が変更された時の、PRE/CENTRALへの影響
-export const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: ExclusionRule }> = {
+const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: ExclusionRule }> = {
   'one': {
     PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
     CENTRAL: { excludes: ['a', 'these', 'those', ...COMPOUND_QUANTIFIERS], resetTo: '__none__' },
@@ -270,7 +290,7 @@ export const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: Ex
 // ============================================
 // 名詞タイプ別制約
 // ============================================
-export const NOUN_TYPE_CONSTRAINTS: Record<NounType, NounTypeConstraint> = {
+const NOUN_TYPE_CONSTRAINTS: Record<NounType, NounTypeConstraint> = {
   countable: {
     default: { pre: '__none__', central: 'a', post: '__none__' },
     invalid: { pre: [], central: ['a_little', 'a_great_deal_of'], post: ['little', 'much', '__uncountable__'] },
@@ -302,74 +322,13 @@ export const NOUN_TYPE_CONSTRAINTS: Record<NounType, NounTypeConstraint> = {
 // ============================================
 
 /**
- * 指定されたフィールドの値が変更された時、他のフィールドを必要に応じてリセット
+ * 名詞タイプに基づいて適切なDET値を計算（副作用なし）
+ * @returns 新しい値のセット、または変更不要の場合null
  */
-export function applyExclusionRules(
-  changedField: DetField,
-  newValue: string,
-  currentValues: { PRE: string; CENTRAL: string; POST: string },
-  setFieldValue: (field: DetField, value: string) => void
-): void {
-  let exclusions: { PRE?: ExclusionRule; CENTRAL?: ExclusionRule; POST?: ExclusionRule } | undefined;
-
-  if (changedField === 'PRE') {
-    exclusions = PRE_EXCLUSIONS[newValue];
-  } else if (changedField === 'CENTRAL') {
-    exclusions = CENTRAL_EXCLUSIONS[newValue];
-  } else if (changedField === 'POST') {
-    exclusions = POST_EXCLUSIONS[newValue];
-  }
-
-  if (!exclusions) return;
-
-  // 各フィールドをチェックしてリセット
-  for (const field of ['PRE', 'CENTRAL', 'POST'] as DetField[]) {
-    if (field === changedField) continue;
-    const rule = exclusions[field];
-    if (rule && rule.excludes.includes(currentValues[field])) {
-      setFieldValue(field, rule.resetTo);
-    }
-  }
-}
-
-/**
- * 指定されたフィールドの値が、他のフィールドの現在値と排他かどうか判定
- */
-export function isExcludedByOthers(
-  field: DetField,
-  value: string,
-  currentValues: { PRE: string; CENTRAL: string; POST: string }
-): boolean {
-  if (value === '__none__') return false;
-
-  // 他の2つのフィールドからの排他をチェック
-  for (const otherField of ['PRE', 'CENTRAL', 'POST'] as DetField[]) {
-    if (otherField === field) continue;
-
-    let exclusions: { PRE?: ExclusionRule; CENTRAL?: ExclusionRule; POST?: ExclusionRule } | undefined;
-    if (otherField === 'PRE') {
-      exclusions = PRE_EXCLUSIONS[currentValues.PRE];
-    } else if (otherField === 'CENTRAL') {
-      exclusions = CENTRAL_EXCLUSIONS[currentValues.CENTRAL];
-    } else if (otherField === 'POST') {
-      exclusions = POST_EXCLUSIONS[currentValues.POST];
-    }
-
-    if (exclusions?.[field]?.excludes.includes(value)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * 名詞タイプに基づいてDET値をリセット
- */
-export function applyNounTypeConstraints(
+export function calculateNounTypeValues(
   nounType: NounType,
-  currentValues: { PRE: string; CENTRAL: string; POST: string },
-  setFieldValue: (field: DetField, value: string) => void
-): void {
+  currentValues: { PRE: string; CENTRAL: string; POST: string }
+): { PRE: string; CENTRAL: string; POST: string } | null {
   const constraint = NOUN_TYPE_CONSTRAINTS[nounType];
 
   // いずれかのフィールドが無効な値を持っていたら、デフォルトにリセット
@@ -378,13 +337,146 @@ export function applyNounTypeConstraints(
   const hasInvalidPost = constraint.invalid.post.includes(currentValues.POST);
 
   if (hasInvalidPre || hasInvalidCentral || hasInvalidPost) {
-    setFieldValue('PRE', constraint.default.pre);
-    setFieldValue('CENTRAL', constraint.default.central);
-    setFieldValue('POST', constraint.default.post);
+    return {
+      PRE: constraint.default.pre,
+      CENTRAL: constraint.default.central,
+      POST: constraint.default.post,
+    };
   } else if (nounType === 'countable') {
     // 可算名詞で全て__none__なら自動でaを設定
     if (currentValues.PRE === '__none__' && currentValues.CENTRAL === '__none__' && currentValues.POST === '__none__') {
-      setFieldValue('CENTRAL', 'a');
+      return {
+        PRE: '__none__',
+        CENTRAL: 'a',
+        POST: '__none__',
+      };
     }
   }
+
+  return null; // 変更不要
+}
+
+// ============================================
+// 有効な組み合わせリスト（起動時に生成）
+// ============================================
+
+/**
+ * 排他ルールに基づいて有効な組み合わせかどうか判定
+ */
+function isValidByExclusionRules(pre: string, central: string, post: string): boolean {
+  // PRE → CENTRAL/POST 制約
+  const preExcl = PRE_EXCLUSIONS[pre];
+  if (preExcl) {
+    if (preExcl.CENTRAL?.excludes.includes(central)) return false;
+    if (preExcl.POST?.excludes.includes(post)) return false;
+  }
+
+  // CENTRAL → PRE/POST 制約
+  const centralExcl = CENTRAL_EXCLUSIONS[central];
+  if (centralExcl) {
+    if (centralExcl.PRE?.excludes.includes(pre)) return false;
+    if (centralExcl.POST?.excludes.includes(post)) return false;
+  }
+
+  // POST → PRE/CENTRAL 制約
+  const postExcl = POST_EXCLUSIONS[post];
+  if (postExcl) {
+    if (postExcl.PRE?.excludes.includes(pre)) return false;
+    if (postExcl.CENTRAL?.excludes.includes(central)) return false;
+  }
+
+  return true;
+}
+
+/**
+ * 名詞タイプ別の追加制約（組み合わせレベル）
+ * - 基本の排他ルールに加えて、名詞タイプ固有の制約を適用
+ */
+function isValidForNounType(
+  pre: string,
+  central: string,
+  post: string,
+  nounType: NounType | null
+): boolean {
+  // 名詞タイプ別の invalid リストをチェック
+  if (nounType) {
+    const constraint = NOUN_TYPE_CONSTRAINTS[nounType];
+    if (constraint.invalid.pre.includes(pre)) return false;
+    if (constraint.invalid.central.includes(central)) return false;
+    if (constraint.invalid.post.includes(post)) return false;
+  }
+
+  // countable 専用の追加制約
+  if (nounType === 'countable') {
+    // 裸の単数形は不可（CENTRAL=none かつ POST=none）
+    if (central === '__none__' && post === '__none__') return false;
+
+    // both は複数要求（POST=none は不可）
+    if (pre === 'both' && post === '__none__') return false;
+  }
+
+  return true;
+}
+
+/**
+ * ルールから有効な組み合わせリストを生成（名詞タイプ別）
+ */
+function generateValidCombinationsForNounType(nounType: NounType | null): Set<string> {
+  const validSet = new Set<string>();
+  const POST_DETERMINERS = getPostDeterminers();
+
+  // ラベル項目をスキップするヘルパー
+  const isLabel = (value: string) => value.startsWith('__label_');
+
+  for (const pre of PRE_DETERMINERS) {
+    if (isLabel(pre.value)) continue;
+    for (const central of CENTRAL_DETERMINERS) {
+      if (isLabel(central.value)) continue;
+      for (const post of POST_DETERMINERS) {
+        if (isLabel(post.value)) continue;
+        if (isValidByExclusionRules(pre.value, central.value, post.value) &&
+            isValidForNounType(pre.value, central.value, post.value, nounType)) {
+          validSet.add(`${pre.value}|${central.value}|${post.value}`);
+        }
+      }
+    }
+  }
+
+  return validSet;
+}
+
+// モジュール読み込み時に名詞タイプ別リストを生成
+const VALID_COMBINATIONS_BY_NOUN_TYPE: Record<string, Set<string>> = {
+  null: generateValidCombinationsForNounType(null),
+  countable: generateValidCombinationsForNounType('countable'),
+  uncountable: generateValidCombinationsForNounType('uncountable'),
+  proper: generateValidCombinationsForNounType('proper'),
+  zeroArticle: generateValidCombinationsForNounType('zeroArticle'),
+};
+
+/**
+ * 指定された組み合わせが有効かどうか判定（名詞タイプ考慮）
+ */
+export function isValidCombination(
+  pre: string,
+  central: string,
+  post: string,
+  nounType: NounType | null = null
+): boolean {
+  const key = nounType ?? 'null';
+  return VALID_COMBINATIONS_BY_NOUN_TYPE[key].has(`${pre}|${central}|${post}`);
+}
+
+/**
+ * 指定されたフィールドの値を変更した場合、有効な組み合わせになるか判定
+ * （バツ印表示の判定に使用）
+ */
+export function wouldBeValidCombination(
+  field: DetField,
+  newValue: string,
+  currentValues: { PRE: string; CENTRAL: string; POST: string },
+  nounType: NounType | null = null
+): boolean {
+  const testValues = { ...currentValues, [field]: newValue };
+  return isValidCombination(testValues.PRE, testValues.CENTRAL, testValues.POST, nounType);
 }

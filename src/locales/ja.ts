@@ -124,9 +124,14 @@ export const ja: LocaleData = {
     // Determiner
     DETERMINER_LABEL: '限定詞',
     DETERMINER_TOOLTIP: '限定詞: 前置 + 中央 + 後置',
-    DETERMINER_NONE: '─',
+    DET_NONE: '[∅]',
     DET_PLURAL: '[複数]',
     DET_UNCOUNTABLE: '[不可算]',
+    DET_LABEL_ARTICLE: '── 冠詞 ──',
+    DET_LABEL_DEMONSTRATIVE: '── 指示詞 ──',
+    DET_LABEL_POSSESSIVE: '── 所有詞 ──',
+    DET_LABEL_DISTRIBUTIVE: '── 分配詞 ──',
+    DET_LABEL_QUANTITY: '── 数量詞 ──',
 
     // Verb modifiers
     NEGATION_LABEL: '否定',

@@ -124,9 +124,14 @@ export const en: LocaleData = {
     // Determiner
     DETERMINER_LABEL: 'DET',
     DETERMINER_TOOLTIP: 'Determiner: pre + central + post',
-    DETERMINER_NONE: '─',
+    DET_NONE: '[∅]',
     DET_PLURAL: '[plural]',
     DET_UNCOUNTABLE: '[uncountable]',
+    DET_LABEL_ARTICLE: '── Article ──',
+    DET_LABEL_DEMONSTRATIVE: '── Demonstrative ──',
+    DET_LABEL_POSSESSIVE: '── Possessive ──',
+    DET_LABEL_DISTRIBUTIVE: '── Distributive ──',
+    DET_LABEL_QUANTITY: '── Quantity ──',
 
     // Verb modifiers
     NEGATION_LABEL: 'NOT',

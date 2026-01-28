@@ -266,8 +266,9 @@ export function renderNounPhraseUnified(
   const parts: string[] = [];
 
   // 前置限定詞（all, both, half）
+  // 複合限定詞のアンダーバーをスペースに変換（e.g., 'a_few' → 'a few'）
   if (np.preDeterminer) {
-    parts.push(np.preDeterminer);
+    parts.push(np.preDeterminer.replace(/_/g, ' '));
   }
 
   // 中央限定詞（the, this, my, a/an, no）
@@ -278,14 +279,14 @@ export function renderNounPhraseUnified(
       needsArticleSelection = true;
       parts.push('INDEF');
     } else {
-      parts.push(np.determiner);
+      parts.push(np.determiner.replace(/_/g, ' '));
     }
   }
 
   // 後置限定詞（one, two, many, few）
   // plural/uncountable はマーカーなので出力しない
   if (np.postDeterminer && np.postDeterminer !== 'plural' && np.postDeterminer !== 'uncountable') {
-    parts.push(np.postDeterminer);
+    parts.push(np.postDeterminer.replace(/_/g, ' '));
   }
 
   // 形容詞

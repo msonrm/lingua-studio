@@ -7,8 +7,8 @@ import {
   getPostDeterminers,
   NOUN_TYPE_CONSTRAINTS,
   applyExclusionRules,
-  isExcludedByOthers,
   calculateNounTypeValues,
+  wouldBeValidCombination,
   type DetField,
   type NounType,
   type DeterminerOption,
@@ -668,13 +668,9 @@ Blockly.Blocks['determiner_unified'] = {
     ): [string, string][] => {
       const values = getValuesForOptions();
       const nounType = getNounType();
-      const currentValue = values[field];  // 現在（または目標）のこのフィールドの値
 
       return determiners.map(o => {
         if (o.value === '__none__') return [o.label, o.value];
-
-        // 現在選択されている値はバツ印を付けない（タイミング問題の安全策）
-        if (o.value === currentValue) return [o.label, o.value];
 
         // 名詞タイプによる制約
         if (nounType) {
@@ -685,8 +681,8 @@ Blockly.Blocks['determiner_unified'] = {
           }
         }
 
-        // 他のフィールドとの排他チェック（目標値を使用）
-        if (isExcludedByOthers(field, o.value, values)) {
+        // 組み合わせの有効性チェック（有効リストに基づく）
+        if (!wouldBeValidCombination(field, o.value, values)) {
           return [markInvalid(o.label), o.value];
         }
 

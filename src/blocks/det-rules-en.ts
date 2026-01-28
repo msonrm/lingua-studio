@@ -412,3 +412,78 @@ export function applyNounTypeConstraints(
     setFieldValue('POST', newValues.POST);
   }
 }
+
+// ============================================
+// 有効な組み合わせリスト（起動時に生成）
+// ============================================
+
+/**
+ * 排他ルールに基づいて有効な組み合わせかどうか判定
+ */
+function isValidByExclusionRules(pre: string, central: string, post: string): boolean {
+  // PRE → CENTRAL/POST 制約
+  const preExcl = PRE_EXCLUSIONS[pre];
+  if (preExcl) {
+    if (preExcl.CENTRAL?.excludes.includes(central)) return false;
+    if (preExcl.POST?.excludes.includes(post)) return false;
+  }
+
+  // CENTRAL → PRE/POST 制約
+  const centralExcl = CENTRAL_EXCLUSIONS[central];
+  if (centralExcl) {
+    if (centralExcl.PRE?.excludes.includes(pre)) return false;
+    if (centralExcl.POST?.excludes.includes(post)) return false;
+  }
+
+  // POST → PRE/CENTRAL 制約
+  const postExcl = POST_EXCLUSIONS[post];
+  if (postExcl) {
+    if (postExcl.PRE?.excludes.includes(pre)) return false;
+    if (postExcl.CENTRAL?.excludes.includes(central)) return false;
+  }
+
+  return true;
+}
+
+/**
+ * ルールから有効な組み合わせリストを生成
+ */
+function generateValidCombinations(): Set<string> {
+  const validSet = new Set<string>();
+  const POST_DETERMINERS = getPostDeterminers();
+
+  for (const pre of PRE_DETERMINERS) {
+    for (const central of CENTRAL_DETERMINERS) {
+      for (const post of POST_DETERMINERS) {
+        if (isValidByExclusionRules(pre.value, central.value, post.value)) {
+          validSet.add(`${pre.value}|${central.value}|${post.value}`);
+        }
+      }
+    }
+  }
+
+  return validSet;
+}
+
+// モジュール読み込み時に一度だけ生成
+const VALID_COMBINATIONS = generateValidCombinations();
+
+/**
+ * 指定された組み合わせが有効かどうか判定
+ */
+export function isValidCombination(pre: string, central: string, post: string): boolean {
+  return VALID_COMBINATIONS.has(`${pre}|${central}|${post}`);
+}
+
+/**
+ * 指定されたフィールドの値を変更した場合、有効な組み合わせになるか判定
+ * （バツ印表示の判定に使用）
+ */
+export function wouldBeValidCombination(
+  field: DetField,
+  newValue: string,
+  currentValues: { PRE: string; CENTRAL: string; POST: string }
+): boolean {
+  const testValues = { ...currentValues, [field]: newValue };
+  return isValidCombination(testValues.PRE, testValues.CENTRAL, testValues.POST);
+}

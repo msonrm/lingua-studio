@@ -373,7 +373,7 @@ export const verbToJapanese: Record<string, string> = {
   'forget': '忘れる',
   'want': '欲しい',
   'need': '必要とする',
-  'like': '好きだ',
+  'like': '好む',
   'love': '愛する',
   'hate': '嫌う',
   'hope': '望む',

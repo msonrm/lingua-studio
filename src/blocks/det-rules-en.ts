@@ -3,8 +3,10 @@
  *
  * このファイルは英語特有の限定詞システムを定義します：
  * - PRE（前置限定詞）: all, both, half
- * - CENTRAL（中央限定詞）: the, a, this, that, my, your, no
- * - POST（後置限定詞）: 数詞、数量詞、plural/uncountableマーカー
+ * - CENTRAL（中央限定詞）: the, a, this/that/these/those, 所有格(my,your,his,her,its,our,their),
+ *                        no, each, every, either, neither, any, a little
+ * - POST（後置限定詞）: 数詞(one,two,three)、数量詞(many,few,little,much,some,several)、
+ *                      plural/uncountableマーカー
  *
  * 排他ルールは英文法に基づいており、無効な組み合わせを防ぎます。
  */
@@ -73,6 +75,12 @@ export const CENTRAL_DETERMINERS: DeterminerOption[] = [
   { label: 'our', value: 'our', output: 'our' },
   { label: 'their', value: 'their', output: 'their' },
   { label: 'no', value: 'no', output: 'no' },
+  { label: 'each', value: 'each', number: 'singular', output: 'each' },
+  { label: 'every', value: 'every', number: 'singular', output: 'every' },
+  { label: 'either', value: 'either', number: 'singular', output: 'either' },
+  { label: 'neither', value: 'neither', number: 'singular', output: 'neither' },
+  { label: 'any', value: 'any', output: 'any' },
+  { label: 'a little', value: 'a_little', number: 'uncountable', output: 'a little' },
 ];
 
 // 後置限定詞（postdeterminer）- ローカライズ可能なラベルを動的に生成
@@ -84,7 +92,9 @@ export function getPostDeterminers(): DeterminerOption[] {
     { label: 'three', value: 'three', number: 'plural', output: 'three' },
     { label: 'many', value: 'many', number: 'plural', output: 'many' },
     { label: 'few', value: 'few', number: 'plural', output: 'few' },
-    { label: 'some', value: 'some', number: 'plural', output: 'some' },
+    { label: 'little', value: 'little', number: 'uncountable', output: 'little' },
+    { label: 'much', value: 'much', number: 'uncountable', output: 'much' },
+    { label: 'some', value: 'some', output: 'some' },  // 可算/不可算両方OK
     { label: 'several', value: 'several', number: 'plural', output: 'several' },
     { label: msg('DET_PLURAL', '[plural]'), value: '__plural__', number: 'plural', output: null },
     { label: msg('DET_UNCOUNTABLE', '[–]'), value: '__uncountable__', number: 'uncountable', output: null },
@@ -103,8 +113,8 @@ export const PRE_EXCLUSIONS: Record<string, { CENTRAL?: ExclusionRule; POST?: Ex
     POST: { excludes: ['one'], resetTo: '__none__' },
   },
   'both': {
-    CENTRAL: { excludes: ['a', 'no', 'this', 'that', 'these', 'those'], resetTo: 'the' },
-    POST: { excludes: ['one', 'three', 'many', 'few', 'some', 'several', '__uncountable__'], resetTo: 'two' },
+    CENTRAL: { excludes: ['a', 'no', 'this', 'that', 'these', 'those', 'each', 'every', 'either', 'neither', 'a_little'], resetTo: 'the' },
+    POST: { excludes: ['one', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__uncountable__'], resetTo: 'two' },
   },
   'half': {
     CENTRAL: { excludes: ['a', 'no'], resetTo: 'the' },
@@ -138,45 +148,76 @@ export const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: Ex
     PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
     POST: { excludes: ['some', '__uncountable__'], resetTo: '__none__' },
   },
+  'each': {
+    PRE: { excludes: ['both'], resetTo: '__none__' },
+    POST: { excludes: ['two', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
+  },
+  'every': {
+    PRE: { excludes: ['both'], resetTo: '__none__' },
+    POST: { excludes: ['two', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
+  },
+  'either': {
+    PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
+    POST: { excludes: ['two', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
+  },
+  'neither': {
+    PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
+    POST: { excludes: ['two', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
+  },
+  'any': {
+    PRE: { excludes: ['both'], resetTo: '__none__' },
+  },
+  'a_little': {
+    PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
+    POST: { excludes: ['one', 'two', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
+  },
 };
 
 // POST値が変更された時の、PRE/CENTRALへの影響
 export const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: ExclusionRule }> = {
   'one': {
     PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'these', 'those'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'these', 'those', 'a_little'], resetTo: '__none__' },
   },
   'two': {
     PRE: { excludes: ['half'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'this', 'that'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that', 'each', 'every', 'either', 'neither', 'a_little'], resetTo: '__none__' },
   },
   'three': {
     PRE: { excludes: ['both', 'half'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'this', 'that'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that', 'each', 'every', 'either', 'neither', 'a_little'], resetTo: '__none__' },
   },
   'many': {
     PRE: { excludes: ['both', 'half'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'this', 'that'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that', 'each', 'every', 'either', 'neither', 'a_little'], resetTo: '__none__' },
   },
   'few': {
     PRE: { excludes: ['both', 'half'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['this', 'that'], resetTo: '__none__' },  // 'a few' は有効
+    CENTRAL: { excludes: ['this', 'that', 'each', 'every', 'either', 'neither', 'a_little'], resetTo: '__none__' },  // 'a few' は有効
   },
   'some': {
     PRE: { excludes: ['both', 'half'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'this', 'that', 'no'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that', 'no', 'each', 'every', 'either', 'neither', 'a_little'], resetTo: '__none__' },
   },
   'several': {
     PRE: { excludes: ['both', 'half'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'this', 'that'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that', 'each', 'every', 'either', 'neither', 'a_little'], resetTo: '__none__' },
   },
   '__plural__': {
     PRE: { excludes: ['both'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'this', 'that'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'this', 'that', 'each', 'every', 'either', 'neither', 'a_little'], resetTo: '__none__' },
   },
   '__uncountable__': {
     PRE: { excludes: ['both'], resetTo: '__none__' },
-    CENTRAL: { excludes: ['a', 'these', 'those'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'these', 'those', 'each', 'every', 'either', 'neither'], resetTo: '__none__' },
+  },
+  'little': {
+    PRE: { excludes: ['both'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'these', 'those', 'each', 'every', 'either', 'neither'], resetTo: '__none__' },
+  },
+  'much': {
+    PRE: { excludes: ['both'], resetTo: '__none__' },
+    CENTRAL: { excludes: ['a', 'these', 'those', 'each', 'every', 'either', 'neither'], resetTo: '__none__' },
   },
 };
 
@@ -186,13 +227,13 @@ export const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: Ex
 export const NOUN_TYPE_CONSTRAINTS: Record<NounType, NounTypeConstraint> = {
   countable: {
     default: { pre: '__none__', central: 'a', post: '__none__' },
-    invalid: { pre: [], central: [], post: ['__uncountable__'] },
+    invalid: { pre: [], central: ['a_little'], post: ['little', 'much', '__uncountable__'] },
   },
   uncountable: {
     default: { pre: '__none__', central: '__none__', post: '__uncountable__' },
     invalid: {
       pre: ['both'],
-      central: ['a'],
+      central: ['a', 'each', 'every', 'either', 'neither'],
       post: ['one', 'two', 'three', 'many', 'few', 'several', '__plural__'],
     },
   },
@@ -200,8 +241,8 @@ export const NOUN_TYPE_CONSTRAINTS: Record<NounType, NounTypeConstraint> = {
     default: { pre: '__none__', central: '__none__', post: '__none__' },
     invalid: {
       pre: ['all', 'both', 'half'],
-      central: ['the', 'this', 'that', 'a', 'my', 'your', 'no'],
-      post: ['one', 'two', 'three', 'many', 'few', 'some', 'several', '__plural__', '__uncountable__'],
+      central: ['the', 'this', 'that', 'a', 'my', 'your', 'no', 'each', 'every', 'either', 'neither', 'any', 'a_little'],
+      post: ['one', 'two', 'three', 'many', 'few', 'little', 'much', 'some', 'several', '__plural__', '__uncountable__'],
     },
   },
   zeroArticle: {

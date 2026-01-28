@@ -663,6 +663,9 @@ Blockly.Blocks['determiner_unified'] = {
       const currentValues = getCurrentValues();
       const nounType = getNounType();
 
+      // デバッグ: 実際の値を確認
+      console.log(`[DET] getOptionsForField(${field}):`, { currentValues, nounType });
+
       return determiners.map(o => {
         if (o.value === '__none__') return [o.label, o.value];
 
@@ -677,6 +680,7 @@ Blockly.Blocks['determiner_unified'] = {
 
         // 他のフィールドとの排他チェック
         if (isExcludedByOthers(field, o.value, currentValues)) {
+          console.log(`[DET] ${o.value} excluded by others:`, currentValues);
           return [markInvalid(o.label), o.value];
         }
 
@@ -766,6 +770,7 @@ Blockly.Blocks['determiner_unified'] = {
 
     // 一括更新関数（バリデーションをスキップして値をまとめて設定）
     this._bulkSetValues = (values: { PRE: string; CENTRAL: string; POST: string }) => {
+      console.log('[DET] _bulkSetValues:', values);
       bulkUpdateMode = true;
       try {
         block.setFieldValue(values.PRE, 'PRE');
@@ -774,6 +779,7 @@ Blockly.Blocks['determiner_unified'] = {
       } finally {
         bulkUpdateMode = false;
       }
+      console.log('[DET] after _bulkSetValues:', getCurrentValues());
     };
   },
 

@@ -655,16 +655,19 @@ Blockly.Blocks['determiner_unified'] = {
     // 無効マーク付きラベルを生成
     const markInvalid = (label: string) => `× ${label}`;
 
+    // 一括更新中の目標値（更新完了まで参照用）
+    let targetValues: { PRE: string; CENTRAL: string; POST: string } | null = null;
+
+    // オプション生成時に使う値を取得（更新中は目標値を優先）
+    const getValuesForOptions = () => targetValues ?? getCurrentValues();
+
     // オプション生成（共通ロジック）
     const getOptionsForField = (
       field: DetField,
       determiners: DeterminerOption[]
     ): [string, string][] => {
-      const currentValues = getCurrentValues();
+      const values = getValuesForOptions();
       const nounType = getNounType();
-
-      // デバッグ: 実際の値を確認
-      console.log(`[DET] getOptionsForField(${field}):`, { currentValues, nounType });
 
       return determiners.map(o => {
         if (o.value === '__none__') return [o.label, o.value];
@@ -678,9 +681,8 @@ Blockly.Blocks['determiner_unified'] = {
           }
         }
 
-        // 他のフィールドとの排他チェック
-        if (isExcludedByOthers(field, o.value, currentValues)) {
-          console.log(`[DET] ${o.value} excluded by others:`, currentValues);
+        // 他のフィールドとの排他チェック（目標値を使用）
+        if (isExcludedByOthers(field, o.value, values)) {
           return [markInvalid(o.label), o.value];
         }
 
@@ -770,7 +772,7 @@ Blockly.Blocks['determiner_unified'] = {
 
     // 一括更新関数（バリデーションをスキップして値をまとめて設定）
     this._bulkSetValues = (values: { PRE: string; CENTRAL: string; POST: string }) => {
-      console.log('[DET] _bulkSetValues:', values);
+      targetValues = values;  // 更新中は目標値を参照させる
       bulkUpdateMode = true;
       try {
         block.setFieldValue(values.PRE, 'PRE');
@@ -778,8 +780,8 @@ Blockly.Blocks['determiner_unified'] = {
         block.setFieldValue(values.POST, 'POST');
       } finally {
         bulkUpdateMode = false;
+        targetValues = null;  // 更新完了後はクリア
       }
-      console.log('[DET] after _bulkSetValues:', getCurrentValues());
     };
   },
 

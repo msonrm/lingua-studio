@@ -670,8 +670,6 @@ Blockly.Blocks['determiner_unified'] = {
       const nounType = getNounType();
 
       return determiners.map(o => {
-        if (o.value === '__none__') return [o.label, o.value];
-
         // 組み合わせの有効性チェック（名詞タイプ別リストに基づく）
         if (!wouldBeValidCombination(field, o.value, values, nounType)) {
           return [markInvalid(o.label), o.value];

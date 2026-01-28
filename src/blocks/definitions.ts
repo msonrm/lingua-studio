@@ -771,6 +771,21 @@ Blockly.Blocks['determiner_unified'] = {
       // 計算した値を一括で適用（バリデーションをバイパス）
       this._bulkSetValues?.(newValues);
     }
+
+    // ドロップダウンの表示を強制更新（×マーク状態が変わる可能性があるため）
+    // 値が変わらなくても、名詞タイプ変更で有効/無効が変わることがある
+    const forceRefreshDropdowns = () => {
+      const preField = this.getField('PRE') as Blockly.FieldDropdown;
+      const centralField = this.getField('CENTRAL') as Blockly.FieldDropdown;
+      const postField = this.getField('POST') as Blockly.FieldDropdown;
+      // forceRerender()で表示テキストを再計算させる
+      preField?.forceRerender();
+      centralField?.forceRerender();
+      postField?.forceRerender();
+    };
+
+    // 値の変更後にUIを更新（setTimeoutで確実に値の反映後に実行）
+    setTimeout(forceRefreshDropdowns, 0);
   },
 };
 

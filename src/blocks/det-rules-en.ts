@@ -446,16 +446,47 @@ function isValidByExclusionRules(pre: string, central: string, post: string): bo
 }
 
 /**
- * ルールから有効な組み合わせリストを生成
+ * 名詞タイプ別の追加制約（組み合わせレベル）
+ * - 基本の排他ルールに加えて、名詞タイプ固有の制約を適用
  */
-function generateValidCombinations(): Set<string> {
+function isValidForNounType(
+  pre: string,
+  central: string,
+  post: string,
+  nounType: NounType | null
+): boolean {
+  // 名詞タイプ別の invalid リストをチェック
+  if (nounType) {
+    const constraint = NOUN_TYPE_CONSTRAINTS[nounType];
+    if (constraint.invalid.pre.includes(pre)) return false;
+    if (constraint.invalid.central.includes(central)) return false;
+    if (constraint.invalid.post.includes(post)) return false;
+  }
+
+  // countable 専用の追加制約
+  if (nounType === 'countable') {
+    // 裸の単数形は不可（CENTRAL=none かつ POST=none）
+    if (central === '__none__' && post === '__none__') return false;
+
+    // both は複数要求（POST=none は不可）
+    if (pre === 'both' && post === '__none__') return false;
+  }
+
+  return true;
+}
+
+/**
+ * ルールから有効な組み合わせリストを生成（名詞タイプ別）
+ */
+function generateValidCombinationsForNounType(nounType: NounType | null): Set<string> {
   const validSet = new Set<string>();
   const POST_DETERMINERS = getPostDeterminers();
 
   for (const pre of PRE_DETERMINERS) {
     for (const central of CENTRAL_DETERMINERS) {
       for (const post of POST_DETERMINERS) {
-        if (isValidByExclusionRules(pre.value, central.value, post.value)) {
+        if (isValidByExclusionRules(pre.value, central.value, post.value) &&
+            isValidForNounType(pre.value, central.value, post.value, nounType)) {
           validSet.add(`${pre.value}|${central.value}|${post.value}`);
         }
       }
@@ -465,14 +496,26 @@ function generateValidCombinations(): Set<string> {
   return validSet;
 }
 
-// モジュール読み込み時に一度だけ生成
-const VALID_COMBINATIONS = generateValidCombinations();
+// モジュール読み込み時に名詞タイプ別リストを生成
+const VALID_COMBINATIONS_BY_NOUN_TYPE: Record<string, Set<string>> = {
+  null: generateValidCombinationsForNounType(null),
+  countable: generateValidCombinationsForNounType('countable'),
+  uncountable: generateValidCombinationsForNounType('uncountable'),
+  proper: generateValidCombinationsForNounType('proper'),
+  zeroArticle: generateValidCombinationsForNounType('zeroArticle'),
+};
 
 /**
- * 指定された組み合わせが有効かどうか判定
+ * 指定された組み合わせが有効かどうか判定（名詞タイプ考慮）
  */
-export function isValidCombination(pre: string, central: string, post: string): boolean {
-  return VALID_COMBINATIONS.has(`${pre}|${central}|${post}`);
+export function isValidCombination(
+  pre: string,
+  central: string,
+  post: string,
+  nounType: NounType | null = null
+): boolean {
+  const key = nounType ?? 'null';
+  return VALID_COMBINATIONS_BY_NOUN_TYPE[key].has(`${pre}|${central}|${post}`);
 }
 
 /**
@@ -482,8 +525,9 @@ export function isValidCombination(pre: string, central: string, post: string): 
 export function wouldBeValidCombination(
   field: DetField,
   newValue: string,
-  currentValues: { PRE: string; CENTRAL: string; POST: string }
+  currentValues: { PRE: string; CENTRAL: string; POST: string },
+  nounType: NounType | null = null
 ): boolean {
   const testValues = { ...currentValues, [field]: newValue };
-  return isValidCombination(testValues.PRE, testValues.CENTRAL, testValues.POST);
+  return isValidCombination(testValues.PRE, testValues.CENTRAL, testValues.POST, nounType);
 }

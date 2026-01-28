@@ -5,7 +5,6 @@ import {
   PRE_DETERMINERS,
   CENTRAL_DETERMINERS,
   getPostDeterminers,
-  NOUN_TYPE_CONSTRAINTS,
   applyExclusionRules,
   calculateNounTypeValues,
   wouldBeValidCombination,
@@ -662,6 +661,7 @@ Blockly.Blocks['determiner_unified'] = {
     const getValuesForOptions = () => targetValues ?? getCurrentValues();
 
     // オプション生成（共通ロジック）
+    // 名詞タイプ別の有効リストを使って判定（単一の真実のソース）
     const getOptionsForField = (
       field: DetField,
       determiners: DeterminerOption[]
@@ -672,17 +672,8 @@ Blockly.Blocks['determiner_unified'] = {
       return determiners.map(o => {
         if (o.value === '__none__') return [o.label, o.value];
 
-        // 名詞タイプによる制約
-        if (nounType) {
-          const constraint = NOUN_TYPE_CONSTRAINTS[nounType];
-          const invalidList = constraint.invalid[field.toLowerCase() as 'pre' | 'central' | 'post'];
-          if (invalidList.includes(o.value)) {
-            return [markInvalid(o.label), o.value];
-          }
-        }
-
-        // 組み合わせの有効性チェック（有効リストに基づく）
-        if (!wouldBeValidCombination(field, o.value, values)) {
+        // 組み合わせの有効性チェック（名詞タイプ別リストに基づく）
+        if (!wouldBeValidCombination(field, o.value, values, nounType)) {
           return [markInvalid(o.label), o.value];
         }
 

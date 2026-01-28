@@ -7,7 +7,6 @@ import {
   getPostDeterminers,
   calculateNounTypeValues,
   wouldBeValidCombination,
-  calculateResetIfNeeded,
   type DetField,
   type NounType,
   type DeterminerOption,
@@ -692,9 +691,8 @@ Blockly.Blocks['determiner_unified'] = {
     // 一括更新モードフラグ（バリデーターをバイパスするため）
     let bulkUpdateMode = false;
 
-    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否、必要ならリセット
+    // バリデータ：無効なオプション（×マーク付き）を選んだら拒否
     const createValidator = (
-      field: DetField,
       getOptions: () => [string, string][]
     ) => {
       return function(this: Blockly.FieldDropdown, newValue: string) {
@@ -709,22 +707,6 @@ Blockly.Blocks['determiner_unified'] = {
           return null;  // 選択を拒否
         }
 
-        // リストベースのリセット判定
-        const currentValues = getCurrentValues();
-        const nounType = getNounType();
-        const resetResult = calculateResetIfNeeded(field, newValue, currentValues, nounType);
-
-        if (resetResult.needed) {
-          // リセットが必要 → デフォルト値を適用
-          setTimeout(() => {
-            block._bulkSetValues?.(resetResult.newValues);
-
-            // リセット理由をブロックに保存（Grammarパネルで読み取り可能）
-            (block as unknown as Record<string, unknown>)._lastResetReason = resetResult.reason;
-            (block as unknown as Record<string, unknown>)._lastResetTime = Date.now();
-          }, 0);
-        }
-
         return newValue;
       };
     };
@@ -732,9 +714,9 @@ Blockly.Blocks['determiner_unified'] = {
     this.appendValueInput("NOUN")
         .setCheck(["noun", "adjective"])
         .appendField(msg('DETERMINER_LABEL', 'DET'))
-        .appendField(new Blockly.FieldDropdown(getPreOptions, createValidator('PRE', getPreOptions)), "PRE")
-        .appendField(new Blockly.FieldDropdown(getCentralOptions, createValidator('CENTRAL', getCentralOptions)), "CENTRAL")
-        .appendField(new Blockly.FieldDropdown(getPostOptions, createValidator('POST', getPostOptions)), "POST");
+        .appendField(new Blockly.FieldDropdown(getPreOptions, createValidator(getPreOptions)), "PRE")
+        .appendField(new Blockly.FieldDropdown(getCentralOptions, createValidator(getCentralOptions)), "CENTRAL")
+        .appendField(new Blockly.FieldDropdown(getPostOptions, createValidator(getPostOptions)), "POST");
 
     this.setOutput(true, "nounPhrase");
     this.setColour(COLORS.determiner);

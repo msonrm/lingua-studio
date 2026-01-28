@@ -778,10 +778,18 @@ Blockly.Blocks['determiner_unified'] = {
       const preField = this.getField('PRE') as Blockly.FieldDropdown;
       const centralField = this.getField('CENTRAL') as Blockly.FieldDropdown;
       const postField = this.getField('POST') as Blockly.FieldDropdown;
-      // forceRerender()で表示テキストを再計算させる
-      preField?.forceRerender();
-      centralField?.forceRerender();
-      postField?.forceRerender();
+
+      // キャッシュをバイパスしてオプションを再取得し、setValue で表示を更新
+      // 参考: https://github.com/google/blockly/issues/3099
+      [preField, centralField, postField].forEach(field => {
+        if (field) {
+          field.getOptions(false);  // キャッシュをクリア
+          const currentValue = field.getValue();
+          if (currentValue) {
+            field.setValue(currentValue);  // 同じ値を再設定して表示を更新
+          }
+        }
+      });
     };
 
     // 値の変更後にUIを更新（setTimeoutで確実に値の反映後に実行）

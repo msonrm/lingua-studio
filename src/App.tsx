@@ -43,6 +43,7 @@ function setStoredWorkspace(state: object | null): void {
 function App() {
   const [asts, setASTs] = useState<SentenceNode[]>([]);
   const [sentences, setSentences] = useState<string[]>([]);
+  const [japaneseSentences, setJapaneseSentences] = useState<string[]>([]);
   const [grammarLogs, setGrammarLogs] = useState<TransformLog[]>([]);
   const [_blockChanges, setBlockChanges] = useState<BlockChange[]>([]);
   const [resetNotice, setResetNotice] = useState<string | null>(null);
@@ -196,6 +197,7 @@ function App() {
                     key={workspaceKey}
                     onASTChange={setASTs}
                     onSentenceChange={setSentences}
+                    onJapaneseSentenceChange={setJapaneseSentences}
                     onLogsChange={setGrammarLogs}
                     onBlockChanges={setBlockChanges}
                     onResetNotice={setResetNotice}
@@ -251,13 +253,22 @@ function App() {
           </div>
 
           <div className="bottom-panel">
-            <div className="output-panel">
+            <div className="output-panel dual">
               <div className="output-section">
-                <h2>{t.PANEL_OUTPUT}</h2>
+                <h3>English</h3>
                 <div className="sentence-output">
                   {sentences.length > 0
                     ? sentences.map((s, i) => <div key={i}>{s}</div>)
                     : <span className="placeholder">{t.PLACEHOLDER_OUTPUT}</span>
+                  }
+                </div>
+              </div>
+              <div className="output-section">
+                <h3>Japanese (syntax)</h3>
+                <div className="sentence-output">
+                  {japaneseSentences.length > 0
+                    ? japaneseSentences.map((s, i) => <div key={i}>{s}</div>)
+                    : <span className="placeholder">___</span>
                   }
                 </div>
               </div>

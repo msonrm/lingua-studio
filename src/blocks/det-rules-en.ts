@@ -36,14 +36,14 @@ export interface DeterminerOption {
 
 export type DetField = 'PRE' | 'CENTRAL' | 'POST';
 
-export interface ExclusionRule {
+interface ExclusionRule {
   excludes: string[];  // 排他となる値のリスト
   resetTo: string;     // リセット先の値
 }
 
 export type NounType = 'countable' | 'uncountable' | 'proper' | 'zeroArticle';
 
-export interface NounTypeConstraint {
+interface NounTypeConstraint {
   default: { pre: string; central: string; post: string };
   invalid: { pre: string[]; central: string[]; post: string[] };
 }
@@ -121,7 +121,7 @@ export function getPostDeterminers(): DeterminerOption[] {
 const COMPOUND_QUANTIFIERS = ['a_few', 'a_little', 'a_lot_of', 'plenty_of', 'a_number_of', 'a_couple_of', 'a_great_deal_of', 'many_a', 'quite_a_few'];
 
 // PRE値が変更された時の、CENTRAL/POSTへの影響
-export const PRE_EXCLUSIONS: Record<string, { CENTRAL?: ExclusionRule; POST?: ExclusionRule }> = {
+const PRE_EXCLUSIONS: Record<string, { CENTRAL?: ExclusionRule; POST?: ExclusionRule }> = {
   'all': {
     CENTRAL: { excludes: ['a', 'no'], resetTo: 'the' },
     POST: { excludes: ['one'], resetTo: '__none__' },
@@ -137,7 +137,7 @@ export const PRE_EXCLUSIONS: Record<string, { CENTRAL?: ExclusionRule; POST?: Ex
 };
 
 // CENTRAL値が変更された時の、PRE/POSTへの影響
-export const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: ExclusionRule }> = {
+const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: ExclusionRule }> = {
   'a': {
     PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
     POST: { excludes: ['one', 'two', 'three', 'many', 'some', 'several', '__plural__', '__uncountable__'], resetTo: '__none__' },
@@ -220,7 +220,7 @@ export const CENTRAL_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; POST?: Ex
 };
 
 // POST値が変更された時の、PRE/CENTRALへの影響
-export const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: ExclusionRule }> = {
+const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: ExclusionRule }> = {
   'one': {
     PRE: { excludes: ['all', 'both', 'half'], resetTo: '__none__' },
     CENTRAL: { excludes: ['a', 'these', 'those', ...COMPOUND_QUANTIFIERS], resetTo: '__none__' },
@@ -270,7 +270,7 @@ export const POST_EXCLUSIONS: Record<string, { PRE?: ExclusionRule; CENTRAL?: Ex
 // ============================================
 // 名詞タイプ別制約
 // ============================================
-export const NOUN_TYPE_CONSTRAINTS: Record<NounType, NounTypeConstraint> = {
+const NOUN_TYPE_CONSTRAINTS: Record<NounType, NounTypeConstraint> = {
   countable: {
     default: { pre: '__none__', central: 'a', post: '__none__' },
     invalid: { pre: [], central: ['a_little', 'a_great_deal_of'], post: ['little', 'much', '__uncountable__'] },
@@ -300,67 +300,6 @@ export const NOUN_TYPE_CONSTRAINTS: Record<NounType, NounTypeConstraint> = {
 // ============================================
 // ヘルパー関数
 // ============================================
-
-/**
- * 指定されたフィールドの値が変更された時、他のフィールドを必要に応じてリセット
- */
-export function applyExclusionRules(
-  changedField: DetField,
-  newValue: string,
-  currentValues: { PRE: string; CENTRAL: string; POST: string },
-  setFieldValue: (field: DetField, value: string) => void
-): void {
-  let exclusions: { PRE?: ExclusionRule; CENTRAL?: ExclusionRule; POST?: ExclusionRule } | undefined;
-
-  if (changedField === 'PRE') {
-    exclusions = PRE_EXCLUSIONS[newValue];
-  } else if (changedField === 'CENTRAL') {
-    exclusions = CENTRAL_EXCLUSIONS[newValue];
-  } else if (changedField === 'POST') {
-    exclusions = POST_EXCLUSIONS[newValue];
-  }
-
-  if (!exclusions) return;
-
-  // 各フィールドをチェックしてリセット
-  for (const field of ['PRE', 'CENTRAL', 'POST'] as DetField[]) {
-    if (field === changedField) continue;
-    const rule = exclusions[field];
-    if (rule && rule.excludes.includes(currentValues[field])) {
-      setFieldValue(field, rule.resetTo);
-    }
-  }
-}
-
-/**
- * 指定されたフィールドの値が、他のフィールドの現在値と排他かどうか判定
- */
-export function isExcludedByOthers(
-  field: DetField,
-  value: string,
-  currentValues: { PRE: string; CENTRAL: string; POST: string }
-): boolean {
-  if (value === '__none__') return false;
-
-  // 他の2つのフィールドからの排他をチェック
-  for (const otherField of ['PRE', 'CENTRAL', 'POST'] as DetField[]) {
-    if (otherField === field) continue;
-
-    let exclusions: { PRE?: ExclusionRule; CENTRAL?: ExclusionRule; POST?: ExclusionRule } | undefined;
-    if (otherField === 'PRE') {
-      exclusions = PRE_EXCLUSIONS[currentValues.PRE];
-    } else if (otherField === 'CENTRAL') {
-      exclusions = CENTRAL_EXCLUSIONS[currentValues.CENTRAL];
-    } else if (otherField === 'POST') {
-      exclusions = POST_EXCLUSIONS[currentValues.POST];
-    }
-
-    if (exclusions?.[field]?.excludes.includes(value)) {
-      return true;
-    }
-  }
-  return false;
-}
 
 /**
  * 名詞タイプに基づいて適切なDET値を計算（副作用なし）
@@ -395,22 +334,6 @@ export function calculateNounTypeValues(
   }
 
   return null; // 変更不要
-}
-
-/**
- * 名詞タイプに基づいてDET値をリセット（後方互換性のため維持）
- */
-export function applyNounTypeConstraints(
-  nounType: NounType,
-  currentValues: { PRE: string; CENTRAL: string; POST: string },
-  setFieldValue: (field: DetField, value: string) => void
-): void {
-  const newValues = calculateNounTypeValues(nounType, currentValues);
-  if (newValues) {
-    setFieldValue('PRE', newValues.PRE);
-    setFieldValue('CENTRAL', newValues.CENTRAL);
-    setFieldValue('POST', newValues.POST);
-  }
 }
 
 // ============================================
@@ -530,71 +453,4 @@ export function wouldBeValidCombination(
 ): boolean {
   const testValues = { ...currentValues, [field]: newValue };
   return isValidCombination(testValues.PRE, testValues.CENTRAL, testValues.POST, nounType);
-}
-
-/**
- * 名詞タイプに応じたデフォルト値を取得
- */
-export function getDefaultValues(nounType: NounType | null): { PRE: string; CENTRAL: string; POST: string } {
-  if (nounType) {
-    const constraint = NOUN_TYPE_CONSTRAINTS[nounType];
-    return {
-      PRE: constraint.default.pre,
-      CENTRAL: constraint.default.central,
-      POST: constraint.default.post,
-    };
-  }
-  // 名詞なしの場合は全て none
-  return { PRE: '__none__', CENTRAL: '__none__', POST: '__none__' };
-}
-
-/**
- * リセット判定結果の型
- */
-export interface ResetResult {
-  needed: boolean;
-  newValues: { PRE: string; CENTRAL: string; POST: string };
-  reason?: string;
-}
-
-/**
- * ユーザーが値を変更した後、リセットが必要かどうか判定
- * - 変更後の組み合わせが有効リストにない場合、デフォルト値へのリセットが必要
- */
-export function calculateResetIfNeeded(
-  changedField: DetField,
-  newValue: string,
-  currentValues: { PRE: string; CENTRAL: string; POST: string },
-  nounType: NounType | null
-): ResetResult {
-  const valuesWithChange = { ...currentValues, [changedField]: newValue };
-
-  // 変更後の組み合わせが有効かチェック
-  if (isValidCombination(valuesWithChange.PRE, valuesWithChange.CENTRAL, valuesWithChange.POST, nounType)) {
-    // 有効なのでリセット不要
-    return { needed: false, newValues: valuesWithChange };
-  }
-
-  // 無効なのでデフォルト値にリセット
-  const defaults = getDefaultValues(nounType);
-
-  // 理由を生成
-  let reason: string;
-  if (nounType === 'countable') {
-    reason = '可算名詞の既定値にリセット';
-  } else if (nounType === 'uncountable') {
-    reason = '不可算名詞の既定値にリセット';
-  } else if (nounType === 'proper') {
-    reason = '固有名詞の既定値にリセット';
-  } else if (nounType === 'zeroArticle') {
-    reason = 'ゼロ冠詞名詞の既定値にリセット';
-  } else {
-    reason = '既定値にリセット';
-  }
-
-  return {
-    needed: true,
-    newValues: defaults,
-    reason,
-  };
 }

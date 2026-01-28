@@ -19,7 +19,7 @@ import {
   CoordinationConjunct,
   SemanticRole,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb, translateAdjective } from './particles';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb, translateAdjective, translateAdverb } from './particles';
 
 // ============================================
 // Main Entry Points
@@ -117,14 +117,20 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   const subject = argParts.find(p => p.isSubject);
   const others = argParts.filter(p => !p.isSubject);
 
+  // 副詞（日本語に変換）
+  const adverbs = verbPhrase.adverbs.map(adv => translateAdverb(adv.lemma));
+
   // 動詞（日本語に変換）
   const verb = translateVerb(verbLemma);
 
-  // SOV順で組み立て
+  // SOV順で組み立て: 主語 → その他の引数 → 副詞 → 動詞
   const result: string[] = [];
   if (subject) result.push(subject.text);
   for (const other of others) {
     result.push(other.text);
+  }
+  for (const adv of adverbs) {
+    result.push(adv);
   }
   result.push(verb);
 

@@ -573,3 +573,108 @@ export const adjectiveToJapanese: Record<string, string> = {
 export function translateAdjective(lemma: string): string {
   return adjectiveToJapanese[lemma] || lemma;
 }
+
+// ============================================
+// 副詞の日本語マッピング
+// ============================================
+
+/**
+ * 英語副詞 → 日本語
+ */
+export const adverbToJapanese: Record<string, string> = {
+  // Manner（様態）
+  'quickly': '速く',
+  'slowly': 'ゆっくりと',
+  'carefully': '注意深く',
+  'easily': '簡単に',
+  'happily': '幸せに',
+  'sadly': '悲しく',
+  'quietly': '静かに',
+  'loudly': '大声で',
+  'well': 'よく',
+  'badly': 'ひどく',
+  'hard': '一生懸命に',
+  'fast': '速く',
+  'suddenly': '突然に',
+  'gradually': '徐々に',
+  'naturally': '自然に',
+  'automatically': '自動的に',
+  'properly': '適切に',
+  'correctly': '正しく',
+  'perfectly': '完璧に',
+  'completely': '完全に',
+  'together': '一緒に',
+  'alone': '一人で',
+  'seriously': '真剣に',
+  'honestly': '正直に',
+  'furiously': '猛烈に',
+
+  // Frequency（頻度）
+  'always': 'いつも',
+  'usually': '普段',
+  'often': 'よく',
+  'sometimes': '時々',
+  'rarely': 'まれに',
+  'seldom': 'まれに',
+  // never - スキップ（否定形が必要）
+  'again': 'また',
+  'once': '一度',
+  'twice': '二度',
+
+  // Degree（程度）
+  'very': 'とても',
+  'really': '本当に',
+  'quite': 'かなり',
+  'pretty': 'けっこう',
+  'extremely': '非常に',
+  'absolutely': '絶対に',
+  'almost': 'ほとんど',
+  'nearly': 'ほぼ',
+  // hardly - スキップ（否定形が必要）
+  'enough': '十分に',
+  'too': 'あまりにも',
+
+  // Time（時間）
+  'now': '今',
+  'then': 'その時',
+  'soon': 'もうすぐ',
+  'later': '後で',
+  'already': 'すでに',
+  'still': 'まだ',
+  'yet': 'まだ',
+  'just': 'ちょうど',
+  'recently': '最近',
+  'finally': 'ついに',
+  'immediately': 'すぐに',
+  'eventually': '最終的に',
+  'today': '今日',
+  'yesterday': '昨日',
+  'tomorrow': '明日',
+
+  // Place（場所）
+  'here': 'ここに',
+  'there': 'そこに',
+  'somewhere': 'どこかに',
+  'everywhere': 'どこでも',
+  // nowhere - スキップ（否定形が必要）
+  'inside': '中に',
+  'outside': '外に',
+  'upstairs': '上の階に',
+  'downstairs': '下の階に',
+  'indoors': '屋内に',
+  'outdoors': '屋外に',
+  'abroad': '海外に',
+  'home': '家に',
+  'away': '離れて',
+  'back': '戻って',
+  'ahead': '前方に',
+  'nearby': '近くに',
+  'far': '遠くに',
+};
+
+/**
+ * 副詞を日本語に変換（見つからなければそのまま返す）
+ */
+export function translateAdverb(lemma: string): string {
+  return adverbToJapanese[lemma] || lemma;
+}

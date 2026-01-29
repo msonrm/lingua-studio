@@ -19,7 +19,7 @@ import {
 import './App.css';
 
 type EditorMode = 'blocks' | 'linguascript' | 'ast';
-type SidePanelTab = 'timeline' | 'grammar' | 'artifact';
+type SidePanelTab = 'timeline' | 'grammar';
 
 const WORKSPACE_STORAGE_KEY = 'lingua-studio-workspace';
 
@@ -239,12 +239,6 @@ function App() {
                   >
                     {t.TAB_TIMELINE}
                   </button>
-                  <button
-                    className={`side-tab ${sidePanelTab === 'artifact' ? 'active' : ''}`}
-                    onClick={() => setSidePanelTab('artifact')}
-                  >
-                    Artifact
-                  </button>
                 </div>
                 <div className="side-panel-content">
                   {sidePanelTab === 'grammar' && (
@@ -252,19 +246,6 @@ function App() {
                   )}
                   {sidePanelTab === 'timeline' && (
                     <VisualizationPanel asts={asts} />
-                  )}
-                  {sidePanelTab === 'artifact' && (
-                    <div className="artifact-panel">
-                      <iframe
-                        src="https://claude.site/public/artifacts/ba72eb32-933c-4593-aa89-996f96e42d61/embed"
-                        title="Claude Artifact"
-                        width="100%"
-                        height="100%"
-                        frameBorder="0"
-                        allow="clipboard-write"
-                        allowFullScreen
-                      />
-                    </div>
                   )}
                 </div>
               </div>

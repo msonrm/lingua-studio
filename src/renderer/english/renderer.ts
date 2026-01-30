@@ -35,6 +35,7 @@ import {
 import {
   renderCoordinationUnified,
   CoordElement,
+  CoordinationOptions,
 } from './coordination';
 
 // Derivation tracker (module-level, reset on each render)
@@ -475,7 +476,10 @@ function appendCoordinatedVP(
   });
 
   // 統一モジュールでレンダリング
-  return renderCoordinationUnified(elements, s => s);
+  // Note: VP coordination via coordinatedWith chain doesn't have notCount yet
+  // Future: support notCount for neither...nor verb phrases
+  const options: CoordinationOptions = { notCount: 0 };
+  return renderCoordinationUnified(elements, s => s, options);
 }
 
 // ============================================

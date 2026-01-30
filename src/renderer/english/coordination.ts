@@ -9,6 +9,7 @@
  * 3. フォーマット規則の適用:
  *    - 1階層 → 素の接続詞（A and B, A, B, and C）
  *    - 複数階層 → correlative で構造明示（both A and B, either A or B）
+ *    - 否定時 → neither...nor / not both...and
  * 4. 具体化（レンダリング）: 文字列生成
  */
 
@@ -46,6 +47,12 @@ interface FormattedGroup {
   conjunction: Conjunction | null;
 }
 
+/** レンダリングオプション */
+export interface CoordinationOptions {
+  /** 否定ラッパーの数（1以上で neither...nor / not both...and を使用） */
+  notCount?: number;
+}
+
 // ============================================
 // メイン関数
 // ============================================
@@ -55,6 +62,7 @@ interface FormattedGroup {
  *
  * @param elements - 接続する要素の配列
  * @param renderElement - 各要素をレンダリングする関数
+ * @param options - レンダリングオプション（notCount など）
  * @returns フォーマット済み文字列
  *
  * @example
@@ -71,24 +79,31 @@ interface FormattedGroup {
  *   { value: b, groupId: 'x', conjunction: 'and' },
  *   { value: c, groupId: 'y', conjunction: 'and' },
  * ], render)
+ *
+ * @example
+ * // 否定: "neither A nor B"
+ * renderCoordinationUnified([...], render, { notCount: 1 })
  */
 export function renderCoordinationUnified<T>(
   elements: CoordElement<T>[],
-  renderElement: (elem: T) => string
+  renderElement: (elem: T) => string,
+  options: CoordinationOptions = {}
 ): string {
+  const { notCount = 0 } = options;
+
   if (elements.length === 0) return '___';
   if (elements.length === 1) return renderElement(elements[0].value);
 
   // 1. グルーピング: 連続する同一グループ・同一接続詞をまとめる
   const groups = groupElements(elements);
 
-  // 2. 階層判定: 複数グループがあるか
+  // 2. 階層判定: 複数グループがあるか（否定時は常にcorrelative使用）
   const isNested = groups.length > 1;
 
   // 3. 各グループをフォーマット
   const formattedGroups: FormattedGroup[] = groups.map((group, index) => {
     const renderedElements = group.elements.map(renderElement);
-    const text = formatGroup(renderedElements, group.conjunction, isNested);
+    const text = formatGroup(renderedElements, group.conjunction, isNested, notCount);
 
     // 次のグループへの接続詞（最後のグループはnull）
     const nextConjunction = index < groups.length - 1
@@ -150,18 +165,30 @@ function groupElements<T>(elements: CoordElement<T>[]): CoordGroup<T>[] {
  *
  * @param elements - レンダリング済み要素
  * @param conjunction - 接続詞
- * @param useCorrelative - correlative（both/either）を使うか
+ * @param useCorrelative - correlative（both/either/neither）を使うか
+ * @param notCount - 否定ラッパーの数（1以上で否定形を使用）
  */
 function formatGroup(
   elements: string[],
   conjunction: Conjunction,
-  useCorrelative: boolean
+  useCorrelative: boolean,
+  notCount: number = 0
 ): string {
   if (elements.length === 0) return '___';
   if (elements.length === 1) return elements[0];
 
+  // 否定時の処理
+  const isNegated = notCount > 0;
+
   if (elements.length === 2) {
-    if (useCorrelative) {
+    if (isNegated) {
+      // 否定: neither A nor B / not both A and B
+      if (conjunction === 'or') {
+        return `neither ${elements[0]} nor ${elements[1]}`;
+      } else {
+        return `not both ${elements[0]} and ${elements[1]}`;
+      }
+    } else if (useCorrelative) {
       // 複数階層: both A and B / either A or B
       const correlative = conjunction === 'and' ? 'both' : 'either';
       return `${correlative} ${elements[0]} ${conjunction} ${elements[1]}`;
@@ -171,9 +198,20 @@ function formatGroup(
     }
   }
 
-  // 3要素以上: A, B, and C（オックスフォードカンマ）
+  // 3要素以上
   const allButLast = elements.slice(0, -1);
   const last = elements[elements.length - 1];
+
+  if (isNegated) {
+    // 否定: neither A, B, nor C / not both A, B, and C
+    if (conjunction === 'or') {
+      return `neither ${allButLast.join(', ')}, nor ${last}`;
+    } else {
+      return `not both ${allButLast.join(', ')}, and ${last}`;
+    }
+  }
+
+  // 通常: A, B, and C（オックスフォードカンマ）
   return `${allButLast.join(', ')}, ${conjunction} ${last}`;
 }
 

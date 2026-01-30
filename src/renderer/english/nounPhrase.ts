@@ -13,7 +13,7 @@ import type {
   CoordinatedNounPhraseNode,
 } from '../../types/schema';
 import type { TransformationType } from '../types';
-import { renderCoordinationUnified, CoordElement } from './coordination';
+import { renderCoordinationUnified, CoordElement, CoordinationOptions } from './coordination';
 
 // ============================================
 // Types
@@ -377,8 +377,11 @@ export function renderCoordinatedNounPhraseUnified(
       conjunction: index === 0 ? null : cnp.conjunction,
     }));
 
-  // 統一等位接続モジュールを使用
-  const form = renderCoordinationUnified(elements, renderConjunct);
+  // 統一等位接続モジュールを使用（notCount を渡す）
+  const options: CoordinationOptions = {
+    notCount: cnp.notCount ?? 0,
+  };
+  const form = renderCoordinationUnified(elements, renderConjunct, options);
 
   return { form, transforms };
 }

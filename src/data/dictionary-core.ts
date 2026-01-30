@@ -272,6 +272,8 @@ export const nounCores: NounCore[] = [
   { lemma: "church", category: "place", countable: true },
   { lemma: "city", category: "place", countable: true },
   { lemma: "country", category: "place", countable: true },
+  { lemma: "town", category: "place", countable: true },
+  { lemma: "village", category: "place", countable: true },
   { lemma: "room", category: "place", countable: true },
   { lemma: "kitchen", category: "place", countable: true },
   { lemma: "bathroom", category: "place", countable: true },

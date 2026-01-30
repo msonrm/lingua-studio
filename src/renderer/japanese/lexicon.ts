@@ -745,7 +745,7 @@ export const adverbToJapanese: Record<string, string> = {
   // 疑問副詞（?プレフィックス付き - dictionary-core形式）
   '?how': 'どう',
   '?when': 'いつ',
-  '?where': 'どこ',
+  '?where': 'どこで',
 };
 
 /**

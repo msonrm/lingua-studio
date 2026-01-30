@@ -287,106 +287,105 @@ function conjugateGodanNai(ja: string): string {
 
 /**
  * モダリティ付き活用
- * 構造: 動詞辞書形 + モーダル助動詞句
+ * 構造: 動詞活用形 + モーダル助動詞句
  *
- * モーダル助動詞句が時制・極性で活用する:
- * - 食べることができる（現在肯定）
- * - 食べることができた（過去肯定）
- * - 食べることができない（現在否定）
- * - 食べることができなかった（過去否定）
+ * モダリティによって必要な動詞形式が異なる:
+ * - ability: 辞書形 + ことができる
+ * - permission: テ形 + もいい
+ * - possibility: 辞書形/ナイ形/タ形 + かもしれない
+ * - obligation: ナイ形語幹 + ければならない
+ * - certainty: 辞書形/タ形 + にちがいない
+ * - advice: 辞書形 + べきだ
+ * - volition: 辞書形 + つもりだ
+ * - prediction: 辞書形/タ形 + だろう
  */
 function conjugateWithModal(entry: VerbEntry, context: ConjugationContext): string {
   const { tense, polarity, modal } = context;
-  const dictForm = entry.ja;
 
-  // モーダル助動詞句を取得
-  const modalSuffix = getModalSuffix(modal!, tense, polarity);
-
-  return dictForm + modalSuffix;
+  return applyModal(entry, modal!, tense, polarity);
 }
 
 /**
- * モダリティから日本語助動詞句を取得
- *
- * | ModalType   | 肯定現在         | 否定現在             | 肯定過去           | 否定過去               |
- * |-------------|------------------|----------------------|--------------------|------------------------|
- * | ability     | ことができる     | ことができない       | ことができた       | ことができなかった     |
- * | permission  | てもいい         | てはいけない         | てもよかった       | てはいけなかった       |
- * | possibility | かもしれない     | ないかもしれない     | たかもしれない     | なかったかもしれない   |
- * | obligation  | なければならない | なくてもいい         | なければならなかった| なくてもよかった       |
- * | certainty   | にちがいない     | ではないだろう       | たにちがいない     | なかったにちがいない   |
- * | advice      | べきだ           | べきではない         | べきだった         | べきではなかった       |
- * | volition    | つもりだ         | つもりはない         | つもりだった       | つもりはなかった       |
- * | prediction  | だろう           | ないだろう           | ただろう           | なかっただろう         |
+ * モダリティを適用
  */
-function getModalSuffix(
+function applyModal(
+  entry: VerbEntry,
   modal: ModalType,
   tense: Tense,
   polarity: Polarity
 ): string {
   const isPast = tense === 'past';
   const isNegative = polarity === 'negative';
+  const dictForm = entry.ja;
 
   switch (modal) {
     case 'ability':
-      // ～ことができる
+      // 辞書形 + ことができる/できない/できた/できなかった
       if (isNegative) {
-        return isPast ? 'ことができなかった' : 'ことができない';
+        return dictForm + (isPast ? 'ことができなかった' : 'ことができない');
       }
-      return isPast ? 'ことができた' : 'ことができる';
+      return dictForm + (isPast ? 'ことができた' : 'ことができる');
 
     case 'permission':
-      // ～てもいい / ～てはいけない
-      // 注意: 本来はテ形が必要だが、シンプルに辞書形+てもいい とする
+      // テ形 + もいい/はいけない
+      const teForm = toTeForm(entry);
       if (isNegative) {
-        return isPast ? 'てはいけなかった' : 'てはいけない';
+        return teForm + (isPast ? 'はいけなかった' : 'はいけない');
       }
-      return isPast ? 'てもよかった' : 'てもいい';
+      return teForm + (isPast ? 'もよかった' : 'もいい');
 
     case 'possibility':
-      // ～かもしれない（肯定）/ ～ないかもしれない（否定）
-      // 否定は動詞側を否定形にするパターン（ここではシンプルに）
+      // 肯定: 辞書形/タ形 + かもしれない
+      // 否定: ナイ形/ナカッタ形 + かもしれない
       if (isNegative) {
-        return isPast ? 'なかったかもしれない' : 'ないかもしれない';
+        const negForm = isPast ? toNakattaForm(entry) : toNaiForm(entry);
+        return negForm + 'かもしれない';
       }
-      return isPast ? 'たかもしれない' : 'かもしれない';
+      const affForm = isPast ? toTaForm(entry) : dictForm;
+      return affForm + 'かもしれない';
 
     case 'obligation':
-      // ～なければならない（義務）/ ～なくてもいい（義務否定＝許可）
+      // ナイ形語幹 + ければならない（肯定）/ なくてもいい（否定）
+      const naiForm = toNaiForm(entry);
+      const naiStem = naiForm.slice(0, -1); // 「ない」の「い」を除去
       if (isNegative) {
-        return isPast ? 'なくてもよかった' : 'なくてもいい';
+        return naiStem + (isPast ? 'くてもよかった' : 'くてもいい');
       }
-      return isPast ? 'なければならなかった' : 'なければならない';
+      return naiStem + (isPast ? 'ければならなかった' : 'ければならない');
 
     case 'certainty':
-      // ～にちがいない
+      // 辞書形/タ形/ナイ形/ナカッタ形 + にちがいない
       if (isNegative) {
-        return isPast ? 'なかったにちがいない' : 'ないにちがいない';
+        const negForm = isPast ? toNakattaForm(entry) : toNaiForm(entry);
+        return negForm + 'にちがいない';
       }
-      return isPast ? 'たにちがいない' : 'にちがいない';
+      const certForm = isPast ? toTaForm(entry) : dictForm;
+      return certForm + 'にちがいない';
 
     case 'advice':
-      // ～べきだ
+      // 辞書形 + べきだ/べきではない/べきだった/べきではなかった
       if (isNegative) {
-        return isPast ? 'べきではなかった' : 'べきではない';
+        return dictForm + (isPast ? 'べきではなかった' : 'べきではない');
       }
-      return isPast ? 'べきだった' : 'べきだ';
+      return dictForm + (isPast ? 'べきだった' : 'べきだ');
 
     case 'volition':
-      // ～つもりだ
+      // 辞書形 + つもりだ/つもりはない
       if (isNegative) {
-        return isPast ? 'つもりはなかった' : 'つもりはない';
+        return dictForm + (isPast ? 'つもりはなかった' : 'つもりはない');
       }
-      return isPast ? 'つもりだった' : 'つもりだ';
+      return dictForm + (isPast ? 'つもりだった' : 'つもりだ');
 
     case 'prediction':
-      // ～だろう
+      // 辞書形/タ形/ナイ形/ナカッタ形 + だろう
       if (isNegative) {
-        return isPast ? 'なかっただろう' : 'ないだろう';
+        const negForm = isPast ? toNakattaForm(entry) : toNaiForm(entry);
+        return negForm + 'だろう';
       }
-      return isPast ? 'ただろう' : 'だろう';
+      const predForm = isPast ? toTaForm(entry) : dictForm;
+      return predForm + 'だろう';
 
     default:
-      return '';
+      return dictForm;
   }
 }

@@ -32,16 +32,18 @@ import { findVerbCore } from '../../data/dictionary-core';
  * ASTを日本語語順でレンダリング
  */
 export function renderToJapanese(ast: SentenceNode): string {
+  const timeAdv = ast.timeAdverbial ? translateAdverb(ast.timeAdverbial.toLowerCase()) : undefined;
+
   switch (ast.sentenceType) {
     case 'imperative':
-      return renderImperative(ast.clause);
+      return renderImperative(ast.clause, timeAdv);
     case 'interrogative':
-      return renderInterrogative(ast.clause);
+      return renderInterrogative(ast.clause, timeAdv);
     case 'fact':
       // factは対象外（とりあえず平叙文として処理）
-      return renderDeclarative(ast.clause);
+      return renderDeclarative(ast.clause, timeAdv);
     default:
-      return renderDeclarative(ast.clause);
+      return renderDeclarative(ast.clause, timeAdv);
   }
 }
 
@@ -51,28 +53,25 @@ export function renderToJapanese(ast: SentenceNode): string {
 
 /**
  * 平叙文: SOV語順
- * "私は the appleを eat。"
  */
-function renderDeclarative(clause: ClauseNode): string {
-  const parts = buildSOVParts(clause);
+function renderDeclarative(clause: ClauseNode, timeAdv?: string): string {
+  const parts = buildSOVParts(clause, { timeAdverbial: timeAdv });
   return parts.filter(Boolean).join(' ') + '。';
 }
 
 /**
  * 疑問文: SOV語順 + 「か」
- * "私は 何を eatか？"
  */
-function renderInterrogative(clause: ClauseNode): string {
-  const parts = buildSOVParts(clause);
+function renderInterrogative(clause: ClauseNode, timeAdv?: string): string {
+  const parts = buildSOVParts(clause, { timeAdverbial: timeAdv });
   return parts.filter(Boolean).join(' ') + 'か？';
 }
 
 /**
  * 命令文: OV語順（主語省略）
- * "the appleを eat。"
  */
-function renderImperative(clause: ClauseNode): string {
-  const parts = buildSOVParts(clause, { omitSubject: true });
+function renderImperative(clause: ClauseNode, timeAdv?: string): string {
+  const parts = buildSOVParts(clause, { omitSubject: true, timeAdverbial: timeAdv });
   return parts.filter(Boolean).join(' ') + '。';
 }
 
@@ -82,6 +81,7 @@ function renderImperative(clause: ClauseNode): string {
 
 interface BuildOptions {
   omitSubject?: boolean;
+  timeAdverbial?: string;
 }
 
 /**
@@ -155,9 +155,13 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
     verb = `${attribute.text}${verb}`;
   }
 
-  // SOV順で組み立て: 主語 → その他の引数 → 副詞 → 動詞
+  // SOV順で組み立て: 主語 → 時間副詞 → その他の引数 → 副詞 → 動詞
   const result: string[] = [];
   if (subject) result.push(subject.text);
+  // 時間副詞（SentenceNode.timeAdverbial）
+  if (options.timeAdverbial) {
+    result.push(options.timeAdverbial);
+  }
   for (const other of others) {
     result.push(other.text);
   }

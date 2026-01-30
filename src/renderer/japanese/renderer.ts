@@ -95,7 +95,7 @@ interface BuildOptions {
  * 例: "I am a dog" → "私は 犬である"
  */
 function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[] {
-  const { verbPhrase, tense, aspect, polarity } = clause;
+  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
   const args = verbPhrase.arguments;
   const verbLemma = verbPhrase.verb.lemma;
 
@@ -149,13 +149,15 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   // 副詞（日本語に変換）
   const adverbs = verbPhrase.adverbs.map(adv => translateAdverb(adv.lemma));
 
-  // 動詞を活用（時制・相・否定を適用）
+  // 動詞を活用（時制・相・否定・モダリティを適用）
   // 日本語では future は present と同形
   const effectiveTense: Tense = tense === 'future' ? 'present' : tense;
   let verb = conjugate(verbLemma, {
     tense: effectiveTense,
     aspect: aspect as Aspect,
     polarity: polarity as Polarity,
+    modal,
+    modalPolarity: modalPolarity as Polarity | undefined,
   });
 
   // be動詞の場合、attributeと動詞を結合（「犬である」）

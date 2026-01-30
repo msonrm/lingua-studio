@@ -9,6 +9,7 @@
  */
 
 import { VerbEntry, getVerbEntry } from './lexicon';
+import { ModalType } from '../../types/schema';
 
 // ============================================
 // Types
@@ -22,6 +23,8 @@ export interface ConjugationContext {
   tense: Tense;
   aspect: Aspect;
   polarity: Polarity;
+  modal?: ModalType;
+  modalPolarity?: Polarity;
 }
 
 // ============================================
@@ -31,11 +34,17 @@ export interface ConjugationContext {
 /**
  * 動詞を活用する
  * @param lemma 英語lemma
- * @param context 活用コンテキスト（tense, aspect, polarity）
+ * @param context 活用コンテキスト（tense, aspect, polarity, modal）
  * @returns 活用された日本語動詞
  */
 export function conjugate(lemma: string, context: ConjugationContext): string {
   const entry = getVerbEntry(lemma);
+
+  // モダリティがある場合は特別処理
+  if (context.modal) {
+    return conjugateWithModal(entry, context);
+  }
+
   return conjugateEntry(entry, context);
 }
 
@@ -270,4 +279,114 @@ function conjugateGodanNai(ja: string): string {
   }
 
   return ja + 'ない';
+}
+
+// ============================================
+// Modal Conjugation
+// ============================================
+
+/**
+ * モダリティ付き活用
+ * 構造: 動詞辞書形 + モーダル助動詞句
+ *
+ * モーダル助動詞句が時制・極性で活用する:
+ * - 食べることができる（現在肯定）
+ * - 食べることができた（過去肯定）
+ * - 食べることができない（現在否定）
+ * - 食べることができなかった（過去否定）
+ */
+function conjugateWithModal(entry: VerbEntry, context: ConjugationContext): string {
+  const { tense, polarity, modal } = context;
+  const dictForm = entry.ja;
+
+  // モーダル助動詞句を取得
+  const modalSuffix = getModalSuffix(modal!, tense, polarity);
+
+  return dictForm + modalSuffix;
+}
+
+/**
+ * モダリティから日本語助動詞句を取得
+ *
+ * | ModalType   | 肯定現在         | 否定現在             | 肯定過去           | 否定過去               |
+ * |-------------|------------------|----------------------|--------------------|------------------------|
+ * | ability     | ことができる     | ことができない       | ことができた       | ことができなかった     |
+ * | permission  | てもいい         | てはいけない         | てもよかった       | てはいけなかった       |
+ * | possibility | かもしれない     | ないかもしれない     | たかもしれない     | なかったかもしれない   |
+ * | obligation  | なければならない | なくてもいい         | なければならなかった| なくてもよかった       |
+ * | certainty   | にちがいない     | ではないだろう       | たにちがいない     | なかったにちがいない   |
+ * | advice      | べきだ           | べきではない         | べきだった         | べきではなかった       |
+ * | volition    | つもりだ         | つもりはない         | つもりだった       | つもりはなかった       |
+ * | prediction  | だろう           | ないだろう           | ただろう           | なかっただろう         |
+ */
+function getModalSuffix(
+  modal: ModalType,
+  tense: Tense,
+  polarity: Polarity
+): string {
+  const isPast = tense === 'past';
+  const isNegative = polarity === 'negative';
+
+  switch (modal) {
+    case 'ability':
+      // ～ことができる
+      if (isNegative) {
+        return isPast ? 'ことができなかった' : 'ことができない';
+      }
+      return isPast ? 'ことができた' : 'ことができる';
+
+    case 'permission':
+      // ～てもいい / ～てはいけない
+      // 注意: 本来はテ形が必要だが、シンプルに辞書形+てもいい とする
+      if (isNegative) {
+        return isPast ? 'てはいけなかった' : 'てはいけない';
+      }
+      return isPast ? 'てもよかった' : 'てもいい';
+
+    case 'possibility':
+      // ～かもしれない（肯定）/ ～ないかもしれない（否定）
+      // 否定は動詞側を否定形にするパターン（ここではシンプルに）
+      if (isNegative) {
+        return isPast ? 'なかったかもしれない' : 'ないかもしれない';
+      }
+      return isPast ? 'たかもしれない' : 'かもしれない';
+
+    case 'obligation':
+      // ～なければならない（義務）/ ～なくてもいい（義務否定＝許可）
+      if (isNegative) {
+        return isPast ? 'なくてもよかった' : 'なくてもいい';
+      }
+      return isPast ? 'なければならなかった' : 'なければならない';
+
+    case 'certainty':
+      // ～にちがいない
+      if (isNegative) {
+        return isPast ? 'なかったにちがいない' : 'ないにちがいない';
+      }
+      return isPast ? 'たにちがいない' : 'にちがいない';
+
+    case 'advice':
+      // ～べきだ
+      if (isNegative) {
+        return isPast ? 'べきではなかった' : 'べきではない';
+      }
+      return isPast ? 'べきだった' : 'べきだ';
+
+    case 'volition':
+      // ～つもりだ
+      if (isNegative) {
+        return isPast ? 'つもりはなかった' : 'つもりはない';
+      }
+      return isPast ? 'つもりだった' : 'つもりだ';
+
+    case 'prediction':
+      // ～だろう
+      if (isNegative) {
+        return isPast ? 'なかっただろう' : 'ないだろう';
+      }
+      return isPast ? 'ただろう' : 'だろう';
+
+    default:
+      return '';
+  }
 }

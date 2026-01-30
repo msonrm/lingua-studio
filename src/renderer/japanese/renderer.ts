@@ -1,11 +1,12 @@
 /**
- * Japanese Syntax Renderer (統語論のみバージョン)
+ * Japanese Renderer
  *
- * AST → 日本語語順（SOV）+ 格助詞
- * 単語は英語のまま、語順と格マーキングのみ日本語化
- * 代名詞は日本語に変換
+ * AST → 日本語文
+ * - SOV語順、格助詞付与
+ * - 動詞活用（時制・相・否定）
+ * - 語彙の日本語化
  *
- * 例: "I eat the apple" → "私は the appleを eat。"
+ * 例: "I ate the apple" → "私は りんごを 食べた。"
  */
 
 import {
@@ -19,7 +20,8 @@ import {
   CoordinationConjunct,
   SemanticRole,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, getVerbEntry, translateAdjective, translateAdverb, translateDeterminer } from './lexicon';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer } from './lexicon';
+import { conjugate, Tense, Aspect, Polarity } from './conjugation';
 
 // ============================================
 // Main Entry Points
@@ -83,10 +85,10 @@ interface BuildOptions {
 
 /**
  * SOV語順のパーツを構築
- * [主語+は] [目的語+を] [間接目的語+に] ... [動詞]
+ * [主語+は] [目的語+を] [間接目的語+に] ... [動詞（活用済み）]
  */
 function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[] {
-  const { verbPhrase } = clause;
+  const { verbPhrase, tense, aspect, polarity } = clause;
   const args = verbPhrase.arguments;
   const verbLemma = verbPhrase.verb.lemma;
 
@@ -120,8 +122,14 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   // 副詞（日本語に変換）
   const adverbs = verbPhrase.adverbs.map(adv => translateAdverb(adv.lemma));
 
-  // 動詞（日本語に変換）
-  const verb = getVerbEntry(verbLemma).ja;
+  // 動詞を活用（時制・相・否定を適用）
+  // 日本語では future は present と同形
+  const effectiveTense: Tense = tense === 'future' ? 'present' : tense;
+  const verb = conjugate(verbLemma, {
+    tense: effectiveTense,
+    aspect: aspect as Aspect,
+    polarity: polarity as Polarity,
+  });
 
   // SOV順で組み立て: 主語 → その他の引数 → 副詞 → 動詞
   const result: string[] = [];

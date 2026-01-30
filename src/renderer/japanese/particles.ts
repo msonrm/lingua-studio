@@ -107,6 +107,10 @@ export const pronounToJapanese: Record<string, string> = {
   'who': '誰',
   'what': '何',
   'which': 'どれ',
+
+  // 疑問代名詞（?プレフィックス付き - dictionary-core形式）
+  '?who': '誰',
+  '?what': '何',
 };
 
 /**
@@ -670,6 +674,11 @@ export const adverbToJapanese: Record<string, string> = {
   'ahead': '前方に',
   'nearby': '近くに',
   'far': '遠くに',
+
+  // 疑問副詞（?プレフィックス付き - dictionary-core形式）
+  '?how': 'どう',
+  '?when': 'いつ',
+  '?where': 'どこ',
 };
 
 /**

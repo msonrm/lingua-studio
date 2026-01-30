@@ -339,20 +339,29 @@ export function conjugateVerb(
     }
 
     if (tense === 'past') {
-      record('tense', verbEntry.forms.base, verbEntry.forms.past, 'TENSE_PAST', 'TENSE_PAST_DESC');
-      // 平叙文では活用形を直接使用、疑問文では do-support
+      if (isNegative) {
+        // 否定文: do-supportの時制変化 do → did
+        record('tense', 'do', 'did', 'TENSE_PAST', 'TENSE_PAST_DESC');
+      } else {
+        // 肯定文: 本動詞の時制変化 eat → ate
+        record('tense', verbEntry.forms.base, verbEntry.forms.past, 'TENSE_PAST', 'TENSE_PAST_DESC');
+      }
       return {
-        auxiliary: 'did',  // 疑問文用
+        auxiliary: 'did',
         mainVerb: join(notPart, freqStr, verbEntry.forms.base),
         transforms,
-        // Note: 平叙文では auxiliary を使わず、mainVerb に過去形を使う
-        // この区別は呼び出し側で行う
       };
     }
 
     // present
     if (isThirdPersonSingular) {
-      record('agreement', verbEntry.forms.base, verbEntry.forms.thirdSg, 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
+      if (isNegative) {
+        // 否定文: do-supportの一致 do → does
+        record('agreement', 'do', 'does', 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
+      } else {
+        // 肯定文: 本動詞の一致 eat → eats
+        record('agreement', verbEntry.forms.base, verbEntry.forms.thirdSg, 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
+      }
     }
     const doForm = isThirdPersonSingular ? 'does' : 'do';
     return {

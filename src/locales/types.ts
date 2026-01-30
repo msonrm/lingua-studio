@@ -313,6 +313,8 @@ export interface GrammarMessages {
   // Syntax rules
   DO_SUPPORT_QUESTION: string;
   DO_SUPPORT_QUESTION_DESC: string;
+  DO_SUPPORT_NEGATIVE: string;
+  DO_SUPPORT_NEGATIVE_DESC: string;
   INVERSION_QUESTION: string;
   INVERSION_QUESTION_DESC: string;
   WH_MOVEMENT_FRONT: string;

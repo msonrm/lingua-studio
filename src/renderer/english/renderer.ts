@@ -150,6 +150,11 @@ function getDeclarativeVerbForm(
     // 否定文: "He does not eat" / "He did not eat"
     // mainVerb に既に "not" が含まれている
     if (isNegative) {
+      // do-support をログ（否定形成にはdo-supportが必要）
+      tracker.recordSyntax('do-support', 'insert', 'DO_SUPPORT_NEGATIVE', 'DO_SUPPORT_NEGATIVE_DESC', {
+        element: 'do',
+        after: [`${result.auxiliary} not [V]`],
+      });
       return `${result.auxiliary} ${result.mainVerb}`.trim();
     }
   }

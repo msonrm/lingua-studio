@@ -240,8 +240,14 @@ function conjugateGodanTe(ja: string): string {
 
 /**
  * 五段動詞のナイ形
+ * 特殊ケース: ある → ない（あらない ではない）
  */
 function conjugateGodanNai(ja: string): string {
+  // 特殊ケース: 「ある」「である」は否定形が「ない」「でない」
+  if (ja === 'ある') return 'ない';
+  if (ja === 'である') return 'でない';
+  if (ja.endsWith('である')) return ja.slice(0, -3) + 'でない';
+
   const lastChar = ja.slice(-1);
   const stem = ja.slice(0, -1);
 

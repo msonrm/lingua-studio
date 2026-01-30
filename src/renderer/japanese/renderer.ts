@@ -22,6 +22,7 @@ import {
 } from '../../types/schema';
 import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer } from './lexicon';
 import { conjugate, Tense, Aspect, Polarity } from './conjugation';
+import { findVerbCore } from '../../data/dictionary-core';
 
 // ============================================
 // Main Entry Points
@@ -98,12 +99,25 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   // 引数を格助詞付きでレンダリング
   const argParts: { role: SemanticRole; text: string; isSubject: boolean; isAttribute: boolean }[] = [];
 
+  // valency から required 情報を取得
+  const verbCore = findVerbCore(verbLemma);
+  const isRequired = (role: SemanticRole): boolean => {
+    if (!verbCore) return true; // 不明な動詞は必須扱い
+    const slot = verbCore.valency.find(v => v.role === role);
+    return slot?.required ?? false;
+  };
+
   for (const arg of args) {
     // 動的に格助詞を決定
     const particle = getParticle(arg.role, verbLemma);
     if (particle === undefined) continue; // マッピングがない役割はスキップ
 
-    // filler が null の場合はプレースホルダー
+    // filler が null の場合
+    if (!arg.filler) {
+      // 必須スロットのみプレースホルダーを表示
+      if (!isRequired(arg.role)) continue;
+    }
+
     const np = arg.filler ? renderFiller(arg.filler) : '___';
     const subjectFlag = isSubjectRole(arg.role, verbLemma);
     const isAttribute = arg.role === 'attribute';

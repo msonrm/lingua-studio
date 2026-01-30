@@ -524,6 +524,32 @@ Geminiでの実験により、前提知識なしで論理構文が理解され�
 - [x] 前置詞プルダウンのデフォルト値を `in` に修正
   - グループヘッダーではなく実際の値をデフォルトに
 
+### VP Coordination & Grammar Panel Improvements (2026-01)
+- [x] VP-level polarity 対応
+  - `and(not(verb), verb)` と `not(and(verb, verb))` の区別を実装
+  - VerbPhraseNode に `polarity?: 'affirmative' | 'negative'` を追加
+  - astGenerator で VP 個別の polarity を設定（節レベルにホイストしない）
+  - linguaScriptRenderer で VP 個別の not() をレンダリング
+- [x] 二重否定 (Double Negation) レンダリング
+  - `not(and(not(eat), eat))` → "I do not not eat and I do not eat"
+  - ConjugationContext に `doubleNegation?: boolean` を追加
+  - `getNotPart()` ヘルパーで二重否定時に 'not not' を返す
+- [x] 文法パネルの否定文ログ修正
+  - 否定文で `eat → eats` ではなく `do → does` をログ（do-support に対する一致）
+  - 過去否定で `eat → ate` ではなく `do → did` をログ
+  - do-support 挿入のシンタックスログ追加（DO_SUPPORT_NEGATIVE）
+  - ローカライズキー追加（en, ja, ja-hira）
+- [x] 疑問文の agreement ログ修正
+  - 肯定疑問文でも `do → does` をログ（`eat → eats` は誤り）
+  - ConjugationContext に `isQuestion?: boolean` を追加
+  - `usesDoSupport = isNegative || isQuestion` で判定
+- [x] null 出力バグ修正
+  - 辞書にない動詞（プレースホルダー `___` など）で "null" が出力される問題
+  - `auxiliary` が null の場合は mainVerb のみ返すよう修正
+- [x] 未使用コード削除
+  - rules/ フォルダ（morphology.ts, syntax.ts, index.ts）を削除（conjugation.ts リファクタリング後のレガシー）
+  - coordination.ts の未使用ユーティリティ関数を削除
+
 ### DET Dropdown UX Improvements (2026-01)
 - [x] CENTRAL限定詞にカテゴリラベル追加
   - Article, Demonstrative, Possessive, Distributive, Quantity

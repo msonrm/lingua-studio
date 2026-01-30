@@ -8,7 +8,7 @@
  * - カ変動詞（kuru）: 来る
  */
 
-import { VerbType, VerbEntry, getVerbEntry } from './lexicon';
+import { VerbEntry, getVerbEntry } from './lexicon';
 
 // ============================================
 // Types

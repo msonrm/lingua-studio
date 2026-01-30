@@ -19,7 +19,7 @@ import {
   CoordinationConjunct,
   SemanticRole,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb, translateAdjective, translateAdverb, translateDeterminer } from './particles';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb, translateAdjective, translateAdverb, translateDeterminer } from './lexicon';
 
 // ============================================
 // Main Entry Points

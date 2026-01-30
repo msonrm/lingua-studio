@@ -62,12 +62,14 @@ function conjugateVerbUnified(
   frequencyAdverbs: AdverbNode[],
   subject?: NounPhraseNode | CoordinatedNounPhraseNode,
   modal?: ModalType,
-  modalPolarity?: Polarity
+  modalPolarity?: Polarity,
+  doubleNegation?: boolean
 ): ConjugationResult {
   const ctx: ConjugationContext = {
     tense,
     aspect,
     polarity,
+    doubleNegation,
     subject,
     modal: modal as ConjugationModalType,
     modalPolarity,
@@ -122,10 +124,11 @@ function getDeclarativeVerbForm(
   frequencyAdverbs: AdverbNode[],
   subject?: NounPhraseNode | CoordinatedNounPhraseNode,
   modal?: ModalType,
-  modalPolarity?: Polarity
+  modalPolarity?: Polarity,
+  doubleNegation?: boolean
 ): string {
   const result = conjugateVerbUnified(
-    lemma, tense, aspect, polarity, frequencyAdverbs, subject, modal, modalPolarity
+    lemma, tense, aspect, polarity, frequencyAdverbs, subject, modal, modalPolarity, doubleNegation
   );
 
   const verbEntry = findVerb(lemma);
@@ -178,10 +181,11 @@ function getInterrogativeVerbForm(
   frequencyAdverbs: AdverbNode[],
   subject?: NounPhraseNode | CoordinatedNounPhraseNode,
   modal?: ModalType,
-  modalPolarity?: Polarity
+  modalPolarity?: Polarity,
+  doubleNegation?: boolean
 ): { auxiliary: string; mainVerb: string } {
   const result = conjugateVerbUnified(
-    lemma, tense, aspect, polarity, frequencyAdverbs, subject, modal, modalPolarity
+    lemma, tense, aspect, polarity, frequencyAdverbs, subject, modal, modalPolarity, doubleNegation
   );
 
   // Simple past/present で do-support が必要な場合
@@ -450,12 +454,16 @@ function appendCoordinatedVP(
     const nextVP: VerbPhraseNode = coord.verbPhrase;
     const groupId = getSubjectGroupId(nextVP);
 
-    // VP個別のpolarityがあれば使用、なければ節レベルのpolarityを使用
-    const effectivePolarity = nextVP.polarity ?? ctx.polarity;
+    // VP個別のpolarityと節レベルのpolarityを組み合わせる
+    const vpNegative = nextVP.polarity === 'negative';
+    const clauseNegative = ctx.polarity === 'negative';
+    const doubleNegation = vpNegative && clauseNegative;
+    const effectivePolarity = (vpNegative || clauseNegative) ? 'negative' : 'affirmative';
     const rendered = renderSingleVerbPhrase(
       nextVP, ctx.tense, ctx.aspect, effectivePolarity,
       undefined,  // 継承なし、各VPは独立してレンダリング
-      ctx.modal, ctx.modalPolarity
+      ctx.modal, ctx.modalPolarity,
+      doubleNegation
     );
 
     vpInfos.push({ vp: nextVP, rendered, groupId });
@@ -630,8 +638,11 @@ export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
 function renderClause(clause: ClauseNode): string {
   const ctx = prepareClauseContext(clause);
 
-  // VP個別のpolarityがあれば使用、なければ節レベルのpolarityを使用
-  const effectivePolarity = ctx.verbPhrase.polarity ?? ctx.polarity;
+  // VP個別のpolarityと節レベルのpolarityを組み合わせる
+  const vpNegative = ctx.verbPhrase.polarity === 'negative';
+  const clauseNegative = ctx.polarity === 'negative';
+  const doubleNegation = vpNegative && clauseNegative;
+  const effectivePolarity = (vpNegative || clauseNegative) ? 'negative' : 'affirmative';
 
   // 動詞を活用
   const verbForm = getDeclarativeVerbForm(
@@ -642,7 +653,8 @@ function renderClause(clause: ClauseNode): string {
     ctx.adverbs.frequency,
     ctx.subjectForConjugation,
     ctx.modal,
-    ctx.modalPolarity
+    ctx.modalPolarity,
+    doubleNegation
   );
 
   // 引数・副詞・前置詞句をレンダリング
@@ -750,8 +762,11 @@ function renderInterrogativeClause(clause: ClauseNode): string {
   // Yes/No疑問文の場合
   const ctx = prepareClauseContext(clause);
 
-  // VP個別のpolarityがあれば使用、なければ節レベルのpolarityを使用
-  const effectivePolarity = ctx.verbPhrase.polarity ?? ctx.polarity;
+  // VP個別のpolarityと節レベルのpolarityを組み合わせる
+  const vpNegative = ctx.verbPhrase.polarity === 'negative';
+  const clauseNegative = ctx.polarity === 'negative';
+  const doubleNegation = vpNegative && clauseNegative;
+  const effectivePolarity = (vpNegative || clauseNegative) ? 'negative' : 'affirmative';
 
   // 疑問文用の動詞活用（助動詞と本動詞を分離）
   const { auxiliary, mainVerb } = getInterrogativeVerbForm(
@@ -762,7 +777,8 @@ function renderInterrogativeClause(clause: ClauseNode): string {
     ctx.adverbs.frequency,
     ctx.subjectForConjugation,
     ctx.modal,
-    ctx.modalPolarity
+    ctx.modalPolarity,
+    doubleNegation
   );
 
   // 倒置をログ
@@ -790,8 +806,11 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
   const ctx = prepareClauseContext(clause);
   const { mannerStr, locativeStr, prepPhrasesStr } = renderAdverbsAndPrepPhrases(ctx);
 
-  // VP個別のpolarityがあれば使用、なければ節レベルのpolarityを使用
-  const effectivePolarity = ctx.verbPhrase.polarity ?? ctx.polarity;
+  // VP個別のpolarityと節レベルのpolarityを組み合わせる
+  const vpNegative = ctx.verbPhrase.polarity === 'negative';
+  const clauseNegative = ctx.polarity === 'negative';
+  const doubleNegation = vpNegative && clauseNegative;
+  const effectivePolarity = (vpNegative || clauseNegative) ? 'negative' : 'affirmative';
 
   // Wh移動をログ
   tracker.recordSyntax(
@@ -809,7 +828,8 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
       ctx.adverbs.frequency,
       undefined, // 疑問詞は3人称単数扱い
       ctx.modal,
-      ctx.modalPolarity
+      ctx.modalPolarity,
+      doubleNegation
     );
 
     const otherArgs = renderOtherArguments(ctx);
@@ -826,7 +846,8 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
       ctx.adverbs.frequency,
       ctx.subjectForConjugation,
       ctx.modal,
-      ctx.modalPolarity
+      ctx.modalPolarity,
+      doubleNegation
     );
 
     // 疑問詞ロールも除外
@@ -845,8 +866,11 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
 function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo): string {
   const ctx = prepareClauseContext(clause);
 
-  // VP個別のpolarityがあれば使用、なければ節レベルのpolarityを使用
-  const effectivePolarity = ctx.verbPhrase.polarity ?? ctx.polarity;
+  // VP個別のpolarityと節レベルのpolarityを組み合わせる
+  const vpNegative = ctx.verbPhrase.polarity === 'negative';
+  const clauseNegative = ctx.polarity === 'negative';
+  const doubleNegation = vpNegative && clauseNegative;
+  const effectivePolarity = (vpNegative || clauseNegative) ? 'negative' : 'affirmative';
 
   // Wh副詞を除外した副詞リストで上書き
   const adverbsExcludingWh = {
@@ -865,7 +889,8 @@ function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo):
     ctx.adverbs.frequency,
     ctx.subjectForConjugation,
     ctx.modal,
-    ctx.modalPolarity
+    ctx.modalPolarity,
+    doubleNegation
   );
 
   // 引数をレンダリング
@@ -1020,7 +1045,8 @@ function renderSingleVerbPhrase(
   polarity: 'affirmative' | 'negative',
   inheritedSubject?: NounPhraseNode | CoordinatedNounPhraseNode,
   modal?: ModalType,
-  modalPolarity?: 'affirmative' | 'negative'
+  modalPolarity?: 'affirmative' | 'negative',
+  doubleNegation?: boolean
 ): string {
   const verbEntry = findVerb(vp.verb.lemma);
 
@@ -1063,7 +1089,8 @@ function renderSingleVerbPhrase(
     frequencyAdverbs,
     effectiveSubject,
     hasOwnSubject ? modal : modal,
-    hasOwnSubject ? modalPolarity : undefined
+    hasOwnSubject ? modalPolarity : undefined,
+    doubleNegation
   );
 
   // 主語をレンダリング（値がなければ___）

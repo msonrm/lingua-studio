@@ -23,6 +23,7 @@ export interface ConjugationContext {
   tense: Tense;
   aspect: Aspect;
   polarity: Polarity;
+  doubleNegation?: boolean;  // 二重否定: "do not not eat"
   subject?: NounPhraseNode | CoordinatedNounPhraseNode;
   modal?: ModalType;
   modalPolarity?: Polarity;
@@ -156,11 +157,17 @@ export function conjugateVerb(
     return { auxiliary: null, mainVerb: lemma, transforms: [] };
   }
 
-  const { tense, aspect, polarity, subject, modal, modalPolarity, frequencyAdverbs = [] } = ctx;
+  const { tense, aspect, polarity, doubleNegation, subject, modal, modalPolarity, frequencyAdverbs = [] } = ctx;
   const isNegative = polarity === 'negative';
   const isThirdPersonSingular = isThirdSingular(subject);
   const personNumber = getPersonNumber(subject);
   const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
+
+  // 否定部分を計算（二重否定対応）
+  const getNotPart = () => {
+    if (!isNegative) return '';
+    return doubleNegation ? 'not not' : 'not';
+  };
 
   // Helper: 記録付きで変形を追加
   const record = (type: TransformationType, from: string, to: string, rule: string, description: string) => {
@@ -216,7 +223,7 @@ export function conjugateVerb(
     // 義務の否定（特殊処理: must → don't have to）
     if (isModalNegative && modal === 'obligation') {
       const haveToAux = tense === 'past' ? "didn't have to" : "don't have to";
-      const notPart = isNegative ? 'not' : '';
+      const notPart = getNotPart();
 
       if (aspect === 'simple') {
         return {
@@ -230,7 +237,7 @@ export function conjugateVerb(
     // 迂言形式（was going to, had to）
     if (modalForm.usePeriPhrastic) {
       const peri = modalForm.usePeriPhrastic;
-      const notPart = isNegative ? 'not' : '';
+      const notPart = getNotPart();
 
       if (peri === 'was going to') {
         if (aspect === 'simple') {
@@ -254,7 +261,7 @@ export function conjugateVerb(
     // 通常のモダリティ
     const aux = modalForm.auxiliary || '';
     const negatedAux = isModalNegative ? negateModalAuxiliary(aux) : aux;
-    const notPart = isNegative ? 'not' : '';
+    const notPart = getNotPart();
 
     if (aspect === 'simple') {
       return {
@@ -293,7 +300,7 @@ export function conjugateVerb(
   // Simple Aspect（モダリティなし）
   // ============================================
   if (aspect === 'simple') {
-    const notPart = isNegative ? 'not' : '';
+    const notPart = getNotPart();
 
     // be動詞の特別処理
     if (lemma === 'be') {
@@ -359,7 +366,7 @@ export function conjugateVerb(
   // Progressive Aspect
   // ============================================
   if (aspect === 'progressive') {
-    const notPart = isNegative ? 'not' : '';
+    const notPart = getNotPart();
     const beForm = getBeForm(tense);
 
     if (tense === 'future') {
@@ -388,7 +395,7 @@ export function conjugateVerb(
   // Perfect Aspect
   // ============================================
   if (aspect === 'perfect') {
-    const notPart = isNegative ? 'not' : '';
+    const notPart = getNotPart();
     const haveForm = getHaveForm(tense);
 
     if (tense === 'future') {
@@ -419,7 +426,7 @@ export function conjugateVerb(
   // Perfect Progressive Aspect
   // ============================================
   if (aspect === 'perfectProgressive') {
-    const notPart = isNegative ? 'not' : '';
+    const notPart = getNotPart();
     const haveForm = getHaveForm(tense);
 
     if (tense === 'future') {

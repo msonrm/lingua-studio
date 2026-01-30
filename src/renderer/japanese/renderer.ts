@@ -86,6 +86,9 @@ interface BuildOptions {
 /**
  * SOV語順のパーツを構築
  * [主語+は] [目的語+を] [間接目的語+に] ... [動詞（活用済み）]
+ *
+ * be動詞の場合: [主語+は] [attribute+動詞]
+ * 例: "I am a dog" → "私は 犬である"
  */
 function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[] {
   const { verbPhrase, tense, aspect, polarity } = clause;
@@ -93,17 +96,18 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   const verbLemma = verbPhrase.verb.lemma;
 
   // 引数を格助詞付きでレンダリング
-  const argParts: { role: SemanticRole; text: string; isSubject: boolean }[] = [];
+  const argParts: { role: SemanticRole; text: string; isSubject: boolean; isAttribute: boolean }[] = [];
 
   for (const arg of args) {
     if (!arg.filler) continue;
 
     // 動的に格助詞を決定
     const particle = getParticle(arg.role, verbLemma);
-    if (!particle) continue; // マッピングがない役割はスキップ
+    if (particle === undefined) continue; // マッピングがない役割はスキップ
 
     const np = renderFiller(arg.filler);
     const subjectFlag = isSubjectRole(arg.role, verbLemma);
+    const isAttribute = arg.role === 'attribute';
 
     // 主語省略オプション
     if (options.omitSubject && subjectFlag) continue;
@@ -112,12 +116,14 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
       role: arg.role,
       text: `${np}${particle}`,
       isSubject: subjectFlag,
+      isAttribute,
     });
   }
 
   // 主語を先頭に、その他を続ける
   const subject = argParts.find(p => p.isSubject);
-  const others = argParts.filter(p => !p.isSubject);
+  const attribute = argParts.find(p => p.isAttribute);
+  const others = argParts.filter(p => !p.isSubject && !p.isAttribute);
 
   // 副詞（日本語に変換）
   const adverbs = verbPhrase.adverbs.map(adv => translateAdverb(adv.lemma));
@@ -125,17 +131,26 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   // 動詞を活用（時制・相・否定を適用）
   // 日本語では future は present と同形
   const effectiveTense: Tense = tense === 'future' ? 'present' : tense;
-  const verb = conjugate(verbLemma, {
+  let verb = conjugate(verbLemma, {
     tense: effectiveTense,
     aspect: aspect as Aspect,
     polarity: polarity as Polarity,
   });
+
+  // be動詞の場合、attributeと動詞を結合（「犬である」）
+  if (attribute && verbLemma === 'be') {
+    verb = `${attribute.text}${verb}`;
+  }
 
   // SOV順で組み立て: 主語 → その他の引数 → 副詞 → 動詞
   const result: string[] = [];
   if (subject) result.push(subject.text);
   for (const other of others) {
     result.push(other.text);
+  }
+  // be動詞以外でattributeがある場合（seem等）
+  if (attribute && verbLemma !== 'be') {
+    result.push(attribute.text);
   }
   for (const adv of adverbs) {
     result.push(adv);

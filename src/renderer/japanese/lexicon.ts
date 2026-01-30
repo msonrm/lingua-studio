@@ -13,7 +13,7 @@
 import { SemanticRole } from '../../types/schema';
 import { verbCores } from '../../data/dictionary-core';
 
-export type Particle = 'は' | 'が' | 'を' | 'に' | 'で' | 'から' | 'まで' | 'と' | 'へ';
+export type Particle = 'は' | 'が' | 'を' | 'に' | 'で' | 'から' | 'まで' | 'と' | 'へ' | '';
 
 /**
  * 意味役割から格助詞へのデフォルトマッピング
@@ -34,6 +34,9 @@ export const roleToParticleDefault: Partial<Record<SemanticRole, Particle>> = {
   source: 'から',
   location: 'で',
   instrument: 'で',
+
+  // コピュラ（be動詞）の補語 - 格助詞なし
+  attribute: '',
 };
 
 /**

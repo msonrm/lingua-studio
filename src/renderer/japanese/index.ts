@@ -12,6 +12,9 @@ export {
   translateAdjective,
   translateAdverb,
   translateDeterminer,
+  translatePreDeterminer,
+  translatePostDeterminer,
+  isNegativePolarityAdverb,
 } from './lexicon';
 export type { VerbType, VerbEntry } from './lexicon';
 

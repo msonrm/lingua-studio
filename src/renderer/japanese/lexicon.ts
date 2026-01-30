@@ -163,6 +163,31 @@ export const possessiveToJapanese: Record<string, string> = {
 };
 
 /**
+ * Pre-determiner（前限定詞）の日本語マッピング
+ */
+export const preDeterminerToJapanese: Record<string, string> = {
+  'all': 'すべての',
+  'both': '両方の',
+  'half': '半分の',
+};
+
+/**
+ * Post-determiner（後限定詞・数量詞）の日本語マッピング
+ */
+export const postDeterminerToJapanese: Record<string, string> = {
+  'many': 'たくさんの',
+  'few': '少しの',
+  'some': 'いくつかの',
+  'several': 'いくつかの',
+  'much': 'たくさんの',
+  'little': '少しの',
+  // 数詞
+  'one': '1つの',
+  'two': '2つの',
+  'three': '3つの',
+};
+
+/**
  * 限定詞を日本語に変換
  * - 所有格・指示詞は日本語化
  * - the, a は空文字を返す（日本語では不要）
@@ -179,6 +204,20 @@ export function translateDeterminer(det: string): string {
   }
   // その他はそのまま
   return det;
+}
+
+/**
+ * Pre-determinerを日本語に変換
+ */
+export function translatePreDeterminer(det: string): string {
+  return preDeterminerToJapanese[det] || det;
+}
+
+/**
+ * Post-determinerを日本語に変換
+ */
+export function translatePostDeterminer(det: string): string {
+  return postDeterminerToJapanese[det] || det;
 }
 
 // ============================================

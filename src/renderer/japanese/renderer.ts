@@ -20,7 +20,7 @@ import {
   CoordinationConjunct,
   SemanticRole,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, isNegativePolarityAdverb } from './lexicon';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb } from './lexicon';
 import { conjugate, Tense, Aspect, Polarity } from './conjugation';
 import { findVerbCore } from '../../data/dictionary-core';
 
@@ -236,7 +236,7 @@ function renderNounPhrase(np: NounPhraseNode): string {
 
   // Pre-determiner (all, both, half)
   if (np.preDeterminer) {
-    parts.push(np.preDeterminer);
+    parts.push(translatePreDeterminer(np.preDeterminer));
   }
 
   // Determiner (the, a, my, this, etc.)
@@ -253,7 +253,7 @@ function renderNounPhrase(np: NounPhraseNode): string {
     if (np.postDeterminer === 'plural') {
       // 複数形は表示しない（名詞自体で表現）
     } else {
-      parts.push(np.postDeterminer);
+      parts.push(translatePostDeterminer(np.postDeterminer));
     }
   }
 

@@ -149,6 +149,11 @@ function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
     result = `pp('${pp.preposition}, ${objScript}, ${result})`;
   }
 
+  // VP個別のpolarity（等位接続内で個別に否定される場合）
+  if (vp.polarity === 'negative') {
+    result = `not(${result})`;
+  }
+
   // 等位接続をラップ（小文字 and/or - NP/VP の接続）
   if (vp.coordinatedWith) {
     const coordScript = renderVerbPhraseToScript(vp.coordinatedWith.verbPhrase);

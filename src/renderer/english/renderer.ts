@@ -450,8 +450,10 @@ function appendCoordinatedVP(
     const nextVP: VerbPhraseNode = coord.verbPhrase;
     const groupId = getSubjectGroupId(nextVP);
 
+    // VP個別のpolarityがあれば使用、なければ節レベルのpolarityを使用
+    const effectivePolarity = nextVP.polarity ?? ctx.polarity;
     const rendered = renderSingleVerbPhrase(
-      nextVP, ctx.tense, ctx.aspect, ctx.polarity,
+      nextVP, ctx.tense, ctx.aspect, effectivePolarity,
       undefined,  // 継承なし、各VPは独立してレンダリング
       ctx.modal, ctx.modalPolarity
     );
@@ -628,12 +630,15 @@ export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
 function renderClause(clause: ClauseNode): string {
   const ctx = prepareClauseContext(clause);
 
+  // VP個別のpolarityがあれば使用、なければ節レベルのpolarityを使用
+  const effectivePolarity = ctx.verbPhrase.polarity ?? ctx.polarity;
+
   // 動詞を活用
   const verbForm = getDeclarativeVerbForm(
     ctx.verbPhrase.verb.lemma,
     ctx.tense,
     ctx.aspect,
-    ctx.polarity,
+    effectivePolarity,
     ctx.adverbs.frequency,
     ctx.subjectForConjugation,
     ctx.modal,
@@ -745,12 +750,15 @@ function renderInterrogativeClause(clause: ClauseNode): string {
   // Yes/No疑問文の場合
   const ctx = prepareClauseContext(clause);
 
+  // VP個別のpolarityがあれば使用、なければ節レベルのpolarityを使用
+  const effectivePolarity = ctx.verbPhrase.polarity ?? ctx.polarity;
+
   // 疑問文用の動詞活用（助動詞と本動詞を分離）
   const { auxiliary, mainVerb } = getInterrogativeVerbForm(
     ctx.verbPhrase.verb.lemma,
     ctx.tense,
     ctx.aspect,
-    ctx.polarity,
+    effectivePolarity,
     ctx.adverbs.frequency,
     ctx.subjectForConjugation,
     ctx.modal,
@@ -782,6 +790,9 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
   const ctx = prepareClauseContext(clause);
   const { mannerStr, locativeStr, prepPhrasesStr } = renderAdverbsAndPrepPhrases(ctx);
 
+  // VP個別のpolarityがあれば使用、なければ節レベルのpolarityを使用
+  const effectivePolarity = ctx.verbPhrase.polarity ?? ctx.polarity;
+
   // Wh移動をログ
   tracker.recordSyntax(
     'wh-movement', 'move', 'WH_MOVEMENT_FRONT', 'WH_MOVEMENT_FRONT_DESC',
@@ -794,7 +805,7 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
       ctx.verbPhrase.verb.lemma,
       ctx.tense,
       ctx.aspect,
-      ctx.polarity,
+      effectivePolarity,
       ctx.adverbs.frequency,
       undefined, // 疑問詞は3人称単数扱い
       ctx.modal,
@@ -811,7 +822,7 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
       ctx.verbPhrase.verb.lemma,
       ctx.tense,
       ctx.aspect,
-      ctx.polarity,
+      effectivePolarity,
       ctx.adverbs.frequency,
       ctx.subjectForConjugation,
       ctx.modal,
@@ -834,6 +845,9 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
 function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo): string {
   const ctx = prepareClauseContext(clause);
 
+  // VP個別のpolarityがあれば使用、なければ節レベルのpolarityを使用
+  const effectivePolarity = ctx.verbPhrase.polarity ?? ctx.polarity;
+
   // Wh副詞を除外した副詞リストで上書き
   const adverbsExcludingWh = {
     ...ctx.adverbs,
@@ -847,7 +861,7 @@ function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo):
     ctx.verbPhrase.verb.lemma,
     ctx.tense,
     ctx.aspect,
-    ctx.polarity,
+    effectivePolarity,
     ctx.adverbs.frequency,
     ctx.subjectForConjugation,
     ctx.modal,

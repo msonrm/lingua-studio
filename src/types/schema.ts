@@ -238,6 +238,7 @@ export interface VerbPhraseNode {
   arguments: FilledArgumentSlot[];
   adverbs: AdverbNode[];
   prepositionalPhrases: PrepositionalPhraseNode[];  // 前置詞句 ("go TO THE PARK")
+  polarity?: "affirmative" | "negative";  // VP個別の否定（等位接続内で使用）
   coordinatedWith?: {
     conjunction: Conjunction;
     verbPhrase: VerbPhraseNode;

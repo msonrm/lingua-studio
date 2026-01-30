@@ -120,6 +120,15 @@ export const pronounToJapanese: Record<string, string> = {
   // 疑問代名詞（?プレフィックス付き - dictionary-core形式）
   '?who': '誰',
   '?what': '何',
+
+  // 独立所有代名詞（mine, yours, etc.）
+  'mine': '私のもの',
+  'yours': 'あなたのもの',
+  'his': '彼のもの',
+  'hers': '彼女のもの',
+  'its': 'それのもの',
+  'ours': '私たちのもの',
+  'theirs': '彼らのもの',
 };
 
 /**

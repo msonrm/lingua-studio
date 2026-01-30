@@ -721,6 +721,13 @@ export const adverbToJapanese: Record<string, string> = {
   'today': '今日',
   'yesterday': '昨日',
   'tomorrow': '明日',
+  // TimeChip expressions（複合表現）
+  'every day': '毎日',
+  'right now': '今すぐ',
+  'at the moment': '現在',
+  'next week': '来週',
+  'just now': 'たった今',
+  'last sunday': '先週の日曜日',
 
   // Place（場所）
   'here': 'ここに',

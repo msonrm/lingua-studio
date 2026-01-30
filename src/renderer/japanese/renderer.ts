@@ -59,7 +59,7 @@ export function renderToJapanese(ast: SentenceNode): string {
  */
 function renderDeclarative(clause: ClauseNode, timeAdv?: string): string {
   const parts = buildSOVParts(clause, { timeAdverbial: timeAdv });
-  return parts.filter(Boolean).join(' ') + '。';
+  return parts.filter(Boolean).join('') + '。';
 }
 
 /**
@@ -67,7 +67,7 @@ function renderDeclarative(clause: ClauseNode, timeAdv?: string): string {
  */
 function renderInterrogative(clause: ClauseNode, timeAdv?: string): string {
   const parts = buildSOVParts(clause, { timeAdverbial: timeAdv });
-  return parts.filter(Boolean).join(' ') + 'か？';
+  return parts.filter(Boolean).join('') + 'か？';
 }
 
 /**
@@ -75,7 +75,7 @@ function renderInterrogative(clause: ClauseNode, timeAdv?: string): string {
  */
 function renderImperative(clause: ClauseNode, timeAdv?: string): string {
   const parts = buildSOVParts(clause, { omitSubject: true, timeAdverbial: timeAdv });
-  return parts.filter(Boolean).join(' ') + '。';
+  return parts.filter(Boolean).join('') + '。';
 }
 
 // ============================================

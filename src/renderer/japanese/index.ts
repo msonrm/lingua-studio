@@ -8,8 +8,9 @@ export {
   isSubjectRole,
   translatePronoun,
   translateNoun,
-  translateVerb,
+  getVerbEntry,
   translateAdjective,
   translateAdverb,
   translateDeterminer,
 } from './lexicon';
+export type { VerbType, VerbEntry } from './lexicon';

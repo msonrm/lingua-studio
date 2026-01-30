@@ -99,13 +99,12 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   const argParts: { role: SemanticRole; text: string; isSubject: boolean; isAttribute: boolean }[] = [];
 
   for (const arg of args) {
-    if (!arg.filler) continue;
-
     // 動的に格助詞を決定
     const particle = getParticle(arg.role, verbLemma);
     if (particle === undefined) continue; // マッピングがない役割はスキップ
 
-    const np = renderFiller(arg.filler);
+    // filler が null の場合はプレースホルダー
+    const np = arg.filler ? renderFiller(arg.filler) : '___';
     const subjectFlag = isSubjectRole(arg.role, verbLemma);
     const isAttribute = arg.role === 'attribute';
 

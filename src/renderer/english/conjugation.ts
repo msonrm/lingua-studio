@@ -24,6 +24,7 @@ export interface ConjugationContext {
   aspect: Aspect;
   polarity: Polarity;
   doubleNegation?: boolean;  // 二重否定: "do not not eat"
+  isQuestion?: boolean;      // 疑問文: do-supportを使用
   subject?: NounPhraseNode | CoordinatedNounPhraseNode;
   modal?: ModalType;
   modalPolarity?: Polarity;
@@ -157,8 +158,9 @@ export function conjugateVerb(
     return { auxiliary: null, mainVerb: lemma, transforms: [] };
   }
 
-  const { tense, aspect, polarity, doubleNegation, subject, modal, modalPolarity, frequencyAdverbs = [] } = ctx;
+  const { tense, aspect, polarity, doubleNegation, isQuestion, subject, modal, modalPolarity, frequencyAdverbs = [] } = ctx;
   const isNegative = polarity === 'negative';
+  const usesDoSupport = isNegative || isQuestion;  // do-supportを使う場合、agreement/tenseはdoに適用
   const isThirdPersonSingular = isThirdSingular(subject);
   const personNumber = getPersonNumber(subject);
   const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
@@ -339,11 +341,11 @@ export function conjugateVerb(
     }
 
     if (tense === 'past') {
-      if (isNegative) {
-        // 否定文: do-supportの時制変化 do → did
+      if (usesDoSupport) {
+        // do-support使用時: doの時制変化 do → did
         record('tense', 'do', 'did', 'TENSE_PAST', 'TENSE_PAST_DESC');
       } else {
-        // 肯定文: 本動詞の時制変化 eat → ate
+        // 平叙肯定文: 本動詞の時制変化 eat → ate
         record('tense', verbEntry.forms.base, verbEntry.forms.past, 'TENSE_PAST', 'TENSE_PAST_DESC');
       }
       return {
@@ -355,11 +357,11 @@ export function conjugateVerb(
 
     // present
     if (isThirdPersonSingular) {
-      if (isNegative) {
-        // 否定文: do-supportの一致 do → does
+      if (usesDoSupport) {
+        // do-support使用時: doの一致 do → does
         record('agreement', 'do', 'does', 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
       } else {
-        // 肯定文: 本動詞の一致 eat → eats
+        // 平叙肯定文: 本動詞の一致 eat → eats
         record('agreement', verbEntry.forms.base, verbEntry.forms.thirdSg, 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
       }
     }

@@ -63,13 +63,15 @@ function conjugateVerbUnified(
   subject?: NounPhraseNode | CoordinatedNounPhraseNode,
   modal?: ModalType,
   modalPolarity?: Polarity,
-  doubleNegation?: boolean
+  doubleNegation?: boolean,
+  isQuestion?: boolean
 ): ConjugationResult {
   const ctx: ConjugationContext = {
     tense,
     aspect,
     polarity,
     doubleNegation,
+    isQuestion,
     subject,
     modal: modal as ConjugationModalType,
     modalPolarity,
@@ -194,7 +196,8 @@ function getInterrogativeVerbForm(
   doubleNegation?: boolean
 ): { auxiliary: string; mainVerb: string } {
   const result = conjugateVerbUnified(
-    lemma, tense, aspect, polarity, frequencyAdverbs, subject, modal, modalPolarity, doubleNegation
+    lemma, tense, aspect, polarity, frequencyAdverbs, subject, modal, modalPolarity, doubleNegation,
+    true  // isQuestion: 疑問文ではdo-supportを使用
   );
 
   // Simple past/present で do-support が必要な場合

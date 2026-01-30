@@ -112,7 +112,7 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
 
   for (const arg of args) {
     // 動的に格助詞を決定
-    const particle = getParticle(arg.role, verbLemma);
+    let particle = getParticle(arg.role, verbLemma);
     if (particle === undefined) continue; // マッピングがない役割はスキップ
 
     // filler が null の場合
@@ -124,6 +124,11 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
     const np = arg.filler ? renderFiller(arg.filler) : '___';
     const subjectFlag = isSubjectRole(arg.role, verbLemma);
     const isAttribute = arg.role === 'attribute';
+
+    // 疑問詞が主語の場合は「が」を使用（「誰が」「何が」）
+    if (subjectFlag && arg.filler && isInterrogativeFiller(arg.filler)) {
+      particle = 'が';
+    }
 
     // 主語省略オプション
     if (options.omitSubject && subjectFlag) continue;
@@ -183,6 +188,19 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
 // ============================================
 // Filler Rendering
 // ============================================
+
+/**
+ * フィラーが疑問詞かどうかを判定
+ * 疑問詞は「?」プレフィックス付きで格納される（?who, ?what など）
+ */
+function isInterrogativeFiller(
+  filler: NounPhraseNode | AdjectivePhraseNode | CoordinatedNounPhraseNode
+): boolean {
+  if (filler.type === 'nounPhrase') {
+    return filler.head.lemma.startsWith('?');
+  }
+  return false;
+}
 
 /**
  * フィラー（名詞句/形容詞句/等位接続）をレンダリング

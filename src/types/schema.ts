@@ -316,7 +316,6 @@ export interface CoordinatedNounPhraseNode {
   conjunction: Conjunction;
   conjuncts: CoordinationConjunct[];  // 入れ子の等位接続も許可
   isChoiceQuestion?: boolean;  // 選択疑問: ?which('tea, 'coffee)
-  notCount?: number;  // 否定ラッパーの数: 1 = neither...nor / not both...and
 }
 
 // VP等位接続（動詞句 AND/OR 動詞句）
@@ -324,5 +323,4 @@ export interface CoordinatedVerbPhraseNode {
   type: "coordinatedVerbPhrase";
   conjunction: Conjunction;
   conjuncts: VerbPhraseNode[];
-  notCount?: number;  // 否定ラッパーの数: 1 = neither...nor / not both...and
 }

@@ -477,8 +477,9 @@ export function assembleDeclarative(
       return result.mainVerb.trim() || verbEntry.forms.base;
     }
     // 否定文: "He does not eat" - do-support 必要
+    // mainVerb に既に "not" が含まれているため、ここでは追加しない
     if (isNegative) {
-      return `${result.auxiliary} not ${result.mainVerb}`.trim();
+      return `${result.auxiliary} ${result.mainVerb}`.trim();
     }
   }
 

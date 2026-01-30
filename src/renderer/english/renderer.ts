@@ -145,15 +145,17 @@ function getDeclarativeVerbForm(
       return freqStr ? `${freqStr} ${form}` : form;
     }
     // 否定文: "He does not eat" / "He did not eat"
+    // mainVerb に既に "not" が含まれている
     if (isNegative) {
-      return `${result.auxiliary} not ${result.mainVerb}`.trim();
+      return `${result.auxiliary} ${result.mainVerb}`.trim();
     }
   }
 
   // be動詞の特殊処理
+  // mainVerb に既に "not" が含まれている
   if (lemma === 'be' && aspect === 'simple' && !modal) {
     if (isNegative) {
-      return `${result.auxiliary} not ${result.mainVerb}`.trim();
+      return `${result.auxiliary} ${result.mainVerb}`.trim();
     }
     return result.auxiliary || 'is';
   }

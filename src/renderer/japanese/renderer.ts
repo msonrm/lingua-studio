@@ -32,7 +32,10 @@ import { findVerbCore } from '../../data/dictionary-core';
  * ASTを日本語語順でレンダリング
  */
 export function renderToJapanese(ast: SentenceNode): string {
-  const timeAdv = ast.timeAdverbial ? translateAdverb(ast.timeAdverbial.toLowerCase()) : undefined;
+  // timeAdverbialは空白形式で格納されているので、アンダースコアに正規化して検索
+  const timeAdv = ast.timeAdverbial
+    ? translateAdverb(ast.timeAdverbial.toLowerCase().replace(/ /g, '_'))
+    : undefined;
 
   switch (ast.sentenceType) {
     case 'imperative':

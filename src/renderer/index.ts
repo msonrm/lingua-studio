@@ -28,7 +28,3 @@ export type {
 
 // Tracker
 export { DerivationTracker } from './DerivationTracker';
-
-// English Rules
-export * as EnglishMorphology from './english/rules/morphology';
-export * as EnglishSyntax from './english/rules/syntax';

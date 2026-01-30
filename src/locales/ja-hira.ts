@@ -348,6 +348,8 @@ export const jaHira: LocaleData = {
     // Syntax rules
     DO_SUPPORT_QUESTION: 'do挿入',
     DO_SUPPORT_QUESTION_DESC: '疑問文形成にdoが必要',
+    DO_SUPPORT_NEGATIVE: 'do挿入',
+    DO_SUPPORT_NEGATIVE_DESC: '否定文形成にdoが必要',
     INVERSION_QUESTION: '倒置',
     INVERSION_QUESTION_DESC: '主語と助動詞の倒置',
     WH_MOVEMENT_FRONT: '疑問詞前置',

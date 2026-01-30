@@ -19,7 +19,7 @@ import {
   CoordinationConjunct,
   SemanticRole,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb, translateAdjective, translateAdverb } from './particles';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb, translateAdjective, translateAdverb, translateDeterminer } from './particles';
 
 // ============================================
 // Main Entry Points
@@ -174,8 +174,11 @@ function renderNounPhrase(np: NounPhraseNode): string {
 
   // Determiner (the, a, my, this, etc.)
   if (np.determiner && np.determiner !== 'none') {
-    // アンダースコアをスペースに変換（plenty_of → plenty of）
-    parts.push(np.determiner.replace(/_/g, ' '));
+    const translated = translateDeterminer(np.determiner);
+    if (translated) {
+      parts.push(translated);
+    }
+    // 空文字の場合（the, a）は追加しない
   }
 
   // Post-determiner (数量詞)

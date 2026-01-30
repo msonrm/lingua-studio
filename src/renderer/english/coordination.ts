@@ -192,32 +192,3 @@ function joinGroups(groups: FormattedGroup[]): string {
 
   return result;
 }
-
-// ============================================
-// ユーティリティ
-// ============================================
-
-/**
- * プレースホルダーを含む要素配列を生成
- * null/undefined は '___' としてレンダリングされる
- */
-export function withPlaceholders<T>(
-  items: (T | null | undefined)[],
-  getGroupId: (item: T) => string,
-  getConjunction: (index: number) => Conjunction | null
-): CoordElement<T | null>[] {
-  return items.map((item, index) => ({
-    value: item ?? null,
-    groupId: item ? getGroupId(item) : `__placeholder_${index}`,
-    conjunction: index === 0 ? null : (getConjunction(index) || 'and'),
-  }));
-}
-
-/**
- * レンダリング関数をプレースホルダー対応にラップ
- */
-export function withPlaceholderRendering<T>(
-  renderFn: (item: T) => string
-): (item: T | null) => string {
-  return (item: T | null) => item !== null ? renderFn(item) : '___';
-}

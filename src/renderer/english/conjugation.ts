@@ -23,6 +23,8 @@ export interface ConjugationContext {
   tense: Tense;
   aspect: Aspect;
   polarity: Polarity;
+  doubleNegation?: boolean;  // 二重否定: "do not not eat"
+  isQuestion?: boolean;      // 疑問文: do-supportを使用
   subject?: NounPhraseNode | CoordinatedNounPhraseNode;
   modal?: ModalType;
   modalPolarity?: Polarity;
@@ -156,11 +158,18 @@ export function conjugateVerb(
     return { auxiliary: null, mainVerb: lemma, transforms: [] };
   }
 
-  const { tense, aspect, polarity, subject, modal, modalPolarity, frequencyAdverbs = [] } = ctx;
+  const { tense, aspect, polarity, doubleNegation, isQuestion, subject, modal, modalPolarity, frequencyAdverbs = [] } = ctx;
   const isNegative = polarity === 'negative';
+  const usesDoSupport = isNegative || isQuestion;  // do-supportを使う場合、agreement/tenseはdoに適用
   const isThirdPersonSingular = isThirdSingular(subject);
   const personNumber = getPersonNumber(subject);
   const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
+
+  // 否定部分を計算（二重否定対応）
+  const getNotPart = () => {
+    if (!isNegative) return '';
+    return doubleNegation ? 'not not' : 'not';
+  };
 
   // Helper: 記録付きで変形を追加
   const record = (type: TransformationType, from: string, to: string, rule: string, description: string) => {
@@ -216,7 +225,7 @@ export function conjugateVerb(
     // 義務の否定（特殊処理: must → don't have to）
     if (isModalNegative && modal === 'obligation') {
       const haveToAux = tense === 'past' ? "didn't have to" : "don't have to";
-      const notPart = isNegative ? 'not' : '';
+      const notPart = getNotPart();
 
       if (aspect === 'simple') {
         return {
@@ -230,7 +239,7 @@ export function conjugateVerb(
     // 迂言形式（was going to, had to）
     if (modalForm.usePeriPhrastic) {
       const peri = modalForm.usePeriPhrastic;
-      const notPart = isNegative ? 'not' : '';
+      const notPart = getNotPart();
 
       if (peri === 'was going to') {
         if (aspect === 'simple') {
@@ -254,7 +263,7 @@ export function conjugateVerb(
     // 通常のモダリティ
     const aux = modalForm.auxiliary || '';
     const negatedAux = isModalNegative ? negateModalAuxiliary(aux) : aux;
-    const notPart = isNegative ? 'not' : '';
+    const notPart = getNotPart();
 
     if (aspect === 'simple') {
       return {
@@ -293,7 +302,7 @@ export function conjugateVerb(
   // Simple Aspect（モダリティなし）
   // ============================================
   if (aspect === 'simple') {
-    const notPart = isNegative ? 'not' : '';
+    const notPart = getNotPart();
 
     // be動詞の特別処理
     if (lemma === 'be') {
@@ -332,20 +341,29 @@ export function conjugateVerb(
     }
 
     if (tense === 'past') {
-      record('tense', verbEntry.forms.base, verbEntry.forms.past, 'TENSE_PAST', 'TENSE_PAST_DESC');
-      // 平叙文では活用形を直接使用、疑問文では do-support
+      if (usesDoSupport) {
+        // do-support使用時: doの時制変化 do → did
+        record('tense', 'do', 'did', 'TENSE_PAST', 'TENSE_PAST_DESC');
+      } else {
+        // 平叙肯定文: 本動詞の時制変化 eat → ate
+        record('tense', verbEntry.forms.base, verbEntry.forms.past, 'TENSE_PAST', 'TENSE_PAST_DESC');
+      }
       return {
-        auxiliary: 'did',  // 疑問文用
+        auxiliary: 'did',
         mainVerb: join(notPart, freqStr, verbEntry.forms.base),
         transforms,
-        // Note: 平叙文では auxiliary を使わず、mainVerb に過去形を使う
-        // この区別は呼び出し側で行う
       };
     }
 
     // present
     if (isThirdPersonSingular) {
-      record('agreement', verbEntry.forms.base, verbEntry.forms.thirdSg, 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
+      if (usesDoSupport) {
+        // do-support使用時: doの一致 do → does
+        record('agreement', 'do', 'does', 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
+      } else {
+        // 平叙肯定文: 本動詞の一致 eat → eats
+        record('agreement', verbEntry.forms.base, verbEntry.forms.thirdSg, 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
+      }
     }
     const doForm = isThirdPersonSingular ? 'does' : 'do';
     return {
@@ -359,7 +377,7 @@ export function conjugateVerb(
   // Progressive Aspect
   // ============================================
   if (aspect === 'progressive') {
-    const notPart = isNegative ? 'not' : '';
+    const notPart = getNotPart();
     const beForm = getBeForm(tense);
 
     if (tense === 'future') {
@@ -388,7 +406,7 @@ export function conjugateVerb(
   // Perfect Aspect
   // ============================================
   if (aspect === 'perfect') {
-    const notPart = isNegative ? 'not' : '';
+    const notPart = getNotPart();
     const haveForm = getHaveForm(tense);
 
     if (tense === 'future') {
@@ -419,7 +437,7 @@ export function conjugateVerb(
   // Perfect Progressive Aspect
   // ============================================
   if (aspect === 'perfectProgressive') {
-    const notPart = isNegative ? 'not' : '';
+    const notPart = getNotPart();
     const haveForm = getHaveForm(tense);
 
     if (tense === 'future') {
@@ -448,57 +466,4 @@ export function conjugateVerb(
 
   // Fallback
   return { auxiliary: null, mainVerb: lemma, transforms: [] };
-}
-
-// ============================================
-// Sentence Assembly Helpers
-// ============================================
-
-/**
- * 平叙文の動詞句を組み立て
- * Simple past/present では活用形を直接使用
- */
-export function assembleDeclarative(
-  result: ConjugationResult,
-  ctx: ConjugationContext,
-  verbEntry: { forms: { past: string; thirdSg: string; base: string } }
-): string {
-  const { tense, aspect, polarity } = ctx;
-  const isNegative = polarity === 'negative';
-
-  // Simple aspect の平叙文では do-support を使わない
-  if (aspect === 'simple' && !ctx.modal) {
-    if (tense === 'past' && !isNegative) {
-      // "He ate" - 直接過去形
-      return verbEntry.forms.past;
-    }
-    if (tense === 'present' && !isNegative) {
-      // "He eats" / "They eat" - 直接現在形
-      return result.mainVerb.trim() || verbEntry.forms.base;
-    }
-    // 否定文: "He does not eat" - do-support 必要
-    if (isNegative) {
-      return `${result.auxiliary} not ${result.mainVerb}`.trim();
-    }
-  }
-
-  // 他のケース: auxiliary + mainVerb
-  if (result.auxiliary) {
-    return `${result.auxiliary} ${result.mainVerb}`.trim();
-  }
-  return result.mainVerb;
-}
-
-/**
- * 疑問文の語順で組み立て
- * Auxiliary + Subject + MainVerb
- */
-export function assembleInterrogative(
-  result: ConjugationResult,
-  subjectStr: string
-): { auxiliary: string; rest: string } {
-  return {
-    auxiliary: result.auxiliary || 'does',
-    rest: `${subjectStr} ${result.mainVerb}`.trim(),
-  };
 }

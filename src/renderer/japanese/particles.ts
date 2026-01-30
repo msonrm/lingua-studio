@@ -107,6 +107,10 @@ export const pronounToJapanese: Record<string, string> = {
   'who': '誰',
   'what': '何',
   'which': 'どれ',
+
+  // 疑問代名詞（?プレフィックス付き - dictionary-core形式）
+  '?who': '誰',
+  '?what': '何',
 };
 
 /**
@@ -116,6 +120,47 @@ export function translatePronoun(lemma: string): string {
   // ?プレフィックスを除去
   const cleanLemma = lemma.replace(/^\?/, '');
   return pronounToJapanese[cleanLemma] || cleanLemma;
+}
+
+// ============================================
+// 所有格（限定詞）の日本語マッピング
+// ============================================
+
+/**
+ * 所有格限定詞 → 日本語
+ */
+export const possessiveToJapanese: Record<string, string> = {
+  'my': '私の',
+  'your': 'あなたの',
+  'his': '彼の',
+  'her': '彼女の',
+  'its': 'その',
+  'our': '私たちの',
+  'their': '彼らの',
+  // 指示限定詞
+  'this': 'この',
+  'that': 'あの',
+  'these': 'これらの',
+  'those': 'あれらの',
+};
+
+/**
+ * 限定詞を日本語に変換
+ * - 所有格・指示詞は日本語化
+ * - the, a は空文字を返す（日本語では不要）
+ * - その他はそのまま返す
+ */
+export function translateDeterminer(det: string): string {
+  // 所有格・指示詞の変換
+  if (possessiveToJapanese[det]) {
+    return possessiveToJapanese[det];
+  }
+  // the, a は削除
+  if (det === 'the' || det === 'a' || det === 'an') {
+    return '';
+  }
+  // その他はそのまま
+  return det;
 }
 
 // ============================================
@@ -670,6 +715,11 @@ export const adverbToJapanese: Record<string, string> = {
   'ahead': '前方に',
   'nearby': '近くに',
   'far': '遠くに',
+
+  // 疑問副詞（?プレフィックス付き - dictionary-core形式）
+  '?how': 'どう',
+  '?when': 'いつ',
+  '?where': 'どこ',
 };
 
 /**

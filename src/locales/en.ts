@@ -348,6 +348,8 @@ export const en: LocaleData = {
     // Syntax rules
     DO_SUPPORT_QUESTION: 'do',
     DO_SUPPORT_QUESTION_DESC: 'Question formation requires do-support',
+    DO_SUPPORT_NEGATIVE: 'do',
+    DO_SUPPORT_NEGATIVE_DESC: 'Negation requires do-support',
     INVERSION_QUESTION: 'inversion',
     INVERSION_QUESTION_DESC: 'Subject-auxiliary inversion',
     WH_MOVEMENT_FRONT: 'wh-fronting',

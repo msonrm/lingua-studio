@@ -406,6 +406,8 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
         ...result.prepositionalPhrases,
         ...result.verbPhrase.prepositionalPhrases,
       ],
+      // VP個別のpolarity（否定の場合のみ設定）
+      polarity: result.polarity === 'negative' ? 'negative' : undefined,
       logicOp: result.logicOp,
       // 内側の等位接続を保持（入れ子対応）
       coordinatedWith: result.coordination ? {
@@ -774,11 +776,12 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
 
     // 左側を完全なVerbPhraseNodeに変換（内側の等位接続を含む）
     // これにより or(and(A, B), C) で B が失われるバグを防ぐ
+    // polarityは各VP個別に持つため、ここではhoistしない
     const leftVP = toVerbPhraseWithLogic(leftResult);
 
     return {
       verbPhrase: leftVP,
-      polarity: leftResult.polarity,
+      polarity: 'affirmative',  // 節レベルは肯定、VP個別のpolarityはleftVPに含まれる
       frequencyAdverbs: [],  // leftVP に含まれている
       mannerAdverbs: [],
       locativeAdverbs: [],

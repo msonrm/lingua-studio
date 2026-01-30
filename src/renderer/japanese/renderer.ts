@@ -20,7 +20,7 @@ import {
   CoordinationConjunct,
   SemanticRole,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer } from './lexicon';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, isNegativePolarityAdverb } from './lexicon';
 import { conjugate, Tense, Aspect, Polarity } from './conjugation';
 import { findVerbCore } from '../../data/dictionary-core';
 
@@ -149,13 +149,17 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   // 副詞（日本語に変換）
   const adverbs = verbPhrase.adverbs.map(adv => translateAdverb(adv.lemma));
 
+  // 否定極性副詞（never, hardly, etc.）がある場合、動詞を否定形にする
+  const hasNegativePolarityAdverb = verbPhrase.adverbs.some(adv => isNegativePolarityAdverb(adv.lemma));
+  const effectivePolarity: Polarity = hasNegativePolarityAdverb ? 'negative' : polarity as Polarity;
+
   // 動詞を活用（時制・相・否定・モダリティを適用）
   // 日本語では future は present と同形
   const effectiveTense: Tense = tense === 'future' ? 'present' : tense;
   let verb = conjugate(verbLemma, {
     tense: effectiveTense,
     aspect: aspect as Aspect,
-    polarity: polarity as Polarity,
+    polarity: effectivePolarity,
     modal,
     modalPolarity: modalPolarity as Polarity | undefined,
   });

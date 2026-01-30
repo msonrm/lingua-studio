@@ -738,12 +738,18 @@ export const adverbToJapanese: Record<string, string> = {
   'just_now': 'たった今',
   'last_sunday': '先週の日曜日',
 
+  // Negative Polarity Items（否定極性項目 - 動詞を否定形にする）
+  'never': '決して',
+  'hardly': 'ほとんど',
+  'barely': 'かろうじて',
+  'nowhere': 'どこにも',
+  'anywhere': 'どこにも',  // 否定文脈で使用
+
   // Place（場所）
   'here': 'ここに',
   'there': 'そこに',
   'somewhere': 'どこかに',
   'everywhere': 'どこでも',
-  // nowhere - スキップ（否定形が必要）
   'inside': '中に',
   'outside': '外に',
   'upstairs': '上の階に',
@@ -769,4 +775,24 @@ export const adverbToJapanese: Record<string, string> = {
  */
 export function translateAdverb(lemma: string): string {
   return adverbToJapanese[lemma] || lemma;
+}
+
+/**
+ * 否定極性副詞（Negative Polarity Items）
+ * これらの副詞が存在する場合、動詞は否定形で活用する必要がある
+ * 例: never eat → 決して食べない（食べる ではなく）
+ */
+const NEGATIVE_POLARITY_ADVERBS = new Set([
+  'never',
+  'hardly',
+  'barely',
+  'nowhere',
+  'anywhere',  // 否定文脈では「どこにも〜ない」
+]);
+
+/**
+ * 副詞が否定極性項目かどうかを判定
+ */
+export function isNegativePolarityAdverb(lemma: string): boolean {
+  return NEGATIVE_POLARITY_ADVERBS.has(lemma);
 }

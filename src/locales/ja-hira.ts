@@ -266,6 +266,8 @@ export const jaHira: LocaleData = {
 
     // Panels
     PANEL_OUTPUT: 'できたぶん',
+    PANEL_ENGLISH: 'えいご',
+    PANEL_JAPANESE: 'にほんご',
     PANEL_LINGUASCRIPT: 'LinguaScript',
     PANEL_GRAMMAR_CONSOLE: 'ぶんぽうのせつめい',
     PANEL_AST: 'AST',

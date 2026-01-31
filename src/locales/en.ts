@@ -266,6 +266,8 @@ export const en: LocaleData = {
 
     // Panels
     PANEL_OUTPUT: 'Output',
+    PANEL_ENGLISH: 'English',
+    PANEL_JAPANESE: 'Japanese',
     PANEL_LINGUASCRIPT: 'LinguaScript',
     PANEL_GRAMMAR_CONSOLE: 'Grammar Console',
     PANEL_AST: 'AST',

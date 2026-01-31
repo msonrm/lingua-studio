@@ -344,6 +344,8 @@ export interface UIMessages {
 
   // Panels
   PANEL_OUTPUT: string;
+  PANEL_ENGLISH: string;
+  PANEL_JAPANESE: string;
   PANEL_LINGUASCRIPT: string;
   PANEL_GRAMMAR_CONSOLE: string;
   PANEL_AST: string;

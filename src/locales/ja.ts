@@ -266,6 +266,8 @@ export const ja: LocaleData = {
 
     // Panels
     PANEL_OUTPUT: '出力',
+    PANEL_ENGLISH: '英語',
+    PANEL_JAPANESE: '日本語',
     PANEL_LINGUASCRIPT: 'LinguaScript',
     PANEL_GRAMMAR_CONSOLE: '文法コンソール',
     PANEL_AST: 'AST',

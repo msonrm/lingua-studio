@@ -255,7 +255,7 @@ function App() {
           <div className="bottom-panel">
             <div className="output-panel dual">
               <div className="output-section">
-                <h3>English</h3>
+                <h3>{t.PANEL_ENGLISH}</h3>
                 <div className="sentence-output">
                   {sentences.length > 0
                     ? sentences.map((s, i) => <div key={i}>{s}</div>)
@@ -264,7 +264,7 @@ function App() {
                 </div>
               </div>
               <div className="output-section">
-                <h3>日本語</h3>
+                <h3>{t.PANEL_JAPANESE}</h3>
                 <div className="sentence-output">
                   {japaneseSentences.length > 0
                     ? japaneseSentences.map((s, i) => <div key={i}>{s}</div>)

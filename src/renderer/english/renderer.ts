@@ -460,11 +460,16 @@ function appendCoordinatedVP(
   });
 
   // チェーンを辿る
+  // 同じグループの2番目以降は主語を省略するため、前回のグループIDを追跡
+  let prevGroupId = firstGroupId;
   let currentVP: VerbPhraseNode | undefined = ctx.verbPhrase;
   while (currentVP?.coordinatedWith) {
     const coord: { conjunction: 'and' | 'or'; verbPhrase: VerbPhraseNode } = currentVP.coordinatedWith;
     const nextVP: VerbPhraseNode = coord.verbPhrase;
     const groupId = getSubjectGroupId(nextVP);
+
+    // 同じグループの2番目以降は主語を省略
+    const omitSubject = groupId === prevGroupId;
 
     // VP個別のpolarityと節レベルのpolarityを組み合わせる
     const vpNegative = nextVP.polarity === 'negative';
@@ -475,10 +480,12 @@ function appendCoordinatedVP(
       nextVP, ctx.tense, ctx.aspect, effectivePolarity,
       undefined,  // 継承なし、各VPは独立してレンダリング
       ctx.modal, ctx.modalPolarity,
-      doubleNegation
+      doubleNegation,
+      omitSubject
     );
 
     vpInfos.push({ vp: nextVP, rendered, groupId });
+    prevGroupId = groupId;
     currentVP = nextVP;
   }
 
@@ -1058,7 +1065,8 @@ function renderSingleVerbPhrase(
   inheritedSubject?: NounPhraseNode | CoordinatedNounPhraseNode,
   modal?: ModalType,
   modalPolarity?: 'affirmative' | 'negative',
-  doubleNegation?: boolean
+  doubleNegation?: boolean,
+  omitSubject?: boolean
 ): string {
   const verbEntry = findVerb(vp.verb.lemma);
 
@@ -1108,9 +1116,12 @@ function renderSingleVerbPhrase(
   // 主語をレンダリング（値がなければ___）
   // 注: inheritedSubjectは活用用、表示はownSubjectSlotのみ
   // 主語ロールがない動詞では空文字
-  const subjectStr = subjectRole
-    ? render(ownSubjectSlot?.filler, f => renderFiller(f, true, polarity))
-    : '';
+  // omitSubject: 等位接続で同じ主語の2番目以降のVPでは省略
+  const subjectStr = omitSubject
+    ? ''
+    : (subjectRole
+        ? render(ownSubjectSlot?.filler, f => renderFiller(f, true, polarity))
+        : '');
 
   // その他の引数
   const otherArgs = (verbEntry?.valency || [])

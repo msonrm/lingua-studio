@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { SentenceNode } from '../types/schema';
 import { useLocale } from '../locales';
 
@@ -7,7 +6,7 @@ interface VisualizationPanelProps {
 }
 
 // Extract tense/aspect from AST
-function extractTenseAspect(asts: SentenceNode[]): { tense: string | null; aspect: string | null } {
+export function extractTenseAspect(asts: SentenceNode[]): { tense: string | null; aspect: string | null } {
   for (const ast of asts) {
     if (ast.clause) {
       return {
@@ -19,7 +18,7 @@ function extractTenseAspect(asts: SentenceNode[]): { tense: string | null; aspec
   return { tense: null, aspect: null };
 }
 
-// Extract prepositions from AST recursively
+/* Extract prepositions from AST recursively - commented out for future use
 function extractPrepositions(obj: unknown, found: Set<string> = new Set()): Set<string> {
   if (!obj || typeof obj !== 'object') return found;
 
@@ -39,9 +38,10 @@ function extractPrepositions(obj: unknown, found: Set<string> = new Set()): Set<
 
   return found;
 }
+*/
 
 // Tense/Aspect Timeline Component with Reichenbach S/R/E model
-function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: string | null }) {
+export function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: string | null }) {
   const { blockly: t } = useLocale();
 
   // Timeline marker labels (short, for diagram)
@@ -277,7 +277,7 @@ function TenseAspectDiagram({ tense, aspect }: { tense: string | null; aspect: s
   );
 }
 
-// Preposition Diagram Component
+/* Preposition Diagram Component - commented out for future use
 function PrepositionDiagram({ activePreps }: { activePreps: Set<string> }) {
   const { blockly: t } = useLocale();
 
@@ -474,15 +474,25 @@ function PrepositionDiagram({ activePreps }: { activePreps: Set<string> }) {
     </div>
   );
 }
+*/
 
-export function VisualizationPanel({ asts }: VisualizationPanelProps) {
-  const { tense, aspect } = useMemo(() => extractTenseAspect(asts), [asts]);
-  const activePreps = useMemo(() => extractPrepositions(asts), [asts]);
-
+export function VisualizationPanel({ asts: _asts }: VisualizationPanelProps) {
+  // Timeline tab is "coming soon" - show empty state
   return (
     <div className="visualization-panel">
-      <TenseAspectDiagram tense={tense} aspect={aspect} />
+      <div className="coming-soon-placeholder">
+        <span className="coming-soon-icon">🚧</span>
+        <span className="coming-soon-text">Coming soon...</span>
+      </div>
+    </div>
+  );
+
+  /* Preposition diagram - commented out for future use
+  const activePreps = useMemo(() => extractPrepositions(asts), [asts]);
+  return (
+    <div className="visualization-panel">
       <PrepositionDiagram activePreps={activePreps} />
     </div>
   );
+  */
 }

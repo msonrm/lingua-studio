@@ -1,10 +1,14 @@
+import { useMemo } from 'react';
 import type { TransformLog } from '../types/grammarLog';
+import type { SentenceNode } from '../types/schema';
 import { useLocale } from '../locales';
 import type { GrammarMessages } from '../locales';
+import { TenseAspectDiagram, extractTenseAspect } from './VisualizationPanel';
 
 interface GrammarPanelProps {
   logs: TransformLog[];
   notification?: string | null;
+  asts: SentenceNode[];
 }
 
 // Get color for transformation type
@@ -49,8 +53,9 @@ function translateKey(key: string | undefined, grammar: GrammarMessages): string
   return key;
 }
 
-export function GrammarPanel({ logs, notification }: GrammarPanelProps) {
+export function GrammarPanel({ logs, notification, asts }: GrammarPanelProps) {
   const { grammar } = useLocale();
+  const { tense, aspect } = useMemo(() => extractTenseAspect(asts), [asts]);
 
   // Translate type name
   const translateType = (type: string): string => {
@@ -58,32 +63,25 @@ export function GrammarPanel({ logs, notification }: GrammarPanelProps) {
     return translateKey(typeKey, grammar) || type;
   };
 
-  if (logs.length === 0) {
-    return (
-      <div className="grammar-panel">
-        {notification && (
-          <div className="grammar-notification">
-            <span className="notification-icon">⚠</span>
-            <span className="notification-text">{notification}</span>
-          </div>
-        )}
-        <div className="grammar-empty">
-          <span className="empty-icon">∅</span>
-          <span className="empty-text">{grammar.EMPTY_NO_TRANSFORMATIONS}</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="grammar-panel">
+      {/* Tense/Aspect Diagram at top */}
+      <TenseAspectDiagram tense={tense} aspect={aspect} />
+
       {notification && (
         <div className="grammar-notification">
           <span className="notification-icon">⚠</span>
           <span className="notification-text">{notification}</span>
         </div>
       )}
-      <div className="grammar-steps">
+
+      {logs.length === 0 ? (
+        <div className="grammar-empty">
+          <span className="empty-icon">∅</span>
+          <span className="empty-text">{grammar.EMPTY_NO_TRANSFORMATIONS}</span>
+        </div>
+      ) : (
+        <div className="grammar-steps">
         {logs.map((log, i) => {
           const typeColor = getTypeColor(log.type);
 
@@ -117,7 +115,8 @@ export function GrammarPanel({ logs, notification }: GrammarPanelProps) {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

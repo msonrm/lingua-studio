@@ -465,6 +465,26 @@ body {
   gap: 1.5rem;
 }
 
+.coming-soon-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #718096;
+  text-align: center;
+}
+
+.coming-soon-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.coming-soon-text {
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
 .viz-section {
   background: #2d3748;
   border-radius: 8px;

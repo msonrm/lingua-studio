@@ -237,12 +237,12 @@ function App() {
                     className={`side-tab ${sidePanelTab === 'timeline' ? 'active' : ''}`}
                     onClick={() => setSidePanelTab('timeline')}
                   >
-                    {t.TAB_TIMELINE}
+                    {t.TAB_COMING_SOON}
                   </button>
                 </div>
                 <div className="side-panel-content">
                   {sidePanelTab === 'grammar' && (
-                    <GrammarPanel logs={grammarLogs} notification={resetNotice} />
+                    <GrammarPanel logs={grammarLogs} notification={resetNotice} asts={asts} />
                   )}
                   {sidePanelTab === 'timeline' && (
                     <VisualizationPanel asts={asts} />

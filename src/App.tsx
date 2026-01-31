@@ -50,7 +50,7 @@ function App() {
   const [editorMode, setEditorMode] = useState<EditorMode>('blocks');
   const [localeCode, setLocaleCode] = useState<LocaleCode>(getStoredLocale());
   const [workspaceKey, setWorkspaceKey] = useState(0);
-  const [showSidePanel, setShowSidePanel] = useState(true);
+  const [showSidePanel, setShowSidePanel] = useState(false);
   const [sidePanelTab, setSidePanelTab] = useState<SidePanelTab>('grammar');
   const [workspaceState, setWorkspaceState] = useState<object | null>(getStoredWorkspace);
   const workspaceRef = useRef<BlocklyWorkspaceHandle>(null);

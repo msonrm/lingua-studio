@@ -1,6 +1,10 @@
 import * as Blockly from 'blockly';
 import { nounCores, adjectiveCores, adverbCores, pronounCores, verbCores } from '../data/dictionary-core';
-import type { VerbCategory, AdjectiveCategory } from '../types/schema';
+import type { VerbCategory, NounCategory, AdjectiveCategory } from '../types/schema';
+import {
+  getExtVerbs, getExtNouns,
+  addChangeListener as addDictChangeListener,
+} from '../data/dictionary-ext';
 import {
   getPreDeterminers,
   getCentralDeterminers,
@@ -394,6 +398,141 @@ function createVerbCategoryBlock(category: VerbCategory) {
 
 // 6カテゴリの動詞ブロックを生成
 (['motion', 'action', 'transfer', 'cognition', 'communication', 'state'] as VerbCategory[]).forEach(createVerbCategoryBlock);
+
+// ============================================
+// 拡張辞書用の動的ブロック生成
+// ============================================
+
+// 拡張動詞ブロックを登録済みかどうかを追跡
+const registeredExtVerbBlocks = new Set<string>();
+const registeredExtNounBlocks = new Set<string>();
+
+// 拡張動詞ブロックを生成（カテゴリ別）
+function createExtVerbCategoryBlock(category: VerbCategory) {
+  const blockType = `verb_${category}_ext`;
+
+  // 既に登録済みならスキップ
+  if (registeredExtVerbBlocks.has(blockType)) {
+    return;
+  }
+
+  const config = VERB_CATEGORY_KEYS[category];
+
+  Blockly.Blocks[blockType] = {
+    init: function() {
+      // 初期化時に拡張辞書から動詞を取得
+      const extVerbs = getExtVerbs().filter(v => v.category === category);
+
+      const label = msg(config.msgKey, config.fallback) + '+';
+
+      this.appendDummyInput()
+          .appendField(label)
+          .appendField(new Blockly.FieldDropdown(() => {
+            // ドロップダウン展開時に最新の拡張辞書を取得
+            const currentExtVerbs = getExtVerbs().filter(v => v.category === category);
+            return currentExtVerbs.length > 0
+              ? currentExtVerbs.map(v => [v.lemma, v.lemma] as [string, string])
+              : [['(empty)', '__empty__'] as [string, string]];
+          }, this.updateShape.bind(this)), "VERB");
+
+      this.setPreviousStatement(true, "verb");
+      this.setColour(config.color);
+      this.setTooltip(`${label} verb (user-defined)`);
+
+      // 初期形状を設定
+      if (extVerbs.length > 0) {
+        this.updateShape(extVerbs[0].lemma);
+      }
+    },
+
+    updateShape: function(verbLemma: string) {
+      if (verbLemma === '__empty__') return verbLemma;
+
+      const extVerbs = getExtVerbs();
+      const verb = extVerbs.find(v => v.lemma === verbLemma);
+      if (!verb) return verbLemma;
+
+      // 既存のスロットを削除（ARG_で始まるもの）
+      const existingInputs = this.inputList
+        .filter((input: Blockly.Input) => input.name.startsWith("ARG_"))
+        .map((input: Blockly.Input) => input.name);
+      existingInputs.forEach((name: string) => this.removeInput(name));
+
+      // 新しいスロットを追加
+      verb.valency.forEach((slot: { role: string; required: boolean }) => {
+        const roleKey = `ROLE_${slot.role.toUpperCase()}`;
+        const roleLabel = msg(roleKey, slot.role);
+
+        this.appendValueInput(`ARG_${slot.role}`)
+            .setCheck("noun")
+            .appendField(roleLabel + (slot.required ? '*' : ''));
+      });
+
+      return verbLemma;
+    }
+  };
+
+  registeredExtVerbBlocks.add(blockType);
+}
+
+// 拡張名詞ブロックを生成（カテゴリ別）
+function createExtNounCategoryBlock(category: NounCategory) {
+  const blockType = `noun_${category}_ext`;
+
+  if (registeredExtNounBlocks.has(blockType)) {
+    return;
+  }
+
+  Blockly.Blocks[blockType] = {
+    init: function() {
+
+      this.appendDummyInput()
+          .appendField(new Blockly.FieldDropdown(() => {
+            const currentExtNouns = getExtNouns().filter(n => n.category === category);
+            return currentExtNouns.length > 0
+              ? currentExtNouns.map(n => [n.lemma, n.lemma] as [string, string])
+              : [['(empty)', '__empty__'] as [string, string]];
+          }), "LEMMA");
+
+      this.setOutput(true, "noun");
+      this.setColour(COLORS.person);
+      this.setTooltip(`User-defined ${category} noun`);
+    }
+  };
+
+  registeredExtNounBlocks.add(blockType);
+}
+
+// 拡張辞書に単語があるカテゴリのブロックを登録
+function registerExtensionBlocks() {
+  const extVerbs = getExtVerbs();
+  const extNouns = getExtNouns();
+
+  // 動詞: 各カテゴリのブロックを登録
+  const verbCategories = new Set(extVerbs.map(v => v.category));
+  verbCategories.forEach(cat => createExtVerbCategoryBlock(cat as VerbCategory));
+
+  // 名詞: 各カテゴリのブロックを登録
+  const nounCategories = new Set(extNouns.map(n => n.category));
+  nounCategories.forEach(cat => createExtNounCategoryBlock(cat as NounCategory));
+}
+
+// 初期登録
+registerExtensionBlocks();
+
+// 拡張辞書の変更を監視して再登録
+let toolboxUpdateCallback: (() => void) | null = null;
+
+export function setToolboxUpdateCallback(callback: (() => void) | null) {
+  toolboxUpdateCallback = callback;
+}
+
+addDictChangeListener(() => {
+  registerExtensionBlocks();
+  if (toolboxUpdateCallback) {
+    toolboxUpdateCallback();
+  }
+});
 
 // ============================================
 // 代名詞ブロック（限定詞不要）
@@ -1348,6 +1487,41 @@ export const FREQUENCY_ADVERB_DATA = FREQUENCY_ADVERBS;
 export const PREPOSITION_DATA = PREPOSITIONS;
 
 // ============================================
+// ツールボックス用ヘルパー関数
+// ============================================
+
+// 動詞ツールボックスの内容を動的に生成
+function buildVerbToolboxContents() {
+  const extVerbs = getExtVerbs();
+  const contents: { kind: string; text?: string; type?: string }[] = [];
+
+  // カテゴリ定義
+  const categories: { category: VerbCategory; section: string; fallback: string }[] = [
+    { category: 'action', section: 'SECTION_ACTION', fallback: '── Action ──' },
+    { category: 'motion', section: 'SECTION_MOTION', fallback: '── Motion ──' },
+    { category: 'state', section: 'SECTION_STATE', fallback: '── State ──' },
+    { category: 'communication', section: 'SECTION_COMMUNICATION', fallback: '── Communication ──' },
+    { category: 'cognition', section: 'SECTION_COGNITION', fallback: '── Cognition ──' },
+    { category: 'transfer', section: 'SECTION_TRANSFER', fallback: '── Transfer ──' },
+  ];
+
+  for (const { category, section, fallback } of categories) {
+    // ベースカテゴリ
+    contents.push({ kind: 'label', text: msg(section, fallback) });
+    contents.push({ kind: 'block', type: `verb_${category}` });
+
+    // 拡張カテゴリ（拡張辞書にエントリがある場合のみ）
+    const extVerbsInCategory = extVerbs.filter(v => v.category === category);
+    if (extVerbsInCategory.length > 0) {
+      contents.push({ kind: 'label', text: msg(section, fallback).replace('──', '──+') });
+      contents.push({ kind: 'block', type: `verb_${category}_ext` });
+    }
+  }
+
+  return contents;
+}
+
+// ============================================
 // ツールボックス定義（動的生成）
 // ============================================
 export function createToolbox() {
@@ -1386,20 +1560,7 @@ export function createToolbox() {
         kind: "category",
         name: msg('TOOLBOX_VERBS', 'Verbs'),
         colour: COLORS.action,
-        contents: [
-          { kind: "label", text: msg('SECTION_ACTION', '── Action ──') },
-          { kind: "block", type: "verb_action" },
-          { kind: "label", text: msg('SECTION_MOTION', '── Motion ──') },
-          { kind: "block", type: "verb_motion" },
-          { kind: "label", text: msg('SECTION_STATE', '── State ──') },
-          { kind: "block", type: "verb_state" },
-          { kind: "label", text: msg('SECTION_COMMUNICATION', '── Communication ──') },
-          { kind: "block", type: "verb_communication" },
-          { kind: "label", text: msg('SECTION_COGNITION', '── Cognition ──') },
-          { kind: "block", type: "verb_cognition" },
-          { kind: "label", text: msg('SECTION_TRANSFER', '── Transfer ──') },
-          { kind: "block", type: "verb_transfer" },
-        ]
+        contents: buildVerbToolboxContents()
       },
       {
         kind: "category",

@@ -286,9 +286,10 @@ function App() {
                       onClick={() => speak(sentences.join(' '), 'en')}
                       title="Speak"
                     >
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
                         <path d="M8 5v14l11-7z"/>
                       </svg>
+                      <span>Play</span>
                     </button>
                   )}
                 </div>
@@ -308,9 +309,10 @@ function App() {
                       onClick={() => speak(japaneseSentences.join(' '), 'ja')}
                       title="Speak"
                     >
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
                         <path d="M8 5v14l11-7z"/>
                       </svg>
+                      <span>Play</span>
                     </button>
                   )}
                 </div>

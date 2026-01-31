@@ -1,5 +1,7 @@
 # CHANGELOG
 
+> **Note**: このファイルは [TODO.md](./TODO.md) と連動しています。機能実装完了時は両方を更新してください。
+
 ## 2026-01-31
 
 ### User Dictionary Extension

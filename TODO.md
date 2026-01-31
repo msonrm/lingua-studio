@@ -1,5 +1,7 @@
 # TODO
 
+> **Note**: このファイルは [CHANGELOG.md](./CHANGELOG.md) と連動しています。機能実装完了時は両方を更新してください。
+
 ## Session Log (2026-01-31)
 
 ### UI改善

@@ -287,6 +287,8 @@ export const nounToJapanese: Record<string, string> = {
   'cake': 'ケーキ',
   'pizza': 'ピザ',
   'sandwich': 'サンドイッチ',
+  'telescope': '望遠鏡',
+  'camera': 'カメラ',
   'coffee': 'コーヒー',
   'tea': 'お茶',
   'water': '水',

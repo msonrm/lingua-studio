@@ -423,6 +423,7 @@ function createExtVerbCategoryBlock(category: VerbCategory) {
       // 初期化時に拡張辞書から動詞を取得
       const extVerbs = getExtVerbs().filter(v => v.category === category);
 
+      // ベースブロックと同じラベル形式（+マークで区別）
       const label = msg(config.msgKey, config.fallback) + '+';
 
       this.appendDummyInput()
@@ -458,14 +459,22 @@ function createExtVerbCategoryBlock(category: VerbCategory) {
         .map((input: Blockly.Input) => input.name);
       existingInputs.forEach((name: string) => this.removeInput(name));
 
-      // 新しいスロットを追加
-      verb.valency.forEach((slot: { role: string; required: boolean }) => {
-        const roleKey = `ROLE_${slot.role.toUpperCase()}`;
-        const roleLabel = msg(roleKey, slot.role);
+      // 新しいスロットを追加（ベースブロックと同じ形式: ARG_0, ARG_1, ...）
+      verb.valency.forEach((slot: { role: string; label?: string; required: boolean }, index: number) => {
+        const inputName = `ARG_${index}`;
+        const labelKey = slot.label || slot.role;
+        const roleKey = `ROLE_${labelKey.toUpperCase()}`;
+        const translatedLabel = msg(roleKey, labelKey);
+        // ベースブロックと同じチェックタイプ
+        const checkType = slot.role === 'attribute'
+          ? ['noun', 'nounPhrase', 'adjective', 'coordinatedNounPhrase']
+          : ['noun', 'nounPhrase', 'coordinatedNounPhrase'];
+        // ベースブロックと同じラベル形式
+        const displayLabel = slot.required ? `${translatedLabel}:` : `(${translatedLabel}):`;
 
-        this.appendValueInput(`ARG_${slot.role}`)
-            .setCheck("noun")
-            .appendField(roleLabel + (slot.required ? '*' : ''));
+        this.appendValueInput(inputName)
+            .setCheck(checkType)
+            .appendField(displayLabel);
       });
 
       return verbLemma;
@@ -1490,6 +1499,54 @@ export const PREPOSITION_DATA = PREPOSITIONS;
 // ツールボックス用ヘルパー関数
 // ============================================
 
+// 名詞ツールボックスの内容を動的に生成
+function buildNounToolboxContents() {
+  const extNouns = getExtNouns();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const contents: any[] = [];
+
+  // 代名詞セクション（拡張なし）
+  contents.push({ kind: 'label', text: msg('SECTION_PRONOUNS', '── Pronouns ──') });
+  contents.push({ kind: 'block', type: 'pronoun_block' });
+  contents.push({ kind: 'block', type: 'possessive_pronoun_block' });
+
+  // カテゴリ定義（NounCategory: human, animal, object, place, abstract）
+  const categories: { category: NounCategory; section: string; fallback: string; baseBlock: string }[] = [
+    { category: 'human', section: 'SECTION_PEOPLE', fallback: '── People ──', baseBlock: 'human_block' },
+    { category: 'animal', section: 'SECTION_ANIMALS', fallback: '── Animals ──', baseBlock: 'animal_block' },
+    { category: 'object', section: 'SECTION_OBJECTS', fallback: '── Objects ──', baseBlock: 'object_block' },
+    { category: 'place', section: 'SECTION_PLACES', fallback: '── Places ──', baseBlock: 'place_block' },
+    { category: 'abstract', section: 'SECTION_ABSTRACT', fallback: '── Abstract ──', baseBlock: 'abstract_block' },
+  ];
+
+  for (const { category, section, fallback, baseBlock } of categories) {
+    // セクションラベル
+    contents.push({ kind: 'label', text: msg(section, fallback) });
+    // ベースブロック（限定詞でラップ）
+    contents.push({
+      kind: 'block',
+      type: 'determiner_unified',
+      inputs: {
+        NOUN: { block: { type: baseBlock } }
+      }
+    });
+
+    // 拡張ブロック（同じセクション内に追加、存在する場合のみ）
+    const extNounsInCategory = extNouns.filter(n => n.category === category);
+    if (extNounsInCategory.length > 0) {
+      contents.push({
+        kind: 'block',
+        type: 'determiner_unified',
+        inputs: {
+          NOUN: { block: { type: `noun_${category}_ext` } }
+        }
+      });
+    }
+  }
+
+  return contents;
+}
+
 // 動詞ツールボックスの内容を動的に生成
 function buildVerbToolboxContents() {
   const extVerbs = getExtVerbs();
@@ -1506,14 +1563,14 @@ function buildVerbToolboxContents() {
   ];
 
   for (const { category, section, fallback } of categories) {
-    // ベースカテゴリ
+    // セクションラベル
     contents.push({ kind: 'label', text: msg(section, fallback) });
+    // ベースブロック
     contents.push({ kind: 'block', type: `verb_${category}` });
 
-    // 拡張カテゴリ（拡張辞書にエントリがある場合のみ）
+    // 拡張ブロック（同じセクション内に追加、存在する場合のみ）
     const extVerbsInCategory = extVerbs.filter(v => v.category === category);
     if (extVerbsInCategory.length > 0) {
-      contents.push({ kind: 'label', text: msg(section, fallback).replace('──', '──+') });
       contents.push({ kind: 'block', type: `verb_${category}_ext` });
     }
   }
@@ -1582,61 +1639,7 @@ export function createToolbox() {
         kind: "category",
         name: msg('TOOLBOX_NOUNS', 'Nouns'),
         colour: COLORS.person,
-        contents: [
-          { kind: "label", text: msg('SECTION_PRONOUNS', '── Pronouns ──') },
-          { kind: "block", type: "pronoun_block" },
-          { kind: "block", type: "possessive_pronoun_block" },
-          { kind: "label", text: msg('SECTION_PEOPLE', '── People ──') },
-          {
-            kind: "block",
-            type: "determiner_unified",
-            inputs: {
-              NOUN: {
-                block: { type: "human_block" }
-              }
-            }
-          },
-          { kind: "label", text: msg('SECTION_ANIMALS', '── Animals ──') },
-          {
-            kind: "block",
-            type: "determiner_unified",
-            inputs: {
-              NOUN: {
-                block: { type: "animal_block" }
-              }
-            }
-          },
-          { kind: "label", text: msg('SECTION_OBJECTS', '── Objects ──') },
-          {
-            kind: "block",
-            type: "determiner_unified",
-            inputs: {
-              NOUN: {
-                block: { type: "object_block" }
-              }
-            }
-          },
-          { kind: "label", text: msg('SECTION_PLACES', '── Places ──') },
-          {
-            kind: "block",
-            type: "determiner_unified",
-            inputs: {
-              NOUN: {
-                block: { type: "place_block" }
-              }
-            }
-          },
-          { kind: "label", text: msg('SECTION_ABSTRACT', '── Abstract ──') },
-          {
-            kind: "block",
-            type: "determiner_unified",
-            inputs: {
-              NOUN: {
-                block: { type: "abstract_block" }
-              }
-            }
-          },
-        ]
+        contents: buildNounToolboxContents()
       },
       {
         kind: "category",

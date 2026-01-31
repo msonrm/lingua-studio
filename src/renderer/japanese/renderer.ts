@@ -85,10 +85,49 @@ function renderImperative(clause: ClauseNode, timeAdv?: string): string {
 // VP Coordination
 // ============================================
 
+// 主語ロール（優先順）
+const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
+
+/**
+ * VPから主語フィラーを取得
+ */
+function getSubjectFiller(vp: VerbPhraseNode): NounPhraseNode | CoordinatedNounPhraseNode | null {
+  const verbCore = findVerbCore(vp.verb.lemma);
+  for (const role of SUBJECT_ROLES) {
+    if (verbCore?.valency.some(v => v.role === role)) {
+      const slot = vp.arguments.find(a => a.role === role);
+      if (slot?.filler && (slot.filler.type === 'nounPhrase' || slot.filler.type === 'coordinatedNounPhrase')) {
+        return slot.filler as NounPhraseNode | CoordinatedNounPhraseNode;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * 主語のグループIDを生成（同じ主語なら同じID）
+ */
+function getSubjectGroupId(vp: VerbPhraseNode): string {
+  const filler = getSubjectFiller(vp);
+  return filler ? JSON.stringify(filler) : `__no_subject_${vp.verb.lemma}__`;
+}
+
+/**
+ * 主語フィラーをレンダリング
+ */
+function renderSubjectFiller(filler: NounPhraseNode | CoordinatedNounPhraseNode): string {
+  if (filler.type === 'nounPhrase') {
+    return renderNounPhrase(filler);
+  } else {
+    return renderCoordinatedNounPhrase(filler);
+  }
+}
+
 /**
  * 動詞句を等位接続込みでレンダリング
  * - and: テ形接続（食べて飲む）
  * - or: 終止形+か接続（食べるか飲む）
+ * - 異なる主語の場合: 読点 + 主語が + 動詞
  */
 function renderVerbWithCoordination(
   vp: VerbPhraseNode,
@@ -105,31 +144,53 @@ function renderVerbWithCoordination(
     return attributePrefix ? `${attributePrefix}${verb}` : verb;
   }
 
-  // 等位接続チェーンを収集
-  const chain: { vp: VerbPhraseNode; conjunction: 'and' | 'or' }[] = [];
-  chain.push({ vp, conjunction: vp.coordinatedWith.conjunction });
+  // 等位接続チェーンを収集（グループID付き）
+  interface ChainItem {
+    vp: VerbPhraseNode;
+    conjunction: 'and' | 'or';
+    groupId: string;
+  }
+
+  const chain: ChainItem[] = [];
+  const firstGroupId = getSubjectGroupId(vp);
+  chain.push({ vp, conjunction: vp.coordinatedWith.conjunction, groupId: firstGroupId });
 
   let current = vp.coordinatedWith.verbPhrase;
   while (current.coordinatedWith) {
-    chain.push({ vp: current, conjunction: current.coordinatedWith.conjunction });
+    chain.push({
+      vp: current,
+      conjunction: current.coordinatedWith.conjunction,
+      groupId: getSubjectGroupId(current)
+    });
     current = current.coordinatedWith.verbPhrase;
   }
-  // 最後のVPを追加（conjunctionは使わない）
-  chain.push({ vp: current, conjunction: 'and' });
+  // 最後のVPを追加
+  chain.push({ vp: current, conjunction: 'and', groupId: getSubjectGroupId(current) });
 
   // レンダリング
   const parts: string[] = [];
+  let prevGroupId = firstGroupId;
+
   for (let i = 0; i < chain.length; i++) {
-    const { vp: currentVP, conjunction } = chain[i];
+    const { vp: currentVP, conjunction, groupId } = chain[i];
+    const isFirst = i === 0;
     const isLast = i === chain.length - 1;
     const verbEntry = getVerbEntry(currentVP.verb.lemma);
+    const isSameGroup = groupId === prevGroupId;
 
     // VP個別の polarity を取得
     const vpPolarity = currentVP.polarity === 'negative' ? 'negative' : 'affirmative';
 
+    // 異なる主語の場合、読点 + 主語が を追加
+    if (!isFirst && !isSameGroup) {
+      const subjectFiller = getSubjectFiller(currentVP);
+      if (subjectFiller) {
+        parts.push('、' + renderSubjectFiller(subjectFiller) + 'が');
+      }
+    }
+
     if (isLast) {
       // 最後のVP: 通常活用（時制・相・極性を適用）
-      // 節レベルの polarity と VP個別の polarity を組み合わせる
       const effectivePolarity = (vpPolarity === 'negative' || polarity === 'negative') ? 'negative' : 'affirmative';
       const verb = conjugate(currentVP.verb.lemma, { tense, aspect, polarity: effectivePolarity, modal, modalPolarity });
       parts.push(verb);
@@ -137,10 +198,8 @@ function renderVerbWithCoordination(
       // 最後以外のVP
       if (conjunction === 'and') {
         if (vpPolarity === 'negative') {
-          // 否定 + and: ないで形（食べないで）
           parts.push(toNaideForm(verbEntry));
         } else {
-          // 肯定 + and: テ形（食べて）
           parts.push(toTeForm(verbEntry));
         }
       } else {
@@ -149,6 +208,8 @@ function renderVerbWithCoordination(
         parts.push(verb + 'か');
       }
     }
+
+    prevGroupId = groupId;
   }
 
   return parts.join('');

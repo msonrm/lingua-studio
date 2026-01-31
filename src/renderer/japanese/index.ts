@@ -3,4 +3,21 @@
  */
 
 export { renderToJapanese } from './renderer';
-export { getParticle, isSubjectRole, translatePronoun, translateNoun, translateVerb, translateAdjective } from './particles';
+export {
+  getParticle,
+  isSubjectRole,
+  translatePronoun,
+  translateNoun,
+  getVerbEntry,
+  translateAdjective,
+  translateAdverb,
+  translateDeterminer,
+  translatePreDeterminer,
+  translatePostDeterminer,
+  isNegativePolarityAdverb,
+} from './lexicon';
+export type { VerbType, VerbEntry } from './lexicon';
+
+// Conjugation
+export { conjugate, conjugateEntry, toTaForm, toTeForm, toNaiForm, toNakattaForm } from './conjugation';
+export type { Tense, Aspect, Polarity, ConjugationContext } from './conjugation';

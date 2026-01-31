@@ -79,8 +79,10 @@ function renderClauseToScript(clause: ClauseNode, timeAdverbial?: string): strin
   let result = renderVerbPhraseToScript(verbPhrase);
 
   // 時間副詞をラップ（他の副詞と同階層、not の前）
+  // 空白をアンダースコアに変換（パーサー対応）
   if (timeAdverbial) {
-    result = `time('${timeAdverbial.toLowerCase()}, ${result})`;
+    const normalized = timeAdverbial.toLowerCase().replace(/ /g, '_');
+    result = `time('${normalized}, ${result})`;
   }
 
   // 否定をラップ

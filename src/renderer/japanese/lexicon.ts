@@ -1,13 +1,19 @@
 /**
- * particles.ts - 意味役割 → 格助詞マッピング + 代名詞日本語化
+ * lexicon.ts - 日本語レンダラー用語彙リソース
  *
- * 日本語の格助詞システム（統語論のみバージョン）
+ * - 意味役割 → 格助詞マッピング（統語論）
+ * - 概念ID（英語lemma）→ 日本語表層形マッピング（語彙）
+ *
+ * 設計思想:
+ * - dictionary-core.ts = UG的な概念辞書（言語非依存）
+ * - lexicon.ts = 日本語モジュールのリソース（プラグイン）
+ * - 英語をハブとし、各言語がそこに接続する構造
  */
 
 import { SemanticRole } from '../../types/schema';
 import { verbCores } from '../../data/dictionary-core';
 
-export type Particle = 'は' | 'が' | 'を' | 'に' | 'で' | 'から' | 'まで' | 'と' | 'へ';
+export type Particle = 'は' | 'が' | 'を' | 'に' | 'で' | 'から' | 'まで' | 'と' | 'へ' | '';
 
 /**
  * 意味役割から格助詞へのデフォルトマッピング
@@ -28,6 +34,9 @@ export const roleToParticleDefault: Partial<Record<SemanticRole, Particle>> = {
   source: 'から',
   location: 'で',
   instrument: 'で',
+
+  // コピュラ（be動詞）の補語 - 格助詞なし
+  attribute: '',
 };
 
 /**
@@ -111,6 +120,15 @@ export const pronounToJapanese: Record<string, string> = {
   // 疑問代名詞（?プレフィックス付き - dictionary-core形式）
   '?who': '誰',
   '?what': '何',
+
+  // 独立所有代名詞（mine, yours, etc.）
+  'mine': '私のもの',
+  'yours': 'あなたのもの',
+  'his': '彼のもの',
+  'hers': '彼女のもの',
+  'its': 'それのもの',
+  'ours': '私たちのもの',
+  'theirs': '彼らのもの',
 };
 
 /**
@@ -145,6 +163,31 @@ export const possessiveToJapanese: Record<string, string> = {
 };
 
 /**
+ * Pre-determiner（前限定詞）の日本語マッピング
+ */
+export const preDeterminerToJapanese: Record<string, string> = {
+  'all': 'すべての',
+  'both': '両方の',
+  'half': '半分の',
+};
+
+/**
+ * Post-determiner（後限定詞・数量詞）の日本語マッピング
+ */
+export const postDeterminerToJapanese: Record<string, string> = {
+  'many': 'たくさんの',
+  'few': '少しの',
+  'some': 'いくつかの',
+  'several': 'いくつかの',
+  'much': 'たくさんの',
+  'little': '少しの',
+  // 数詞
+  'one': '1つの',
+  'two': '2つの',
+  'three': '3つの',
+};
+
+/**
  * 限定詞を日本語に変換
  * - 所有格・指示詞は日本語化
  * - the, a は空文字を返す（日本語では不要）
@@ -161,6 +204,20 @@ export function translateDeterminer(det: string): string {
   }
   // その他はそのまま
   return det;
+}
+
+/**
+ * Pre-determinerを日本語に変換
+ */
+export function translatePreDeterminer(det: string): string {
+  return preDeterminerToJapanese[det] || det;
+}
+
+/**
+ * Post-determinerを日本語に変換
+ */
+export function translatePostDeterminer(det: string): string {
+  return postDeterminerToJapanese[det] || det;
 }
 
 // ============================================
@@ -327,130 +384,147 @@ export function translateNoun(lemma: string): string {
 }
 
 // ============================================
-// 動詞の日本語マッピング（辞書形のみ）
+// 動詞タイプと活用
 // ============================================
 
 /**
- * 英語動詞 → 日本語（辞書形）
+ * 日本語動詞の活用タイプ
+ * - godan: 五段動詞（書く、読む、走る）
+ * - ichidan: 一段動詞（食べる、見る、起きる）
+ * - suru: サ変動詞（〜する）
+ * - kuru: カ変動詞（来る）
  */
-export const verbToJapanese: Record<string, string> = {
+export type VerbType = 'godan' | 'ichidan' | 'suru' | 'kuru';
+
+/**
+ * 動詞エントリ
+ */
+export interface VerbEntry {
+  ja: string;      // 日本語辞書形
+  type: VerbType;  // 活用タイプ
+}
+
+/**
+ * 英語動詞 → 日本語（辞書形 + 活用タイプ）
+ */
+export const verbToJapanese: Record<string, VerbEntry> = {
   // Motion（移動）
-  'run': '走る',
-  'walk': '歩く',
-  'go': '行く',
-  'come': '来る',
-  'fly': '飛ぶ',
-  'swim': '泳ぐ',
-  'jump': '跳ぶ',
-  'fall': '落ちる',
-  'arrive': '着く',
-  'leave': '出る',
+  'run': { ja: '走る', type: 'godan' },
+  'walk': { ja: '歩く', type: 'godan' },
+  'go': { ja: '行く', type: 'godan' },
+  'come': { ja: '来る', type: 'kuru' },
+  'fly': { ja: '飛ぶ', type: 'godan' },
+  'swim': { ja: '泳ぐ', type: 'godan' },
+  'jump': { ja: '跳ぶ', type: 'godan' },
+  'fall': { ja: '落ちる', type: 'ichidan' },
+  'arrive': { ja: '着く', type: 'godan' },
+  'leave': { ja: '出る', type: 'ichidan' },
 
   // Action（動作・創造）
-  'eat': '食べる',
-  'make': '作る',
-  'build': '建てる',
-  'break': '壊す',
-  'cut': '切る',
-  'open': '開ける',
-  'close': '閉める',
-  'write': '書く',
-  'read': '読む',
-  'drink': '飲む',
-  'cook': '料理する',
-  'clean': '掃除する',
-  'wash': '洗う',
-  'buy': '買う',
-  'sell': '売る',
-  'play': '遊ぶ',
-  'work': '働く',
-  'study': '勉強する',
-  'sleep': '眠る',
-  'sing': '歌う',
-  'dance': '踊る',
-  'draw': '描く',
-  'paint': '塗る',
-  'catch': '捕まえる',
-  'throw': '投げる',
-  'kick': '蹴る',
-  'hit': '打つ',
-  'push': '押す',
-  'pull': '引く',
-  'carry': '運ぶ',
-  'hold': '持つ',
-  'drop': '落とす',
-  'pick': '拾う',
-  'put': '置く',
-  'place': '置く',
-  'hang': '掛ける',
-  'wear': '着用する',
-  'use': '使う',
-  'find': '見つける',
-  'lose': '失う',
-  'wait': '待つ',
-  'help': '助ける',
-  'meet': '会う',
-  'visit': '訪ねる',
+  'eat': { ja: '食べる', type: 'ichidan' },
+  'make': { ja: '作る', type: 'godan' },
+  'build': { ja: '建てる', type: 'ichidan' },
+  'break': { ja: '壊す', type: 'godan' },
+  'cut': { ja: '切る', type: 'godan' },
+  'open': { ja: '開ける', type: 'ichidan' },
+  'close': { ja: '閉める', type: 'ichidan' },
+  'write': { ja: '書く', type: 'godan' },
+  'read': { ja: '読む', type: 'godan' },
+  'drink': { ja: '飲む', type: 'godan' },
+  'cook': { ja: '料理する', type: 'suru' },
+  'clean': { ja: '掃除する', type: 'suru' },
+  'wash': { ja: '洗う', type: 'godan' },
+  'buy': { ja: '買う', type: 'godan' },
+  'sell': { ja: '売る', type: 'godan' },
+  'play': { ja: '遊ぶ', type: 'godan' },
+  'work': { ja: '働く', type: 'godan' },
+  'study': { ja: '勉強する', type: 'suru' },
+  'sleep': { ja: '眠る', type: 'godan' },
+  'sing': { ja: '歌う', type: 'godan' },
+  'dance': { ja: '踊る', type: 'godan' },
+  'draw': { ja: '描く', type: 'godan' },
+  'paint': { ja: '塗る', type: 'godan' },
+  'catch': { ja: '捕まえる', type: 'ichidan' },
+  'throw': { ja: '投げる', type: 'ichidan' },
+  'kick': { ja: '蹴る', type: 'godan' },
+  'hit': { ja: '打つ', type: 'godan' },
+  'push': { ja: '押す', type: 'godan' },
+  'pull': { ja: '引く', type: 'godan' },
+  'carry': { ja: '運ぶ', type: 'godan' },
+  'hold': { ja: '持つ', type: 'godan' },
+  'drop': { ja: '落とす', type: 'godan' },
+  'pick': { ja: '拾う', type: 'godan' },
+  'put': { ja: '置く', type: 'godan' },
+  'place': { ja: '置く', type: 'godan' },
+  'hang': { ja: '掛ける', type: 'ichidan' },
+  'wear': { ja: '着る', type: 'ichidan' },
+  'use': { ja: '使う', type: 'godan' },
+  'find': { ja: '見つける', type: 'ichidan' },
+  'lose': { ja: '失う', type: 'godan' },
+  'wait': { ja: '待つ', type: 'godan' },
+  'help': { ja: '助ける', type: 'ichidan' },
+  'meet': { ja: '会う', type: 'godan' },
+  'visit': { ja: '訪ねる', type: 'ichidan' },
 
   // Transfer（授受・移転）
-  'give': 'あげる',
-  'take': '取る',
-  'send': '送る',
-  'receive': '受け取る',
-  'bring': '持って来る',
-  'get': '得る',
-  'show': '見せる',
-  'teach': '教える',
-  'learn': '学ぶ',
-  'lend': '貸す',
-  'borrow': '借りる',
-  'pay': '払う',
+  'give': { ja: 'あげる', type: 'ichidan' },
+  'take': { ja: '取る', type: 'godan' },
+  'send': { ja: '送る', type: 'godan' },
+  'receive': { ja: '受け取る', type: 'godan' },
+  'bring': { ja: '持って来る', type: 'kuru' },
+  'get': { ja: '得る', type: 'ichidan' },
+  'show': { ja: '見せる', type: 'ichidan' },
+  'teach': { ja: '教える', type: 'ichidan' },
+  'learn': { ja: '学ぶ', type: 'godan' },
+  'lend': { ja: '貸す', type: 'godan' },
+  'borrow': { ja: '借りる', type: 'ichidan' },
+  'pay': { ja: '払う', type: 'godan' },
 
   // Cognition（認知・知覚）
-  'think': '考える',
-  'know': '知る',
-  'see': '見る',
-  'hear': '聞く',
-  'feel': '感じる',
-  'believe': '信じる',
-  'understand': '理解する',
-  'remember': '覚える',
-  'forget': '忘れる',
-  'want': '欲しい',
-  'need': '必要とする',
-  'like': '好む',
-  'love': '愛する',
-  'hate': '嫌う',
-  'hope': '望む',
-  'expect': '期待する',
-  'prefer': '好む',
+  'think': { ja: '考える', type: 'ichidan' },
+  'know': { ja: '知る', type: 'godan' },
+  'see': { ja: '見る', type: 'ichidan' },
+  'hear': { ja: '聞く', type: 'godan' },
+  'feel': { ja: '感じる', type: 'ichidan' },
+  'believe': { ja: '信じる', type: 'ichidan' },
+  'understand': { ja: '理解する', type: 'suru' },
+  'remember': { ja: '覚える', type: 'ichidan' },
+  'forget': { ja: '忘れる', type: 'ichidan' },
+  'want': { ja: '欲しい', type: 'ichidan' },  // 形容詞的だが動詞として扱う
+  'need': { ja: '必要とする', type: 'suru' },
+  'like': { ja: '好む', type: 'godan' },
+  'love': { ja: '愛する', type: 'suru' },
+  'hate': { ja: '嫌う', type: 'godan' },
+  'hope': { ja: '望む', type: 'godan' },
+  'expect': { ja: '期待する', type: 'suru' },
+  'prefer': { ja: '好む', type: 'godan' },
 
   // Communication（伝達）
-  'say': '言う',
-  'tell': '伝える',
-  'speak': '話す',
-  'talk': '話す',
-  'ask': '尋ねる',
-  'answer': '答える',
-  'call': '呼ぶ',
-  'explain': '説明する',
+  'say': { ja: '言う', type: 'godan' },
+  'tell': { ja: '伝える', type: 'ichidan' },
+  'speak': { ja: '話す', type: 'godan' },
+  'talk': { ja: '話す', type: 'godan' },
+  'ask': { ja: '尋ねる', type: 'ichidan' },
+  'answer': { ja: '答える', type: 'ichidan' },
+  'call': { ja: '呼ぶ', type: 'godan' },
+  'explain': { ja: '説明する', type: 'suru' },
 
   // State（状態・存在）
-  'be': 'である',
-  'have': '持つ',
-  'exist': '存在する',
-  'live': '住む',
-  'reside': '居住する',
-  'stay': '滞在する',
-  'belong': '属する',
-  'seem': '見える',
+  'be': { ja: 'である', type: 'godan' },  // 特殊（だ/である）
+  'have': { ja: '持つ', type: 'godan' },
+  'exist': { ja: '存在する', type: 'suru' },
+  'live': { ja: '住む', type: 'godan' },
+  'reside': { ja: '居住する', type: 'suru' },
+  'stay': { ja: '滞在する', type: 'suru' },
+  'belong': { ja: '属する', type: 'suru' },
+  'seem': { ja: '見える', type: 'ichidan' },
 };
 
 /**
- * 動詞を日本語に変換（見つからなければそのまま返す）
+ * 動詞エントリを取得（見つからなければデフォルト値を返す）
  */
-export function translateVerb(lemma: string): string {
-  return verbToJapanese[lemma] || lemma;
+export function getVerbEntry(lemma: string): VerbEntry {
+  return verbToJapanese[lemma] || { ja: lemma, type: 'godan' };
 }
 
 // ============================================
@@ -695,13 +769,26 @@ export const adverbToJapanese: Record<string, string> = {
   'today': '今日',
   'yesterday': '昨日',
   'tomorrow': '明日',
+  // TimeChip expressions（複合表現 - アンダースコア形式）
+  'every_day': '毎日',
+  'right_now': '今すぐ',
+  'at_the_moment': '現在',
+  'next_week': '来週',
+  'just_now': 'たった今',
+  'last_sunday': '先週の日曜日',
+
+  // Negative Polarity Items（否定極性項目 - 動詞を否定形にする）
+  'never': '決して',
+  'hardly': 'ほとんど',
+  'barely': 'かろうじて',
+  'nowhere': 'どこにも',
+  'anywhere': 'どこにも',  // 否定文脈で使用
 
   // Place（場所）
   'here': 'ここに',
   'there': 'そこに',
   'somewhere': 'どこかに',
   'everywhere': 'どこでも',
-  // nowhere - スキップ（否定形が必要）
   'inside': '中に',
   'outside': '外に',
   'upstairs': '上の階に',
@@ -719,7 +806,7 @@ export const adverbToJapanese: Record<string, string> = {
   // 疑問副詞（?プレフィックス付き - dictionary-core形式）
   '?how': 'どう',
   '?when': 'いつ',
-  '?where': 'どこ',
+  '?where': 'どこで',
 };
 
 /**
@@ -727,4 +814,24 @@ export const adverbToJapanese: Record<string, string> = {
  */
 export function translateAdverb(lemma: string): string {
   return adverbToJapanese[lemma] || lemma;
+}
+
+/**
+ * 否定極性副詞（Negative Polarity Items）
+ * これらの副詞が存在する場合、動詞は否定形で活用する必要がある
+ * 例: never eat → 決して食べない（食べる ではなく）
+ */
+const NEGATIVE_POLARITY_ADVERBS = new Set([
+  'never',
+  'hardly',
+  'barely',
+  'nowhere',
+  'anywhere',  // 否定文脈では「どこにも〜ない」
+]);
+
+/**
+ * 副詞が否定極性項目かどうかを判定
+ */
+export function isNegativePolarityAdverb(lemma: string): boolean {
+  return NEGATIVE_POLARITY_ADVERBS.has(lemma);
 }

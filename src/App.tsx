@@ -264,7 +264,7 @@ function App() {
                 </div>
               </div>
               <div className="output-section">
-                <h3>Japanese (syntax)</h3>
+                <h3>日本語</h3>
                 <div className="sentence-output">
                   {japaneseSentences.length > 0
                     ? japaneseSentences.map((s, i) => <div key={i}>{s}</div>)

@@ -1,5 +1,29 @@
 # TODO
 
+## Session Log (2026-01-31)
+
+### UI改善
+- [x] モバイルビューポート修正（100dvh）- Safari対応
+- [x] サイドパネルをデフォルトで閉じる
+- [x] サイドパネル再構成
+  - Tense/Aspect図をGrammarパネルに移動
+  - Timelineタブは「Coming soon」表示
+- [x] 文法パネルのスタイル統一（viz-section）
+- [x] ブロックモード時はLinguaScriptバーを非表示
+- [x] 出力欄下のパディング増加
+
+### 出力パネル
+- [x] 英語/日本語ラベルをローカライズ対応
+- [x] テキスト読み上げ機能（Web Speech API）
+- [x] 再生ボタン: 絵文字→SVG、青色統一（#5c8bc4）
+- [x] 再生ボタンに「Play」ラベル追加・ローカライズ
+
+### 日本語レンダラー
+- [x] 名詞句の空白除去（join('')）
+- [x] 量化詞の翻訳追加
+- [x] 否定極性副詞（まだ/もう）
+- [x] 独立所有代名詞
+
 ## Future Enhancements
 
 ### Modality & Register

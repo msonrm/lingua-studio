@@ -266,6 +266,8 @@ export const en: LocaleData = {
 
     // Panels
     PANEL_OUTPUT: 'Output',
+    PANEL_ENGLISH: 'English',
+    PANEL_JAPANESE: 'Japanese',
     PANEL_LINGUASCRIPT: 'LinguaScript',
     PANEL_GRAMMAR_CONSOLE: 'Grammar Console',
     PANEL_AST: 'AST',
@@ -287,6 +289,9 @@ export const en: LocaleData = {
     COPY: 'Copy',
     COPIED: 'Copied!',
     COPY_FOR_AI: 'Copy for AI',
+
+    // Play button
+    PLAY: 'Play',
   },
   grammar: {
     // Transform types
@@ -358,6 +363,9 @@ export const en: LocaleData = {
     // Imperative rules
     IMPERATIVE_SUBJECT_OMISSION: 'subject omission',
     IMPERATIVE_SUBJECT_OMISSION_DESC: 'Imperative omits subject you',
+
+    // Section titles
+    SECTION_TRANSFORMATIONS: 'Transformations',
 
     // Empty state
     EMPTY_NO_TRANSFORMATIONS: 'No transformations',

@@ -324,6 +324,9 @@ export interface GrammarMessages {
   IMPERATIVE_SUBJECT_OMISSION: string;
   IMPERATIVE_SUBJECT_OMISSION_DESC: string;
 
+  // Section titles
+  SECTION_TRANSFORMATIONS: string;
+
   // Empty state
   EMPTY_NO_TRANSFORMATIONS: string;
 }
@@ -344,6 +347,8 @@ export interface UIMessages {
 
   // Panels
   PANEL_OUTPUT: string;
+  PANEL_ENGLISH: string;
+  PANEL_JAPANESE: string;
   PANEL_LINGUASCRIPT: string;
   PANEL_GRAMMAR_CONSOLE: string;
   PANEL_AST: string;
@@ -365,6 +370,9 @@ export interface UIMessages {
   COPY: string;
   COPIED: string;
   COPY_FOR_AI: string;
+
+  // Play button
+  PLAY: string;
 }
 
 export interface LocaleData {

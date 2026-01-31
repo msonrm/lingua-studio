@@ -40,6 +40,27 @@ function setStoredWorkspace(state: object | null): void {
   }
 }
 
+// Text-to-speech function
+function speak(text: string, lang: 'en' | 'ja'): void {
+  if (!text || !window.speechSynthesis) return;
+
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang === 'ja' ? 'ja-JP' : 'en-US';
+  utterance.rate = 0.9;
+
+  // Try to find a native voice for the language
+  const voices = window.speechSynthesis.getVoices();
+  const preferredVoice = voices.find(v => v.lang.startsWith(lang === 'ja' ? 'ja' : 'en'));
+  if (preferredVoice) {
+    utterance.voice = preferredVoice;
+  }
+
+  window.speechSynthesis.speak(utterance);
+}
+
 function App() {
   const [asts, setASTs] = useState<SentenceNode[]>([]);
   const [sentences, setSentences] = useState<string[]>([]);
@@ -180,11 +201,13 @@ function App() {
           </div>
         </header>
 
-        {/* LinguaScript Bar - URL-like always-visible display */}
-        <LinguaScriptBar
-          code={linguaScripts.join('; ')}
-          placeholder={t.PLACEHOLDER_LINGUASCRIPT}
-        />
+        {/* LinguaScript Bar - hidden in blocks mode */}
+        {editorMode !== 'blocks' && (
+          <LinguaScriptBar
+            code={linguaScripts.join('; ')}
+            placeholder={t.PLACEHOLDER_LINGUASCRIPT}
+          />
+        )}
 
         <main className="main">
           <div className="editor-area">
@@ -237,12 +260,12 @@ function App() {
                     className={`side-tab ${sidePanelTab === 'timeline' ? 'active' : ''}`}
                     onClick={() => setSidePanelTab('timeline')}
                   >
-                    {t.TAB_TIMELINE}
+                    {t.TAB_COMING_SOON}
                   </button>
                 </div>
                 <div className="side-panel-content">
                   {sidePanelTab === 'grammar' && (
-                    <GrammarPanel logs={grammarLogs} notification={resetNotice} />
+                    <GrammarPanel logs={grammarLogs} notification={resetNotice} asts={asts} />
                   )}
                   {sidePanelTab === 'timeline' && (
                     <VisualizationPanel asts={asts} />
@@ -255,7 +278,21 @@ function App() {
           <div className="bottom-panel">
             <div className="output-panel dual">
               <div className="output-section">
-                <h3>English</h3>
+                <div className="output-header">
+                  <h3>{t.PANEL_ENGLISH}</h3>
+                  {sentences.length > 0 && (
+                    <button
+                      className="speak-button"
+                      onClick={() => speak(sentences.join(' '), 'en')}
+                      title="Speak"
+                    >
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                      <span>{t.PLAY}</span>
+                    </button>
+                  )}
+                </div>
                 <div className="sentence-output">
                   {sentences.length > 0
                     ? sentences.map((s, i) => <div key={i}>{s}</div>)
@@ -264,7 +301,21 @@ function App() {
                 </div>
               </div>
               <div className="output-section">
-                <h3>日本語</h3>
+                <div className="output-header">
+                  <h3>{t.PANEL_JAPANESE}</h3>
+                  {japaneseSentences.length > 0 && (
+                    <button
+                      className="speak-button"
+                      onClick={() => speak(japaneseSentences.join(' '), 'ja')}
+                      title="Speak"
+                    >
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                      <span>{t.PLAY}</span>
+                    </button>
+                  )}
+                </div>
                 <div className="sentence-output">
                   {japaneseSentences.length > 0
                     ? japaneseSentences.map((s, i) => <div key={i}>{s}</div>)

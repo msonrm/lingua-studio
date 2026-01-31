@@ -266,6 +266,8 @@ export const ja: LocaleData = {
 
     // Panels
     PANEL_OUTPUT: '出力',
+    PANEL_ENGLISH: '英語',
+    PANEL_JAPANESE: '日本語',
     PANEL_LINGUASCRIPT: 'LinguaScript',
     PANEL_GRAMMAR_CONSOLE: '文法コンソール',
     PANEL_AST: 'AST',
@@ -287,6 +289,9 @@ export const ja: LocaleData = {
     COPY: 'コピー',
     COPIED: 'コピー完了',
     COPY_FOR_AI: 'AIにコピー',
+
+    // Play button
+    PLAY: '再生',
   },
   grammar: {
     // Transform types
@@ -358,6 +363,9 @@ export const ja: LocaleData = {
     // Imperative rules
     IMPERATIVE_SUBJECT_OMISSION: '主語省略',
     IMPERATIVE_SUBJECT_OMISSION_DESC: '命令文では主語 you を省略',
+
+    // Section titles
+    SECTION_TRANSFORMATIONS: '変形ルール',
 
     // Empty state
     EMPTY_NO_TRANSFORMATIONS: '変形なし',

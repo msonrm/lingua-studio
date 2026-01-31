@@ -273,7 +273,7 @@ function renderNounPhrase(np: NounPhraseNode): string {
     parts.push(translatePronoun(pronoun.lemma));
   }
 
-  return parts.join(' ');
+  return parts.join('');
 }
 
 /**

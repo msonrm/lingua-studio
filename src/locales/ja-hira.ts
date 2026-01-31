@@ -266,6 +266,8 @@ export const jaHira: LocaleData = {
 
     // Panels
     PANEL_OUTPUT: 'できたぶん',
+    PANEL_ENGLISH: 'えいご',
+    PANEL_JAPANESE: 'にほんご',
     PANEL_LINGUASCRIPT: 'LinguaScript',
     PANEL_GRAMMAR_CONSOLE: 'ぶんぽうのせつめい',
     PANEL_AST: 'AST',
@@ -287,6 +289,9 @@ export const jaHira: LocaleData = {
     COPY: 'コピー',
     COPIED: 'コピーしたよ',
     COPY_FOR_AI: 'AIにコピー',
+
+    // Play button
+    PLAY: 'さいせい',
   },
   grammar: {
     // Transform types
@@ -359,7 +364,10 @@ export const jaHira: LocaleData = {
     IMPERATIVE_SUBJECT_OMISSION: '主語省略',
     IMPERATIVE_SUBJECT_OMISSION_DESC: '命令文では主語 you を省略',
 
+    // Section titles
+    SECTION_TRANSFORMATIONS: 'へんけいルール',
+
     // Empty state
-    EMPTY_NO_TRANSFORMATIONS: '変形なし',
+    EMPTY_NO_TRANSFORMATIONS: 'へんけいなし',
   },
 };

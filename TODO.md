@@ -61,11 +61,8 @@
 ### Multilingual & Language Parameters
 
 #### Output UI
-- [ ] 2パネル出力構成
-  - 左: Primary Output（ターゲット言語）
-  - 右: Reference Output（UI言語で意味確認）
-  - 例: 英語学習時 → 左:English / 右:日本語訳
-  - 例: 架空言語時 → 左:Conlang / 右:UI言語で意味確認
+- [x] 2パネル出力構成（英語/日本語）
+  - 架空言語対応時に再検討
 
 #### 言語別レンダラー
 - [x] 日本語レンダラー（基本実装）

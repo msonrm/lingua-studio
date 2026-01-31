@@ -243,6 +243,8 @@ export const nounCores: NounCore[] = [
   { lemma: "cake", category: "object", countable: true },
   { lemma: "pizza", category: "object", countable: true },
   { lemma: "sandwich", category: "object", countable: true },
+  { lemma: "telescope", category: "object", countable: true },
+  { lemma: "camera", category: "object", countable: true },
   { lemma: "coffee", category: "object", countable: false },
   { lemma: "tea", category: "object", countable: false },
   { lemma: "water", category: "object", countable: false },
@@ -338,6 +340,7 @@ export const adjectiveCores: AdjectiveCore[] = [
   { lemma: "black", category: "color" },
   { lemma: "white", category: "color" },
   { lemma: "gray", category: "color" },
+  { lemma: "colorless", category: "color" },
   // Physical
   { lemma: "hard", category: "physical" },
   { lemma: "soft", category: "physical" },

@@ -287,6 +287,8 @@ export const nounToJapanese: Record<string, string> = {
   'cake': 'ケーキ',
   'pizza': 'ピザ',
   'sandwich': 'サンドイッチ',
+  'telescope': '望遠鏡',
+  'camera': 'カメラ',
   'coffee': 'コーヒー',
   'tea': 'お茶',
   'water': '水',
@@ -571,6 +573,7 @@ export const adjectiveToJapanese: Record<string, string> = {
   'black': '黒い',
   'white': '白い',
   'gray': '灰色の',
+  'colorless': '無色の',
 
   // Physical（物理的）
   'hard': '硬い',

@@ -40,6 +40,27 @@ function setStoredWorkspace(state: object | null): void {
   }
 }
 
+// Text-to-speech function
+function speak(text: string, lang: 'en' | 'ja'): void {
+  if (!text || !window.speechSynthesis) return;
+
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang === 'ja' ? 'ja-JP' : 'en-US';
+  utterance.rate = 0.9;
+
+  // Try to find a native voice for the language
+  const voices = window.speechSynthesis.getVoices();
+  const preferredVoice = voices.find(v => v.lang.startsWith(lang === 'ja' ? 'ja' : 'en'));
+  if (preferredVoice) {
+    utterance.voice = preferredVoice;
+  }
+
+  window.speechSynthesis.speak(utterance);
+}
+
 function App() {
   const [asts, setASTs] = useState<SentenceNode[]>([]);
   const [sentences, setSentences] = useState<string[]>([]);
@@ -257,7 +278,18 @@ function App() {
           <div className="bottom-panel">
             <div className="output-panel dual">
               <div className="output-section">
-                <h3>{t.PANEL_ENGLISH}</h3>
+                <div className="output-header">
+                  <h3>{t.PANEL_ENGLISH}</h3>
+                  {sentences.length > 0 && (
+                    <button
+                      className="speak-button"
+                      onClick={() => speak(sentences.join(' '), 'en')}
+                      title="Speak"
+                    >
+                      🔊
+                    </button>
+                  )}
+                </div>
                 <div className="sentence-output">
                   {sentences.length > 0
                     ? sentences.map((s, i) => <div key={i}>{s}</div>)
@@ -266,7 +298,18 @@ function App() {
                 </div>
               </div>
               <div className="output-section">
-                <h3>{t.PANEL_JAPANESE}</h3>
+                <div className="output-header">
+                  <h3>{t.PANEL_JAPANESE}</h3>
+                  {japaneseSentences.length > 0 && (
+                    <button
+                      className="speak-button"
+                      onClick={() => speak(japaneseSentences.join(' '), 'ja')}
+                      title="Speak"
+                    >
+                      🔊
+                    </button>
+                  )}
+                </div>
                 <div className="sentence-output">
                   {japaneseSentences.length > 0
                     ? japaneseSentences.map((s, i) => <div key={i}>{s}</div>)

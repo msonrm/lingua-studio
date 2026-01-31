@@ -250,6 +250,22 @@ export const jaHira: LocaleData = {
     SECTION_PREPOSITION: '── どこ？だれと？ ──',
     SECTION_WH_NOUNS: '── だれ？なに？ ──',
     SECTION_WH_ADVERBS: '── どこ？いつ？どうやって？ ──',
+
+    // Dictionary Panel
+    DICT_WORDS: 'ことば',
+    DICT_EMPTY: 'まだことばがないよ',
+    DICT_IMPORT: 'よみこみ',
+    DICT_EXPORT: 'かきだし',
+    DICT_LEMMA: 'ことば（れい: prepare）',
+    DICT_VERB: 'どうし',
+    DICT_NOUN: 'めいし',
+    DICT_ADJ: 'けいようし',
+    DICT_ADV: 'ふくし',
+    DICT_INTRANS: 'じどうし（1こ）',
+    DICT_TRANS: 'たどうし（2こ）',
+    DICT_DITRANS: 'にじゅうたどうし（3こ）',
+    DICT_COUNTABLE: 'かぞえられる',
+    DICT_ADD: 'ついか',
   },
   ui: {
     // Header
@@ -263,6 +279,7 @@ export const jaHira: LocaleData = {
     TAB_COMING_SOON: 'もうすこしまってね',
     TAB_GRAMMAR: 'ことばのきまり',
     TAB_TIMELINE: 'じかん/ようす',
+    TAB_DICTIONARY: 'じしょ',
 
     // Panels
     PANEL_OUTPUT: 'できたぶん',

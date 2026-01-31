@@ -250,6 +250,22 @@ export const en: LocaleData = {
     SECTION_PREPOSITION: '── Preposition ──',
     SECTION_WH_NOUNS: '── Wh-Nouns ──',
     SECTION_WH_ADVERBS: '── Wh-Adverbs ──',
+
+    // Dictionary Panel
+    DICT_WORDS: 'words',
+    DICT_EMPTY: 'No words added yet',
+    DICT_IMPORT: 'Import',
+    DICT_EXPORT: 'Export',
+    DICT_LEMMA: 'Lemma (e.g., prepare)',
+    DICT_VERB: 'Verb',
+    DICT_NOUN: 'Noun',
+    DICT_ADJ: 'Adj',
+    DICT_ADV: 'Adv',
+    DICT_INTRANS: 'Intransitive (1 arg)',
+    DICT_TRANS: 'Transitive (2 args)',
+    DICT_DITRANS: 'Ditransitive (3 args)',
+    DICT_COUNTABLE: 'Countable',
+    DICT_ADD: 'Add',
   },
   ui: {
     // Header
@@ -263,6 +279,7 @@ export const en: LocaleData = {
     TAB_COMING_SOON: 'Coming soon',
     TAB_GRAMMAR: 'Grammar',
     TAB_TIMELINE: 'Timeline',
+    TAB_DICTIONARY: 'Dictionary',
 
     // Panels
     PANEL_OUTPUT: 'Output',

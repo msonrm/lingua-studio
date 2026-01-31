@@ -370,6 +370,9 @@ export interface UIMessages {
   COPY: string;
   COPIED: string;
   COPY_FOR_AI: string;
+
+  // Play button
+  PLAY: string;
 }
 
 export interface LocaleData {

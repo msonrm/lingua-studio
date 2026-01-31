@@ -289,6 +289,9 @@ export const ja: LocaleData = {
     COPY: 'コピー',
     COPIED: 'コピー完了',
     COPY_FOR_AI: 'AIにコピー',
+
+    // Play button
+    PLAY: '再生',
   },
   grammar: {
     // Transform types

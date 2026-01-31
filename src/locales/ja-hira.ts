@@ -289,6 +289,9 @@ export const jaHira: LocaleData = {
     COPY: 'コピー',
     COPIED: 'コピーしたよ',
     COPY_FOR_AI: 'AIにコピー',
+
+    // Play button
+    PLAY: 'さいせい',
   },
   grammar: {
     // Transform types

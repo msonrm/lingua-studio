@@ -289,6 +289,9 @@ export const en: LocaleData = {
     COPY: 'Copy',
     COPIED: 'Copied!',
     COPY_FOR_AI: 'Copy for AI',
+
+    // Play button
+    PLAY: 'Play',
   },
   grammar: {
     // Transform types

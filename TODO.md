@@ -24,6 +24,21 @@
 - [x] 否定極性副詞（まだ/もう）
 - [x] 独立所有代名詞
 
+### 日本語VP等位接続
+- [x] Phase 1: 基本的な等位接続
+  - and: テ形接続（食べて飲む）
+  - or: 終止形+か接続（食べるか飲む）
+- [x] Phase 2: VP個別の否定
+  - ないで形（食べないで飲む）
+- [x] Phase 3: 節レベルの否定
+  - De Morgan適用（conjunction無視）
+  - not(and(A,B)) / not(or(A,B)) → 「Aないで Bない」
+- [x] 異なる主語のハンドリング
+  - 「私は食べて、父が走る」
+- [x] 2パス方式へリファクタリング
+  - collectVPChain: 情報収集
+  - renderVPChainItem: レンダリング
+
 ## Future Enhancements
 
 ### Modality & Register
@@ -38,7 +53,7 @@
   - 「〜たい」
 
 ### Coordination
-- [ ] 否定とのスコープ相互作用（De Morgan）
+- [x] 否定とのスコープ相互作用（De Morgan）- 日本語レンダラー実装済み
   - "I don't eat apples and oranges" の解釈曖昧性
 - [ ] 等位接続の構造的曖昧性
   - "I saw the man with the telescope and the camera"

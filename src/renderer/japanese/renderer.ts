@@ -12,6 +12,7 @@
 import {
   SentenceNode,
   ClauseNode,
+  VerbPhraseNode,
   NounPhraseNode,
   NounHead,
   PronounHead,
@@ -19,9 +20,11 @@ import {
   CoordinatedNounPhraseNode,
   CoordinationConjunct,
   SemanticRole,
+  ModalType,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb } from './lexicon';
-import { conjugate, Tense, Aspect, Polarity } from './conjugation';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction } from './lexicon';
+import { conjugate, toTeForm, toNaideForm, Tense, Aspect, Polarity } from './conjugation';
+import { getVerbEntry } from './lexicon';
 import { findVerbCore } from '../../data/dictionary-core';
 
 // ============================================
@@ -76,6 +79,198 @@ function renderInterrogative(clause: ClauseNode, timeAdv?: string): string {
 function renderImperative(clause: ClauseNode, timeAdv?: string): string {
   const parts = buildSOVParts(clause, { omitSubject: true, timeAdverbial: timeAdv });
   return parts.filter(Boolean).join('') + '。';
+}
+
+// ============================================
+// VP Coordination
+// ============================================
+
+// 主語ロール（優先順）
+const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'theme'];
+
+/**
+ * VP等位接続チェーンの要素情報
+ */
+interface VPChainItem {
+  vp: VerbPhraseNode;
+  conjunction: 'and' | 'or';  // この要素の後に続く接続詞（最後の要素では未使用）
+  groupId: string;            // 主語グループID
+  isFirst: boolean;
+  isLast: boolean;
+  isSameGroupAsPrev: boolean; // 前の要素と同じグループか
+  vpPolarity: Polarity;       // VP個別の極性
+}
+
+/**
+ * VPから主語フィラーを取得
+ */
+function getSubjectFiller(vp: VerbPhraseNode): NounPhraseNode | CoordinatedNounPhraseNode | null {
+  const verbCore = findVerbCore(vp.verb.lemma);
+  for (const role of SUBJECT_ROLES) {
+    if (verbCore?.valency.some(v => v.role === role)) {
+      const slot = vp.arguments.find(a => a.role === role);
+      if (slot?.filler && (slot.filler.type === 'nounPhrase' || slot.filler.type === 'coordinatedNounPhrase')) {
+        return slot.filler as NounPhraseNode | CoordinatedNounPhraseNode;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * 主語のグループIDを生成（同じ主語なら同じID）
+ */
+function getSubjectGroupId(vp: VerbPhraseNode): string {
+  const filler = getSubjectFiller(vp);
+  return filler ? JSON.stringify(filler) : `__no_subject_${vp.verb.lemma}__`;
+}
+
+/**
+ * 主語フィラーをレンダリング
+ */
+function renderSubjectFiller(filler: NounPhraseNode | CoordinatedNounPhraseNode): string {
+  if (filler.type === 'nounPhrase') {
+    return renderNounPhrase(filler);
+  } else {
+    return renderCoordinatedNounPhrase(filler);
+  }
+}
+
+/**
+ * Phase 1: VP等位接続チェーンを収集
+ */
+function collectVPChain(vp: VerbPhraseNode): VPChainItem[] {
+  const items: VPChainItem[] = [];
+
+  // 最初のVP
+  const firstGroupId = getSubjectGroupId(vp);
+  items.push({
+    vp,
+    conjunction: vp.coordinatedWith?.conjunction || 'and',
+    groupId: firstGroupId,
+    isFirst: true,
+    isLast: !vp.coordinatedWith,
+    isSameGroupAsPrev: true,  // 最初の要素は常にtrue
+    vpPolarity: vp.polarity === 'negative' ? 'negative' : 'affirmative',
+  });
+
+  if (!vp.coordinatedWith) {
+    return items;
+  }
+
+  // チェーンを辿る
+  let prevGroupId = firstGroupId;
+  let current = vp.coordinatedWith.verbPhrase;
+
+  while (current.coordinatedWith) {
+    const groupId = getSubjectGroupId(current);
+    items.push({
+      vp: current,
+      conjunction: current.coordinatedWith.conjunction,
+      groupId,
+      isFirst: false,
+      isLast: false,
+      isSameGroupAsPrev: groupId === prevGroupId,
+      vpPolarity: current.polarity === 'negative' ? 'negative' : 'affirmative',
+    });
+    prevGroupId = groupId;
+    current = current.coordinatedWith.verbPhrase;
+  }
+
+  // 最後のVP
+  const lastGroupId = getSubjectGroupId(current);
+  items.push({
+    vp: current,
+    conjunction: 'and',  // 最後なので使われない
+    groupId: lastGroupId,
+    isFirst: false,
+    isLast: true,
+    isSameGroupAsPrev: lastGroupId === prevGroupId,
+    vpPolarity: current.polarity === 'negative' ? 'negative' : 'affirmative',
+  });
+
+  return items;
+}
+
+/**
+ * Phase 2: チェーン要素をレンダリング
+ */
+function renderVPChainItem(
+  item: VPChainItem,
+  clausePolarity: Polarity,
+  tense: Tense,
+  aspect: Aspect,
+  modal?: ModalType,
+  modalPolarity?: Polarity
+): string {
+  const parts: string[] = [];
+  const verbEntry = getVerbEntry(item.vp.verb.lemma);
+
+  // 異なる主語の場合、読点 + 主語が を追加
+  if (!item.isFirst && !item.isSameGroupAsPrev) {
+    const subjectFiller = getSubjectFiller(item.vp);
+    if (subjectFiller) {
+      parts.push('、' + renderSubjectFiller(subjectFiller) + 'が');
+    }
+  }
+
+  if (item.isLast) {
+    // 最後のVP: 通常活用（時制・相・極性を適用）
+    const effectivePolarity = (item.vpPolarity === 'negative' || clausePolarity === 'negative')
+      ? 'negative' : 'affirmative';
+    const verb = conjugate(item.vp.verb.lemma, { tense, aspect, polarity: effectivePolarity, modal, modalPolarity });
+    parts.push(verb);
+  } else {
+    // 最後以外のVP
+    if (clausePolarity === 'negative') {
+      // 節レベル否定: 常にないで形（conjunction無視、De Morgan適用）
+      parts.push(toNaideForm(verbEntry));
+    } else if (item.conjunction === 'and') {
+      if (item.vpPolarity === 'negative') {
+        parts.push(toNaideForm(verbEntry));
+      } else {
+        parts.push(toTeForm(verbEntry));
+      }
+    } else {
+      // or: 終止形 + か
+      const verb = conjugate(item.vp.verb.lemma, { tense: 'present', aspect: 'simple', polarity: item.vpPolarity });
+      parts.push(verb + 'か');
+    }
+  }
+
+  return parts.join('');
+}
+
+/**
+ * 動詞句を等位接続込みでレンダリング
+ * - and: テ形接続（食べて飲む）
+ * - or: 終止形+か接続（食べるか飲む）
+ * - 異なる主語の場合: 読点 + 主語が + 動詞
+ */
+function renderVerbWithCoordination(
+  vp: VerbPhraseNode,
+  tense: Tense,
+  aspect: Aspect,
+  polarity: Polarity,
+  modal?: ModalType,
+  modalPolarity?: Polarity,
+  attributePrefix?: string
+): string {
+  // Phase 1: チェーン収集
+  const chain = collectVPChain(vp);
+
+  // 等位接続がなければ通常の活用
+  if (chain.length === 1) {
+    const verb = conjugate(vp.verb.lemma, { tense, aspect, polarity, modal, modalPolarity });
+    return attributePrefix ? `${attributePrefix}${verb}` : verb;
+  }
+
+  // Phase 2: レンダリング
+  const parts = chain.map(item =>
+    renderVPChainItem(item, polarity, tense, aspect, modal, modalPolarity)
+  );
+
+  return parts.join('');
 }
 
 // ============================================
@@ -186,7 +381,18 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   for (const adv of adverbs) {
     result.push(adv);
   }
-  result.push(verb);
+
+  // VP等位接続を処理
+  const verbStr = renderVerbWithCoordination(
+    verbPhrase,
+    effectiveTense,
+    aspect as Aspect,
+    effectivePolarity,
+    modal,
+    modalPolarity as Polarity | undefined,
+    attribute && verbLemma === 'be' ? attribute.text : undefined
+  );
+  result.push(verbStr);
 
   return result;
 }
@@ -278,7 +484,8 @@ function renderNounPhrase(np: NounPhraseNode): string {
 
 /**
  * 等位接続名詞句をレンダリング
- * "A and B" → "A and B"（そのまま）
+ * "A and B" → "AとB"
+ * "A, B, and C" → "AとBとC"
  */
 function renderCoordinatedNounPhrase(cnp: CoordinatedNounPhraseNode): string {
   const parts = cnp.conjuncts.map((conjunct: CoordinationConjunct) => {
@@ -290,7 +497,9 @@ function renderCoordinatedNounPhrase(cnp: CoordinatedNounPhraseNode): string {
     }
   });
 
-  return parts.join(` ${cnp.conjunction} `);
+  // 日本語: 接尾辞方式（「AとB」「AとBとC」「AかB」）
+  const jaConj = translateConjunction(cnp.conjunction);
+  return parts.join(jaConj);
 }
 
 // ============================================

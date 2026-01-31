@@ -169,6 +169,16 @@ export function toNakattaForm(entry: VerbEntry): string {
   return naiForm.slice(0, -2) + 'なかった';
 }
 
+/**
+ * ナイデ形（否定テ形）を生成
+ * 食べる → 食べないで、書く → 書かないで
+ * VP等位接続で「否定 + 肯定」のパターンで使用
+ * 例: "not eat and drink" → 食べないで飲む
+ */
+export function toNaideForm(entry: VerbEntry): string {
+  return toNaiForm(entry) + 'で';
+}
+
 // ============================================
 // Godan Verb Conjugation Helpers
 // ============================================

@@ -372,6 +372,32 @@ function prepareClauseContext(clause: ClauseNode): ClauseContext {
   };
 }
 
+/** 英語の引数出力順序（double object construction対応）
+ * recipient（前置詞なし）→ theme の順に並べる
+ */
+const ENGLISH_ROLE_ORDER: SemanticRole[] = ['recipient', 'theme', 'goal', 'source', 'location', 'instrument', 'attribute'];
+
+/** valencyを英語の語順にソート */
+function sortValencyForEnglish(
+  valency: Array<{ role: SemanticRole; preposition?: string; required: boolean; label?: string }>,
+  excludeRoles: SemanticRole[] = []
+) {
+  return [...valency]
+    .filter(v => !excludeRoles.includes(v.role))
+    .sort((a, b) => {
+      // 前置詞付きは後ろに
+      if (a.preposition && !b.preposition) return 1;
+      if (!a.preposition && b.preposition) return -1;
+      // 両方前置詞なし、または両方前置詞あり → ENGLISH_ROLE_ORDERで比較
+      const aIndex = ENGLISH_ROLE_ORDER.indexOf(a.role);
+      const bIndex = ENGLISH_ROLE_ORDER.indexOf(b.role);
+      // 配列にない場合は末尾扱い
+      const aOrder = aIndex === -1 ? 999 : aIndex;
+      const bOrder = bIndex === -1 ? 999 : bIndex;
+      return aOrder - bOrder;
+    });
+}
+
 /** 引数（目的語など）をレンダリング */
 function renderOtherArguments(
   ctx: ClauseContext,
@@ -380,8 +406,7 @@ function renderOtherArguments(
   const { verbEntry, subjectRole, verbPhrase, polarity } = ctx;
   const allExcluded = subjectRole ? [subjectRole, ...excludeRoles] : excludeRoles;
 
-  return (verbEntry?.valency || [])
-    .filter(v => !allExcluded.includes(v.role))
+  return sortValencyForEnglish(verbEntry?.valency || [], allExcluded)
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
@@ -1016,9 +1041,8 @@ function renderImperativeCoordinatedVP(
     }
   }
 
-  // その他の引数（目的語など）- 主語ロール以外
-  const otherArgs = (verbEntry?.valency || [])
-    .filter(v => v.role !== subjectRole)
+  // その他の引数（目的語など）- 主語ロール以外、英語語順にソート
+  const otherArgs = sortValencyForEnglish(verbEntry?.valency || [], subjectRole ? [subjectRole] : [])
     .map(v => {
       const argSlot = vp.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;
@@ -1123,9 +1147,8 @@ function renderSingleVerbPhrase(
         ? render(ownSubjectSlot?.filler, f => renderFiller(f, true, polarity))
         : '');
 
-  // その他の引数
-  const otherArgs = (verbEntry?.valency || [])
-    .filter(v => v.role !== subjectRole)
+  // その他の引数（英語語順にソート）
+  const otherArgs = sortValencyForEnglish(verbEntry?.valency || [], subjectRole ? [subjectRole] : [])
     .map(v => {
       const argSlot = vp.arguments.find(a => a.role === v.role);
       const preposition = v.preposition;

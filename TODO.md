@@ -39,6 +39,25 @@
   - collectVPChain: 情報収集
   - renderVPChainItem: レンダリング
 
+### ユーザー辞書拡張機能
+- [x] 拡張辞書モジュール（dictionary-ext.ts）
+  - localStorage永続化
+  - インポート/エクスポート（JSONパッケージ形式）
+  - 変更リスナー機構
+- [x] 辞書パネルUI（DictionaryPanel.tsx）
+  - 動詞/名詞/形容詞/副詞のカテゴリ別管理
+  - 単語追加・削除機能
+  - Valency設定（役割・必須/任意）
+  - 自動活用形生成（規則動詞）
+- [x] Blockly連携
+  - 拡張ブロックの動的生成（verb_action_ext等）
+  - ツールボックス自動更新
+  - 同一セクション内に配置（ベースブロック直後）
+- [x] AST/レンダラー連携
+  - 拡張動詞のAST生成対応
+  - 拡張名詞のAST生成対応
+  - 英語レンダラー対応（辞書lookup: ベース→拡張）
+
 ## Future Enhancements
 
 ### Modality & Register
@@ -76,11 +95,11 @@
 - [x] 日本語レンダラー（拡張）
   - 敬語処理（丁寧語・尊敬語・謙譲語）- 未実装
   - モダリティ（〜できる、〜かもしれない）- 実装済み
-- [ ] 拡張辞書方式（単語・言語追加の基盤）
+- [x] 拡張辞書方式（単語・言語追加の基盤）- 実装済み
   - ベース辞書を汚さず拡張可能な設計
-  - dictionary-ext.ts / lexicon-ext.ts による拡張
+  - dictionary-ext.ts による拡張（localStorage永続化）
   - lookup: ベース → 拡張 → フォールバック の順で参照
-  - 将来的に localStorage からの読み込みも可能
+  - 詳細はSession Log「ユーザー辞書拡張機能」参照
 - [ ] パラメータベースのレンダラー設計（架空言語ビルダー）
   - チョムスキー「原理とパラメータ」理論に基づく
   - 語順パラメータ: SVO, SOV, VSO, VOS, OSV, OVS

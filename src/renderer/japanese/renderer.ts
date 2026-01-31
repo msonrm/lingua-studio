@@ -222,7 +222,10 @@ function renderVPChainItem(
     parts.push(verb);
   } else {
     // 最後以外のVP
-    if (item.conjunction === 'and') {
+    if (clausePolarity === 'negative') {
+      // 節レベル否定: 常にないで形（conjunction無視、De Morgan適用）
+      parts.push(toNaideForm(verbEntry));
+    } else if (item.conjunction === 'and') {
       if (item.vpPolarity === 'negative') {
         parts.push(toNaideForm(verbEntry));
       } else {

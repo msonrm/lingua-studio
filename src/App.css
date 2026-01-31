@@ -343,14 +343,13 @@ body {
   border: none;
   cursor: pointer;
   padding: 0.25rem;
-  color: #e8eaed;
-  opacity: 0.6;
-  transition: opacity 0.15s, transform 0.15s;
+  color: #5c8bc4;
+  transition: color 0.15s, transform 0.15s;
 }
 
 .speak-button:hover {
-  opacity: 1;
-  transform: scale(1.1);
+  color: #7aa3d4;
+  transform: scale(1.15);
 }
 
 .speak-button:active {

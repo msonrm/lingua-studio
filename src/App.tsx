@@ -2,8 +2,10 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { BlocklyWorkspace, BlocklyWorkspaceHandle } from './components/BlocklyWorkspace';
 import { LinguaScriptBar } from './components/LinguaScriptBar';
 import { LinguaScriptView } from './components/LinguaScriptView';
-import { VisualizationPanel } from './components/VisualizationPanel';
+// VisualizationPanel is replaced by DictionaryPanel
+// import { VisualizationPanel } from './components/VisualizationPanel';
 import { GrammarPanel } from './components/GrammarPanel';
+import { DictionaryPanel } from './components/DictionaryPanel';
 import { SentenceNode } from './types/schema';
 import { renderToLinguaScript } from './renderer/linguaScriptRenderer';
 import { TransformLog, BlockChange } from './types/grammarLog';
@@ -16,10 +18,14 @@ import {
   applyBlocklyLocale,
   getLocale,
 } from './locales';
+import { initDictionaryExt } from './data/dictionary-ext';
 import './App.css';
 
+// Initialize dictionary extension (load from localStorage)
+initDictionaryExt();
+
 type EditorMode = 'blocks' | 'linguascript' | 'ast';
-type SidePanelTab = 'timeline' | 'grammar';
+type SidePanelTab = 'dictionary' | 'grammar';
 
 const WORKSPACE_STORAGE_KEY = 'lingua-studio-workspace';
 
@@ -257,18 +263,18 @@ function App() {
                     {t.TAB_GRAMMAR}
                   </button>
                   <button
-                    className={`side-tab ${sidePanelTab === 'timeline' ? 'active' : ''}`}
-                    onClick={() => setSidePanelTab('timeline')}
+                    className={`side-tab ${sidePanelTab === 'dictionary' ? 'active' : ''}`}
+                    onClick={() => setSidePanelTab('dictionary')}
                   >
-                    {t.TAB_COMING_SOON}
+                    {t.TAB_DICTIONARY}
                   </button>
                 </div>
                 <div className="side-panel-content">
                   {sidePanelTab === 'grammar' && (
                     <GrammarPanel logs={grammarLogs} notification={resetNotice} asts={asts} />
                   )}
-                  {sidePanelTab === 'timeline' && (
-                    <VisualizationPanel asts={asts} />
+                  {sidePanelTab === 'dictionary' && (
+                    <DictionaryPanel />
                   )}
                 </div>
               </div>

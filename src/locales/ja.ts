@@ -250,6 +250,22 @@ export const ja: LocaleData = {
     SECTION_PREPOSITION: '── 前置詞 ──',
     SECTION_WH_NOUNS: '── 疑問代名詞 ──',
     SECTION_WH_ADVERBS: '── 疑問副詞 ──',
+
+    // Dictionary Panel
+    DICT_WORDS: '語',
+    DICT_EMPTY: 'まだ単語が追加されていません',
+    DICT_IMPORT: 'インポート',
+    DICT_EXPORT: 'エクスポート',
+    DICT_LEMMA: '見出し語（例: prepare）',
+    DICT_VERB: '動詞',
+    DICT_NOUN: '名詞',
+    DICT_ADJ: '形容詞',
+    DICT_ADV: '副詞',
+    DICT_INTRANS: '自動詞（1項）',
+    DICT_TRANS: '他動詞（2項）',
+    DICT_DITRANS: '二重他動詞（3項）',
+    DICT_COUNTABLE: '可算',
+    DICT_ADD: '追加',
   },
   ui: {
     // Header
@@ -263,6 +279,7 @@ export const ja: LocaleData = {
     TAB_COMING_SOON: '準備中',
     TAB_GRAMMAR: '文法',
     TAB_TIMELINE: 'タイムライン',
+    TAB_DICTIONARY: '辞書',
 
     // Panels
     PANEL_OUTPUT: '出力',

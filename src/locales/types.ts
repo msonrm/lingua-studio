@@ -250,6 +250,22 @@ export interface BlocklyMessages {
   SECTION_PREPOSITION: string;
   SECTION_WH_NOUNS: string;
   SECTION_WH_ADVERBS: string;
+
+  // Dictionary Panel
+  DICT_WORDS: string;
+  DICT_EMPTY: string;
+  DICT_IMPORT: string;
+  DICT_EXPORT: string;
+  DICT_LEMMA: string;
+  DICT_VERB: string;
+  DICT_NOUN: string;
+  DICT_ADJ: string;
+  DICT_ADV: string;
+  DICT_INTRANS: string;
+  DICT_TRANS: string;
+  DICT_DITRANS: string;
+  DICT_COUNTABLE: string;
+  DICT_ADD: string;
 }
 
 // Grammar log messages (for GrammarPanel)
@@ -344,6 +360,7 @@ export interface UIMessages {
   TAB_COMING_SOON: string;
   TAB_GRAMMAR: string;
   TAB_TIMELINE: string;
+  TAB_DICTIONARY: string;
 
   // Panels
   PANEL_OUTPUT: string;

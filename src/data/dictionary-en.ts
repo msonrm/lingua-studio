@@ -16,6 +16,11 @@ import {
   VerbCategory, NounCategory, AdjectiveCategory,
 } from '../types/schema';
 import { verbCores, nounCores, pronounCores, adjectiveCores, adverbCores } from './dictionary-core';
+import {
+  findExtVerbCore, findExtVerbForms, findExtNounCore, findExtNounForms,
+  findExtAdjectiveCore, findExtAdjectiveForms, findExtAdverbCore,
+  getExtVerbs, getExtNouns, getExtAdjectives,
+} from './dictionary-ext';
 
 // ============================================
 // 動詞活用形
@@ -480,41 +485,66 @@ const findAdjectiveFormsEn = (lemma: string): AdjectiveForms | undefined =>
 
 /**
  * 動詞をルックアップ（Core + 英語活用形をマージ）
+ * 検索順: ベース辞書 → 拡張辞書 → フォールバック（規則活用）
  */
 export const findVerb = (lemma: string): VerbEntry | undefined => {
+  // 1. ベース辞書を検索
   const core = verbCores.find((v) => v.lemma === lemma);
-  if (!core) return undefined;
-
-  const forms = findVerbFormsEn(lemma);
-  if (!forms) {
-    // フォールバック: 規則活用を生成
-    const base = core.lemma;
-    return {
-      ...core,
-      forms: {
-        base,
-        past: base + "ed",
-        pp: base + "ed",
-        ing: base + "ing",
-        s: base + "s",
-      },
-    };
+  if (core) {
+    const forms = findVerbFormsEn(lemma);
+    if (!forms) {
+      // フォールバック: 規則活用を生成
+      const base = core.lemma;
+      return {
+        ...core,
+        forms: {
+          base,
+          past: base + "ed",
+          pp: base + "ed",
+          ing: base + "ing",
+          s: base + "s",
+        },
+      };
+    }
+    return { ...core, forms: forms.forms };
   }
-  return { ...core, forms: forms.forms };
+
+  // 2. 拡張辞書を検索
+  const extCore = findExtVerbCore(lemma);
+  const extForms = findExtVerbForms(lemma);
+  if (extCore && extForms) {
+    return { ...extCore, forms: extForms.forms };
+  }
+
+  return undefined;
 };
 
 /**
  * 名詞をルックアップ（Core + 英語複数形をマージ）
+ * 検索順: ベース辞書 → 拡張辞書
  */
 export const findNoun = (lemma: string): NounEntry | undefined => {
+  // 1. ベース辞書を検索
   const core = nounCores.find((n) => n.lemma === lemma);
-  if (!core) return undefined;
+  if (core) {
+    const forms = findNounFormsEn(lemma);
+    return {
+      ...core,
+      plural: forms?.plural ?? core.lemma + "s",
+    };
+  }
 
-  const forms = findNounFormsEn(lemma);
-  return {
-    ...core,
-    plural: forms?.plural ?? core.lemma + "s",
-  };
+  // 2. 拡張辞書を検索
+  const extCore = findExtNounCore(lemma);
+  const extForms = findExtNounForms(lemma);
+  if (extCore && extForms) {
+    return {
+      ...extCore,
+      plural: extForms.plural,
+    };
+  }
+
+  return undefined;
 };
 
 /**
@@ -535,54 +565,112 @@ export const findPronoun = (lemma: string): PronounEntry | undefined => {
 
 /**
  * 形容詞をルックアップ（Core + 英語比較級をマージ）
+ * 検索順: ベース辞書 → 拡張辞書
  */
 export const findAdjective = (lemma: string): AdjectiveEntry | undefined => {
+  // 1. ベース辞書を検索
   const core = adjectiveCores.find((a) => a.lemma === lemma);
-  if (!core) return undefined;
+  if (core) {
+    const forms = findAdjectiveFormsEn(lemma);
+    return {
+      ...core,
+      comparative: forms?.comparative,
+      superlative: forms?.superlative,
+    };
+  }
 
-  const forms = findAdjectiveFormsEn(lemma);
-  return {
-    ...core,
-    comparative: forms?.comparative,
-    superlative: forms?.superlative,
-  };
+  // 2. 拡張辞書を検索
+  const extCore = findExtAdjectiveCore(lemma);
+  const extForms = findExtAdjectiveForms(lemma);
+  if (extCore) {
+    return {
+      ...extCore,
+      comparative: extForms?.comparative,
+      superlative: extForms?.superlative,
+    };
+  }
+
+  return undefined;
 };
 
 /**
  * 副詞をルックアップ（副詞は活用なし）
+ * 検索順: ベース辞書 → 拡張辞書
  */
 export const findAdverb = (lemma: string): AdverbEntry | undefined => {
+  // 1. ベース辞書を検索
   const core = adverbCores.find((a) => a.lemma === lemma);
-  if (!core) return undefined;
+  if (core) {
+    return {
+      lemma: core.lemma,
+      type: core.type,
+      polaritySensitive: core.polaritySensitive,
+    };
+  }
 
-  return {
-    lemma: core.lemma,
-    type: core.type,
-    polaritySensitive: core.polaritySensitive,
-  };
+  // 2. 拡張辞書を検索
+  const extCore = findExtAdverbCore(lemma);
+  if (extCore) {
+    return {
+      lemma: extCore.lemma,
+      type: extCore.type,
+    };
+  }
+
+  return undefined;
 };
 
 // ============================================
-// カテゴリ別取得関数
+// カテゴリ別取得関数（ベース + 拡張辞書）
 // ============================================
 
-export const getVerbsByCategory = (category: VerbCategory): VerbEntry[] =>
-  verbCores
+export const getVerbsByCategory = (category: VerbCategory): VerbEntry[] => {
+  // ベース辞書
+  const baseVerbs = verbCores
     .filter((v) => v.category === category)
     .map((core) => findVerb(core.lemma)!)
     .filter(Boolean);
 
-export const getNounsByCategory = (category: NounCategory): NounEntry[] =>
-  nounCores
+  // 拡張辞書
+  const extVerbs = getExtVerbs()
+    .filter((v) => v.category === category)
+    .map((v) => findVerb(v.lemma)!)
+    .filter(Boolean);
+
+  return [...baseVerbs, ...extVerbs];
+};
+
+export const getNounsByCategory = (category: NounCategory): NounEntry[] => {
+  // ベース辞書
+  const baseNouns = nounCores
     .filter((n) => n.category === category)
     .map((core) => findNoun(core.lemma)!)
     .filter(Boolean);
 
-export const getAdjectivesByCategory = (category: AdjectiveCategory): AdjectiveEntry[] =>
-  adjectiveCores
+  // 拡張辞書
+  const extNouns = getExtNouns()
+    .filter((n) => n.category === category)
+    .map((n) => findNoun(n.lemma)!)
+    .filter(Boolean);
+
+  return [...baseNouns, ...extNouns];
+};
+
+export const getAdjectivesByCategory = (category: AdjectiveCategory): AdjectiveEntry[] => {
+  // ベース辞書
+  const baseAdjs = adjectiveCores
     .filter((a) => a.category === category)
     .map((core) => findAdjective(core.lemma)!)
     .filter(Boolean);
+
+  // 拡張辞書
+  const extAdjs = getExtAdjectives()
+    .filter((a) => a.category === category)
+    .map((a) => findAdjective(a.lemma)!)
+    .filter(Boolean);
+
+  return [...baseAdjs, ...extAdjs];
+};
 
 export const isProperNoun = (lemma: string): boolean => {
   const noun = findNoun(lemma);

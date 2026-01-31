@@ -1,5 +1,7 @@
 # TODO
 
+> **Note**: このファイルは [CHANGELOG.md](./CHANGELOG.md) と連動しています。機能実装完了時は両方を更新してください。
+
 ## Session Log (2026-01-31)
 
 ### UI改善
@@ -39,6 +41,25 @@
   - collectVPChain: 情報収集
   - renderVPChainItem: レンダリング
 
+### ユーザー辞書拡張機能
+- [x] 拡張辞書モジュール（dictionary-ext.ts）
+  - localStorage永続化
+  - インポート/エクスポート（JSONパッケージ形式）
+  - 変更リスナー機構
+- [x] 辞書パネルUI（DictionaryPanel.tsx）
+  - 動詞/名詞/形容詞/副詞のカテゴリ別管理
+  - 単語追加・削除機能
+  - Valency設定（役割・必須/任意）
+  - 自動活用形生成（規則動詞）
+- [x] Blockly連携
+  - 拡張ブロックの動的生成（verb_action_ext等）
+  - ツールボックス自動更新
+  - 同一セクション内に配置（ベースブロック直後）
+- [x] AST/レンダラー連携
+  - 拡張動詞のAST生成対応
+  - 拡張名詞のAST生成対応
+  - 英語レンダラー対応（辞書lookup: ベース→拡張）
+
 ## Future Enhancements
 
 ### Modality & Register
@@ -61,11 +82,8 @@
 ### Multilingual & Language Parameters
 
 #### Output UI
-- [ ] 2パネル出力構成
-  - 左: Primary Output（ターゲット言語）
-  - 右: Reference Output（UI言語で意味確認）
-  - 例: 英語学習時 → 左:English / 右:日本語訳
-  - 例: 架空言語時 → 左:Conlang / 右:UI言語で意味確認
+- [x] 2パネル出力構成（英語/日本語）
+  - 架空言語対応時に再検討
 
 #### 言語別レンダラー
 - [x] 日本語レンダラー（基本実装）
@@ -79,6 +97,11 @@
 - [x] 日本語レンダラー（拡張）
   - 敬語処理（丁寧語・尊敬語・謙譲語）- 未実装
   - モダリティ（〜できる、〜かもしれない）- 実装済み
+- [x] 拡張辞書方式（単語・言語追加の基盤）- 実装済み
+  - ベース辞書を汚さず拡張可能な設計
+  - dictionary-ext.ts による拡張（localStorage永続化）
+  - lookup: ベース → 拡張 → フォールバック の順で参照
+  - 詳細はSession Log「ユーザー辞書拡張機能」参照
 - [ ] パラメータベースのレンダラー設計（架空言語ビルダー）
   - チョムスキー「原理とパラメータ」理論に基づく
   - 語順パラメータ: SVO, SOV, VSO, VOS, OSV, OVS
@@ -87,6 +110,9 @@
   - Wh移動: 疑問詞の文頭移動
   - 冠詞有無 / 格助詞使用
   - 教育ツールとしての活用（同じASTから異なる語順で出力）
+  - 設計方針: dictionary-core.ts を使わずゼロベースで構築
+    - 架空言語は独自の概念体系を持つ可能性
+    - src/renderer/conlang/ に独立モジュールとして実装
 - [ ] LinguaScriptパーサー（双方向変換の基盤）
   - BNF文法に基づく実装
   - AST ↔ LinguaScript の等価変換

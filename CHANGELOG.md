@@ -1,6 +1,26 @@
 # CHANGELOG
 
+> **Note**: このファイルは [TODO.md](./TODO.md) と連動しています。機能実装完了時は両方を更新してください。
+
 ## 2026-01-31
+
+### User Dictionary Extension
+- [x] Extension dictionary module (`dictionary-ext.ts`)
+  - localStorage persistence for user-defined words
+  - Import/export in JSON package format
+  - Change listener mechanism for reactive updates
+- [x] Dictionary Panel UI (`DictionaryPanel.tsx`)
+  - Category tabs: Verbs, Nouns, Adjectives, Adverbs
+  - Add/remove words with valency settings
+  - Auto-generate regular verb conjugations
+  - Export user dictionary as JSON
+- [x] Blockly integration
+  - Dynamic block generation (`verb_action_ext`, `noun_human_ext`, etc.)
+  - Automatic toolbox update on dictionary changes
+  - Extension blocks placed alongside base blocks in same section
+- [x] AST & Renderer support
+  - Extension verbs/nouns recognized in AST generation
+  - Dictionary lookup: base → extension → fallback
 
 ### Japanese VP Coordination
 - [x] Basic VP coordination

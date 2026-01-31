@@ -15,12 +15,19 @@ import {
   PropositionalOperator,
 } from '../types/schema';
 import { verbCores, pronounCores } from '../data/dictionary-core';
+import { getExtVerbs } from '../data/dictionary-ext';
 import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks/definitions';
 
 // ============================================
-// ヘルパー関数（dictionary-core.ts ベース）
+// ヘルパー関数（dictionary-core.ts ベース + 拡張辞書）
 // ============================================
-const findVerbCore = (lemma: string) => verbCores.find(v => v.lemma === lemma);
+const findVerbCore = (lemma: string) => {
+  // まずベース辞書を検索
+  const baseVerb = verbCores.find(v => v.lemma === lemma);
+  if (baseVerb) return baseVerb;
+  // なければ拡張辞書を検索
+  return getExtVerbs().find(v => v.lemma === lemma);
+};
 const findPronounCore = (lemma: string) => pronounCores.find(p => p.lemma === lemma);
 
 // ============================================
@@ -976,9 +983,11 @@ function parseNounPhraseBlock(block: Blockly.Block): NounPhraseNode | Coordinate
     }
   }
 
-  // 名詞ブロックの処理（カテゴリ別）
+  // 名詞ブロックの処理（カテゴリ別 + 拡張名詞ブロック）
   const nounBlockTypes = [
     'pronoun_block', 'possessive_pronoun_block', 'human_block', 'animal_block', 'object_block', 'place_block', 'abstract_block',
+    // 拡張名詞ブロック（NounCategory: human, animal, object, place, abstract）
+    'noun_human_ext', 'noun_animal_ext', 'noun_object_ext', 'noun_place_ext', 'noun_abstract_ext',
   ];
   if (nounBlockTypes.includes(blockType)) {
     return parseNewNounBlock(block, blockType);
@@ -1195,6 +1204,12 @@ function parseNewNounBlock(block: Blockly.Block, blockType: string): NounPhraseN
     'object_block': 'OBJECT_VALUE',
     'place_block': 'PLACE_VALUE',
     'abstract_block': 'ABSTRACT_VALUE',
+    // 拡張名詞ブロック（LEMMAフィールドを使用、NounCategory: human, animal, object, place, abstract）
+    'noun_human_ext': 'LEMMA',
+    'noun_animal_ext': 'LEMMA',
+    'noun_object_ext': 'LEMMA',
+    'noun_place_ext': 'LEMMA',
+    'noun_abstract_ext': 'LEMMA',
   };
 
   const fieldName = fieldMap[blockType] || 'PLACE_VALUE';

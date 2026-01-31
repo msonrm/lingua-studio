@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import * as Blockly from 'blockly';
 import '../blocks/definitions';
-import { createToolbox } from '../blocks/definitions';
+import { createToolbox, setToolboxUpdateCallback } from '../blocks/definitions';
 import { generateMultipleAST } from '../renderer/astGenerator';
 import { renderToEnglishWithLogs } from '../renderer/english/renderer';
 import { renderToJapanese } from '../renderer/japanese';
@@ -263,6 +263,13 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       // 初期状態を反映させるため、最初に一度呼び出す
       handleWorkspaceChange();
 
+      // 辞書変更時にツールボックスを更新
+      setToolboxUpdateCallback(() => {
+        if (workspaceRef.current) {
+          workspaceRef.current.updateToolbox(createToolbox());
+        }
+      });
+
       // コンテナサイズ変更時にBlocklyをリサイズ
       const resizeObserver = new ResizeObserver(() => {
         Blockly.svgResize(workspace);
@@ -271,6 +278,7 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
 
       return () => {
         resizeObserver.disconnect();
+        setToolboxUpdateCallback(null);
         workspace.dispose();
       };
     }, [handleWorkspaceChange, handleBlockChange, initialState]);

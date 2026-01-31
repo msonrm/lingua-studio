@@ -340,6 +340,7 @@ export const adjectiveCores: AdjectiveCore[] = [
   { lemma: "black", category: "color" },
   { lemma: "white", category: "color" },
   { lemma: "gray", category: "color" },
+  { lemma: "colorless", category: "color" },
   // Physical
   { lemma: "hard", category: "physical" },
   { lemma: "soft", category: "physical" },

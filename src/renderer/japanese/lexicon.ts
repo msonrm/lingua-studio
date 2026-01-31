@@ -573,6 +573,7 @@ export const adjectiveToJapanese: Record<string, string> = {
   'black': '黒い',
   'white': '白い',
   'gray': '灰色の',
+  'colorless': '無色の',
 
   // Physical（物理的）
   'hard': '硬い',

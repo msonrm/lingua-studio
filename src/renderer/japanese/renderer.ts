@@ -20,7 +20,7 @@ import {
   CoordinationConjunct,
   SemanticRole,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb } from './lexicon';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction } from './lexicon';
 import { conjugate, Tense, Aspect, Polarity } from './conjugation';
 import { findVerbCore } from '../../data/dictionary-core';
 
@@ -278,7 +278,8 @@ function renderNounPhrase(np: NounPhraseNode): string {
 
 /**
  * 等位接続名詞句をレンダリング
- * "A and B" → "A and B"（そのまま）
+ * "A and B" → "AとB"
+ * "A, B, and C" → "AとBとC"
  */
 function renderCoordinatedNounPhrase(cnp: CoordinatedNounPhraseNode): string {
   const parts = cnp.conjuncts.map((conjunct: CoordinationConjunct) => {
@@ -290,7 +291,9 @@ function renderCoordinatedNounPhrase(cnp: CoordinatedNounPhraseNode): string {
     }
   });
 
-  return parts.join(` ${cnp.conjunction} `);
+  // 日本語: 接尾辞方式（「AとB」「AとBとC」「AかB」）
+  const jaConj = translateConjunction(cnp.conjunction);
+  return parts.join(jaConj);
 }
 
 // ============================================

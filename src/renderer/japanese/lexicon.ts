@@ -816,6 +816,26 @@ export function translateAdverb(lemma: string): string {
   return adverbToJapanese[lemma] || lemma;
 }
 
+// ============================================
+// 接続詞の日本語マッピング
+// ============================================
+
+/**
+ * 等位接続詞 → 日本語
+ * 日本語では接尾辞型で使用（「AとB」「AかB」）
+ */
+export const conjunctionToJapanese: Record<string, string> = {
+  'and': 'と',
+  'or': 'か',
+};
+
+/**
+ * 接続詞を日本語に変換
+ */
+export function translateConjunction(conj: string): string {
+  return conjunctionToJapanese[conj] || conj;
+}
+
 /**
  * 否定極性副詞（Negative Polarity Items）
  * これらの副詞が存在する場合、動詞は否定形で活用する必要がある

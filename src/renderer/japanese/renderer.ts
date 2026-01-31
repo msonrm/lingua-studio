@@ -23,7 +23,7 @@ import {
   ModalType,
 } from '../../types/schema';
 import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction } from './lexicon';
-import { conjugate, toTeForm, Tense, Aspect, Polarity } from './conjugation';
+import { conjugate, toTeForm, toNaideForm, Tense, Aspect, Polarity } from './conjugation';
 import { getVerbEntry } from './lexicon';
 import { findVerbCore } from '../../data/dictionary-core';
 
@@ -124,18 +124,28 @@ function renderVerbWithCoordination(
     const isLast = i === chain.length - 1;
     const verbEntry = getVerbEntry(currentVP.verb.lemma);
 
+    // VP個別の polarity を取得
+    const vpPolarity = currentVP.polarity === 'negative' ? 'negative' : 'affirmative';
+
     if (isLast) {
       // 最後のVP: 通常活用（時制・相・極性を適用）
-      const verb = conjugate(currentVP.verb.lemma, { tense, aspect, polarity, modal, modalPolarity });
+      // 節レベルの polarity と VP個別の polarity を組み合わせる
+      const effectivePolarity = (vpPolarity === 'negative' || polarity === 'negative') ? 'negative' : 'affirmative';
+      const verb = conjugate(currentVP.verb.lemma, { tense, aspect, polarity: effectivePolarity, modal, modalPolarity });
       parts.push(verb);
     } else {
       // 最後以外のVP
       if (conjunction === 'and') {
-        // and: テ形
-        parts.push(toTeForm(verbEntry));
+        if (vpPolarity === 'negative') {
+          // 否定 + and: ないで形（食べないで）
+          parts.push(toNaideForm(verbEntry));
+        } else {
+          // 肯定 + and: テ形（食べて）
+          parts.push(toTeForm(verbEntry));
+        }
       } else {
         // or: 終止形 + か
-        const verb = conjugate(currentVP.verb.lemma, { tense: 'present', aspect: 'simple', polarity: 'affirmative' });
+        const verb = conjugate(currentVP.verb.lemma, { tense: 'present', aspect: 'simple', polarity: vpPolarity });
         parts.push(verb + 'か');
       }
     }

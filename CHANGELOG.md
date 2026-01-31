@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## 2026-01-31
+
+### Japanese VP Coordination
+- [x] Basic VP coordination
+  - and: テ形接続 (`食べて飲む`)
+  - or: 終止形+か接続 (`食べるか飲む`)
+- [x] VP-level negation with ないで形
+  - `and(not(eat), drink)` → `食べないで飲む`
+- [x] Clause-level negation (De Morgan)
+  - `not(and(eat, drink))` → `食べないで飲まない`
+  - `not(or(eat, drink))` → `食べないで飲まない`
+- [x] Different subject handling
+  - `私は食べて、父が走る。` (comma + subject + が)
+- [x] Refactor to 2-pass approach
+  - `collectVPChain`: Phase 1 - collect chain info
+  - `renderVPChainItem`: Phase 2 - render based on collected info
+  - `VPChainItem` interface: isFirst, isLast, isSameGroupAsPrev, vpPolarity
+
+### English VP Coordination Fix
+- [x] Subject omission for same-group VPs
+  - Fixed: "I eat and I drink" → "I eat and drink"
+  - Added `omitSubject` parameter to `renderSingleVerbPhrase`
+
 ## 2026-01-30
 
 ### Grammar Panel Improvements

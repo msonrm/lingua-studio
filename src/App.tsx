@@ -180,11 +180,13 @@ function App() {
           </div>
         </header>
 
-        {/* LinguaScript Bar - URL-like always-visible display */}
-        <LinguaScriptBar
-          code={linguaScripts.join('; ')}
-          placeholder={t.PLACEHOLDER_LINGUASCRIPT}
-        />
+        {/* LinguaScript Bar - hidden in blocks mode */}
+        {editorMode !== 'blocks' && (
+          <LinguaScriptBar
+            code={linguaScripts.join('; ')}
+            placeholder={t.PLACEHOLDER_LINGUASCRIPT}
+          />
+        )}
 
         <main className="main">
           <div className="editor-area">

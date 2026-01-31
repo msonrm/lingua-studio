@@ -12,6 +12,7 @@
 import {
   SentenceNode,
   ClauseNode,
+  VerbPhraseNode,
   NounPhraseNode,
   NounHead,
   PronounHead,
@@ -19,9 +20,11 @@ import {
   CoordinatedNounPhraseNode,
   CoordinationConjunct,
   SemanticRole,
+  ModalType,
 } from '../../types/schema';
 import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction } from './lexicon';
-import { conjugate, Tense, Aspect, Polarity } from './conjugation';
+import { conjugate, toTeForm, Tense, Aspect, Polarity } from './conjugation';
+import { getVerbEntry } from './lexicon';
 import { findVerbCore } from '../../data/dictionary-core';
 
 // ============================================
@@ -76,6 +79,69 @@ function renderInterrogative(clause: ClauseNode, timeAdv?: string): string {
 function renderImperative(clause: ClauseNode, timeAdv?: string): string {
   const parts = buildSOVParts(clause, { omitSubject: true, timeAdverbial: timeAdv });
   return parts.filter(Boolean).join('') + '。';
+}
+
+// ============================================
+// VP Coordination
+// ============================================
+
+/**
+ * 動詞句を等位接続込みでレンダリング
+ * - and: テ形接続（食べて飲む）
+ * - or: 終止形+か接続（食べるか飲む）
+ */
+function renderVerbWithCoordination(
+  vp: VerbPhraseNode,
+  tense: Tense,
+  aspect: Aspect,
+  polarity: Polarity,
+  modal?: ModalType,
+  modalPolarity?: Polarity,
+  attributePrefix?: string
+): string {
+  // 等位接続がなければ通常の活用
+  if (!vp.coordinatedWith) {
+    const verb = conjugate(vp.verb.lemma, { tense, aspect, polarity, modal, modalPolarity });
+    return attributePrefix ? `${attributePrefix}${verb}` : verb;
+  }
+
+  // 等位接続チェーンを収集
+  const chain: { vp: VerbPhraseNode; conjunction: 'and' | 'or' }[] = [];
+  chain.push({ vp, conjunction: vp.coordinatedWith.conjunction });
+
+  let current = vp.coordinatedWith.verbPhrase;
+  while (current.coordinatedWith) {
+    chain.push({ vp: current, conjunction: current.coordinatedWith.conjunction });
+    current = current.coordinatedWith.verbPhrase;
+  }
+  // 最後のVPを追加（conjunctionは使わない）
+  chain.push({ vp: current, conjunction: 'and' });
+
+  // レンダリング
+  const parts: string[] = [];
+  for (let i = 0; i < chain.length; i++) {
+    const { vp: currentVP, conjunction } = chain[i];
+    const isLast = i === chain.length - 1;
+    const verbEntry = getVerbEntry(currentVP.verb.lemma);
+
+    if (isLast) {
+      // 最後のVP: 通常活用（時制・相・極性を適用）
+      const verb = conjugate(currentVP.verb.lemma, { tense, aspect, polarity, modal, modalPolarity });
+      parts.push(verb);
+    } else {
+      // 最後以外のVP
+      if (conjunction === 'and') {
+        // and: テ形
+        parts.push(toTeForm(verbEntry));
+      } else {
+        // or: 終止形 + か
+        const verb = conjugate(currentVP.verb.lemma, { tense: 'present', aspect: 'simple', polarity: 'affirmative' });
+        parts.push(verb + 'か');
+      }
+    }
+  }
+
+  return parts.join('');
 }
 
 // ============================================
@@ -186,7 +252,18 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   for (const adv of adverbs) {
     result.push(adv);
   }
-  result.push(verb);
+
+  // VP等位接続を処理
+  const verbStr = renderVerbWithCoordination(
+    verbPhrase,
+    effectiveTense,
+    aspect as Aspect,
+    effectivePolarity,
+    modal,
+    modalPolarity as Polarity | undefined,
+    attribute && verbLemma === 'be' ? attribute.text : undefined
+  );
+  result.push(verbStr);
 
   return result;
 }

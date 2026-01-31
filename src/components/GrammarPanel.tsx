@@ -317,55 +317,60 @@ export function GrammarPanel({ logs, notification, asts }: GrammarPanelProps) {
       {/* Tense/Aspect Diagram at top */}
       <TenseAspectDiagram tense={tense} aspect={aspect} />
 
-      {notification && (
-        <div className="grammar-notification">
-          <span className="notification-icon">⚠</span>
-          <span className="notification-text">{notification}</span>
-        </div>
-      )}
+      {/* Transformations Section */}
+      <div className="viz-section">
+        <h4>{grammar.SECTION_TRANSFORMATIONS}</h4>
 
-      {logs.length === 0 ? (
-        <div className="grammar-empty">
-          <span className="empty-icon">∅</span>
-          <span className="empty-text">{grammar.EMPTY_NO_TRANSFORMATIONS}</span>
-        </div>
-      ) : (
-        <div className="grammar-steps">
-        {logs.map((log, i) => {
-          const typeColor = getTypeColor(log.type);
+        {notification && (
+          <div className="grammar-notification">
+            <span className="notification-icon">⚠</span>
+            <span className="notification-text">{notification}</span>
+          </div>
+        )}
 
-          // Translate rule and trigger
-          const ruleText = translateKey(log.rule, grammar);
-          const triggerText = translateKey(log.trigger, grammar);
+        {logs.length === 0 ? (
+          <div className="grammar-empty">
+            <span className="empty-icon">∅</span>
+            <span className="empty-text">{grammar.EMPTY_NO_TRANSFORMATIONS}</span>
+          </div>
+        ) : (
+          <div className="grammar-steps">
+            {logs.map((log, i) => {
+              const typeColor = getTypeColor(log.type);
 
-          return (
-            <div key={i} className="grammar-step">
-              <div className="step-header">
-                <span
-                  className="step-type"
-                  style={{ backgroundColor: typeColor }}
-                >
-                  {translateType(log.type)}
-                </span>
-                {ruleText && (
-                  <span className="step-rule">{ruleText}</span>
-                )}
-              </div>
-              <div className="step-content">
-                <div className="step-transformation">
-                  <span className="step-before">{log.from}</span>
-                  <span className="step-arrow">→</span>
-                  <span className="step-after">{log.to}</span>
+              // Translate rule and trigger
+              const ruleText = translateKey(log.rule, grammar);
+              const triggerText = translateKey(log.trigger, grammar);
+
+              return (
+                <div key={i} className="grammar-step">
+                  <div className="step-header">
+                    <span
+                      className="step-type"
+                      style={{ backgroundColor: typeColor }}
+                    >
+                      {translateType(log.type)}
+                    </span>
+                    {ruleText && (
+                      <span className="step-rule">{ruleText}</span>
+                    )}
+                  </div>
+                  <div className="step-content">
+                    <div className="step-transformation">
+                      <span className="step-before">{log.from}</span>
+                      <span className="step-arrow">→</span>
+                      <span className="step-after">{log.to}</span>
+                    </div>
+                    {triggerText && (
+                      <div className="step-trigger">{triggerText}</div>
+                    )}
+                  </div>
                 </div>
-                {triggerText && (
-                  <div className="step-trigger">{triggerText}</div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

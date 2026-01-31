@@ -361,7 +361,10 @@ export const jaHira: LocaleData = {
     IMPERATIVE_SUBJECT_OMISSION: '主語省略',
     IMPERATIVE_SUBJECT_OMISSION_DESC: '命令文では主語 you を省略',
 
+    // Section titles
+    SECTION_TRANSFORMATIONS: 'へんけいルール',
+
     // Empty state
-    EMPTY_NO_TRANSFORMATIONS: '変形なし',
+    EMPTY_NO_TRANSFORMATIONS: 'へんけいなし',
   },
 };

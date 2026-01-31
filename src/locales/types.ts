@@ -324,6 +324,9 @@ export interface GrammarMessages {
   IMPERATIVE_SUBJECT_OMISSION: string;
   IMPERATIVE_SUBJECT_OMISSION_DESC: string;
 
+  // Section titles
+  SECTION_TRANSFORMATIONS: string;
+
   // Empty state
   EMPTY_NO_TRANSFORMATIONS: string;
 }

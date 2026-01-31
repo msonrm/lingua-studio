@@ -361,6 +361,9 @@ export const en: LocaleData = {
     IMPERATIVE_SUBJECT_OMISSION: 'subject omission',
     IMPERATIVE_SUBJECT_OMISSION_DESC: 'Imperative omits subject you',
 
+    // Section titles
+    SECTION_TRANSFORMATIONS: 'Transformations',
+
     // Empty state
     EMPTY_NO_TRANSFORMATIONS: 'No transformations',
   },

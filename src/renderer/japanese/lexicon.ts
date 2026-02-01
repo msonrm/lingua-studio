@@ -145,9 +145,14 @@ export function translatePronoun(lemma: string): string {
 // ============================================
 
 /**
- * 所有格限定詞 → 日本語
+ * 中央限定詞 → 日本語
+ * - 所有格: my, your, his, her, its, our, their
+ * - 指示詞: this, that, these, those
+ * - 分配詞: each, every, either, any
+ * - 複合量化詞: a few, a little, a lot of, etc.
  */
 export const possessiveToJapanese: Record<string, string> = {
+  // 所有格
   'my': '私の',
   'your': 'あなたの',
   'his': '彼の',
@@ -160,6 +165,21 @@ export const possessiveToJapanese: Record<string, string> = {
   'that': 'あの',
   'these': 'これらの',
   'those': 'あれらの',
+  // 分配詞
+  'each': 'それぞれの',
+  'every': 'すべての',
+  'either': 'どちらかの',
+  'any': 'どんな',
+  // 複合量化詞
+  'a_few': 'いくつかの',
+  'a_little': '少しの',
+  'a_lot_of': 'たくさんの',
+  'plenty_of': 'たっぷりの',
+  'a_number_of': 'いくつかの',
+  'a_couple_of': '2、3の',
+  'a_great_deal_of': '大量の',
+  'many_a': '多くの',
+  'quite_a_few': 'かなりの',
 };
 
 /**

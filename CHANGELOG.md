@@ -2,6 +2,24 @@
 
 > **Note**: このファイルは [TODO.md](./TODO.md) と連動しています。機能実装完了時は両方を更新してください。
 
+## 2026-02-01
+
+### DET Block Improvements
+- [x] Fix DET auto-correction not working with adjectives between DET and noun
+  - `getConnectedNounInfo()` now traverses adjective chains to find noun
+  - Enables proper countable/uncountable detection for `DET → adjective → noun`
+
+### Initial Blocks Update
+- [x] Change initial blocks from "I run." to "I eat an apple."
+  - More comprehensive example with transitive verb and noun phrase
+- [x] Add time_chip_abstract ([Present]) to initial blocks
+
+### Japanese Renderer
+- [x] Add Japanese translations for compound quantifiers and distributives
+  - Distributives: each → それぞれの, every → すべての, either → どちらかの, any → どんな
+  - Compound quantifiers: a_few → いくつかの, a_little → 少しの, a_lot_of → たくさんの, etc.
+  - Note: no/neither require special negation handling (deferred)
+
 ## 2026-01-31
 
 ### User Dictionary Extension

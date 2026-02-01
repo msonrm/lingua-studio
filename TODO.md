@@ -25,6 +25,12 @@
 - [x] 量化詞の翻訳追加
 - [x] 否定極性副詞（まだ/もう）
 - [x] 独立所有代名詞
+- [x] 複合量化詞・分配詞の日本語翻訳追加
+  - 分配詞: each, every, either, any
+  - 複合量化詞: a_few, a_little, a_lot_of, plenty_of, etc.
+- [ ] 否定限定詞（no, neither）の日本語対応
+  - 限定詞の否定情報を動詞の polarity に伝播させる必要あり
+  - 例: "no apples" → 「りんごがない」（動詞で否定）
 
 ### 日本語VP等位接続
 - [x] Phase 1: 基本的な等位接続

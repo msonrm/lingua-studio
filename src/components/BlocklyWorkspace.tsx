@@ -237,10 +237,9 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
         sentenceBlock.render();
         sentenceBlock.moveBy(50, 50);
 
-        // 2. time_chip_unified (present + simple)
-        const timeChipBlock = workspace.newBlock('time_chip_unified');
-        timeChipBlock.setFieldValue('present', 'TENSE_VALUE');
-        timeChipBlock.setFieldValue('simple', 'ASPECT_VALUE');
+        // 2. time_chip_abstract ([Present])
+        const timeChipBlock = workspace.newBlock('time_chip_abstract');
+        timeChipBlock.setFieldValue('current', 'MODIFIER_VALUE');
         timeChipBlock.initSvg();
         timeChipBlock.render();
 

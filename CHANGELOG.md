@@ -22,6 +22,17 @@
   - Extension verbs/nouns recognized in AST generation
   - Dictionary lookup: base → extension → fallback
 
+### English Renderer Fix
+- [x] Ditransitive word order (double object construction)
+  - Fixed: "He gives a green apple me" → "He gives me a green apple"
+  - Added `sortValencyForEnglish()` to order recipient before theme
+  - Semantic structure in dictionary preserved (agent, theme, recipient)
+  - Surface order handled by renderer (recipient → theme)
+
+### Dictionary Additions
+- [x] Added `telescope`, `camera` (objects)
+- [x] Added `colorless` (color adjective)
+
 ### Japanese VP Coordination
 - [x] Basic VP coordination
   - and: テ形接続 (`食べて飲む`)

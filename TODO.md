@@ -60,6 +60,18 @@
   - 拡張名詞のAST生成対応
   - 英語レンダラー対応（辞書lookup: ベース→拡張）
 
+### 英語レンダラー修正
+- [x] Ditransitive語順修正（double object construction）
+  - 修正前: "He gives a green apple me"
+  - 修正後: "He gives me a green apple"
+  - `sortValencyForEnglish()` で recipient → theme 順にソート
+  - 辞書の意味構造（agent, theme, recipient）は維持
+  - 設計メモ: 受動態・使役態は構造変換レイヤーで対応予定
+
+### 辞書追加
+- [x] telescope, camera（object）
+- [x] colorless（color adjective）
+
 ## Future Enhancements
 
 ### Modality & Register

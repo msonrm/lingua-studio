@@ -752,13 +752,23 @@ Blockly.Blocks['determiner_unified'] = {
   init: function() {
     const block = this;
 
-    // 接続された名詞のプロパティを取得
+    // 接続された名詞のプロパティを取得（形容詞チェーンを辿る）
     const getConnectedNounInfo = (): { countable: boolean; proper: boolean; zeroArticle: boolean } | null => {
       const nounInput = block.getInput('NOUN');
       if (!nounInput) return null;
       const connection = nounInput.connection;
       if (!connection || !connection.targetBlock()) return null;
-      const targetBlock = connection.targetBlock();
+      let targetBlock = connection.targetBlock();
+      if (!targetBlock) return null;
+
+      // 形容詞ブロックのチェーンを辿って名詞ブロックを探す
+      while (targetBlock && targetBlock.type.startsWith('adjective_')) {
+        const adjNounInput = targetBlock.getInput('NOUN');
+        if (!adjNounInput || !adjNounInput.connection) {
+          return null; // 形容詞の先に何も接続されていない
+        }
+        targetBlock = adjNounInput.connection.targetBlock();
+      }
       if (!targetBlock) return null;
 
       const fieldMap: Record<string, string> = {

@@ -231,13 +231,26 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
         // 初期ブロックを配置: "I eat an apple."
         // sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))
 
-        // 1. time_frame (present+simple がデフォルト)
+        // 1. time_frame
         const sentenceBlock = workspace.newBlock('time_frame');
         sentenceBlock.initSvg();
         sentenceBlock.render();
         sentenceBlock.moveBy(50, 50);
 
-        // 2. verb_action (eat)
+        // 2. time_chip_unified (present + simple)
+        const timeChipBlock = workspace.newBlock('time_chip_unified');
+        timeChipBlock.setFieldValue('present', 'TENSE_VALUE');
+        timeChipBlock.setFieldValue('simple', 'ASPECT_VALUE');
+        timeChipBlock.initSvg();
+        timeChipBlock.render();
+
+        // TIME_CHIPをtime_frameに接続
+        const timeChipConnection = sentenceBlock.getInput('TIME_CHIP')?.connection;
+        if (timeChipConnection) {
+          timeChipConnection.connect(timeChipBlock.outputConnection);
+        }
+
+        // 3. verb_action (eat)
         const verbBlock = workspace.newBlock('verb_action');
         verbBlock.setFieldValue('eat', 'VERB');
         verbBlock.initSvg();

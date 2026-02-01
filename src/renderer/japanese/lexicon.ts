@@ -878,3 +878,85 @@ const NEGATIVE_POLARITY_ADVERBS = new Set([
 export function isNegativePolarityAdverb(lemma: string): boolean {
   return NEGATIVE_POLARITY_ADVERBS.has(lemma);
 }
+
+// ============================================
+// 前置詞の日本語マッピング（後置詞化）
+// ============================================
+
+/**
+ * 英語前置詞 → 日本語後置詞
+ * 日本語では前置詞が後置詞（格助詞・複合助詞）として機能する
+ * 例: "in the park" → "公園で"
+ */
+export const prepositionToJapanese: Record<string, string> = {
+  // 場所・位置
+  'in': 'で',           // in the park → 公園で
+  'at': 'で',           // at the station → 駅で
+  'on': 'の上に',       // on the table → テーブルの上に
+  'under': 'の下に',    // under the tree → 木の下に
+  'over': 'の上に',     // over the bridge → 橋の上に
+  'above': 'の上に',    // above the clouds → 雲の上に
+  'below': 'の下に',    // below the surface → 表面の下に
+  'between': 'の間に',  // between the trees → 木々の間に
+  'among': 'の中で',    // among friends → 友人の中で
+  'near': 'の近くに',   // near the house → 家の近くに
+  'beside': 'のそばに', // beside the river → 川のそばに
+  'behind': 'の後ろに', // behind the building → 建物の後ろに
+  'inside': 'の中に',   // inside the box → 箱の中に
+  'outside': 'の外に',  // outside the room → 部屋の外に
+  'around': 'の周りに', // around the city → 都市の周りに
+
+  // 方向・移動
+  'to': 'に',           // to school → 学校に
+  'into': 'の中に',     // into the room → 部屋の中に
+  'onto': 'の上に',     // onto the table → テーブルの上に
+  'from': 'から',       // from Tokyo → 東京から
+  'toward': 'に向かって', // toward the station → 駅に向かって
+  'towards': 'に向かって',
+  'through': 'を通って', // through the door → ドアを通って
+  'across': 'を横切って', // across the street → 通りを横切って
+  'along': 'に沿って',  // along the river → 川に沿って
+
+  // 手段・道具・同伴
+  'with': 'と',         // with a friend → 友達と
+  'by': 'で',           // by bus → バスで
+  'without': 'なしで',  // without help → 助けなしで
+
+  // 目的・対象・関係
+  'for': 'のために',    // for you → あなたのために
+  'about': 'について',  // about the book → 本について
+  'of': 'の',           // a cup of tea → お茶のカップ
+  'as': 'として',       // as a teacher → 先生として
+  'like': 'のように',   // like a bird → 鳥のように
+
+  // 時間
+  'before': 'の前に',   // before dinner → 夕食の前に
+  'after': 'の後に',    // after school → 学校の後に
+  'during': 'の間',     // during the meeting → 会議の間
+  'until': 'まで',      // until tomorrow → 明日まで
+  'till': 'まで',
+  'since': 'から',      // since yesterday → 昨日から
+};
+
+/**
+ * 前置詞を日本語後置詞に変換（見つからなければそのまま返す）
+ */
+export function translatePreposition(prep: string): string {
+  return prepositionToJapanese[prep] || prep;
+}
+
+/**
+ * 前置詞を連体修飾形（名詞を修飾する形）に変換
+ * 例: "on the table" → "テーブルの上の"（「テーブルの上に」ではなく）
+ */
+export function translatePrepositionAsModifier(prep: string): string {
+  const base = prepositionToJapanese[prep];
+  if (!base) return prep;
+
+  // 「〜に」「〜で」を「〜の」に変換（連体修飾化）
+  if (base.endsWith('に') || base.endsWith('で')) {
+    return base.slice(0, -1) + 'の';
+  }
+  // 「〜の間」「〜まで」などはそのまま「の」を付加
+  return base + 'の';
+}

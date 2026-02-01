@@ -19,6 +19,12 @@
   - Distributives: each → それぞれの, every → すべての, either → どちらかの, any → どんな
   - Compound quantifiers: a_few → いくつかの, a_little → 少しの, a_lot_of → たくさんの, etc.
   - Note: no/neither require special negation handling (deferred)
+- [x] Add prepositional phrase support
+  - Verb prepositional phrases: "go to the park" → "公園に行く"
+  - Noun prepositional modifiers: "the apple on the table" → "テーブルの上のりんご"
+  - Preposition to postposition mapping in lexicon.ts (30+ prepositions)
+  - `renderPrepositionalPhrase()` for verb modifiers
+  - `renderPrepositionalPhraseAsModifier()` for noun modifiers with 連体形
 
 ## 2026-01-31
 

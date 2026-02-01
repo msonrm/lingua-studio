@@ -28,6 +28,10 @@
 - [x] 複合量化詞・分配詞の日本語翻訳追加
   - 分配詞: each, every, either, any
   - 複合量化詞: a_few, a_little, a_lot_of, plenty_of, etc.
+- [x] 前置詞句サポート
+  - 動詞の前置詞句: "go to the park" → "公園に行く"
+  - 名詞の前置詞句修飾: "the apple on the table" → "テーブルの上のりんご"
+  - 前置詞→後置詞マッピング（in→で, to→に, from→から, with→と, etc.）
 - [ ] 否定限定詞（no, neither）の日本語対応
   - 限定詞の否定情報を動詞の polarity に伝播させる必要あり
   - 例: "no apples" → 「りんごがない」（動詞で否定）

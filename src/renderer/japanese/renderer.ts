@@ -21,8 +21,9 @@ import {
   CoordinationConjunct,
   SemanticRole,
   ModalType,
+  PrepositionalPhraseNode,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction } from './lexicon';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction, translatePreposition, translatePrepositionAsModifier } from './lexicon';
 import { conjugate, toTeForm, toNaideForm, Tense, Aspect, Polarity } from './conjugation';
 import { getVerbEntry } from './lexicon';
 import { findVerbCore } from '../../data/dictionary-core';
@@ -344,6 +345,9 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   // 副詞（日本語に変換）
   const adverbs = verbPhrase.adverbs.map(adv => translateAdverb(adv.lemma));
 
+  // 前置詞句（動詞修飾）
+  const prepPhrases = verbPhrase.prepositionalPhrases.map(pp => renderPrepositionalPhrase(pp));
+
   // 否定極性副詞（never, hardly, etc.）がある場合、動詞を否定形にする
   const hasNegativePolarityAdverb = verbPhrase.adverbs.some(adv => isNegativePolarityAdverb(adv.lemma));
   const effectivePolarity: Polarity = hasNegativePolarityAdverb ? 'negative' : polarity as Polarity;
@@ -380,6 +384,10 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   }
   for (const adv of adverbs) {
     result.push(adv);
+  }
+  // 前置詞句（動詞修飾）
+  for (const pp of prepPhrases) {
+    result.push(pp);
   }
 
   // VP等位接続を処理
@@ -468,6 +476,11 @@ function renderNounPhrase(np: NounPhraseNode): string {
     parts.push(translateAdjective(adj.lemma));
   }
 
+  // 前置詞句修飾（the book on the table → テーブルの上の本）
+  if (np.prepModifier) {
+    parts.push(renderPrepositionalPhraseAsModifier(np.prepModifier));
+  }
+
   // Head (noun or pronoun)
   if (np.head.type === 'noun') {
     const noun = np.head as NounHead;
@@ -500,6 +513,36 @@ function renderCoordinatedNounPhrase(cnp: CoordinatedNounPhraseNode): string {
   // 日本語: 接尾辞方式（「AとB」「AとBとC」「AかB」）
   const jaConj = translateConjunction(cnp.conjunction);
   return parts.join(jaConj);
+}
+
+// ============================================
+// Prepositional Phrase Rendering
+// ============================================
+
+/**
+ * 前置詞句をレンダリング（動詞修飾用）
+ * 英語: "in the park" → 日本語: "公園で"
+ * 語順: 名詞句 + 後置詞
+ */
+function renderPrepositionalPhrase(pp: PrepositionalPhraseNode): string {
+  const objectStr = pp.object.type === 'coordinatedNounPhrase'
+    ? renderCoordinatedNounPhrase(pp.object as CoordinatedNounPhraseNode)
+    : renderNounPhrase(pp.object as NounPhraseNode);
+  const postposition = translatePreposition(pp.preposition);
+  return `${objectStr}${postposition}`;
+}
+
+/**
+ * 前置詞句を連体修飾形でレンダリング（名詞修飾用）
+ * 英語: "the apple on the table" → 日本語: "テーブルの上のりんご"
+ * 語順: 名詞句 + 後置詞（連体形） + 被修飾名詞
+ */
+function renderPrepositionalPhraseAsModifier(pp: PrepositionalPhraseNode): string {
+  const objectStr = pp.object.type === 'coordinatedNounPhrase'
+    ? renderCoordinatedNounPhrase(pp.object as CoordinatedNounPhraseNode)
+    : renderNounPhrase(pp.object as NounPhraseNode);
+  const postposition = translatePrepositionAsModifier(pp.preposition);
+  return `${objectStr}${postposition}`;
 }
 
 // ============================================

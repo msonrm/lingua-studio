@@ -234,6 +234,21 @@ be(theme:'this, attribute:'my_book)
 ;; → "This is my book."
 ```
 
+### 程度修飾（Degree Modification）
+
+形容詞の程度を修飾するには `degree()` を使用する。
+
+```lisp
+be(theme:'she, attribute:degree('very, 'happy))
+;; → "She is very happy."
+
+be(theme:'he, attribute:degree('extremely, 'tired))
+;; → "He is extremely tired."
+
+;; 程度副詞の種類
+'very, 'extremely, 'quite, 'rather, 'fairly, 'really, 'somewhat
+```
+
 ### theme vs patient の使い分け
 
 ```lisp

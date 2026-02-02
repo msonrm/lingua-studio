@@ -40,19 +40,19 @@ future+perfectProgressive(...)  ;; 未来完了進行
 
 ### 意味注釈
 
-同じ表層形に対応する複数の意味を区別するため、`意味:表層形` の記法を使用する。
+同じ基本形に対応する複数の意味を区別するため、`意味:基本形` の記法を使用する。
 
 ```lisp
 ;; must は2つの意味を持つ
 modal(obligation:must, ...)   ;; 義務: 「〜しなければならない」
 modal(certainty:must, ...)    ;; 確信: 「〜に違いない」
 
-;; 時制により表層形が変化
-modal(ability:can, ...)       ;; 現在: can
-modal(ability:could, ...)     ;; 過去: could
-modal(volition:will, ...)     ;; 現在: will
-modal(volition:was_going_to, ...) ;; 過去: was going to
+;; will は2つの意味を持つ
+modal(volition:will, ...)     ;; 意志: 「〜するつもりだ」
+modal(prediction:will, ...)   ;; 予測: 「〜だろう」
 ```
+
+**注意**: 動詞・名詞と同様に、モダルも常に基本形のみを記述する。時制に応じた活用形（could, would 等）はレンダラーが生成する。
 
 ---
 
@@ -93,31 +93,33 @@ not(modal('obligation, ...))  ;; → 「〜しなくてもよい」（義務の�
 
 ### 3. 判断 modal（省略可）
 
-言語非依存の意味概念として8つのモダリティを定義する。`意味:表層形` 記法で出力される。
+言語非依存の意味概念として8つのモダリティを定義する。`意味:基本形` 記法で出力される。
 
 ```lisp
 modal(ability:can, ...)       ;; 能力: can
 modal(permission:may, ...)    ;; 許可: may
 modal(possibility:might, ...) ;; 可能性: might
 modal(obligation:must, ...)   ;; 義務: must
-modal(certainty:must, ...)    ;; 確信: must（obligationと同じ表層形だが意味が異なる）
+modal(certainty:must, ...)    ;; 確信: must（obligationと同じ基本形だが意味が異なる）
 modal(advice:should, ...)     ;; 助言: should
 modal(volition:will, ...)     ;; 意志: will
 modal(prediction:will, ...)   ;; 予測: will
 ```
 
-時制との連動により、適切な英語形式に変換される:
+**レンダラー参考**: 英語レンダラーは時制に応じて適切な活用形に変換する:
 
 | 意味概念 | 現在 | 過去 |
 |---------|------|------|
 | ability | can | could |
 | permission | may | could |
 | possibility | might | might |
-| obligation | must | had_to |
-| certainty | must | must_have |
-| advice | should | should_have |
-| volition | will | was_going_to |
+| obligation | must | had to |
+| certainty | must | must have |
+| advice | should | should have |
+| volition | will | was going to |
 | prediction | will | would |
+
+**注意**: この対応表はレンダラーの参考情報であり、LinguaScriptでは常に基本形（can, may, might, must, should, will）のみを使用する。
 
 ### 4. sentence()（必須）
 
@@ -230,6 +232,21 @@ be(theme:'she, attribute:'happy)
 
 be(theme:'this, attribute:'my_book)
 ;; → "This is my book."
+```
+
+### 程度修飾（Degree Modification）
+
+形容詞の程度を修飾するには `degree()` を使用する。
+
+```lisp
+be(theme:'she, attribute:degree('very, 'happy))
+;; → "She is very happy."
+
+be(theme:'he, attribute:degree('extremely, 'tired))
+;; → "He is extremely tired."
+
+;; 程度副詞の種類
+'very, 'extremely, 'quite, 'rather, 'fairly, 'really, 'somewhat
 ```
 
 ### theme vs patient の使い分け
@@ -1131,13 +1148,12 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
 ### 現行実装（モダリティ）
 
 ```bnf
-;; モダリティ（意味:表層形 記法）
-<modal>         ::= "modal(" <modal-type> ":" <surface-form> ", " <sentence> ")"
+;; モダリティ（意味:基本形 記法）
+;; 動詞・名詞と同様に基本形のみを使用（活用形はレンダラーが生成）
+<modal>         ::= "modal(" <modal-type> ":" <base-form> ", " <sentence> ")"
 <modal-type>    ::= "ability" | "permission" | "possibility" | "obligation"
                   | "certainty" | "advice" | "volition" | "prediction"
-<surface-form>  ::= "can" | "could" | "may" | "might" | "must" | "must_have"
-                  | "should" | "should_have" | "will" | "would"
-                  | "had_to" | "was_going_to"
+<base-form>     ::= "can" | "may" | "might" | "must" | "should" | "will"
 
 ;; モダリティの否定
 <neg-modal>     ::= "not(" <modal> ")"
@@ -1597,7 +1613,8 @@ sentence(present+simple(be(theme:'she, attribute:degree('very, 'happy))))
 modal(ability:can, sentence(present+simple(run(agent:'I))))
 
 ;; モダリティ + 過去: "I could run."
-modal(ability:could, sentence(past+simple(run(agent:'I))))
+;; 注意: LinguaScriptでは基本形のみ。レンダラーが時制に応じて could に変換
+modal(ability:can, sentence(past+simple(run(agent:'I))))
 
 ;; モダリティの否定: "I don't have to run."
 not(modal(obligation:must, sentence(present+simple(run(agent:'I)))))
@@ -1606,16 +1623,17 @@ not(modal(obligation:must, sentence(present+simple(run(agent:'I)))))
 ### 現行実装（モダリティ）
 
 ```lisp
-;; モダリティ（意味:表層形 記法）
+;; モダリティ（意味:基本形 記法）
+;; 動詞・名詞と同様に基本形のみを使用（活用形はレンダラーが生成）
 modal(ability:can, sentence(...))      ;; "I can run."
 modal(obligation:must, sentence(...))  ;; "I must run."
 modal(volition:will, sentence(...))    ;; "I will run."（意志）
 
-;; 時制連動（表層形が変化）
-modal(ability:could, sentence(past+simple(eat(...))))
+;; 過去時制でも基本形を使用（レンダラーが could, would 等に変換）
+modal(ability:can, sentence(past+simple(eat(...))))
 ;; → "I could eat."
 
-modal(volition:was_going_to, sentence(past+simple(eat(...))))
+modal(volition:will, sentence(past+simple(eat(...))))
 ;; → "I was going to eat."
 
 ;; モダリティの否定（義務なし）
@@ -1623,7 +1641,7 @@ not(modal(obligation:must, sentence(...)))
 ;; → "I don't have to run."（しなくてもよい）
 
 ;; 過去時制でのモダリティ否定
-time('yesterday, not(modal(obligation:had_to, sentence(past+simple(eat(...))))))
+time('yesterday, not(modal(obligation:must, sentence(past+simple(eat(...))))))
 ;; → "Yesterday, I didn't have to eat."
 ```
 

@@ -167,6 +167,18 @@
     - 代替案2: 付加詞として `?why` を単独で使用
     - 理由節（because...）との統一的な扱いが必要
   - 関連: Logic Extension の `because(cause:P, effect:Q)` と設計を統一すべき
+- [ ] 複数Wh疑問詞の in-situ 処理
+  - 仕様: 複数Wh語がある場合、最初の1つだけ文頭移動、残りは in-situ
+  - 例: `sentence(present+simple(locative(?where, run(agent:?who))))` → "Who runs where?"
+  - 現状: レンダラーに順序制御ロジックがない
+- [ ] 時制-相制約チェック（バリデーション）
+  - 仕様: 時間副詞と時制・相の適切性を検証
+  - 例: yesterday + present perfect は非文法的
+  - 現状: AST生成時に制約検証がない
+- [ ] 意味役割 instrument/beneficiary の活用検討
+  - 仕様では定義されているが、ほぼ未使用
+  - 現状: pp() with "with", "for" で代替
+  - 検討: 明示的な意味役割 vs 前置詞句の使い分け方針
 - [ ] 否定 + 頻度副詞 "never" の二重否定検出
   - `not(frequency('never, ...))` は論理的に二重否定
   - 警告表示 or 禁止の実装が必要

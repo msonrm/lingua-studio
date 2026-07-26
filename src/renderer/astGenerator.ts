@@ -17,21 +17,10 @@ import {
   ModalType,
   PropositionalOperator,
 } from '../types/schema';
-import { verbCores, pronounCores } from '../concepts';
-import { getExtVerbs } from '../userDictionary';
+import { findVerbCore, findPronounCore } from '../concepts';
 import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks';
 
-// ============================================
-// ヘルパー関数（dictionary-core.ts ベース + 拡張辞書）
-// ============================================
-const findVerbCore = (lemma: string) => {
-  // まずベース辞書を検索
-  const baseVerb = verbCores.find(v => v.lemma === lemma);
-  if (baseVerb) return baseVerb;
-  // なければ拡張辞書を検索
-  return getExtVerbs().find(v => v.lemma === lemma);
-};
-const findPronounCore = (lemma: string) => pronounCores.find(p => p.lemma === lemma);
+// concepts の lookup がベース辞書とユーザー辞書の両方を見る
 
 // ============================================
 // BlocklyワークスペースからAST生成

@@ -5,8 +5,11 @@
  */
 
 import * as Blockly from 'blockly';
-import type { VerbCategory, NounCategory } from '../types/schema';
-import { getExtVerbs, getExtNouns, addChangeListener as addDictChangeListener } from '../userDictionary';
+import type { VerbCategory, NounCategory, AdjectiveCategory } from '../types/schema';
+import {
+  getExtVerbs, getExtNouns, getExtAdjectives,
+  addChangeListener as addDictChangeListener,
+} from '../userDictionary';
 import { COLORS, msg } from './shared';
 import { VERB_CATEGORY_KEYS } from './verbs';
 
@@ -17,6 +20,7 @@ import { VERB_CATEGORY_KEYS } from './verbs';
 // 拡張動詞ブロックを登録済みかどうかを追跡
 const registeredExtVerbBlocks = new Set<string>();
 const registeredExtNounBlocks = new Set<string>();
+const registeredExtAdjectiveBlocks = new Set<string>();
 
 // 拡張動詞ブロックを生成（カテゴリ別）
 function createExtVerbCategoryBlock(category: VerbCategory) {
@@ -123,6 +127,42 @@ function createExtNounCategoryBlock(category: NounCategory) {
   registeredExtNounBlocks.add(blockType);
 }
 
+/**
+ * 拡張形容詞ブロックを生成（カテゴリ別）
+ *
+ * ベースの `adjective_<category>` と同じ形で、選択肢だけユーザー辞書から引く。
+ */
+function createExtAdjectiveCategoryBlock(category: AdjectiveCategory) {
+  const blockType = `adjective_${category}_ext`;
+
+  if (registeredExtAdjectiveBlocks.has(blockType)) {
+    return;
+  }
+
+  Blockly.Blocks[blockType] = {
+    init: function () {
+      this.appendValueInput('NOUN')
+        .setCheck(['noun', 'adjective'])
+        .appendField('+')
+        .appendField(
+          new Blockly.FieldDropdown(() => {
+            const current = getExtAdjectives().filter(a => a.category === category);
+            return current.length > 0
+              ? current.map(a => [a.lemma, a.lemma] as [string, string])
+              : ([['(empty)', '__empty__']] as [string, string][]);
+          }),
+          'ADJ_VALUE'
+        );
+
+      this.setOutput(true, 'adjective');
+      this.setColour(COLORS.adjective);
+      this.setTooltip(`User-defined ${category} adjective`);
+    },
+  };
+
+  registeredExtAdjectiveBlocks.add(blockType);
+}
+
 // 拡張辞書に単語があるカテゴリのブロックを登録
 function registerExtensionBlocks() {
   const extVerbs = getExtVerbs();
@@ -135,6 +175,14 @@ function registerExtensionBlocks() {
   // 名詞: 各カテゴリのブロックを登録
   const nounCategories = new Set(extNouns.map(n => n.category));
   nounCategories.forEach(cat => createExtNounCategoryBlock(cat as NounCategory));
+
+  // 形容詞: 各カテゴリのブロックを登録
+  const adjectiveCategories = new Set(getExtAdjectives().map(a => a.category));
+  adjectiveCategories.forEach(cat => createExtAdjectiveCategoryBlock(cat as AdjectiveCategory));
+
+  // 副詞は独立したブロックではなく、ラッパー（manner/frequency/…）の
+  // ドロップダウン項目として現れる。ドロップダウンは呼び出しのたびに
+  // ユーザー辞書を読むので、ここで登録する必要はない。
 }
 
 // 初期登録

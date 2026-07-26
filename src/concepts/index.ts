@@ -6,6 +6,7 @@
  */
 
 import { VerbCore, NounCore, PronounCore, AdjectiveCore, AdverbCore, VerbCategory, NounCategory, AdjectiveCategory } from '../types/schema';
+import { getExtVerbs, getExtNouns, getExtAdjectives, getExtAdverbs } from '../userDictionary';
 
 // ============================================
 // 動詞コア（意味論的カテゴリ別）
@@ -552,25 +553,31 @@ export const adverbCores: AdverbCore[] = [
 // ヘルパー関数
 //
 // 辞書モジュールの公開 API。品詞ごとに対称な形で揃えてある。
+//
+// ⚠ 概念（valency・可算性・カテゴリ）はユーザー辞書も持つので、
+//    lookup は「ベース辞書 → ユーザー辞書」の順で引く。
+//    ここを通さずに `verbCores.find(...)` を直接書くと、
+//    ユーザーが追加した語が見えず不具合になる。
 // 現時点で呼ばれていないものもあるが、消すと辞書データ側（比較級・複数形など）まで
 // 到達不能になり巻き添えで失われるため、`@public` を付けて knip の対象外にしている。
 // ============================================
 export const findVerbCore = (lemma: string): VerbCore | undefined =>
-  verbCores.find((v) => v.lemma === lemma);
+  verbCores.find((v) => v.lemma === lemma) ?? getExtVerbs().find((v) => v.lemma === lemma);
 
 export const findNounCore = (lemma: string): NounCore | undefined =>
-  nounCores.find((n) => n.lemma === lemma);
+  nounCores.find((n) => n.lemma === lemma) ?? getExtNouns().find((n) => n.lemma === lemma);
 
 export const findPronounCore = (lemma: string): PronounCore | undefined =>
   pronounCores.find((p) => p.lemma === lemma);
 
 /** @public 辞書 API の対称性のために保持 */
 export const findAdjectiveCore = (lemma: string): AdjectiveCore | undefined =>
-  adjectiveCores.find((a) => a.lemma === lemma);
+  adjectiveCores.find((a) => a.lemma === lemma) ??
+  getExtAdjectives().find((a) => a.lemma === lemma);
 
 /** @public 辞書 API の対称性のために保持 */
 export const findAdverbCore = (lemma: string): AdverbCore | undefined =>
-  adverbCores.find((a) => a.lemma === lemma);
+  adverbCores.find((a) => a.lemma === lemma) ?? getExtAdverbs().find((a) => a.lemma === lemma);
 
 export const getVerbCoresByCategory = (category: VerbCategory): VerbCore[] =>
   verbCores.filter((v) => v.category === category);

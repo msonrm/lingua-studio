@@ -117,9 +117,9 @@ const verbWrappers: WorkspaceCase[] = [
   {
     name: 'ラッパー: manner（ラベル行は labelValidator が弾く）',
     note:
-      'ラベル行（__ 始まり）を setFieldValue しても definitions.ts の labelValidator が\n' +
+      'ラベル行（__ 始まり）を setFieldValue しても blocks/shared.ts の labelValidator が\n' +
       '変更を拒否するため、フィールドはデフォルト値（quickly）のまま。\n' +
-      'つまり parseAdverbWrapper の skipLabelRows 分岐は UI 経由では到達しない防御的コード。',
+      'ワークスペースのデシリアライズ経由でも同じく弾かれる（下の回帰テスト参照）。',
     spec: timeFrame('current', {
       type: 'manner_wrapper',
       fields: { MANNER_VALUE: '__label_common__' },
@@ -519,6 +519,37 @@ describe('astGenerator の不変条件', () => {
       expect(describeCoordination(ast.clause.verbPhrase)).toBe('and(eat, drink, build)');
     } finally {
       ws.dispose();
+    }
+  });
+
+  it('ラベル行はデシリアライズ経由でも弾かれる（回帰テスト）', async () => {
+    // parseAdverbWrapper にラベル行の分岐を持たせない根拠。
+    // labelValidator が setFieldValue とワークスペース復元の両方を守っている。
+    const { serialization, Workspace } = await import('blockly');
+    const ws = await buildWorkspace(
+      timeFrame('current', {
+        type: 'manner_wrapper',
+        fields: { MANNER_VALUE: 'quickly' },
+        inputs: { VERB: runVerb() },
+      })
+    );
+    const state = serialization.workspaces.save(ws);
+    ws.dispose();
+
+    // JSON を直接書き換えてラベル行を仕込む（バリデータを経由しない経路）
+    const tampered = JSON.parse(
+      JSON.stringify(state).replace('"MANNER_VALUE":"quickly"', '"MANNER_VALUE":"__label_common__"')
+    );
+    const restored = new Workspace();
+    serialization.workspaces.load(tampered, restored);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    try {
+      const block = restored.getBlocksByType('manner_wrapper', false)[0];
+      expect(block.getFieldValue('MANNER_VALUE')).toBe('quickly');
+      expect(renderToEnglishWithLogs(generateMultipleAST(restored)[0]).output).toBe('I run quickly.');
+    } finally {
+      restored.dispose();
     }
   });
 

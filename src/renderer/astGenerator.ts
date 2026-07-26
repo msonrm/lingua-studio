@@ -457,9 +457,14 @@ interface AdverbWrapperSpec {
   field: string;
   /** フィールド値から副詞の種類と格納先を決める（Wh副詞は値によって変わる） */
   resolve: (value: string) => { advType: AdverbNode['advType']; target: AdverbTarget };
-  /** ドロップダウンのラベル行（`__` 始まり）を選んだとき、副詞を足さず素通しするか */
-  skipLabelRows: boolean;
 }
+
+/**
+ * ⚠ ドロップダウンのラベル行（`__label_` 始まり）はここには来ない。
+ *    `blocks/shared.ts` の `labelValidator` が選択を拒否しており、
+ *    `setFieldValue` 経由でもワークスペースのデシリアライズ経由でも値が入らない
+ *    （`astGenerator.test.ts` で両方確認済み）。
+ */
 
 /** ?where / ?when / ?how を対応する副詞の種類に振り分ける */
 function resolveWhAdverb(value: string): { advType: AdverbNode['advType']; target: AdverbTarget } {
@@ -478,27 +483,22 @@ const ADVERB_WRAPPERS: Record<string, AdverbWrapperSpec> = {
   frequency_wrapper: {
     field: 'FREQ_VALUE',
     resolve: () => ({ advType: 'frequency', target: 'frequencyAdverbs' }),
-    skipLabelRows: false,
   },
   manner_wrapper: {
     field: 'MANNER_VALUE',
     resolve: () => ({ advType: 'manner', target: 'mannerAdverbs' }),
-    skipLabelRows: true,
   },
   locative_wrapper: {
     field: 'LOCATIVE_VALUE',
     resolve: () => ({ advType: 'place', target: 'locativeAdverbs' }),
-    skipLabelRows: true,
   },
   time_adverb_wrapper: {
     field: 'TIME_ADVERB_VALUE',
     resolve: () => ({ advType: 'time', target: 'timeAdverbs' }),
-    skipLabelRows: true,
   },
   wh_adverb_block: {
     field: 'WH_ADVERB_VALUE',
     resolve: resolveWhAdverb,
-    skipLabelRows: false,
   },
 };
 
@@ -526,12 +526,6 @@ function parseAdverbWrapper(
   spec: AdverbWrapperSpec
 ): VerbChainResult | null {
   const value = block.getFieldValue(spec.field) as string;
-
-  // ラベル行が選ばれている場合は副詞として扱わず、内側をそのまま返す
-  if (spec.skipLabelRows && value?.startsWith('__')) {
-    return parseInnerChain(block, 'VERB');
-  }
-
   const inner = parseInnerChain(block, 'VERB');
   if (!inner) {
     return null;

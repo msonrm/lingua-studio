@@ -479,7 +479,7 @@ exports[`'動詞句' > '動詞句: 繋辞（be + 形容詞 + モダリティ）'
 
 exports[`'動詞句' > '動詞句: 繋辞（be + 形容詞 + 程度副詞）' 1`] = `
 {
-  "en": "I am happy.",
+  "en": "I am very happy.",
   "ja": "私はとても幸せである。",
   "logs": [],
   "ls": "sentence(present+simple(be(theme:'I, attribute:degree('very, 'happy))))",

@@ -402,10 +402,9 @@ const verbPhrases: RenderCase[] = [
     name: '動詞句: 繋辞（be + 形容詞 + 程度副詞）',
     ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('happy', 'very'))])),
     note:
-      'AdjectivePhraseNode.degree は astGenerator が生成しないため UI からは到達不能。' +
-      '消費しているのは linguaScriptRenderer だけで、英語レンダラーは degree を無視する' +
-      '（EN が "I am happy." になり very が落ちる）。' +
-      'スキーマとレンダラーの不整合。ブロックを用意する際は英語側の対応も必要。',
+      'AdjectivePhraseNode.degree は astGenerator が生成しないため現状 UI からは到達不能だが、' +
+      '3つのレンダラー（英語 / 日本語 / LinguaScript）すべてが扱えるようにしてある。' +
+      '程度副詞ブロックを追加すればそのまま動く。',
   },
   {
     name: '動詞句: 繋辞（be + 形容詞 + モダリティ）',

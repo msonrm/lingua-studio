@@ -30,14 +30,25 @@ describe('言語パックの契約', () => {
     expect(pack.lookupAdverb('__no_such_adverb__')).toBeUndefined();
   });
 
-  it.each(languagePacks)('$name: ユーザー辞書の入力項目を宣言している', pack => {
-    expect(pack.userEntryFields.length).toBeGreaterThan(0);
-    for (const field of pack.userEntryFields) {
-      expect(field.key).toBeTruthy();
-      expect(field.label).toBeTruthy();
-      if (field.kind === 'select') {
-        expect(field.options?.length).toBeGreaterThan(0);
+  it.each(languagePacks)('$name: 品詞ごとの入力項目を宣言している', pack => {
+    const partsOfSpeech = ['verb', 'noun', 'adjective', 'adverb'] as const;
+    for (const part of partsOfSpeech) {
+      const fields = pack.userEntryFields[part];
+      expect(fields, `${pack.code}.${part}`).toBeDefined();
+      for (const field of fields) {
+        expect(field.key).toBeTruthy();
+        expect(field.label).toBeTruthy();
+        if (field.kind === 'select') {
+          expect(field.options?.length).toBeGreaterThan(0);
+        }
       }
+    }
+  });
+
+  it.each(languagePacks)('$name: 同じ品詞の中でキーが重複していない', pack => {
+    for (const fields of Object.values(pack.userEntryFields)) {
+      const keys = fields.map(f => f.key);
+      expect(new Set(keys).size).toBe(keys.length);
     }
   });
 
@@ -60,7 +71,7 @@ describe('言語ごとの語形の違い', () => {
     expect(japanese.lookupVerb('run')).toEqual({ ja: '走る', type: 'godan' });
     expect(japanese.lookupVerb('eat')).toEqual({ ja: '食べる', type: 'ichidan' });
 
-    const verbTypeField = japanese.userEntryFields.find(f => f.key === 'verbType');
+    const verbTypeField = japanese.userEntryFields.verb.find(f => f.key === 'verbType');
     expect(verbTypeField?.required).toBe(true);
     expect(verbTypeField?.kind).toBe('select');
   });

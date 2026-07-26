@@ -10,6 +10,8 @@ import {
   type DictionaryPackage,
 } from '../userDictionary';
 import type { VerbCategory, NounCategory, AdjectiveCategory } from '../types/schema';
+import type { LanguageFormValues } from '../userDictionary';
+import { LanguageFormFields, findMissingRequiredFields } from './LanguageFormFields';
 
 type WordType = 'verb' | 'noun' | 'adjective' | 'adverb';
 
@@ -40,6 +42,30 @@ export function DictionaryPanel() {
   const [newCategory, setNewCategory] = useState<string>('action');
   const [newValencyPattern, setNewValencyPattern] = useState<'intransitive' | 'transitive' | 'ditransitive'>('transitive');
   const [newCountable, setNewCountable] = useState(true);
+  /** 言語コード → 入力値。言語パックの userEntryFields から動的に集める */
+  const [newForms, setNewForms] = useState<Record<string, LanguageFormValues>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const updateForm = (languageCode: string, key: string, value: string) => {
+    setNewForms(prev => ({
+      ...prev,
+      [languageCode]: { ...prev[languageCode], [key]: value },
+    }));
+  };
+
+  /** 入力された語形を保存用に整える（空欄は捨てる） */
+  const collectForms = (fallbackEn: LanguageFormValues) => {
+    const forms: Record<string, LanguageFormValues> = {};
+    for (const [code, values] of Object.entries(newForms)) {
+      const filled = Object.fromEntries(
+        Object.entries(values).filter(([, v]) => v.trim() !== '')
+      );
+      if (Object.keys(filled).length > 0) forms[code] = filled;
+    }
+    // 英語は未入力なら規則変化から補う
+    if (!forms.en && Object.keys(fallbackEn).length > 0) forms.en = fallbackEn;
+    return forms;
+  };
 
   // Listen for changes
   useEffect(() => {
@@ -102,6 +128,14 @@ export function DictionaryPanel() {
   const handleAdd = () => {
     if (!newLemma.trim()) return;
 
+    // 入力を始めた言語については必須項目を満たしていること
+    const missing = findMissingRequiredFields(newWordType, newForms);
+    if (missing.length > 0) {
+      setFormError(missing.map(m => `${m.languageCode}: ${m.field.key}`).join(', '));
+      return;
+    }
+    setFormError(null);
+
     const lemma = newLemma.trim().toLowerCase();
     let success = false;
 
@@ -112,7 +146,7 @@ export function DictionaryPanel() {
           type: 'action',
           category: newCategory as VerbCategory,
           valency: defaultValencyPatterns[newValencyPattern],
-          forms: { en: generateVerbForms(lemma) },
+          forms: collectForms(generateVerbForms(lemma)),
         });
         break;
       case 'noun':
@@ -120,27 +154,28 @@ export function DictionaryPanel() {
           lemma,
           category: newCategory as NounCategory,
           countable: newCountable,
-          forms: { en: { plural: generateNounPlural(lemma) } },
+          forms: collectForms({ plural: generateNounPlural(lemma) }),
         });
         break;
       case 'adjective':
         success = addAdjective({
           lemma,
           category: newCategory as AdjectiveCategory,
-          forms: {},
+          forms: collectForms({}),
         });
         break;
       case 'adverb':
         success = addAdverb({
           lemma,
           type: newCategory as 'manner' | 'frequency' | 'degree' | 'time' | 'place',
-          forms: {},
+          forms: collectForms({}),
         });
         break;
     }
 
     if (success) {
       setNewLemma('');
+      setNewForms({});
       setShowAddForm(false);
     }
   };
@@ -349,6 +384,15 @@ export function DictionaryPanel() {
               </label>
             </div>
           )}
+
+          {/* 言語別の入力欄。言語パックの userEntryFields から動的に生成される */}
+          <LanguageFormFields
+            partOfSpeech={newWordType}
+            values={newForms}
+            onChange={updateForm}
+          />
+
+          {formError && <div className="dict-form-error">{formError}</div>}
 
           <div className="dict-form-row">
             <button className="dict-btn dict-btn-submit" onClick={handleAdd}>

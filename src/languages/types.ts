@@ -46,6 +46,9 @@ export interface UserEntryField {
   placeholder?: string;
 }
 
+/** 品詞 */
+export type PartOfSpeech = 'verb' | 'noun' | 'adjective' | 'adverb';
+
 /** 語形の集合。言語ごとに中身の型が異なる */
 export interface LanguageForms {
   verb: unknown;
@@ -72,10 +75,10 @@ export interface LanguagePack<Forms extends LanguageForms> {
   lookupAdverb(lemma: string): Forms['adverb'] | undefined;
 
   /**
-   * ユーザー辞書に語を追加するときの入力項目
+   * ユーザー辞書に語を追加するときの入力項目（品詞ごと）
    *
-   * 言語パックを後から追加すると、既存のユーザー辞書にはその言語の語形がない。
-   * `DictionaryPanel` はここを見て「未登録の語」を一覧し、埋める欄を出す。
+   * `DictionaryPanel` はここを見て入力欄を動的に描く。
+   * 言語パックを後から追加しても UI 側を書き足さずに済む。
    */
-  userEntryFields: UserEntryField[];
+  userEntryFields: Record<PartOfSpeech, UserEntryField[]>;
 }

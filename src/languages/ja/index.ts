@@ -4,7 +4,7 @@
  * 語彙（`lexicon.ts`）と形態論（`morphology.ts`）をまとめ、レンダラーへ供給する。
  */
 
-import type { LanguagePack, LanguageForms, UserEntryField } from '../types';
+import type { LanguagePack, LanguageForms, UserEntryField, PartOfSpeech } from '../types';
 import {
   getVerbEntry,
   translateNoun,
@@ -32,27 +32,35 @@ export interface JapaneseForms extends LanguageForms {
  *    走る（五段）と食べる（一段）は語尾が同じ「る」だが活用が違う。
  *    英語のように「空欄なら規則変化から導出」という逃げ道がない。
  */
-const userEntryFields: UserEntryField[] = [
-  {
-    key: 'ja',
-    label: 'DICT_FIELD_JA',
-    kind: 'text',
-    required: true,
-    placeholder: '準備する',
-  },
-  {
-    key: 'verbType',
-    label: 'DICT_FIELD_JA_VERB_TYPE',
-    kind: 'select',
-    required: true,
-    options: [
-      { value: 'godan', label: '五段（走る・書く）' },
-      { value: 'ichidan', label: '一段（食べる・見る）' },
-      { value: 'suru', label: 'サ変（〜する）' },
-      { value: 'kuru', label: 'カ変（来る）' },
-    ],
-  },
-];
+const translation = (placeholder: string): UserEntryField => ({
+  key: 'ja',
+  label: 'DICT_FIELD_JA',
+  kind: 'text',
+  required: true,
+  placeholder,
+});
+
+const userEntryFields: Record<PartOfSpeech, UserEntryField[]> = {
+  verb: [
+    translation('準備する'),
+    {
+      key: 'verbType',
+      label: 'DICT_FIELD_JA_VERB_TYPE',
+      kind: 'select',
+      required: true,
+      options: [
+        { value: 'godan', label: '五段（走る・書く）' },
+        { value: 'ichidan', label: '一段（食べる・見る）' },
+        { value: 'suru', label: 'サ変（〜する）' },
+        { value: 'kuru', label: 'カ変（来る）' },
+      ],
+    },
+  ],
+  // 活用しない品詞は訳語だけでよい。形容詞は連体形で入れてもらう
+  noun: [translation('ノート')],
+  adjective: [translation('きちんとした')],
+  adverb: [translation('きちんと')],
+};
 
 /**
  * ベース辞書 → ユーザー辞書 の順で引く

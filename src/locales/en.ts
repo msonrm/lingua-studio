@@ -266,6 +266,15 @@ export const en: LocaleData = {
     DICT_DITRANS: 'Ditransitive (3 args)',
     DICT_COUNTABLE: 'Countable',
     DICT_ADD: 'Add',
+    DICT_FIELD_PAST: 'Past',
+    DICT_FIELD_PP: 'Past participle',
+    DICT_FIELD_ING: '-ing',
+    DICT_FIELD_S: '3rd person -s',
+    DICT_FIELD_PLURAL: 'Plural',
+    DICT_FIELD_COMPARATIVE: 'Comparative',
+    DICT_FIELD_SUPERLATIVE: 'Superlative',
+    DICT_FIELD_JA: 'Japanese',
+    DICT_FIELD_JA_VERB_TYPE: 'Conjugation type',
   },
   ui: {
     // Header

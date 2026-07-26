@@ -4,6 +4,35 @@
 
 ## 2026-07-27
 
+### ユーザー辞書の入力欄を言語パックから動的生成（第3段階）
+
+`DictionaryPanel` の入力欄を、言語パックの `userEntryFields` から組み立てるようにした。
+**言語を追加しても UI 側を書き足す必要がない。**
+
+- [x] `LanguageFormFields` コンポーネントを追加
+  - 登録済みの言語パックを回り、品詞に応じた入力欄を出す
+  - `kind: 'select'` はプルダウン、`required` は必須マーク（*）
+- [x] `userEntryFields` を品詞ごとに分けた（`Record<PartOfSpeech, UserEntryField[]>`）
+  - 以前は動詞と名詞の項目が1つの配列に混在していた
+- [x] 入力を始めた言語については必須項目の充足を検証する
+  - 一切入力していない言語はスキップ（後から埋められる）
+- [x] 英語の活用形は未入力なら規則変化から補う（プレースホルダーで導出結果を示す）
+- [x] ロケールキー9件を3ロケールに追加
+
+ブラウザで動作を確認した。
+
+```
+言語見出し: ["English", "日本語"]
+入力欄:     ["Past", "Past participle", "-ing", "3rd person -s",
+             "Japanese*", "Conjugation type*"]
+
+保存結果: forms: { ja: {ja:"準備する", verbType:"suru"},
+                   en: {past:"prepared", pp:"prepared", ing:"preparing", s:"prepares"} }
+```
+
+追加した語はツールボックスに `ACTION+prepare` として現れ、
+英語・日本語とも正しく活用される（`I prepared.` / `私は準備した。`）。
+
 ### ユーザー辞書の保存形式を刷新し、日本語に配線（第2段階）
 
 #### 直した問題

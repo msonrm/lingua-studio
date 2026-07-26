@@ -266,6 +266,15 @@ export const ja: LocaleData = {
     DICT_DITRANS: '二重他動詞（3項）',
     DICT_COUNTABLE: '可算',
     DICT_ADD: '追加',
+    DICT_FIELD_PAST: '過去形',
+    DICT_FIELD_PP: '過去分詞',
+    DICT_FIELD_ING: '-ing 形',
+    DICT_FIELD_S: '三単現',
+    DICT_FIELD_PLURAL: '複数形',
+    DICT_FIELD_COMPARATIVE: '比較級',
+    DICT_FIELD_SUPERLATIVE: '最上級',
+    DICT_FIELD_JA: '日本語訳',
+    DICT_FIELD_JA_VERB_TYPE: '活用タイプ',
   },
   ui: {
     // Header

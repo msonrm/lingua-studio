@@ -6,4 +6,4 @@
  */
 
 export * from './store';
-export { STORAGE_VERSION, migratePackage } from './format';
+export { STORAGE_VERSION, migratePackage, type LanguageFormValues } from './format';

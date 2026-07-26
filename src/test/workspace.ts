@@ -36,7 +36,7 @@ function connect(parent: Blockly.Block, inputName: string, child: Blockly.Block)
 }
 
 /** BlockSpec からブロック木を生成する */
-export function buildBlock(ws: Blockly.Workspace, spec: BlockSpec): Blockly.Block {
+function buildBlock(ws: Blockly.Workspace, spec: BlockSpec): Blockly.Block {
   const block = ws.newBlock(spec.type);
 
   for (const [name, value] of Object.entries(spec.fields ?? {})) {
@@ -57,7 +57,7 @@ export function buildBlock(ws: Blockly.Workspace, spec: BlockSpec): Blockly.Bloc
  * Blockly のイベントキューをフラッシュする。
  * `determiner_unified` の限定詞自動補正など、onchange 依存の挙動を反映させるために必要。
  */
-export function flushBlocklyEvents(): Promise<void> {
+function flushBlocklyEvents(): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, 10));
 }
 
@@ -82,7 +82,7 @@ export const pronoun = (lemma: string): BlockSpec => ({
 });
 
 /** 限定詞つきの名詞（DET の値は自動補正に任せる） */
-export const detNoun = (blockType: string, fieldName: string, lemma: string): BlockSpec => ({
+const detNoun = (blockType: string, fieldName: string, lemma: string): BlockSpec => ({
   type: 'determiner_unified',
   inputs: { NOUN: { type: blockType, fields: { [fieldName]: lemma } } },
 });

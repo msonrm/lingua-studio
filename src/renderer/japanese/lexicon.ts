@@ -19,7 +19,7 @@ export type Particle = 'は' | 'が' | 'を' | 'に' | 'で' | 'から' | 'ま�
  * 意味役割から格助詞へのデフォルトマッピング
  * 注意: 主語かどうかは動詞のvalencyで動的に決定
  */
-export const roleToParticleDefault: Partial<Record<SemanticRole, Particle>> = {
+const roleToParticleDefault: Partial<Record<SemanticRole, Particle>> = {
   // 対格（目的語）
   patient: 'を',
   theme: 'を',
@@ -49,7 +49,7 @@ const SUBJECT_ROLES: SemanticRole[] = ['agent', 'experiencer', 'possessor', 'the
  * @param verbLemma 動詞の原形
  * @returns 主語役割（見つからなければundefined）
  */
-export function getSubjectRole(verbLemma: string): SemanticRole | undefined {
+function getSubjectRole(verbLemma: string): SemanticRole | undefined {
   const verbCore = verbCores.find(v => v.lemma === verbLemma);
   if (!verbCore) return 'agent'; // デフォルト
 
@@ -88,7 +88,7 @@ export function getParticle(role: SemanticRole, verbLemma: string): Particle | u
 /**
  * 英語代名詞 → 日本語
  */
-export const pronounToJapanese: Record<string, string> = {
+const pronounToJapanese: Record<string, string> = {
   // 人称代名詞
   'I': '私',
   'you': 'あなた',
@@ -151,7 +151,7 @@ export function translatePronoun(lemma: string): string {
  * - 分配詞: each, every, either, any
  * - 複合量化詞: a few, a little, a lot of, etc.
  */
-export const possessiveToJapanese: Record<string, string> = {
+const possessiveToJapanese: Record<string, string> = {
   // 所有格
   'my': '私の',
   'your': 'あなたの',
@@ -185,7 +185,7 @@ export const possessiveToJapanese: Record<string, string> = {
 /**
  * Pre-determiner（前限定詞）の日本語マッピング
  */
-export const preDeterminerToJapanese: Record<string, string> = {
+const preDeterminerToJapanese: Record<string, string> = {
   'all': 'すべての',
   'both': '両方の',
   'half': '半分の',
@@ -194,7 +194,7 @@ export const preDeterminerToJapanese: Record<string, string> = {
 /**
  * Post-determiner（後限定詞・数量詞）の日本語マッピング
  */
-export const postDeterminerToJapanese: Record<string, string> = {
+const postDeterminerToJapanese: Record<string, string> = {
   'many': 'たくさんの',
   'few': '少しの',
   'some': 'いくつかの',
@@ -247,7 +247,7 @@ export function translatePostDeterminer(det: string): string {
 /**
  * 英語名詞 → 日本語
  */
-export const nounToJapanese: Record<string, string> = {
+const nounToJapanese: Record<string, string> = {
   // Human - Family
   'father': '父',
   'mother': '母',
@@ -416,7 +416,7 @@ export function translateNoun(lemma: string): string {
  * - suru: サ変動詞（〜する）
  * - kuru: カ変動詞（来る）
  */
-export type VerbType = 'godan' | 'ichidan' | 'suru' | 'kuru';
+type VerbType = 'godan' | 'ichidan' | 'suru' | 'kuru';
 
 /**
  * 動詞エントリ
@@ -429,7 +429,7 @@ export interface VerbEntry {
 /**
  * 英語動詞 → 日本語（辞書形 + 活用タイプ）
  */
-export const verbToJapanese: Record<string, VerbEntry> = {
+const verbToJapanese: Record<string, VerbEntry> = {
   // Motion（移動）
   'run': { ja: '走る', type: 'godan' },
   'walk': { ja: '歩く', type: 'godan' },
@@ -556,7 +556,7 @@ export function getVerbEntry(lemma: string): VerbEntry {
 /**
  * 英語形容詞 → 日本語
  */
-export const adjectiveToJapanese: Record<string, string> = {
+const adjectiveToJapanese: Record<string, string> = {
   // Size（大きさ）
   'big': '大きい',
   'small': '小さい',
@@ -726,7 +726,7 @@ export function translateAdjective(lemma: string): string {
  * - `na` : ナ形容詞・ノ形容詞（幸せな、本当の）。述語では語幹 + である
  * - `other`: 動詞由来など（疲れた、同じ）。ナ形容詞と同じく である を付ける
  */
-export type JapaneseAdjectiveType = 'i' | 'na' | 'other';
+type JapaneseAdjectiveType = 'i' | 'na' | 'other';
 
 export interface JapaneseAdjectiveForm {
   /** 連体形（名詞修飾で使う形。「幸せな」「悲しい」） */
@@ -771,7 +771,7 @@ export function analyzeAdjective(lemma: string): JapaneseAdjectiveForm {
 /**
  * 英語副詞 → 日本語
  */
-export const adverbToJapanese: Record<string, string> = {
+const adverbToJapanese: Record<string, string> = {
   // Manner（様態）
   'quickly': '速く',
   'slowly': 'ゆっくりと',
@@ -895,7 +895,7 @@ export function translateAdverb(lemma: string): string {
  * 等位接続詞 → 日本語
  * 日本語では接尾辞型で使用（「AとB」「AかB」）
  */
-export const conjunctionToJapanese: Record<string, string> = {
+const conjunctionToJapanese: Record<string, string> = {
   'and': 'と',
   'or': 'か',
 };
@@ -936,7 +936,7 @@ export function isNegativePolarityAdverb(lemma: string): boolean {
  * 日本語では前置詞が後置詞（格助詞・複合助詞）として機能する
  * 例: "in the park" → "公園で"
  */
-export const prepositionToJapanese: Record<string, string> = {
+const prepositionToJapanese: Record<string, string> = {
   // 場所・位置
   'in': 'で',           // in the park → 公園で
   'at': 'で',           // at the station → 駅で

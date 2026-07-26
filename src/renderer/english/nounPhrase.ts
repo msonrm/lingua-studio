@@ -19,8 +19,8 @@ import { renderCoordinationUnified, CoordElement } from './coordination';
 // Types
 // ============================================
 
-export type NumberValue = 'singular' | 'plural';
-export type Polarity = 'affirmative' | 'negative';
+type NumberValue = 'singular' | 'plural';
+type Polarity = 'affirmative' | 'negative';
 
 /** 名詞句レンダリングコンテキスト */
 export interface NounPhraseContext {
@@ -31,7 +31,7 @@ export interface NounPhraseContext {
 }
 
 /** 変形記録 */
-export interface Transform {
+interface Transform {
   type: TransformationType;
   from: string;
   to: string;

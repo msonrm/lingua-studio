@@ -1,5 +1,8 @@
 import * as Blockly from 'blockly';
-import { nounCores, adjectiveCores, adverbCores, pronounCores, verbCores } from '../data/dictionary-core';
+import {
+  nounCores, adverbCores, pronounCores,
+  findNounCore, getVerbCoresByCategory, getNounCoresByCategory, getAdjectiveCoresByCategory,
+} from '../data/dictionary-core';
 import type { VerbCategory, NounCategory, AdjectiveCategory } from '../types/schema';
 import {
   getExtVerbs, getExtNouns,
@@ -15,12 +18,6 @@ import {
   type NounType,
   type DeterminerOption,
 } from './det-rules-en';
-
-// ============================================
-// ヘルパー関数（dictionary-core.ts ベース）
-// ============================================
-const findNounCore = (lemma: string) => nounCores.find(n => n.lemma === lemma);
-const getVerbCoresByCategory = (category: VerbCategory) => verbCores.filter(v => v.category === category);
 
 // ============================================
 // ドロップダウンラベル用バリデーター
@@ -649,7 +646,7 @@ Blockly.Blocks['human_block'] = {
 // ============================================
 // 動物ブロック (animal)
 // ============================================
-const animalNouns = nounCores.filter(n => n.category === 'animal');
+const animalNouns = getNounCoresByCategory('animal');
 
 Blockly.Blocks['animal_block'] = {
   init: function() {
@@ -670,7 +667,7 @@ Blockly.Blocks['animal_block'] = {
 // ============================================
 // 物体ブロック (object)
 // ============================================
-const objectNouns = nounCores.filter(n => n.category === 'object');
+const objectNouns = getNounCoresByCategory('object');
 
 Blockly.Blocks['object_block'] = {
   init: function() {
@@ -727,7 +724,7 @@ Blockly.Blocks['place_block'] = {
 // ============================================
 // 抽象概念ブロック (abstract)
 // ============================================
-const abstractNouns = nounCores.filter(n => n.category === 'abstract');
+const abstractNouns = getNounCoresByCategory('abstract');
 
 Blockly.Blocks['abstract_block'] = {
   init: function() {
@@ -982,7 +979,7 @@ const ADJECTIVE_CATEGORY_KEYS: Record<AdjectiveCategory, { msgKey: string; fallb
 // カテゴリ別形容詞ブロック生成関数
 function createAdjectiveCategoryBlock(category: AdjectiveCategory) {
   const config = ADJECTIVE_CATEGORY_KEYS[category];
-  const categoryAdjs = adjectiveCores.filter(a => a.category === category);
+  const categoryAdjs = getAdjectiveCoresByCategory(category);
 
   Blockly.Blocks[`adjective_${category}`] = {
     init: function() {
@@ -1503,9 +1500,7 @@ export const DETERMINER_DATA = {
   post: getPostDeterminers(),
 };
 
-export const FREQUENCY_ADVERB_DATA = FREQUENCY_ADVERBS;
 
-export const PREPOSITION_DATA = PREPOSITIONS;
 
 // ============================================
 // ツールボックス用ヘルパー関数
@@ -1706,6 +1701,3 @@ export function createToolbox() {
     ]
   };
 }
-
-// 後方互換性のための静的エクスポート（非推奨）
-export const toolbox = createToolbox();

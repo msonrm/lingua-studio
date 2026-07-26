@@ -115,7 +115,7 @@ function notifyChange(): void {
 // ストレージ操作
 // ============================================
 
-export function loadFromStorage(): void {
+function loadFromStorage(): void {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) {
@@ -131,7 +131,7 @@ export function loadFromStorage(): void {
   }
 }
 
-export function saveToStorage(): void {
+function saveToStorage(): void {
   try {
     const data: DictionaryPackage = {
       name: 'user-dictionary',
@@ -387,6 +387,7 @@ export function getExtWordCount(): number {
 // 全クリア
 // ============================================
 
+/** @public 辞書 API の対称性のために保持（削除すると辞書データが到達不能になる） */
 export function clearAll(): void {
   extVerbs = [];
   extNouns = [];

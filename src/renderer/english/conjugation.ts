@@ -32,7 +32,7 @@ export interface ConjugationContext {
 }
 
 /** 変形記録 */
-export interface Transform {
+interface Transform {
   type: TransformationType;
   from: string;
   to: string;

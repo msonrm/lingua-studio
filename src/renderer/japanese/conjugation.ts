@@ -51,7 +51,7 @@ export function conjugate(lemma: string, context: ConjugationContext): string {
 /**
  * VerbEntry を活用する
  */
-export function conjugateEntry(entry: VerbEntry, context: ConjugationContext): string {
+function conjugateEntry(entry: VerbEntry, context: ConjugationContext): string {
   const { tense, aspect, polarity } = context;
 
   // Perfect は日本語では Past と同形
@@ -84,7 +84,7 @@ export function conjugateEntry(entry: VerbEntry, context: ConjugationContext): s
  * タ形（過去形）を生成
  * 食べる → 食べた、書く → 書いた
  */
-export function toTaForm(entry: VerbEntry): string {
+function toTaForm(entry: VerbEntry): string {
   const { ja, type } = entry;
 
   switch (type) {
@@ -138,7 +138,7 @@ export function toTeForm(entry: VerbEntry): string {
  * ナイ形（否定形）を生成
  * 食べる → 食べない、書く → 書かない
  */
-export function toNaiForm(entry: VerbEntry): string {
+function toNaiForm(entry: VerbEntry): string {
   const { ja, type } = entry;
 
   switch (type) {
@@ -163,7 +163,7 @@ export function toNaiForm(entry: VerbEntry): string {
  * ナカッタ形（過去否定形）を生成
  * 食べる → 食べなかった、書く → 書かなかった
  */
-export function toNakattaForm(entry: VerbEntry): string {
+function toNakattaForm(entry: VerbEntry): string {
   // ナイ形から「ない」を「なかった」に置換
   const naiForm = toNaiForm(entry);
   return naiForm.slice(0, -2) + 'なかった';

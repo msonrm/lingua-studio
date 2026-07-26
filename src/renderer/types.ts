@@ -15,27 +15,27 @@ import type { ModalType } from '../types/schema';
 /**
  * 時制
  */
-export type Tense = 'past' | 'present' | 'future';
+type Tense = 'past' | 'present' | 'future';
 
 /**
  * 相（アスペクト）
  */
-export type Aspect = 'simple' | 'progressive' | 'perfect' | 'perfectProgressive';
+type Aspect = 'simple' | 'progressive' | 'perfect' | 'perfectProgressive';
 
 /**
  * 極性（肯定/否定）
  */
-export type Polarity = 'affirmative' | 'negative';
+type Polarity = 'affirmative' | 'negative';
 
 /**
  * 文の種類
  */
-export type SentenceType = 'declarative' | 'interrogative' | 'imperative' | 'fact';
+type SentenceType = 'declarative' | 'interrogative' | 'imperative' | 'fact';
 
 /**
  * 主語情報
  */
-export interface SubjectInfo {
+interface SubjectInfo {
   person: 1 | 2 | 3;
   number: 'singular' | 'plural';
   form: string;  // レンダリング済みの主語文字列
@@ -47,6 +47,7 @@ export interface SubjectInfo {
  * 既存のClauseNodeから抽出される文脈情報を構造化したもの。
  * ルール関数はこの文脈を参照して変形を決定する。
  */
+/** @public Phase 4-1（tracker のモジュールグローバル解消）で引き回す予定の型 */
 export interface RenderContext {
   // 時制・相
   tense: Tense;
@@ -153,6 +154,7 @@ export interface Derivation {
 /**
  * レンダリング結果（変形記録付き）
  */
+/** @public Phase 4-1（tracker のモジュールグローバル解消）で引き回す予定の型 */
 export interface RenderResultWithDerivation {
   output: string;
   derivation: Derivation;
@@ -165,7 +167,7 @@ export interface RenderResultWithDerivation {
 /**
  * ステップの変更状態
  */
-export type StepStatus = 'added' | 'removed' | 'changed' | 'unchanged';
+type StepStatus = 'added' | 'removed' | 'changed' | 'unchanged';
 
 /**
  * ステップと状態のペア

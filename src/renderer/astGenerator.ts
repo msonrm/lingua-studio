@@ -33,10 +33,6 @@ const findPronounCore = (lemma: string) => pronounCores.find(p => p.lemma === le
 // ============================================
 // BlocklyワークスペースからAST生成
 // ============================================
-export function generateAST(workspace: Blockly.Workspace): SentenceNode | null {
-  const sentences = generateMultipleAST(workspace);
-  return sentences.length > 0 ? sentences[0] : null;
-}
 
 // モダリティ情報を保持するインターフェース
 interface ModalInfo {

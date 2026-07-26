@@ -673,8 +673,3 @@ function renderPrepositionalPhraseAsModifier(pp: PrepositionalPhraseNode): strin
   return `${objectStr}${postposition}`;
 }
 
-// ============================================
-// Export
-// ============================================
-
-export { renderToJapanese as default };

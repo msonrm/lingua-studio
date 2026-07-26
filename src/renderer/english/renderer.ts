@@ -619,10 +619,6 @@ function stripWhPrefix(lemma: string): string {
 // ============================================
 // AST → 英文レンダラー
 // ============================================
-export function renderToEnglish(ast: SentenceNode): string {
-  return renderToEnglishWithLogs(ast).output;
-}
-
 export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
   // Reset tracker for fresh render
   tracker = new DerivationTracker();

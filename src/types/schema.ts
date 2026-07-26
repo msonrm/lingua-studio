@@ -56,21 +56,6 @@ export type NounCategory =
   | "place"     // 場所
   | "abstract"; // 抽象概念
 
-// 限定詞設定
-export interface DeterminerConfig {
-  defaults: {
-    pre: string;
-    central: string;
-    post: string;
-  };
-  options: {
-    pre: string[];
-    central: string[];
-    post: string[];
-  };
-  disabled?: boolean;  // 固有名詞用：限定詞変更不可
-}
-
 export interface NounEntry {
   lemma: string;
   plural: string;
@@ -319,9 +304,5 @@ export interface CoordinatedNounPhraseNode {
   isChoiceQuestion?: boolean;  // 選択疑問: ?which('tea, 'coffee)
 }
 
-// VP等位接続（動詞句 AND/OR 動詞句）
-export interface CoordinatedVerbPhraseNode {
-  type: "coordinatedVerbPhrase";
-  conjunction: Conjunction;
-  conjuncts: VerbPhraseNode[];
-}
+// VP の等位接続は CoordinatedNounPhraseNode のような専用ノードではなく、
+// VerbPhraseNode.coordinatedWith による連結リストで表現する（appendCoordination 参照）。

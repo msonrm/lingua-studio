@@ -2,7 +2,7 @@
  * ヘッドレス Blockly ワークスペースの構築ヘルパー（レイヤーB用）
  *
  * Blockly は Node 環境でも `new Blockly.Workspace()` で動作する（`Blockly.inject` は DOM が要るが不要）。
- * ブロック定義の読み込み（`import '../blocks/definitions'`）も副作用込みで動く。
+ * ブロック定義の読み込み（`import '../blocks'`）も副作用込みで動く。
  *
  * ⚠ Blockly はイベントを非同期にフラッシュする。
  *    determiner_unified の自動補正など `onchange` に依存する挙動は
@@ -10,7 +10,7 @@
  */
 
 import * as Blockly from 'blockly';
-import '../blocks/definitions';
+import '../blocks';
 
 /** ブロック木の宣言的な指定 */
 export interface BlockSpec {

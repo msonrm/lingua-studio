@@ -2,7 +2,7 @@
 
 Lingua Studio の内部構造リファレンス。コードを読む前の地図として使う。
 
-> 調査日: 2026-07-26 / 対象コミット: `c1628f9`
+> 最終更新: 2026-07-26（リファクタリング Phase 3 まで反映）
 
 ---
 
@@ -42,8 +42,22 @@ src/
 ├── App.tsx                    ルート。state 12個を直接保持、LocaleContext.Provider
 ├── main.tsx                   エントリポイント
 │
-├── blocks/
-│   ├── definitions.ts         Blockly ブロック定義 41個 + ツールボックス構築（1,709行）
+├── blocks/                    ★ Blockly ブロック定義（カテゴリ別に分割）
+│   ├── index.ts               登録の集約。`import '../blocks'` でこれらが副作用登録される
+│   ├── shared.ts              COLORS / msg() / labelValidator
+│   ├── blockData.ts           TimeChip・限定詞のデータ（Blockly 非依存。astGenerator も参照）
+│   ├── prepositions.ts        前置詞データ（動詞用・名詞用の両方が使う）
+│   ├── sentence.ts            time_frame / modal・imperative・question ラッパー / time_chip_*
+│   ├── verbs.ts               カテゴリ別の動詞ブロック
+│   ├── verbModifiers.ts       否定・頻度・様態・場所・時間ラッパー / 前置詞句 / 等位接続
+│   ├── nouns.ts               代名詞 / human・animal・object・place・abstract
+│   ├── determiner.ts          determiner_unified（3プルダウン + 自動補正）
+│   ├── nounModifiers.ts       形容詞 / 前置詞句 / 等位接続
+│   ├── question.ts            choice_question / wh_placeholder / wh_adverb
+│   ├── logic.ts               fact_wrapper / logic_*（命題論理）
+│   ├── extensions.ts          拡張辞書ブロックの動的生成
+│   ├── toolbox.ts             createToolbox()
+│   ├── initialWorkspace.ts    初回起動時に置くブロック
 │   └── det-rules-en.ts        限定詞（a/the/some…）の選択ルール
 │
 ├── data/                      ★ 辞書の3層構造（下記 §3）
@@ -52,29 +66,27 @@ src/
 │   └── dictionary-ext.ts      ユーザー拡張辞書（localStorage）
 │
 ├── renderer/
-│   ├── astGenerator.ts        Blockly ブロック木 → AST（1,273行）
+│   ├── astGenerator.ts        Blockly ブロック木 → AST（1,187行）
 │   ├── linguaScriptRenderer.ts AST → LinguaScript テキスト
 │   ├── DerivationTracker.ts   文法導出ステップの記録クラス
 │   ├── types.ts               RenderContext / DerivationStep 等の型
-│   ├── index.ts               バレル（※どこからも import されていない）
 │   ├── english/
-│   │   ├── renderer.ts        AST → 英文（1,332行）
-│   │   ├── conjugation.ts     動詞活用（conjugateVerb が 322行）
+│   │   ├── renderer.ts        AST → 英文（1,327行）
+│   │   ├── conjugation.ts     動詞活用（相ごとのハンドラに分割済み）
 │   │   ├── nounPhrase.ts      名詞句の組み立て
 │   │   └── coordination.ts    等位接続
 │   └── japanese/
 │       ├── renderer.ts        AST → 日本語（SOV 語順・格助詞）
 │       ├── conjugation.ts     五段/一段/サ変/カ変の活用
-│       ├── lexicon.ts         lemma → 日本語表層形のマッピング（962行）
+│       ├── lexicon.ts         lemma → 日本語表層形のマッピング（1,010行）
 │       └── index.ts           バレル
 │
 ├── components/
-│   ├── BlocklyWorkspace.tsx   Blockly の inject / 初期ブロック配置 / 変更検知
+│   ├── BlocklyWorkspace.tsx   Blockly の inject / 変更検知（初期配置は blocks/initialWorkspace.ts）
 │   ├── GrammarPanel.tsx       Grammar Console（導出ログ表示）+ TenseAspectDiagram
 │   ├── DictionaryPanel.tsx    ユーザー辞書の追加・削除・エクスポート UI
 │   ├── LinguaScriptView.tsx   LinguaScript 表示（Prism ハイライト）
-│   ├── LinguaScriptBar.tsx    ヘッダー下の1行表示
-│   └── VisualizationPanel.tsx ※未参照（App.tsx でコメントアウト済み）
+│   └── LinguaScriptBar.tsx    ヘッダー下の1行表示
 │
 ├── locales/
 │   ├── types.ts               UIMessages / BlocklyMessages / GrammarMessages
@@ -144,10 +156,16 @@ ClauseNode {
 
 `ClauseNode.polarity`（節レベル）と `VerbPhraseNode.polarity`（VP レベル）の両方が negative のとき **二重否定**として扱われる（`english/renderer.ts` の `renderClause()` 内 `doubleNegation`）。
 
-### 未使用の型
+### 等位接続は連結リスト
 
-- `CoordinatedVerbPhraseNode` — 定義されているが未使用。VP 等位接続は `coordinatedWith` で表現されている。
-- `DeterminerConfig` — 未使用。
+VP の等位接続に専用ノードはない。`coordinatedWith` を辿る連結リストで表現する。
+
+```
+or(and(A, B), C)  →  A ─and→ B ─or→ C
+```
+
+新しい接続を足すときは上書きせず `astGenerator.ts` の `appendCoordination()` で末尾に繋ぐこと。
+上書きすると入れ子で項が消える（2026-07-26 に修正した実バグ）。
 
 ---
 
@@ -201,39 +219,38 @@ TransformLog[]  ──►  App の grammarLogs state  ──►  GrammarPanel �
 
 ## 8. Blockly ブロックの分類
 
-`blocks/definitions.ts` に 41個。ツールボックスは 8カテゴリ:
+`blocks/` 以下に 41個。ツールボックスは 8カテゴリ:
 
 `TOOLBOX_SENTENCE` / `SENTENCE_MODIFIER` / `VERBS` / `VERB_MODIFIERS` / `NOUNS` / `NOUN_MODIFIERS` / `QUESTION` / `LOGIC`
 
 構造上のパターン:
 
 - **ラッパーブロック** — `negation_wrapper`, `frequency_wrapper`, `manner_wrapper`, `locative_wrapper`, `time_adverb_wrapper`, `preposition_verb`, `wh_adverb_block`。いずれも内側に VERB を1つ取り、`astGenerator.parseVerbChain()` が再帰的に剥がしていく。
-- **カテゴリ別動的生成** — `verb_{category}`（6種）、`adjective_{category}`（6種）は `createVerbCategoryBlock()` / `createAdjectiveCategoryBlock()` がループで生成。
-- **拡張ブロック** — `verb_*_ext`, `noun_*_ext` は辞書変更リスナーで動的に再登録される（`registerExtensionBlocks()`）。
+- **カテゴリ別動的生成** — `verb_{category}`（6種、`verbs.ts`）、`adjective_{category}`（6種、`nounModifiers.ts`）はループで生成。
+- **拡張ブロック** — `verb_*_ext`, `noun_*_ext` は辞書変更リスナーで動的に再登録される（`extensions.ts` の `registerExtensionBlocks()`）。
 
 ---
 
-## 9. 現状の技術的負債（2026-07-26 時点）
+## 9. 現状（2026-07-26 / リファクタリング Phase 3 完了時点）
 
-| 項目 | 実測 |
+| 項目 | 状況 |
 |---|---|
-| テスト | **0件**。Vitest 等の設定もなし |
-| Lint / Format | ESLint・Prettier とも未導入（`tsc --noEmit` のみ） |
-| 未参照 export | **47 / 224（21%）** |
-| 最大の関数 | `astGenerator.parseVerbChain` **426行** |
-| 次点 | `english/conjugation.conjugateVerb` **322行** |
-| 最大のファイル | `blocks/definitions.ts` **1,709行**（ブロック定義41個） |
+| テスト | **691件 / スナップショット120**（`src/test/`、2層のゴールデンテスト） |
+| Lint | ESLint + typescript-eslint。エラー0 / 警告1（`LinguaScriptView.tsx` の exhaustive-deps） |
+| 未参照 export | **0件**（`npm run knip` が CI のゲート） |
+| CI | GitHub Actions で tsc / eslint / vitest / build / knip |
+| 最大の関数 | `createScope` 58行（`english/conjugation.ts`）。データ定義を除く |
+| 最大のファイル | `english/renderer.ts` 1,327行 / `astGenerator.ts` 1,187行 / `japanese/lexicon.ts` 1,010行 |
 | バンドル | 1,123 KB / gzip 305 KB（code-split なし、Vite の警告あり） |
 
-### 到達不能・未使用のコード
+### 残っている技術的負債
 
-- `components/VisualizationPanel.tsx` — `App.tsx` でコメントアウト済み、完全に未参照 → **削除予定**
-- `EditorMode` の `'ast'` — 表示分岐（`App.tsx:243`）は書かれているが切り替え UI がなく到達不能 → **タブを追加して復活予定**
-- `BlockChange` 収集経路 — `BlocklyWorkspace.tsx` の `getReadableFieldName()` / `handleBlockChange()`（約90行）が変更を収集し `App` に渡すが、`App` は `_blockChanges` として受け取るだけで**一切使っていない**。2026-01-25 に「Your Changes」パネルとして追加され、2026-01-27 のサイドパネル移設で表示側だけが落ちた残骸 → **削除予定**
-- `renderer/index.ts` — バレルだがどこからも import されていない
-- `astGenerator.generateAST` — `generateMultipleAST` のみ使用
-- `english/renderer.renderToEnglish` — `renderToEnglishWithLogs` のみ使用
+- **`english/renderer.ts` の `tracker` がモジュールグローバル**（§5 の落とし穴）。Phase 4-1 で解消予定
+- **英語・日本語レンダラーの走査骨格が重複**。Phase 4-2 で共通化を検討（架空言語ビルダーへの布石）
+- **`japanese/lexicon.ts` がデータとロジックの混在**（1,010行）。Phase 4-3
+- **Blockly が code-split されていない**。バンドルの大半を占める。Phase 4-4
+- **既知の不具合が `TODO.md` に集約されている**（等位接続のカンマ、モダリティの迂言形式、`degree` の未配線など）
 
-判断の根拠と削除/復活の詳細は [REFACTORING-PLAN.md](./REFACTORING-PLAN.md) の Phase 1 を参照。
-
-> `tsconfig.json` は `noUnusedLocals` / `noUnusedParameters` を有効にしているが、**未使用 export は検出できない**。これが 47件残っている理由。
+Phase 0〜3 で解消した項目（未参照 export 47件、`VisualizationPanel.tsx`、`BlockChange` 収集経路、
+`parseVerbChain` 426行、`conjugateVerb` 322行、`definitions.ts` 1,703行）は
+[CHANGELOG.md](../CHANGELOG.md) を参照。

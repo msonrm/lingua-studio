@@ -16,7 +16,7 @@ import {
 } from '../types/schema';
 import { verbCores, pronounCores } from '../data/dictionary-core';
 import { getExtVerbs } from '../data/dictionary-ext';
-import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks/definitions';
+import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks';
 
 // ============================================
 // ヘルパー関数（dictionary-core.ts ベース + 拡張辞書）

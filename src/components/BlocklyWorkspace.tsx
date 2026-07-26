@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import * as Blockly from 'blockly';
-import '../blocks/definitions';
-import { createToolbox, setToolboxUpdateCallback } from '../blocks/definitions';
+import { createToolbox, setToolboxUpdateCallback } from '../blocks';
 import { placeInitialBlocks } from '../blocks/initialWorkspace';
 import { generateMultipleAST } from '../renderer/astGenerator';
 import { renderToEnglishWithLogs } from '../renderer/english/renderer';

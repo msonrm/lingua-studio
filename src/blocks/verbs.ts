@@ -6,7 +6,7 @@
 
 import * as Blockly from 'blockly';
 import type { VerbCategory } from '../types/schema';
-import { getVerbCoresByCategory } from '../data/dictionary-core';
+import { getVerbCoresByCategory } from '../concepts';
 import { COLORS, msg } from './shared';
 
 // ============================================

@@ -5,7 +5,7 @@
  */
 
 import * as Blockly from 'blockly';
-import { nounCores, pronounCores, getNounCoresByCategory } from '../data/dictionary-core';
+import { nounCores, pronounCores, getNounCoresByCategory } from '../concepts';
 import { COLORS, msg, labelValidator } from './shared';
 
 // ============================================

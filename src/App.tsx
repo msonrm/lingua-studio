@@ -16,7 +16,7 @@ import {
   applyBlocklyLocale,
   getLocale,
 } from './locales';
-import { initDictionaryExt } from './data/dictionary-ext';
+import { initDictionaryExt } from './userDictionary';
 import './App.css';
 
 // Initialize dictionary extension (load from localStorage)

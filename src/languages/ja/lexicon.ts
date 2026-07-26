@@ -11,7 +11,7 @@
  */
 
 import { SemanticRole } from '../../types/schema';
-import { verbCores } from '../../data/dictionary-core';
+import { verbCores } from '../../concepts';
 
 export type Particle = 'は' | 'が' | 'を' | 'に' | 'で' | 'から' | 'まで' | 'と' | 'へ' | '';
 
@@ -416,7 +416,8 @@ export function translateNoun(lemma: string): string {
  * - suru: サ変動詞（〜する）
  * - kuru: カ変動詞（来る）
  */
-type VerbType = 'godan' | 'ichidan' | 'suru' | 'kuru';
+/** @public ユーザー辞書で活用タイプを選ばせるために公開している（推論できないため必須入力） */
+export type VerbType = 'godan' | 'ichidan' | 'suru' | 'kuru';
 
 /**
  * 動詞エントリ

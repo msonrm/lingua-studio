@@ -7,7 +7,7 @@
 
 import * as Blockly from 'blockly';
 import type { AdjectiveCategory } from '../types/schema';
-import { getAdjectiveCoresByCategory } from '../data/dictionary-core';
+import { getAdjectiveCoresByCategory } from '../concepts';
 import { COLORS, msg, labelValidator } from './shared';
 import { getPrepositionOptions } from './prepositions';
 

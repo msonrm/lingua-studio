@@ -6,12 +6,12 @@
  */
 
 import * as Blockly from 'blockly';
-import { findNounCore } from '../data/dictionary-core';
+import { findNounCore } from '../concepts';
 import {
   getPreDeterminers, getCentralDeterminers, getPostDeterminers,
   calculateNounTypeValues, wouldBeValidCombination,
   type DetField, type NounType, type DeterminerOption,
-} from './det-rules-en';
+} from '../languages/en/determiners';
 import { COLORS, msg } from './shared';
 
 // ============================================

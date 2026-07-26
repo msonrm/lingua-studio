@@ -16,8 +16,8 @@ import {
   isCoordinatedVerbPhrase,
   ModalType,
 } from '../../types/schema';
-import { findVerb, findNoun, findPronoun } from '../../data/dictionary-en';
-import { nounCores } from '../../data/dictionary-core';
+import { findVerb, findNoun, findPronoun } from '../../languages/en/lexicon';
+import { nounCores } from '../../concepts';
 import { RenderResult } from '../../types/grammarLog';
 import { DerivationTracker } from '../DerivationTracker';
 import {
@@ -28,7 +28,7 @@ import {
   Aspect,
   Polarity,
   ModalType as ConjugationModalType,
-} from './conjugation';
+} from '../../languages/en/morphology';
 import {
   renderNounPhraseUnified,
   renderCoordinatedNounPhraseUnified,

@@ -4,7 +4,7 @@
  * 拡張辞書の内容を反映するため、ロケール切り替えや辞書変更のたびに再生成する。
  */
 
-import { getExtVerbs, getExtNouns } from '../data/dictionary-ext';
+import { getExtVerbs, getExtNouns } from '../userDictionary';
 import type { VerbCategory, NounCategory } from '../types/schema';
 import { COLORS, msg } from './shared';
 

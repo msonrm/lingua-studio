@@ -85,15 +85,18 @@ Blockly Workspace
 
 レンダラーは **AST → 文字列の純関数**。英語・日本語は `BlocklyWorkspace.tsx` 内で生成、LinguaScript のみ `App.tsx` の `useMemo` で生成する（経路が1つだけ非対称）。
 
-辞書は3層: `dictionary-core.ts`（言語非依存・valency）→ `dictionary-en.ts`（英語の語形）→ `dictionary-ext.ts`（ユーザー拡張・localStorage）。`findVerb()` 等がマージして返す。日本語は `renderer/japanese/lexicon.ts` が独自マッピングを持ち、この3層には接続していない。
+語彙と形態論は**言語パック**（`languages/<code>/`）にまとめ、語順の組み立て（`renderer/<lang>/`）と分けている。概念（valency・可算性）は言語非依存で `concepts/` にある。
+
+語形の型は言語ごとに違う（英語 `{base, past, pp, ing, s}` / 日本語 `{ja, type}`）。**日本語の活用タイプは表層形から推論できない**（走る=五段 / 食べる=一段）ので、ユーザー辞書では必須入力にしている。
+
+言語を足すときは `languages/<code>/` を作って `LanguagePack` を実装し、`languages/index.ts` に登録する。
 
 ## Key Files
 
 - `src/blocks/` - Blockly ブロック定義41個 + ツールボックス。カテゴリ別に分割済み（`index.ts` が登録を集約）
-- `src/blocks/det-rules-en.ts` - 限定詞ルール
 - `src/renderer/astGenerator.ts` - ブロック木 → AST（`parseVerbChain` が426行）
-- `src/renderer/english/` - 英語レンダラー
-- `src/renderer/japanese/` - 日本語レンダラー
+- `src/languages/` - 語彙と形態論（言語パック）
+- `src/renderer/english/`, `src/renderer/japanese/` - 語順の組み立て
 - `src/types/schema.ts` - AST スキーマ
 - `src/locales/` - ローカライズ（en / ja / ja-hira × 290キー）
 

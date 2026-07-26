@@ -4,6 +4,53 @@
 
 ## 2026-07-27
 
+### 言語パック構造への移行（第1段階）
+
+語彙と形態論の置き場所を整理し、言語パックの契約を定義した。
+**振る舞いは変えていない**（既存スナップショットに差分なし）。
+
+#### 直した構造上の歪み
+
+1. **言語資源の置き場所が非対称だった**
+   英語は `data/dictionary-en.ts`（データ扱い）、日本語は `renderer/japanese/lexicon.ts`
+   （レンダラーの実装詳細扱い）に置かれ、フランス語を足すときの前例が食い違っていた。
+2. **語を引く経路が言語ごとにバラバラだった**
+   英語は「ベース → 拡張 → 規則変化」とマージするのに、日本語にはその経路がなかった。
+3. **語彙・形態論と語順の組み立てが同居していた**（日本語のみ）
+
+#### 新しい構造
+
+```
+concepts/          言語非依存の概念（valency・可算性・カテゴリ）
+     ↓
+languages/<code>/  語彙と形態論。lexicon.ts / morphology.ts / index.ts
+     ↓
+renderer/<lang>/   語順の組み立て
+```
+
+| 移設前 | 移設後 |
+|---|---|
+| `data/dictionary-core.ts` | `concepts/index.ts` |
+| `data/dictionary-en.ts` | `languages/en/lexicon.ts` |
+| `renderer/english/conjugation.ts` | `languages/en/morphology.ts` |
+| `blocks/det-rules-en.ts` | `languages/en/determiners.ts` |
+| `renderer/japanese/lexicon.ts` | `languages/ja/lexicon.ts` |
+| `renderer/japanese/conjugation.ts` | `languages/ja/morphology.ts` |
+| `data/dictionary-ext.ts` | `userDictionary.ts` |
+
+#### 言語パックの契約（`languages/types.ts`）
+
+- 語形の型を**型パラメータ**で受ける。「言語コード → 文字列」の1つのマップには押し込めない
+  （英語は `{base, past, pp, ing, thirdSg}`、日本語は `{ja, type}`）
+- とくに**日本語の活用タイプは表層形から推論できない**（走る=五段 / 食べる=一段）。
+  そのため `userEntryFields` で活用タイプを必須入力として宣言する
+- `userEntryFields` は `DictionaryPanel` が入力欄を動的に描くための宣言。
+  言語を足しても UI 側を書き足さずに済む
+- 未登録の語は `undefined` を返す（lemma をそのまま返して「引けた」と誤認しない）
+
+契約テスト（`languagePacks.test.ts`）を追加。言語を追加したらレジストリに1行足すだけで
+同じ契約が課される。
+
 ### 既知の不整合3件の修正
 
 #### モダリティの迂言形式が相と合成できない問題

@@ -26,10 +26,10 @@ import {
   ModalType,
   PrepositionalPhraseNode,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction, translatePreposition, translatePrepositionAsModifier, analyzeAdjective } from './lexicon';
-import { conjugate, conjugateAdjectivalPredicate, toTeForm, toNaideForm, Tense, Aspect, Polarity } from './conjugation';
-import { getVerbEntry } from './lexicon';
-import { findVerbCore } from '../../data/dictionary-core';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction, translatePreposition, translatePrepositionAsModifier, analyzeAdjective } from '../../languages/ja/lexicon';
+import { conjugate, conjugateAdjectivalPredicate, toTeForm, toNaideForm, Tense, Aspect, Polarity } from '../../languages/ja/morphology';
+import { getVerbEntry } from '../../languages/ja/lexicon';
+import { findVerbCore } from '../../concepts';
 
 // ============================================
 // Main Entry Points

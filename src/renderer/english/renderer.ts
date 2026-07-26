@@ -709,7 +709,7 @@ function renderClause(clause: ClauseNode): string {
   const parts = [ctx.subjectStr, verbForm, otherArgs, prepPhrasesStr, mannerStr, locativeStr, timeStr]
     .filter(p => p.length > 0);
 
-  let result = parts.join(' ');
+  const result = parts.join(' ');
 
   // 等位接続動詞句を処理
   return appendCoordinatedVP(result, ctx);
@@ -839,7 +839,7 @@ function renderInterrogativeClause(clause: ClauseNode): string {
   const parts = [auxiliary, ctx.subjectStr, mainVerb, otherArgs, prepPhrasesStr, mannerStr, locativeStr]
     .filter(p => p.length > 0);
 
-  let result = parts.join(' ');
+  const result = parts.join(' ');
 
   // 等位接続動詞句を処理
   return appendCoordinatedVP(result, ctx);
@@ -952,7 +952,7 @@ function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo):
   const parts = [whAdverbInfo.whWord, auxiliary, ctx.subjectStr, mainVerb, otherArgs, prepPhrasesStr, mannerStr, locativeStr, timeStr]
     .filter(p => p.length > 0);
 
-  let result = parts.join(' ');
+  const result = parts.join(' ');
 
   // 等位接続動詞句を処理
   return appendCoordinatedVP(result, ctx);
@@ -1023,14 +1023,13 @@ function renderImperativeCoordinatedVP(
   const locativeAdverbs = vp.adverbs.filter(a => a.advType === 'place');
 
   // 動詞形を決定（命令文は原形）
-  let verbForm: string;
   const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
   const baseForm = verbEntry?.forms.base || vp.verb.lemma;
 
   // 等位接続の2番目以降は、否定でも do not を繰り返さない（原形のみ）
   // "Don't run and eat" ではなく "Don't run or eat" が自然だが、
   // ここでは単純に原形を使う
-  verbForm = freqStr ? `${freqStr} ${baseForm}` : baseForm;
+  const verbForm = freqStr ? `${freqStr} ${baseForm}` : baseForm;
 
   // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
   let subjectRole: SemanticRole | undefined;

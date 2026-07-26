@@ -750,6 +750,8 @@ Blockly.Blocks['abstract_block'] = {
 // ============================================
 Blockly.Blocks['determiner_unified'] = {
   init: function() {
+    // Blockly の init は this がブロックを指す。以降のクロージャから参照するため退避する。
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const block = this;
 
     // 接続された名詞のプロパティを取得（形容詞チェーンを辿る）

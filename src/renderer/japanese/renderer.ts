@@ -352,9 +352,14 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   const hasNegativePolarityAdverb = verbPhrase.adverbs.some(adv => isNegativePolarityAdverb(adv.lemma));
   const effectivePolarity: Polarity = hasNegativePolarityAdverb ? 'negative' : polarity as Polarity;
 
-  // 動詞を活用（時制・相・否定・モダリティを適用）
   // 日本語では future は present と同形
   const effectiveTense: Tense = tense === 'future' ? 'present' : tense;
+
+  // TODO(Phase 1): この conjugate() の結果は使われていない。
+  // 実際の動詞文字列は下の renderVerbWithCoordination() が生成しており、
+  // ここは 2026-01-31 の「2パス方式へリファクタリング」の残骸。
+  // 呼び出しが例外を投げる可能性があるため、Phase 0 では振る舞いを変えず温存する。
+  /* eslint-disable @typescript-eslint/no-unused-vars, no-useless-assignment */
   let verb = conjugate(verbLemma, {
     tense: effectiveTense,
     aspect: aspect as Aspect,
@@ -367,6 +372,7 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   if (attribute && verbLemma === 'be') {
     verb = `${attribute.text}${verb}`;
   }
+  /* eslint-enable @typescript-eslint/no-unused-vars, no-useless-assignment */
 
   // SOV順で組み立て: 主語 → 時間副詞 → その他の引数 → 副詞 → 動詞
   const result: string[] = [];

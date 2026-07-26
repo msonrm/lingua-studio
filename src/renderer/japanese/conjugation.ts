@@ -336,15 +336,16 @@ function applyModal(
       }
       return dictForm + (isPast ? 'ことができた' : 'ことができる');
 
-    case 'permission':
+    case 'permission': {
       // テ形 + もいい/はいけない
       const teForm = toTeForm(entry);
       if (isNegative) {
         return teForm + (isPast ? 'はいけなかった' : 'はいけない');
       }
       return teForm + (isPast ? 'もよかった' : 'もいい');
+    }
 
-    case 'possibility':
+    case 'possibility': {
       // 肯定: 辞書形/タ形 + かもしれない
       // 否定: ナイ形/ナカッタ形 + かもしれない
       if (isNegative) {
@@ -353,8 +354,9 @@ function applyModal(
       }
       const affForm = isPast ? toTaForm(entry) : dictForm;
       return affForm + 'かもしれない';
+    }
 
-    case 'obligation':
+    case 'obligation': {
       // ナイ形語幹 + ければならない（肯定）/ なくてもいい（否定）
       const naiForm = toNaiForm(entry);
       const naiStem = naiForm.slice(0, -1); // 「ない」の「い」を除去
@@ -362,8 +364,9 @@ function applyModal(
         return naiStem + (isPast ? 'くてもよかった' : 'くてもいい');
       }
       return naiStem + (isPast ? 'ければならなかった' : 'ければならない');
+    }
 
-    case 'certainty':
+    case 'certainty': {
       // 辞書形/タ形/ナイ形/ナカッタ形 + にちがいない
       if (isNegative) {
         const negForm = isPast ? toNakattaForm(entry) : toNaiForm(entry);
@@ -371,6 +374,7 @@ function applyModal(
       }
       const certForm = isPast ? toTaForm(entry) : dictForm;
       return certForm + 'にちがいない';
+    }
 
     case 'advice':
       // 辞書形 + べきだ/べきではない/べきだった/べきではなかった
@@ -386,7 +390,7 @@ function applyModal(
       }
       return dictForm + (isPast ? 'つもりだった' : 'つもりだ');
 
-    case 'prediction':
+    case 'prediction': {
       // 辞書形/タ形/ナイ形/ナカッタ形 + だろう
       if (isNegative) {
         const negForm = isPast ? toNakattaForm(entry) : toNaiForm(entry);
@@ -394,6 +398,7 @@ function applyModal(
       }
       const predForm = isPast ? toTaForm(entry) : dictForm;
       return predForm + 'だろう';
+    }
 
     default:
       return dictForm;

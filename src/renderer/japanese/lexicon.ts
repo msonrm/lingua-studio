@@ -711,9 +711,57 @@ export const adjectiveToJapanese: Record<string, string> = {
 
 /**
  * 形容詞を日本語に変換（見つからなければそのまま返す）
+ *
+ * ⚠ 返るのは **連体形**（「幸せな」「赤い」「本当の」）。
+ *    名詞修飾はこのまま使えるが、述語で使う場合は `analyzeAdjective()` で
+ *    語幹と型を取り出すこと。「幸せなである」のような誤りを防ぐため。
  */
 export function translateAdjective(lemma: string): string {
   return adjectiveToJapanese[lemma] || lemma;
+}
+
+/**
+ * 日本語形容詞の活用型
+ * - `i`  : イ形容詞（悲しい、赤い）。述語では形容詞自体が活用する
+ * - `na` : ナ形容詞・ノ形容詞（幸せな、本当の）。述語では語幹 + である
+ * - `other`: 動詞由来など（疲れた、同じ）。ナ形容詞と同じく である を付ける
+ */
+export type JapaneseAdjectiveType = 'i' | 'na' | 'other';
+
+export interface JapaneseAdjectiveForm {
+  /** 連体形（名詞修飾で使う形。「幸せな」「悲しい」） */
+  attributive: string;
+  /** 述語を組み立てるための語幹（イ形容詞は「い」を除いた形、ナ形容詞は「な」「の」を除いた形） */
+  stem: string;
+  /**
+   * 連用形（用言を修飾する形。「幸せに」「悲しく」）。
+   * 「〜に見える」のように繋辞以外の動詞へ係る場合に使う。
+   * 型が `other`（動詞由来の「疲れた」など）のときは変換できないので連体形をそのまま返す。
+   */
+  adverbial: string;
+  type: JapaneseAdjectiveType;
+}
+
+/**
+ * 形容詞の連体形から、述語で使うための語幹と活用型を求める。
+ *
+ * 判定は語尾のみで行う（辞書に型情報を持たせていないため）:
+ *   「〜な」→ na  /  「〜の」→ na  /  「〜い」→ i  /  それ以外 → other
+ *
+ * 「〜な」を先に見るので、「幸いな」のように語幹が「い」で終わるナ形容詞も正しく na になる。
+ */
+export function analyzeAdjective(lemma: string): JapaneseAdjectiveForm {
+  const attributive = translateAdjective(lemma);
+
+  if (attributive.endsWith('な') || attributive.endsWith('の')) {
+    const stem = attributive.slice(0, -1);
+    return { attributive, stem, adverbial: stem + 'に', type: 'na' };
+  }
+  if (attributive.endsWith('い')) {
+    const stem = attributive.slice(0, -1);
+    return { attributive, stem, adverbial: stem + 'く', type: 'i' };
+  }
+  return { attributive, stem: attributive, adverbial: attributive, type: 'other' };
 }
 
 // ============================================

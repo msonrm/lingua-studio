@@ -23,8 +23,8 @@ import {
   ModalType,
   PrepositionalPhraseNode,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction, translatePreposition, translatePrepositionAsModifier } from './lexicon';
-import { conjugate, toTeForm, toNaideForm, Tense, Aspect, Polarity } from './conjugation';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction, translatePreposition, translatePrepositionAsModifier, analyzeAdjective } from './lexicon';
+import { conjugate, conjugateAdjectivalPredicate, toTeForm, toNaideForm, Tense, Aspect, Polarity } from './conjugation';
 import { getVerbEntry } from './lexicon';
 import { findVerbCore } from '../../data/dictionary-core';
 
@@ -47,8 +47,7 @@ export function renderToJapanese(ast: SentenceNode): string {
     case 'interrogative':
       return renderInterrogative(ast.clause, timeAdv);
     case 'fact':
-      // factは対象外（とりあえず平叙文として処理）
-      return renderDeclarative(ast.clause, timeAdv);
+      return renderFact(ast.clause, timeAdv);
     default:
       return renderDeclarative(ast.clause, timeAdv);
   }
@@ -80,6 +79,90 @@ function renderInterrogative(clause: ClauseNode, timeAdv?: string): string {
 function renderImperative(clause: ClauseNode, timeAdv?: string): string {
   const parts = buildSOVParts(clause, { omitSubject: true, timeAdverbial: timeAdv });
   return parts.filter(Boolean).join('') + '。';
+}
+
+/**
+ * 事実宣言（fact）: 命題論理をサポートする平叙文
+ */
+function renderFact(clause: ClauseNode, timeAdv?: string): string {
+  if (!clause.verbPhrase.logicOp) {
+    return renderDeclarative(clause, timeAdv);
+  }
+  return renderLogicExpression(clause) + '。';
+}
+
+// ============================================
+// Logic Extension（命題論理）
+// ============================================
+
+/**
+ * 命題レベルの論理演算をレンダリング（英語の renderLogicExpression に対応）
+ *
+ * | 演算子 | 日本語 |
+ * |---|---|
+ * | AND | 〜、かつ〜 |
+ * | OR | 〜、または〜 |
+ * | NOT | 〜ということはない |
+ * | NOT(OR(P, Q)) | Pということも、Qということもない（De Morgan） |
+ * | IF | 〜ならば、〜 |
+ * | BECAUSE | 〜ので、〜（日本語は原因が先） |
+ *
+ * ⚠ 時間副詞は各命題へは配らない（fact に TimeChip が付くのは想定外の組み合わせのため）。
+ */
+function renderLogicExpression(clause: ClauseNode): string {
+  const { verbPhrase, tense, aspect } = clause;
+  const logicOp = verbPhrase.logicOp;
+
+  if (!logicOp) {
+    return buildSOVParts(clause).filter(Boolean).join('');
+  }
+
+  const makeClause = (vp: VerbPhraseNode): ClauseNode => ({
+    type: 'clause',
+    verbPhrase: vp,
+    tense,
+    aspect,
+    polarity: 'affirmative',
+  });
+
+  // オペランドをレンダリング（入れ子の論理式なら再帰）
+  const renderOperand = (vp: VerbPhraseNode | undefined): string => {
+    if (!vp) return '___';
+    const operandClause = makeClause(vp);
+    return vp.logicOp
+      ? renderLogicExpression(operandClause)
+      : buildSOVParts(operandClause).filter(Boolean).join('');
+  };
+
+  // leftOperand があればそれを、なければ現在の verbPhrase から logicOp を外したものを使う
+  const leftVP: VerbPhraseNode = logicOp.leftOperand ?? { ...verbPhrase, logicOp: undefined };
+  const left = renderOperand(leftVP);
+
+  if (logicOp.operator === 'NOT') {
+    // NOT(OR(P, Q)) は De Morgan で「PということもQということもない」
+    const innerOr = logicOp.leftOperand?.logicOp;
+    if (innerOr?.operator === 'OR' && logicOp.leftOperand) {
+      const innerLeft = renderOperand({ ...logicOp.leftOperand, logicOp: undefined });
+      const innerRight = renderOperand(innerOr.rightOperand);
+      return `${innerLeft}ということも、${innerRight}ということもない`;
+    }
+    return `${left}ということはない`;
+  }
+
+  const right = renderOperand(logicOp.rightOperand);
+
+  switch (logicOp.operator) {
+    case 'AND':
+      return `${left}、かつ${right}`;
+    case 'OR':
+      return `${left}、または${right}`;
+    case 'IF':
+      return `${left}ならば、${right}`;
+    case 'BECAUSE':
+      return `${left}ので、${right}`;
+    default:
+      return left;
+  }
 }
 
 // ============================================
@@ -317,7 +400,18 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
       if (!isRequired(arg.role)) continue;
     }
 
-    const np = arg.filler ? renderFiller(arg.filler) : '___';
+    // be 以外の動詞に係る形容詞（seem 等）は連用形にする（「幸せに見える」）
+    const useAdverbialAdjective =
+      arg.role === 'attribute' &&
+      verbLemma !== 'be' &&
+      arg.filler?.type === 'adjectivePhrase';
+
+    const np = !arg.filler
+      ? '___'
+      : useAdverbialAdjective
+        ? renderDegree(arg.filler as AdjectivePhraseNode) +
+          analyzeAdjective((arg.filler as AdjectivePhraseNode).head.lemma).adverbial
+        : renderFiller(arg.filler);
     const subjectFlag = isSubjectRole(arg.role, verbLemma);
     const isAttribute = arg.role === 'attribute';
 
@@ -355,24 +449,6 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   // 日本語では future は present と同形
   const effectiveTense: Tense = tense === 'future' ? 'present' : tense;
 
-  // TODO(Phase 1): この conjugate() の結果は使われていない。
-  // 実際の動詞文字列は下の renderVerbWithCoordination() が生成しており、
-  // ここは 2026-01-31 の「2パス方式へリファクタリング」の残骸。
-  // 呼び出しが例外を投げる可能性があるため、Phase 0 では振る舞いを変えず温存する。
-  /* eslint-disable @typescript-eslint/no-unused-vars, no-useless-assignment */
-  let verb = conjugate(verbLemma, {
-    tense: effectiveTense,
-    aspect: aspect as Aspect,
-    polarity: effectivePolarity,
-    modal,
-    modalPolarity: modalPolarity as Polarity | undefined,
-  });
-
-  // be動詞の場合、attributeと動詞を結合（「犬である」）
-  if (attribute && verbLemma === 'be') {
-    verb = `${attribute.text}${verb}`;
-  }
-  /* eslint-enable @typescript-eslint/no-unused-vars, no-useless-assignment */
 
   // SOV順で組み立て: 主語 → 時間副詞 → その他の引数 → 副詞 → 動詞
   const result: string[] = [];
@@ -396,6 +472,31 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
     result.push(pp);
   }
 
+  // be + 形容詞は繋辞を付けず、形容詞自体を述語として活用する（「私は悲しかった」）
+  const adjectivalPredicate = getAdjectivalPredicate(verbPhrase);
+
+  if (adjectivalPredicate && !modal && !verbPhrase.coordinatedWith) {
+    const form = analyzeAdjective(adjectivalPredicate.head.lemma);
+    result.push(
+      renderDegree(adjectivalPredicate) +
+        conjugateAdjectivalPredicate(form.stem, form.type, effectiveTense, effectivePolarity)
+    );
+    return result;
+  }
+
+  // 繋辞の前に置く文字列（「先生」+「である」）。
+  // 形容詞の場合は連体形のままだと「幸せなである」になるので語幹を使う。
+  // ただしイ形容詞は語幹だけだと語にならない（「悲し」）ため連体形を使う。
+  // → modal 付きのイ形容詞述語は「悲しいであることができる」と不自然になる（既知の限界）。
+  let attributePrefix: string | undefined;
+  if (adjectivalPredicate) {
+    const form = analyzeAdjective(adjectivalPredicate.head.lemma);
+    attributePrefix =
+      renderDegree(adjectivalPredicate) + (form.type === 'i' ? form.attributive : form.stem);
+  } else if (attribute && verbLemma === 'be') {
+    attributePrefix = attribute.text;
+  }
+
   // VP等位接続を処理
   const verbStr = renderVerbWithCoordination(
     verbPhrase,
@@ -404,7 +505,7 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
     effectivePolarity,
     modal,
     modalPolarity as Polarity | undefined,
-    attribute && verbLemma === 'be' ? attribute.text : undefined
+    attributePrefix
   );
   result.push(verbStr);
 
@@ -414,6 +515,23 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
 // ============================================
 // Filler Rendering
 // ============================================
+
+/**
+ * 繋辞 be の attribute が形容詞句なら返す。
+ *
+ * 日本語では形容詞述語に繋辞が付かない（「私は悲しい」であって「私は悲しいである」ではない）ため、
+ * 名詞述語（「彼は先生である」）とは別経路で活用させる必要がある。
+ */
+function getAdjectivalPredicate(vp: VerbPhraseNode): AdjectivePhraseNode | null {
+  if (vp.verb.lemma !== 'be') return null;
+  const filler = vp.arguments.find(a => a.role === 'attribute')?.filler;
+  return filler?.type === 'adjectivePhrase' ? filler : null;
+}
+
+/** 程度副詞（very, too など）を日本語にする。無ければ空文字 */
+function renderDegree(adjective: AdjectivePhraseNode): string {
+  return adjective.degree ? translateAdverb(adjective.degree.lemma) : '';
+}
 
 /**
  * フィラーが疑問詞かどうかを判定
@@ -437,8 +555,12 @@ function renderFiller(
   switch (filler.type) {
     case 'nounPhrase':
       return renderNounPhrase(filler);
-    case 'adjectivePhrase':
-      return filler.head.lemma;
+    case 'adjectivePhrase': {
+      // 連体形をそのまま返す（「幸せな」「悲しい」）。
+      // 繋辞の述語位置では buildSOVParts が別経路で活用させるため、ここには来ない。
+      const degree = filler.degree ? translateAdverb(filler.degree.lemma) : '';
+      return degree + translateAdjective(filler.head.lemma);
+    }
     case 'coordinatedNounPhrase':
       return renderCoordinatedNounPhrase(filler);
     default:

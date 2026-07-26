@@ -193,13 +193,26 @@ const modality: RenderCase[] = [
     name: 'モダリティ: モダリティ否定',
     ast: decl(eatApple(), { modal: 'obligation', modalPolarity: 'negative' }),
     note:
-      'KNOWN ISSUE: 日本語が modalPolarity を無視して肯定のまま' +
-      '（EN は "don\'t have to" だが JA は「食べなければならない」）',
+      '日本語はモダリティ自体が否定を担うため、動詞否定（polarity）と' +
+      'モダリティ否定（modalPolarity）を表層で区別しない',
+  },
+  {
+    name: 'モダリティ: モダリティ否定（permission）',
+    ast: decl(eatApple(), { modal: 'permission', modalPolarity: 'negative' }),
   },
   {
     name: 'モダリティ: 進行相',
     ast: decl(eatApple(), { modal: 'ability', aspect: 'progressive' }),
-    note: 'KNOWN ISSUE: 日本語がモダリティ使用時に相を落とす',
+    note: '日本語はテ形 + いる を土台にモダリティを付ける',
+  },
+  {
+    name: 'モダリティ: 完了相',
+    ast: decl(eatApple(), { modal: 'ability', aspect: 'perfect' }),
+    note: '日本語では完了相は過去と同形',
+  },
+  {
+    name: 'モダリティ: 進行相 + 過去',
+    ast: decl(eatApple(), { modal: 'ability', aspect: 'progressive', tense: 'past' }),
   },
 ];
 
@@ -308,13 +321,64 @@ const verbPhrases: RenderCase[] = [
     note: '意味構造は agent/theme/recipient、表層順は recipient → theme',
   },
   {
-    name: '動詞句: 繋辞（be + 形容詞）',
+    name: '動詞句: 繋辞（be + ナ形容詞）',
     ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('happy'))])),
+    note: '日本語は語幹 + である →「私は幸せである」',
+  },
+  {
+    name: '動詞句: 繋辞（be + イ形容詞）',
+    ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('sad'))])),
+    note: '日本語は繋辞を付けず形容詞自体が活用する →「私は悲しい」',
+  },
+  {
+    name: '動詞句: 繋辞（be + イ形容詞・過去）',
+    ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('sad'))]), { tense: 'past' }),
+  },
+  {
+    name: '動詞句: 繋辞（be + イ形容詞・否定）',
+    ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('sad'))]), {
+      polarity: 'negative',
+    }),
+  },
+  {
+    name: '動詞句: 繋辞（be + イ形容詞・過去否定）',
+    ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('sad'))]), {
+      tense: 'past',
+      polarity: 'negative',
+    }),
+  },
+  {
+    name: '動詞句: 繋辞（be + ナ形容詞・過去否定）',
+    ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('happy'))]), {
+      tense: 'past',
+      polarity: 'negative',
+    }),
+  },
+  {
+    name: '動詞句: 繋辞（be + ノ形容詞）',
+    ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('true'))])),
+    note: '「〜の」もナ形容詞と同じく語幹 + である',
+  },
+  {
+    name: '動詞句: 繋辞（be + 形容詞 + 程度副詞）',
+    ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('happy', 'very'))])),
     note:
-      'KNOWN ISSUE: 日本語が「私はhappyである」になる。' +
-      'japanese/lexicon.ts に happy → 幸せな があるのに、' +
-      'japanese/renderer.ts の renderFiller() が adjectivePhrase で ' +
-      'translateAdjective() を通さず head.lemma をそのまま返している',
+      'AdjectivePhraseNode.degree は astGenerator が生成しないため UI からは到達不能。' +
+      '消費しているのは linguaScriptRenderer だけで、英語レンダラーは degree を無視する' +
+      '（EN が "I am happy." になり very が落ちる）。' +
+      'スキーマとレンダラーの不整合。ブロックを用意する際は英語側の対応も必要。',
+  },
+  {
+    name: '動詞句: 繋辞（be + 形容詞 + モダリティ）',
+    ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('happy'))]), {
+      modal: 'ability',
+    }),
+    note: 'モダリティがある場合は「である」経路にフォールバックする',
+  },
+  {
+    name: '動詞句: 繋辞以外の形容詞（seem）',
+    ast: decl(vp('seem', [arg('theme', I()), arg('attribute', adjP('happy'))])),
+    note: 'be 以外は renderFiller() 経由で連体形が使われる',
   },
   {
     name: '動詞句: 繋辞（be + 名詞）',
@@ -440,9 +504,8 @@ const coordination: RenderCase[] = [
 // ============================================
 // Logic Extension（命題論理）
 //
-// KNOWN ISSUE: 日本語レンダラーは logicOp を扱っていないため、
-// AND/OR/IF/BECAUSE の右オペランドが出力から丸ごと落ちる（NOT も否定されない）。
-// 英語レンダラーのみ対応済み。
+// 日本語は AND=かつ / OR=または / NOT=〜ということはない /
+// IF=〜ならば / BECAUSE=〜ので（原因が先）で表現する。
 // ============================================
 const logic: RenderCase[] = [
   {
@@ -499,6 +562,39 @@ const logic: RenderCase[] = [
       ),
       { sentenceType: 'fact' }
     ),
+    note: '英語は結果が先（Q because P）、日本語は原因が先（Pので、Q）',
+  },
+  {
+    name: 'Logic: 入れ子 AND(NOT(P), Q)',
+    ast: sentence(
+      clause(
+        vp('eat', [arg('agent', I())], {
+          logicOp: {
+            operator: 'AND',
+            leftOperand: vp('eat', [arg('agent', I())], { logicOp: { operator: 'NOT' } }),
+            rightOperand: vp('drink', [arg('agent', I())]),
+          },
+        })
+      ),
+      { sentenceType: 'fact' }
+    ),
+  },
+  {
+    name: 'Logic: De Morgan NOT(OR(P, Q))',
+    ast: sentence(
+      clause(
+        vp('eat', [arg('agent', I())], {
+          logicOp: {
+            operator: 'NOT',
+            leftOperand: vp('eat', [arg('agent', I())], {
+              logicOp: { operator: 'OR', rightOperand: vp('drink', [arg('agent', I())]) },
+            }),
+          },
+        })
+      ),
+      { sentenceType: 'fact' }
+    ),
+    note: '英語は neither P nor Q、日本語は「PということもQということもない」',
   },
 ];
 

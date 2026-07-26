@@ -3,7 +3,7 @@
 exports[`'Logic Extension' > 'Logic: AND' 1`] = `
 {
   "en": "⊨ Both I eat and I drink.",
-  "ja": "私は食べる。",
+  "ja": "私は食べる、かつ私は飲む。",
   "logs": [],
   "ls": "fact(present+simple(AND(eat(agent:'I), drink(agent:'I))))",
 }
@@ -12,16 +12,25 @@ exports[`'Logic Extension' > 'Logic: AND' 1`] = `
 exports[`'Logic Extension' > 'Logic: BECAUSE' 1`] = `
 {
   "en": "⊨ I eat because I run.",
-  "ja": "私は走る。",
+  "ja": "私は走るので、私は食べる。",
   "logs": [],
   "ls": "fact(present+simple(BECAUSE(run(agent:'I), effect:eat(agent:'I))))",
+}
+`;
+
+exports[`'Logic Extension' > 'Logic: De Morgan NOT(OR(P, Q))' 1`] = `
+{
+  "en": "⊨ Neither I eat nor I drink.",
+  "ja": "私は食べるということも、私は飲むということもない。",
+  "logs": [],
+  "ls": "fact(present+simple(NOT(OR(eat(agent:'I), drink(agent:'I)))))",
 }
 `;
 
 exports[`'Logic Extension' > 'Logic: IF' 1`] = `
 {
   "en": "⊨ If I run, then I eat.",
-  "ja": "私は走る。",
+  "ja": "私は走るならば、私は食べる。",
   "logs": [],
   "ls": "fact(present+simple(IF(run(agent:'I), then:eat(agent:'I))))",
 }
@@ -30,7 +39,7 @@ exports[`'Logic Extension' > 'Logic: IF' 1`] = `
 exports[`'Logic Extension' > 'Logic: NOT' 1`] = `
 {
   "en": "⊨ It is not the case that I eat.",
-  "ja": "私は食べる。",
+  "ja": "私は食べるということはない。",
   "logs": [],
   "ls": "fact(present+simple(NOT(eat(agent:'I))))",
 }
@@ -39,9 +48,18 @@ exports[`'Logic Extension' > 'Logic: NOT' 1`] = `
 exports[`'Logic Extension' > 'Logic: OR' 1`] = `
 {
   "en": "⊨ Either I eat or I drink.",
-  "ja": "私は食べる。",
+  "ja": "私は食べる、または私は飲む。",
   "logs": [],
   "ls": "fact(present+simple(OR(eat(agent:'I), drink(agent:'I))))",
+}
+`;
+
+exports[`'Logic Extension' > 'Logic: 入れ子 AND(NOT(P), Q)' 1`] = `
+{
+  "en": "⊨ Both it is not the case that I eat and I drink.",
+  "ja": "私は食べるということはない、かつ私は飲む。",
+  "logs": [],
+  "ls": "fact(present+simple(AND(NOT(eat(agent:'I)), drink(agent:'I))))",
 }
 `;
 
@@ -160,11 +178,22 @@ exports[`'モダリティ' > 'モダリティ: volition' 1`] = `
 exports[`'モダリティ' > 'モダリティ: モダリティ否定' 1`] = `
 {
   "en": "I don't have to eat an apple.",
-  "ja": "私はりんごを食べなければならない。",
+  "ja": "私はりんごを食べなくてもいい。",
   "logs": [
     "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
   ],
   "ls": "not(modal(obligation:must, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: モダリティ否定（permission）' 1`] = `
+{
+  "en": "I may not eat an apple.",
+  "ja": "私はりんごを食べてはいけない。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "not(modal(permission:may, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))))",
 }
 `;
 
@@ -179,10 +208,35 @@ exports[`'モダリティ' > 'モダリティ: 動詞否定' 1`] = `
 }
 `;
 
+exports[`'モダリティ' > 'モダリティ: 完了相' 1`] = `
+{
+  "en": "I can have eaten an apple.",
+  "ja": "私はりんごを食べることができた。",
+  "logs": [
+    "aspect | eat → have eaten | rule=ASPECT_PERFECT | trigger=ASPECT_PERFECT_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(ability:can, sentence(present+perfect(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: 進行相 + 過去' 1`] = `
+{
+  "en": "I could be eating an apple.",
+  "ja": "私はりんごを食べていることができた。",
+  "logs": [
+    "modal | can → could | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
+    "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(ability:can, sentence(past+progressive(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
 exports[`'モダリティ' > 'モダリティ: 進行相' 1`] = `
 {
   "en": "I can be eating an apple.",
-  "ja": "私はりんごを食べることができる。",
+  "ja": "私はりんごを食べていることができる。",
   "logs": [
     "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
     "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
@@ -250,6 +304,84 @@ exports[`'動詞句' > '動詞句: 様態副詞' 1`] = `
 }
 `;
 
+exports[`'動詞句' > '動詞句: 繋辞以外の形容詞（seem）' 1`] = `
+{
+  "en": "I seem happy.",
+  "ja": "私は幸せに見える。",
+  "logs": [],
+  "ls": "sentence(present+simple(seem(theme:'I, attribute:'happy)))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + イ形容詞・否定）' 1`] = `
+{
+  "en": "I am not sad.",
+  "ja": "私は悲しくない。",
+  "logs": [],
+  "ls": "sentence(present+simple(not(be(theme:'I, attribute:'sad))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + イ形容詞・過去否定）' 1`] = `
+{
+  "en": "I was not sad.",
+  "ja": "私は悲しくなかった。",
+  "logs": [
+    "tense | be → was | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+  ],
+  "ls": "sentence(past+simple(not(be(theme:'I, attribute:'sad))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + イ形容詞・過去）' 1`] = `
+{
+  "en": "I was sad.",
+  "ja": "私は悲しかった。",
+  "logs": [
+    "tense | be → was | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+  ],
+  "ls": "sentence(past+simple(be(theme:'I, attribute:'sad)))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + イ形容詞）' 1`] = `
+{
+  "en": "I am sad.",
+  "ja": "私は悲しい。",
+  "logs": [],
+  "ls": "sentence(present+simple(be(theme:'I, attribute:'sad)))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + ナ形容詞・過去否定）' 1`] = `
+{
+  "en": "I was not happy.",
+  "ja": "私は幸せではなかった。",
+  "logs": [
+    "tense | be → was | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+  ],
+  "ls": "sentence(past+simple(not(be(theme:'I, attribute:'happy))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + ナ形容詞）' 1`] = `
+{
+  "en": "I am happy.",
+  "ja": "私は幸せである。",
+  "logs": [],
+  "ls": "sentence(present+simple(be(theme:'I, attribute:'happy)))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + ノ形容詞）' 1`] = `
+{
+  "en": "I am true.",
+  "ja": "私は本当である。",
+  "logs": [],
+  "ls": "sentence(present+simple(be(theme:'I, attribute:'true)))",
+}
+`;
+
 exports[`'動詞句' > '動詞句: 繋辞（be + 名詞）' 1`] = `
 {
   "en": "He is a teacher.",
@@ -261,12 +393,21 @@ exports[`'動詞句' > '動詞句: 繋辞（be + 名詞）' 1`] = `
 }
 `;
 
-exports[`'動詞句' > '動詞句: 繋辞（be + 形容詞）' 1`] = `
+exports[`'動詞句' > '動詞句: 繋辞（be + 形容詞 + モダリティ）' 1`] = `
+{
+  "en": "I can be happy.",
+  "ja": "私は幸せであることができる。",
+  "logs": [],
+  "ls": "modal(ability:can, sentence(present+simple(be(theme:'I, attribute:'happy))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + 形容詞 + 程度副詞）' 1`] = `
 {
   "en": "I am happy.",
-  "ja": "私はhappyである。",
+  "ja": "私はとても幸せである。",
   "logs": [],
-  "ls": "sentence(present+simple(be(theme:'I, attribute:'happy)))",
+  "ls": "sentence(present+simple(be(theme:'I, attribute:degree('very, 'happy))))",
 }
 `;
 

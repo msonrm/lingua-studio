@@ -64,8 +64,19 @@
   - 英語レンダラーは degree を無視する（`degree('very, 'happy)` でも EN は "I am happy."）
   - 日本語レンダラーは対応済み（「とても幸せである」）
   - 程度副詞ブロックを追加する際は英語側の対応も必要
-- [ ] **`obligation` + 過去の英語が "I did have to eat" になる**
-  - 迂言形式 `had to` に do-support が重複している疑い（`english/conjugation.ts`）
+- [ ] **モダリティの迂言形式が単純相にしか対応しておらず、英語が壊れる**
+  - `english/conjugation.ts` の `conjugateWithModal()`
+  - `had to` / `was going to` / `don't have to` の特別扱いが `aspect === 'simple'` の場合のみ。
+    それ以外は通常経路に落ち、`modalForm.auxiliary` が undefined → 空文字になる
+  - 実際の出力:
+    ```
+    obligation + past + progressive        → "I be eating an apple."      ← 助動詞が落ちる
+    volition   + past + progressive        → "I be eating an apple."      ← 同上
+    obligation + past + progressive + 否定 → "I not be eating an apple."  ← 空文字を否定して ' not'
+    ```
+  - 単純相の `obligation` + 過去も `"I did have to eat an apple."` と do-support が重複している
+  - 日本語は正しく出ている（「食べていなければならなかった」）
+  - `Phase 2` のテストで現状を固定済み（`cases.ts` の KNOWN BUG コメント参照）
 - [ ] **日本語は動詞否定とモダリティ否定を表層で区別しない**
   - 英語の "can not eat"（動詞否定）と "need not eat"（モダリティ否定）が
     日本語ではどちらもモダリティ側の否定形になる

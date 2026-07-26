@@ -60,10 +60,23 @@ src/
 │   ├── initialWorkspace.ts    初回起動時に置くブロック
 │   └── det-rules-en.ts        限定詞（a/the/some…）の選択ルール
 │
-├── data/                      ★ 辞書の3層構造（下記 §3）
-│   ├── dictionary-core.ts     言語非依存の概念（valency はここ）
-│   ├── dictionary-en.ts       英語固有の語形 + マージ済みルックアップ関数
-│   └── dictionary-ext.ts      ユーザー拡張辞書（localStorage）
+├── concepts/                  ★ 言語非依存の概念（valency・可算性・カテゴリ）
+│   └── index.ts
+│
+├── languages/                 ★ 語彙と形態論（言語パック。下記 §3）
+│   ├── types.ts               LanguagePack の契約
+│   ├── index.ts               レジストリ
+│   ├── en/
+│   │   ├── lexicon.ts         英語の語形 + lookup
+│   │   ├── morphology.ts      動詞活用（conjugateVerb）
+│   │   ├── determiners.ts     限定詞の選択ルール
+│   │   └── index.ts           LanguagePack 実装
+│   └── ja/
+│       ├── lexicon.ts         日本語の表層形 + lookup（活用タイプ込み）
+│       ├── morphology.ts      五段/一段/サ変/カ変の活用
+│       └── index.ts           LanguagePack 実装
+│
+├── userDictionary.ts          ユーザー拡張辞書（localStorage）
 │
 ├── renderer/
 │   ├── astGenerator.ts        Blockly ブロック木 → AST（1,187行）
@@ -71,14 +84,11 @@ src/
 │   ├── DerivationTracker.ts   文法導出ステップの記録クラス
 │   ├── types.ts               RenderContext / DerivationStep 等の型
 │   ├── english/
-│   │   ├── renderer.ts        AST → 英文（1,327行）
-│   │   ├── conjugation.ts     動詞活用（相ごとのハンドラに分割済み）
+│   │   ├── renderer.ts        AST → 英文
 │   │   ├── nounPhrase.ts      名詞句の組み立て
 │   │   └── coordination.ts    等位接続
 │   └── japanese/
 │       ├── renderer.ts        AST → 日本語（SOV 語順・格助詞）
-│       ├── conjugation.ts     五段/一段/サ変/カ変の活用
-│       ├── lexicon.ts         lemma → 日本語表層形のマッピング（1,010行）
 │       └── index.ts           バレル
 │
 ├── components/
@@ -103,27 +113,53 @@ src/
 
 ---
 
-## 3. 辞書の3層構造
+## 3. 語彙と形態論（言語パック）
 
-英語をハブとしつつ、概念（言語非依存）と語形（言語固有）を分離する設計。
-
-| 層 | ファイル | 内容 |
-|---|---|---|
-| **Core** | `dictionary-core.ts` | `VerbCore` / `NounCore` / `PronounCore` / `AdjectiveCore` / `AdverbCore`。**動詞の valency（結合価）はここ**。言語非依存 |
-| **Forms** | `dictionary-en.ts` | `VerbForms`（base/past/pp/ing/s）、`NounForms`（plural）等、英語固有の語形 |
-| **Ext** | `dictionary-ext.ts` | ユーザー定義語。localStorage キー `lingua-studio-dictionary-ext`。変更リスナーで Blockly ツールボックスを再生成 |
-
-**ルックアップ**: `dictionary-en.ts` の `findVerb()` / `findNoun()` などが Core と Forms をマージして返す。検索順は:
+### 役割分担
 
 ```
-1. ベース辞書（Core + Forms）
-2. 拡張辞書（ExtCore + ExtForms）
-3. 規則活用フォールバック（base + "ed"/"ing"/"s" を機械生成）
+concepts/          言語非依存の概念（valency・可算性・カテゴリ）
+     ↓
+languages/<code>/  語彙と形態論。この言語で語をどう綴り、どう活用するか
+     ↓
+renderer/<lang>/   語順の組み立て。どの順で並べ、何を省略するか
 ```
 
-**日本語は別系統**: `renderer/japanese/lexicon.ts` が lemma → 日本語表層形の独自マッピングを持ち、Core/Forms には接続していない。多言語化の際はここが分岐点になる。
+語彙・形態論と語順の組み立てを分けているのは、後者だけが言語ごとに大きく違う一方、
+前者は「lemma を引いて語形を得る」という同じ形をしているため。
 
----
+### 語形の型は言語ごとに違う
+
+語形を「言語コード → 文字列」の1つのマップに押し込めない。
+
+| 言語 | 語形 |
+|---|---|
+| 英語 | `{ base, past, pp, ing, thirdSg }` |
+| 日本語 | `{ ja, type: 五段 \| 一段 \| サ変 \| カ変 }` |
+| フランス語（将来） | 活用群 + 性 |
+
+とくに**日本語の活用タイプは表層形から推論できない**。走る（五段）と食べる（一段）は
+語尾が同じ「る」だが活用が違う。そのため `LanguagePack` は語形の型を型パラメータで受け取り、
+ユーザー辞書では活用タイプを必須入力にしている。
+
+### lookup の一元化
+
+語を引く経路（ベース辞書 → ユーザー辞書 → 機械的な導出）はすべて `lookup*` の内側に閉じる。
+レンダラーは語がどこから来たかを知らなくてよい。
+
+```
+1. ベース辞書
+2. ユーザー辞書（第3段階で接続予定）
+3. 規則変化からの導出（英語のみ。日本語は活用タイプが推論できないため不可）
+```
+
+未登録なら `undefined` を返す。lemma をそのまま返して「引けた」と誤認しないことを
+`languagePacks.test.ts` の契約テストで担保している。
+
+### 言語を追加するとき
+
+`languages/<code>/` を作り `LanguagePack` を実装して `languages/index.ts` に登録する。
+`DictionaryPanel` は `userEntryFields` を見て入力欄を動的に描くので、UI 側の追記は要らない。
 
 ## 4. AST スキーマの要点
 

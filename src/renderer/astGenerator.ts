@@ -17,8 +17,8 @@ import {
   ModalType,
   PropositionalOperator,
 } from '../types/schema';
-import { verbCores, pronounCores } from '../data/dictionary-core';
-import { getExtVerbs } from '../data/dictionary-ext';
+import { verbCores, pronounCores } from '../concepts';
+import { getExtVerbs } from '../userDictionary';
 import { TIME_CHIP_DATA, DETERMINER_DATA } from '../blocks';
 
 // ============================================

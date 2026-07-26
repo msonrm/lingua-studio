@@ -8,7 +8,7 @@ import {
   addChangeListener,
   type ExtVerbEntry, type ExtNounEntry, type ExtAdjectiveEntry, type ExtAdverbEntry,
   type DictionaryPackage,
-} from '../data/dictionary-ext';
+} from '../userDictionary';
 import type { VerbCategory, NounCategory, AdjectiveCategory } from '../types/schema';
 
 type WordType = 'verb' | 'noun' | 'adjective' | 'adverb';

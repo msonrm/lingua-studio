@@ -15,7 +15,7 @@ import {
   VerbForms, NounForms, AdjectiveForms,
   VerbCategory, NounCategory, AdjectiveCategory,
   ArgumentSlot,
-} from '../types/schema';
+} from './types/schema';
 
 // ============================================
 // パッケージ形式の型定義

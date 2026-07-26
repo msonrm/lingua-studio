@@ -14,13 +14,13 @@ import {
   VerbForms, NounForms, PronounForms, AdjectiveForms,
   VerbEntry, NounEntry, PronounEntry, AdjectiveEntry, AdverbEntry,
   VerbCategory, NounCategory, AdjectiveCategory,
-} from '../types/schema';
-import { verbCores, nounCores, pronounCores, adjectiveCores, adverbCores } from './dictionary-core';
+} from '../../types/schema';
+import { verbCores, nounCores, pronounCores, adjectiveCores, adverbCores } from '../../concepts';
 import {
   findExtVerbCore, findExtVerbForms, findExtNounCore, findExtNounForms,
   findExtAdjectiveCore, findExtAdjectiveForms, findExtAdverbCore,
   getExtVerbs, getExtNouns, getExtAdjectives,
-} from './dictionary-ext';
+} from '../../userDictionary';
 
 // ============================================
 // 動詞活用形

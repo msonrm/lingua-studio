@@ -6,7 +6,7 @@
 
 import * as Blockly from 'blockly';
 import type { VerbCategory, NounCategory } from '../types/schema';
-import { getExtVerbs, getExtNouns, addChangeListener as addDictChangeListener } from '../data/dictionary-ext';
+import { getExtVerbs, getExtNouns, addChangeListener as addDictChangeListener } from '../userDictionary';
 import { COLORS, msg } from './shared';
 import { VERB_CATEGORY_KEYS } from './verbs';
 

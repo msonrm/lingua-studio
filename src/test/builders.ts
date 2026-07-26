@@ -6,7 +6,7 @@
  * （`{ type, adjectives: [], head, ... }` のように省略可能なフィールドは省く）。
  */
 
-import { findPronounCore } from '../data/dictionary-core';
+import { findPronounCore } from '../concepts';
 import type {
   SentenceNode,
   ClauseNode,

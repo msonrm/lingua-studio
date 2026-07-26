@@ -6,7 +6,7 @@
  */
 
 import * as Blockly from 'blockly';
-import { adverbCores } from '../data/dictionary-core';
+import { adverbCores } from '../concepts';
 import { COLORS, msg, labelValidator } from './shared';
 import { getPrepositionOptions } from './prepositions';
 

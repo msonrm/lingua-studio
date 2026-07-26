@@ -5,7 +5,7 @@
  * ブロック定義を読み込まずに参照できる。
  */
 
-import { getPreDeterminers, getCentralDeterminers, getPostDeterminers } from './det-rules-en';
+import { getPreDeterminers, getCentralDeterminers, getPostDeterminers } from '../languages/en/determiners';
 
 // ============================================
 // TimeChip データ定義

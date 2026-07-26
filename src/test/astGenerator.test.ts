@@ -141,14 +141,10 @@ const coordination: WorkspaceCase[] = [
   {
     name: '等位接続: VP 入れ子 or(and(A, B), C)',
     note:
-      'KNOWN BUG: B（drink）が AST から丸ごと消える。期待は eat/drink/run の3つが残ること。\n' +
-      'CHANGELOG 2026-01-31 で修正されたはずの「or(and(A, B), C) で B が失われるバグ」が再現する。\n' +
-      '原因: astGenerator.ts の parseTimeFrameBlock:303 と toVerbPhraseWithLogic:420 が、\n' +
-      'スプレッド（...verbChain.verbPhrase）で引き継いだ内側の coordinatedWith を\n' +
-      '外側の coordination で無条件に上書きしている。\n' +
-      '2026-01-31 の修正は左辺 VP の構築（parseVerbChain:787）までは正しいが、\n' +
-      'その結果を消費する2箇所で潰れる。\n' +
-      'Phase 0 は現状固定が役目なので、このスナップショットはバグった出力を保持している。',
+      '内側の等位接続が失われないことの回帰テスト。\n' +
+      'AST は eat ─and→ drink ─or→ run の鎖になる（appendCoordination）。\n' +
+      '英語は coordination.ts の設計どおり correlative で構造を明示し\n' +
+      '"Both I eat and drink, or run." になる。',
     spec: timeFrame('current', {
       type: 'coordination_verb_or',
       inputs: {
@@ -416,6 +412,31 @@ describe('astGenerator の不変条件', () => {
     );
     try {
       expect(generateMultipleAST(ws)).toHaveLength(2);
+    } finally {
+      ws.dispose();
+    }
+  });
+
+  it('入れ子の等位接続で項が失われない（回帰テスト）', async () => {
+    // or(and(eat, drink), run) → eat ─and→ drink ─or→ run の鎖になること。
+    // 以前は内側の coordinatedWith が外側の coordination に上書きされ drink が消えていた。
+    const nested = coordination.find(c => c.name.includes('入れ子'))!;
+    const ws = await buildWorkspace(nested.spec);
+    try {
+      const [ast] = generateMultipleAST(ws);
+
+      // 鎖を辿って動詞と接続詞を集める
+      const verbs: string[] = [];
+      const conjunctions: string[] = [];
+      let vp: typeof ast.clause.verbPhrase | undefined = ast.clause.verbPhrase;
+      while (vp) {
+        verbs.push(vp.verb.lemma);
+        if (vp.coordinatedWith) conjunctions.push(vp.coordinatedWith.conjunction);
+        vp = vp.coordinatedWith?.verbPhrase;
+      }
+
+      expect(verbs).toEqual(['eat', 'drink', 'run']);
+      expect(conjunctions).toEqual(['and', 'or']);
     } finally {
       ws.dispose();
     }

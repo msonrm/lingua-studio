@@ -2,7 +2,77 @@
 
 > **Note**: このファイルは [TODO.md](./TODO.md) と連動しています。機能実装完了時は両方を更新してください。
 
-## 2026-07-26
+## 2026-07-27
+
+### 等位接続の統一とカンマの修正
+
+VP の等位接続を連結リストから n項ツリーに変え、名詞句と対称な表現にした。
+**LinguaScript / 英語の出力が変わる意図的な変更。**
+
+#### 根本原因: 3つの異なる「繋ぐ」表現
+
+同じ「and/or で2つを繋ぐ」概念に AST 上で3つの形があった。
+
+| 機構 | 修正前 | 入れ子 |
+|---|---|---|
+| NP 等位 | `CoordinatedNounPhraseNode { conjunction, conjuncts[] }` | n項ツリー |
+| VP 等位 | `VerbPhraseNode.coordinatedWith { conjunction, verbPhrase }` | **二項連結リスト** |
+| 命題論理 | `logicOp { operator, leftOperand?, rightOperand? }` | 二項ツリー |
+
+VP だけが鎖だったため、左入れ子と右入れ子が同じ鎖に潰れていた。
+
+```
+修正前: or(and(A,B), C) と and(A, or(B,C)) が
+        どちらも eat ─and→ drink ─or→ build になり、
+        LinguaScript も英語も同一だった
+```
+
+とくに LinguaScript は `or(and(A,B),C)` を `and(A, or(B,C))` と誤って出力しており、
+「意味を一意に確定させる中間表現」という位置づけに反していた。
+
+#### 変更内容
+
+- [x] `CoordinatedVerbPhraseNode` を導入（`CoordinatedNounPhraseNode` と対称な n項ツリー）
+  - `ClauseNode.verbPhrase` は `VerbPhraseConjunct`（単一 or 等位接続）の union に
+  - `VerbPhraseNode.coordinatedWith` は廃止
+  - 同じ接続詞が続く場合は1グループに畳む（`and(and(A,B),C)` → `and(A,B,C)`）
+- [x] `logicOp` のオペランドも等位接続を取れるように型を拡張
+- [x] `NOT` のオペランド構築を二項演算子と統一（Phase 2 で保留していた項目）
+- [x] 4つのレンダラーを対応
+  - 英語: 鎖の走査（`appendCoordinatedVP`）をツリー再帰に置き換え。
+    命令文専用の等位接続処理も一本化
+  - LinguaScript: `and(A, B, C)` のように n項で出力
+  - 日本語: correlative がなく語順が線形なので、ツリーを表層順に平坦化して
+    既存の2パス方式（テ形接続など）を活かす
+- [x] `english/coordination.ts` を作り直し、**構造を受け取る API** に
+  - 修正前は要素の並びと接続詞から構造を推測しており、
+    `groupElements()` が先頭要素の接続詞を `'and'` にデフォルトしていたため
+    純粋な OR でもグループが割れてカンマが入っていた
+
+#### 出力の変化
+
+```
+I eat, or drink.               →  I eat or drink.
+I eat an apple, or an orange.  →  I eat an apple or an orange.
+Do you drink tea, or coffee?   →  Do you drink tea or coffee?
+I eat apple and orange, or banana. → I eat both apple and orange, or banana.
+```
+
+カンマの規則を構造から決めるようにした。
+
+| 条件 | カンマ |
+|---|---|
+| 3要素以上 | 打つ（オックスフォードカンマ） |
+| 末尾以外に入れ子グループがある | 打つ |
+| 2要素目以降が独立した節（主語が違う） | 打つ（"I eat, and my father runs."） |
+| それ以外 | 打たない |
+
+入れ子は correlative で範囲を明示する。
+
+```
+or(and(A,B), C)  →  "Both I eat and drink, or build."     ← both が内側を括る
+and(A, or(B,C))  →  "I eat and either drink or build."     ← either が内側を括る
+```
 
 ### Refactoring Phase 3: blocks/definitions.ts の分割
 

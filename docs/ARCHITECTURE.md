@@ -150,22 +150,27 @@ ClauseNode {
 
 | フィールド | 用途 | 出力 |
 |---|---|---|
-| `coordinatedWith` | **等位接続**（統語論）。小文字 and/or | "I eat and drink" |
+| `CoordinatedVerbPhraseNode` | **等位接続**（統語論）。小文字 and/or の n項ツリー | "I eat and drink" |
 | `logicOp` | **命題論理**（Logic Extension）。大文字 AND/OR/NOT/IF/BECAUSE | `AND(P, Q)` |
 | `polarity` | VP 個別の否定。`ClauseNode.polarity` とは別物 | "I do not eat and I drink" |
 
 `ClauseNode.polarity`（節レベル）と `VerbPhraseNode.polarity`（VP レベル）の両方が negative のとき **二重否定**として扱われる（`english/renderer.ts` の `renderClause()` 内 `doubleNegation`）。
 
-### 等位接続は連結リスト
+### 等位接続は n項ツリー（名詞句と対称）
 
-VP の等位接続に専用ノードはない。`coordinatedWith` を辿る連結リストで表現する。
+`ClauseNode.verbPhrase` は `VerbPhraseConjunct`（単一の `VerbPhraseNode`、または
+`CoordinatedVerbPhraseNode`）。名詞句の `CoordinatedNounPhraseNode` と同じ形で、
+入れ子はそのまま `conjuncts` に入る。
 
 ```
-or(and(A, B), C)  →  A ─and→ B ─or→ C
+or(and(A, B), C)  →  { or, conjuncts: [ { and, conjuncts: [A, B] }, C ] }
+and(A, or(B, C))  →  { and, conjuncts: [ A, { or, conjuncts: [B, C] } ] }
 ```
 
-新しい接続を足すときは上書きせず `astGenerator.ts` の `appendCoordination()` で末尾に繋ぐこと。
-上書きすると入れ子で項が消える（2026-07-26 に修正した実バグ）。
+同じ接続詞が続く場合は1グループに畳まれる（`and(and(A,B),C)` → `and(A,B,C)`）。
+
+以前は `VerbPhraseNode.coordinatedWith` の連結リストで表現していたため、
+上の2つが同じ鎖に潰れ、LinguaScript が別の命題を出力していた（2026-07-27 に修正）。
 
 ---
 

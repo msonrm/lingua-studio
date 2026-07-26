@@ -1049,7 +1049,7 @@ exports[`'等位接続' > '等位接続: NP and' 1`] = `
 
 exports[`'等位接続' > '等位接続: NP or' 1`] = `
 {
-  "en": "I eat an apple, or an orange.",
+  "en": "I eat an apple or an orange.",
   "ja": "私はりんごかオレンジを食べる。",
   "logs": [],
   "ls": "sentence(present+simple(eat(agent:'I, patient:or(noun(det:'an, head:'apple), noun(det:'an, head:'orange)))))",
@@ -1058,7 +1058,7 @@ exports[`'等位接続' > '等位接続: NP or' 1`] = `
 
 exports[`'等位接続' > '等位接続: NP 入れ子（or(and(A, B), C)）' 1`] = `
 {
-  "en": "I eat apple and orange, or banana.",
+  "en": "I eat both apple and orange, or banana.",
   "ja": "私はりんごとオレンジかバナナを食べる。",
   "logs": [],
   "ls": "sentence(present+simple(eat(agent:'I, patient:or(and(noun(head:'apple), noun(head:'orange)), noun(head:'banana)))))",
@@ -1087,7 +1087,7 @@ exports[`'等位接続' > '等位接続: VP and（同一主語 → 主語省略�
 
 exports[`'等位接続' > '等位接続: VP or' 1`] = `
 {
-  "en": "I eat, or drink.",
+  "en": "I eat or drink.",
   "ja": "私は食べるか飲む。",
   "logs": [],
   "ls": "sentence(present+simple(or(eat(agent:'I), drink(agent:'I))))",
@@ -1107,7 +1107,7 @@ exports[`'等位接続' > '等位接続: VP（異なる主語）' 1`] = `
 
 exports[`'等位接続' > '等位接続: 選択疑問（?which）' 1`] = `
 {
-  "en": "Do you drink tea, or coffee?",
+  "en": "Do you drink tea or coffee?",
   "ja": "あなたはお茶かコーヒーを飲むか？",
   "logs": [
     "do-support | do → do [S V] | rule=DO_SUPPORT_QUESTION | trigger=DO_SUPPORT_QUESTION_DESC",

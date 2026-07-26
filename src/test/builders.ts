@@ -11,6 +11,8 @@ import type {
   SentenceNode,
   ClauseNode,
   VerbPhraseNode,
+  VerbPhraseConjunct,
+  CoordinatedVerbPhraseNode,
   NounPhraseNode,
   CoordinatedNounPhraseNode,
   AdjectivePhraseNode,
@@ -126,11 +128,10 @@ export interface VpOptions {
   pps?: PrepositionalPhraseNode[];
   /** VP 個別の否定（等位接続内で使用。ClauseNode.polarity とは別物） */
   polarity?: 'negative';
-  coordinatedWith?: { conjunction: Conjunction; verbPhrase: VerbPhraseNode };
   logicOp?: {
     operator: PropositionalOperator;
-    leftOperand?: VerbPhraseNode;
-    rightOperand?: VerbPhraseNode;
+    leftOperand?: VerbPhraseConjunct;
+    rightOperand?: VerbPhraseConjunct;
   };
 }
 
@@ -148,9 +149,21 @@ export function vp(
     prepositionalPhrases: opts.pps ?? [],
   };
   if (opts.polarity) node.polarity = opts.polarity;
-  if (opts.coordinatedWith) node.coordinatedWith = opts.coordinatedWith;
   if (opts.logicOp) node.logicOp = opts.logicOp;
   return node;
+}
+
+/**
+ * 等位接続された動詞句: coordVp('and', [vp('eat', ...), vp('drink', ...)])
+ *
+ * 入れ子もそのまま表現できる:
+ *   coordVp('or', [coordVp('and', [A, B]), C])  →  (A and B) or C
+ */
+export function coordVp(
+  conjunction: Conjunction,
+  conjuncts: VerbPhraseConjunct[]
+): CoordinatedVerbPhraseNode {
+  return { type: 'coordinatedVerbPhrase', conjunction, conjuncts };
 }
 
 // ============================================
@@ -166,7 +179,7 @@ export interface ClauseOptions {
   modalPolarity?: ClauseNode['modalPolarity'];
 }
 
-export function clause(verbPhrase: VerbPhraseNode, opts: ClauseOptions = {}): ClauseNode {
+export function clause(verbPhrase: VerbPhraseConjunct, opts: ClauseOptions = {}): ClauseNode {
   const node: ClauseNode = {
     type: 'clause',
     verbPhrase,
@@ -199,6 +212,6 @@ export function sentence(clauseNode: ClauseNode, opts: SentenceOptions = {}): Se
 // ============================================
 
 /** 平叙文をひと息で: decl(vp(...), { tense: 'past' }) */
-export function decl(verbPhrase: VerbPhraseNode, opts: ClauseOptions = {}): SentenceNode {
+export function decl(verbPhrase: VerbPhraseConjunct, opts: ClauseOptions = {}): SentenceNode {
   return sentence(clause(verbPhrase, opts));
 }

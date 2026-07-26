@@ -3,6 +3,9 @@ import {
   SentenceNode,
   ClauseNode,
   VerbPhraseNode,
+  VerbPhraseConjunct,
+  CoordinatedVerbPhraseNode,
+  isCoordinatedVerbPhrase,
   NounPhraseNode,
   FilledArgumentSlot,
   AdverbNode,
@@ -223,91 +226,72 @@ function findTimeFrameFromSentenceChain(block: Blockly.Block): { timeFrameBlock:
 
 // 動詞ラッパーチェーンの解析結果
 interface VerbChainResult {
-  verbPhrase: VerbPhraseNode;
+  /** 単一の動詞句、または等位接続ツリー */
+  verbPhrase: VerbPhraseConjunct;
   polarity: 'affirmative' | 'negative';
   frequencyAdverbs: AdverbNode[];
   mannerAdverbs: AdverbNode[];
   locativeAdverbs: AdverbNode[];
   timeAdverbs: AdverbNode[];
   prepositionalPhrases: PrepositionalPhraseNode[];
-  coordination?: {
-    conjunction: Conjunction;
-    rightVerbPhrase: VerbPhraseNode;
-  };
   // 命題レベルの論理演算（Logic Extension）
   logicOp?: {
     operator: PropositionalOperator;
-    leftOperand?: VerbPhraseNode;   // ネストされた論理式の場合
-    rightOperand?: VerbPhraseNode;
+    leftOperand?: VerbPhraseConjunct;   // ネストされた論理式の場合
+    rightOperand?: VerbPhraseConjunct;
   };
 }
 
 /**
- * 等位接続チェーンの末尾に接続を追加する。
+ * 等位接続ツリーの左端にある `VerbPhraseNode` に変換を適用する。
  *
- * `coordinatedWith` は連結リストなので、既存の接続を上書きせず末尾へ繋ぐ必要がある。
- * 上書きすると `or(and(A, B), C)` のような入れ子で内側の B が失われる。
- *
- *   or(and(A, B), C) → A ─and→ B ─or→ C
- *
- * AST は接続を1本の鎖でしか表現できないため、グループ化（優先順位）の情報は落ちるが、
- * 少なくとも項が消えることはなくなる。レンダラー側も英語 (`appendCoordinatedVP`) /
- * 日本語 (`collectVPChain`) ともに鎖を辿る実装になっている。
+ * ラッパー（副詞・前置詞句・否定）が等位接続の外側に付いている場合、
+ * 従来どおり左端の動詞句に畳み込む。
+ *   例: `often(and(A, B))` の often は A に付く
  */
-function appendCoordination(
-  vp: VerbPhraseNode,
-  coordination: { conjunction: Conjunction; verbPhrase: VerbPhraseNode }
-): VerbPhraseNode {
-  if (!vp.coordinatedWith) {
-    return { ...vp, coordinatedWith: coordination };
+function mapLeftmostVerbPhrase(
+  node: VerbPhraseConjunct,
+  fn: (vp: VerbPhraseNode) => VerbPhraseNode
+): VerbPhraseConjunct {
+  if (!isCoordinatedVerbPhrase(node)) {
+    return fn(node);
   }
-  return {
-    ...vp,
-    coordinatedWith: {
-      conjunction: vp.coordinatedWith.conjunction,
-      verbPhrase: appendCoordination(vp.coordinatedWith.verbPhrase, coordination),
-    },
-  };
+  const [first, ...rest] = node.conjuncts;
+  return { ...node, conjuncts: [mapLeftmostVerbPhrase(first, fn), ...rest] };
 }
 
 /**
- * VerbChainResult を VerbPhraseNode に畳み込む。
+ * VerbChainResult を AST ノードに畳み込む。
  *
- * ラッパーブロックが集めた副詞・前置詞句を動詞句へマージし、
- * 等位接続をチェーンの末尾へ繋ぐ。
+ * ラッパーブロックが集めた副詞・前置詞句を動詞句へマージする。
+ * 等位接続は `parseVerbCoordination` が既に `CoordinatedVerbPhraseNode` として
+ * 組み立てているので、ここでは触らない。
  *
  * @param withPolarity VP 個別の polarity を設定するか。
  *   等位接続や論理演算のオペランドでは各 VP が個別に極性を持つため true。
  *   節のトップレベルでは極性は ClauseNode 側が持つため false。
  */
-function toVerbPhraseNode(chain: VerbChainResult, withPolarity: boolean): VerbPhraseNode {
-  const base: VerbPhraseNode = {
-    ...chain.verbPhrase,
-    adverbs: [
-      ...chain.mannerAdverbs,
-      ...chain.frequencyAdverbs,
-      ...chain.locativeAdverbs,
-      ...(chain.timeAdverbs || []),
-      ...chain.verbPhrase.adverbs,
-    ],
-    prepositionalPhrases: [
-      ...chain.prepositionalPhrases,
-      ...chain.verbPhrase.prepositionalPhrases,
-    ],
-    logicOp: chain.logicOp,
-  };
+function toVerbPhraseNode(chain: VerbChainResult, withPolarity: boolean): VerbPhraseConjunct {
+  return mapLeftmostVerbPhrase(chain.verbPhrase, vp => {
+    const base: VerbPhraseNode = {
+      ...vp,
+      adverbs: [
+        ...chain.mannerAdverbs,
+        ...chain.frequencyAdverbs,
+        ...chain.locativeAdverbs,
+        ...(chain.timeAdverbs || []),
+        ...vp.adverbs,
+      ],
+      prepositionalPhrases: [...chain.prepositionalPhrases, ...vp.prepositionalPhrases],
+      logicOp: chain.logicOp,
+    };
 
-  if (withPolarity) {
-    base.polarity = chain.polarity === 'negative' ? 'negative' : undefined;
-  }
+    if (withPolarity) {
+      base.polarity = chain.polarity === 'negative' ? 'negative' : undefined;
+    }
 
-  // chain.verbPhrase 由来の内側の等位接続を保持したまま、外側の接続を末尾に足す
-  return chain.coordination
-    ? appendCoordination(base, {
-        conjunction: chain.coordination.conjunction,
-        verbPhrase: chain.coordination.rightVerbPhrase,
-      })
-    : base;
+    return base;
+  });
 }
 
 function parseTimeFrameBlock(
@@ -358,7 +342,7 @@ function parseTimeFrameBlock(
 
 // Wh疑問詞・疑問副詞を検出して自動的に疑問文に変換
 function detectInterrogativeFromWh(
-  verbPhrase: VerbPhraseNode,
+  verbPhrase: VerbPhraseConjunct,
   currentType: 'declarative' | 'imperative' | 'interrogative' | 'fact'
 ): 'declarative' | 'imperative' | 'interrogative' | 'fact' {
   // 既に疑問文の場合はそのまま
@@ -374,6 +358,13 @@ function detectInterrogativeFromWh(
   // fact は変換しない（事実宣言は疑問にならない）
   if (currentType === 'fact') {
     return 'fact';
+  }
+
+  // 等位接続の場合はどれか1つでも Wh を含めば疑問文
+  if (isCoordinatedVerbPhrase(verbPhrase)) {
+    return verbPhrase.conjuncts.some(c => detectInterrogativeFromWh(c, currentType) === 'interrogative')
+      ? 'interrogative'
+      : currentType;
   }
 
   // Wh疑問副詞をチェック（?where, ?when, ?how）
@@ -435,11 +426,11 @@ function hasInterrogativePronoun(filler: FilledArgumentSlot['filler']): boolean 
  * VerbChainResult を VerbPhraseNode に変換する。
  * 等位接続や論理演算のオペランドで使用。各 VP が個別に極性を持つため withPolarity = true。
  */
-const toVerbPhraseWithLogic = (result: VerbChainResult): VerbPhraseNode =>
+const toVerbPhraseWithLogic = (result: VerbChainResult): VerbPhraseConjunct =>
   toVerbPhraseNode(result, true);
 
 /** 副詞・前置詞句を何も持たない VerbChainResult */
-function emptyChain(verbPhrase: VerbPhraseNode): VerbChainResult {
+function emptyChain(verbPhrase: VerbPhraseConjunct): VerbChainResult {
   return {
     verbPhrase,
     polarity: 'affirmative',
@@ -623,29 +614,9 @@ function parseNotLogic(block: Blockly.Block): VerbChainResult | null {
     return { ...inner, logicOp: { operator: 'NOT' } };
   }
 
-  // 内側が複合式の場合は完全な VerbPhraseNode として leftOperand に格納する。
-  //
-  // ⚠ ここは二項演算子（parseBinaryLogic）と違い toVerbPhraseWithLogic を使っていない。
-  //    polarity を載せず、内側の等位接続も末尾に繋がない点が異なる。
-  //    統一すべきに見えるが振る舞いが変わるため、Phase 2（機械的な分割）では現状を保つ。
-  //    TODO.md「NOT のオペランド構築が二項演算子と揃っていない」を参照。
-  const innerVP: VerbPhraseNode = {
-    ...inner.verbPhrase,
-    adverbs: [
-      ...inner.mannerAdverbs,
-      ...inner.frequencyAdverbs,
-      ...inner.locativeAdverbs,
-      ...(inner.timeAdverbs || []),
-      ...inner.verbPhrase.adverbs,
-    ],
-    prepositionalPhrases: [
-      ...inner.prepositionalPhrases,
-      ...inner.verbPhrase.prepositionalPhrases,
-    ],
-    logicOp: inner.logicOp,
-  };
-
-  return { ...inner, logicOp: { operator: 'NOT', leftOperand: innerVP } };
+  // 内側が複合式の場合は完全なノードとして leftOperand に格納する。
+  // 二項演算子（parseBinaryLogic）と同じ toVerbPhraseWithLogic を使う。
+  return { ...inner, logicOp: { operator: 'NOT', leftOperand: toVerbPhraseWithLogic(inner) } };
 }
 
 // --- 等位接続（動詞） -------------------------------------------------------
@@ -675,22 +646,36 @@ function parseVerbCoordination(
     prepositionalPhrases: [],
   };
 
-  // 左側は内側の等位接続を含む完全な VerbPhraseNode に変換する。
-  // 副詞・前置詞句も leftVP へ畳み込まれるので、返す Result 側は空にする。
-  // polarity は各 VP が個別に持つためここでは hoist しない。
-  return {
-    verbPhrase: toVerbPhraseWithLogic(left),
-    polarity: 'affirmative',
-    frequencyAdverbs: [],
-    mannerAdverbs: [],
-    locativeAdverbs: [],
-    timeAdverbs: [],
-    prepositionalPhrases: [],
-    coordination: {
-      conjunction,
-      rightVerbPhrase: right ? toVerbPhraseWithLogic(right) : defaultVP,
-    },
+  const leftNode = toVerbPhraseWithLogic(left);
+  const rightNode = right ? toVerbPhraseWithLogic(right) : defaultVP;
+
+  // 同じ接続詞が連続する場合は1つのグループに畳む（A and B and C → and[A, B, C]）。
+  // 接続詞が変わるところでグループの境界になり、それが英語のカンマや
+  // correlative（both/either）の判断材料になる。
+  const conjuncts: VerbPhraseConjunct[] = [
+    ...flattenSameConjunction(leftNode, conjunction),
+    ...flattenSameConjunction(rightNode, conjunction),
+  ];
+
+  const coordinated: CoordinatedVerbPhraseNode = {
+    type: 'coordinatedVerbPhrase',
+    conjunction,
+    conjuncts,
   };
+
+  // 副詞・前置詞句は各 conjunct が既に持っているので Result 側は空にする。
+  // polarity も各 VP が個別に持つためここでは hoist しない。
+  return emptyChain(coordinated);
+}
+
+/** 同じ接続詞の等位接続なら要素を展開し、違えばそのまま1要素として返す */
+function flattenSameConjunction(
+  node: VerbPhraseConjunct,
+  conjunction: Conjunction
+): VerbPhraseConjunct[] {
+  return isCoordinatedVerbPhrase(node) && node.conjunction === conjunction
+    ? node.conjuncts
+    : [node];
 }
 
 // --- ディスパッチャ ---------------------------------------------------------

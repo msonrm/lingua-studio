@@ -10,6 +10,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { generateMultipleAST } from '../renderer/astGenerator';
+import { isCoordinatedVerbPhrase, type VerbPhraseConjunct } from '../types/schema';
 import { renderToEnglishWithLogs } from '../renderer/english/renderer';
 import {
   buildWorkspace,
@@ -440,26 +441,82 @@ describe('astGenerator の不変条件', () => {
     }
   });
 
+  /** 等位接続ツリーを `or(and(A, B), C)` のような文字列にする */
+  function describeCoordination(node: VerbPhraseConjunct): string {
+    if (!isCoordinatedVerbPhrase(node)) return node.verb.lemma;
+    return `${node.conjunction}(${node.conjuncts.map(describeCoordination).join(', ')})`;
+  }
+
   it('入れ子の等位接続で項が失われない（回帰テスト）', async () => {
-    // or(and(eat, drink), run) → eat ─and→ drink ─or→ run の鎖になること。
-    // 以前は内側の coordinatedWith が外側の coordination に上書きされ drink が消えていた。
     const nested = coordination.find(c => c.name.includes('入れ子'))!;
     const ws = await buildWorkspace(nested.spec);
     try {
       const [ast] = generateMultipleAST(ws);
+      expect(describeCoordination(ast.clause.verbPhrase)).toBe('or(and(eat, drink), run)');
+    } finally {
+      ws.dispose();
+    }
+  });
 
-      // 鎖を辿って動詞と接続詞を集める
-      const verbs: string[] = [];
-      const conjunctions: string[] = [];
-      let vp: typeof ast.clause.verbPhrase | undefined = ast.clause.verbPhrase;
-      while (vp) {
-        verbs.push(vp.verb.lemma);
-        if (vp.coordinatedWith) conjunctions.push(vp.coordinatedWith.conjunction);
-        vp = vp.coordinatedWith?.verbPhrase;
-      }
+  it('左入れ子と右入れ子を区別できる（回帰テスト）', async () => {
+    // 連結リスト表現では両方が eat ─and→ drink ─or→ build に潰れ、
+    // 意味の違う2文が同じ AST・同じ LinguaScript になっていた。
+    const v = (lemma: string): BlockSpec => ({
+      type: 'verb_action',
+      fields: { VERB: lemma },
+      inputs: { ARG_0: pronoun('I') },
+    });
+    const coord = (kind: 'and' | 'or', left: BlockSpec, right: BlockSpec): BlockSpec => ({
+      type: `coordination_verb_${kind}`,
+      inputs: { LEFT: left, RIGHT: right },
+    });
 
-      expect(verbs).toEqual(['eat', 'drink', 'run']);
-      expect(conjunctions).toEqual(['and', 'or']);
+    const leftNested = await buildWorkspace(
+      timeFrame('current', coord('or', coord('and', v('eat'), v('drink')), v('build')))
+    );
+    const rightNested = await buildWorkspace(
+      timeFrame('current', coord('and', v('eat'), coord('or', v('drink'), v('build'))))
+    );
+
+    try {
+      const [leftAst] = generateMultipleAST(leftNested);
+      const [rightAst] = generateMultipleAST(rightNested);
+
+      expect(describeCoordination(leftAst.clause.verbPhrase)).toBe('or(and(eat, drink), build)');
+      expect(describeCoordination(rightAst.clause.verbPhrase)).toBe('and(eat, or(drink, build))');
+
+      // 英語は correlative（both / either）で範囲を書き分ける
+      expect(renderToEnglishWithLogs(leftAst).output).not.toBe(
+        renderToEnglishWithLogs(rightAst).output
+      );
+    } finally {
+      leftNested.dispose();
+      rightNested.dispose();
+    }
+  });
+
+  it('同じ接続詞が続く場合は1つのグループに畳まれる', async () => {
+    const v = (lemma: string): BlockSpec => ({
+      type: 'verb_action',
+      fields: { VERB: lemma },
+      inputs: { ARG_0: pronoun('I') },
+    });
+    const ws = await buildWorkspace(
+      timeFrame('current', {
+        type: 'coordination_verb_and',
+        inputs: {
+          LEFT: {
+            type: 'coordination_verb_and',
+            inputs: { LEFT: v('eat'), RIGHT: v('drink') },
+          },
+          RIGHT: v('build'),
+        },
+      })
+    );
+    try {
+      const [ast] = generateMultipleAST(ws);
+      // and(and(A, B), C) は and(A, B, C) に畳まれる
+      expect(describeCoordination(ast.clause.verbPhrase)).toBe('and(eat, drink, build)');
     } finally {
       ws.dispose();
     }

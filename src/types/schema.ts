@@ -202,7 +202,8 @@ export type ModalType =
 
 export interface ClauseNode {
   type: "clause";
-  verbPhrase: VerbPhraseNode;
+  /** 単一の動詞句、または等位接続された動詞句のツリー */
+  verbPhrase: VerbPhraseConjunct;
   tense: "past" | "present" | "future";
   aspect: "simple" | "progressive" | "perfect" | "perfectProgressive";
   polarity: "affirmative" | "negative";        // 動詞否定: "I do NOT run"
@@ -224,16 +225,40 @@ export interface VerbPhraseNode {
   adverbs: AdverbNode[];
   prepositionalPhrases: PrepositionalPhraseNode[];  // 前置詞句 ("go TO THE PARK")
   polarity?: "affirmative" | "negative";  // VP個別の否定（等位接続内で使用）
-  coordinatedWith?: {
-    conjunction: Conjunction;
-    verbPhrase: VerbPhraseNode;
-  };
   // 命題レベルの論理演算（AND/OR/NOT - 大文字、and/or 等位接続とは別）
   logicOp?: {
     operator: PropositionalOperator;
-    leftOperand?: VerbPhraseNode;   // NOT が複合式をラップする場合、または AND/OR の左側
-    rightOperand?: VerbPhraseNode;  // AND/OR の右側
+    leftOperand?: VerbPhraseConjunct;   // NOT が複合式をラップする場合、または AND/OR の左側
+    rightOperand?: VerbPhraseConjunct;  // AND/OR の右側
   };
+}
+
+/**
+ * VP等位接続（動詞句 AND/OR 動詞句）
+ *
+ * 名詞句の `CoordinatedNounPhraseNode` と対称な n項ツリー。
+ * 入れ子の要素も `conjuncts` に入るため、グループ化が保持される。
+ *
+ *   or(and(A, B), C)  →  { or, conjuncts: [ { and, conjuncts: [A, B] }, C ] }
+ *   and(A, or(B, C))  →  { and, conjuncts: [ A, { or, conjuncts: [B, C] } ] }
+ *
+ * 以前は `VerbPhraseNode.coordinatedWith` による連結リストで表現していたが、
+ * 上の2つが同じ鎖に潰れてしまい、意味の違いを表現できなかった。
+ */
+export interface CoordinatedVerbPhraseNode {
+  type: "coordinatedVerbPhrase";
+  conjunction: Conjunction;
+  conjuncts: VerbPhraseConjunct[];
+}
+
+/** 等位接続の要素（単一の動詞句、または入れ子の等位接続） */
+export type VerbPhraseConjunct = VerbPhraseNode | CoordinatedVerbPhraseNode;
+
+/** 等位接続された動詞句かどうかを判定する */
+export function isCoordinatedVerbPhrase(
+  node: VerbPhraseConjunct
+): node is CoordinatedVerbPhraseNode {
+  return node.type === "coordinatedVerbPhrase";
 }
 
 export interface FilledArgumentSlot {
@@ -304,5 +329,4 @@ export interface CoordinatedNounPhraseNode {
   isChoiceQuestion?: boolean;  // 選択疑問: ?which('tea, 'coffee)
 }
 
-// VP の等位接続は CoordinatedNounPhraseNode のような専用ノードではなく、
-// VerbPhraseNode.coordinatedWith による連結リストで表現する（appendCoordination 参照）。
+

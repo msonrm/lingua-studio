@@ -13,6 +13,9 @@ import {
   SentenceNode,
   ClauseNode,
   VerbPhraseNode,
+  VerbPhraseConjunct,
+  Conjunction,
+  isCoordinatedVerbPhrase,
   NounPhraseNode,
   NounHead,
   PronounHead,
@@ -85,7 +88,7 @@ function renderImperative(clause: ClauseNode, timeAdv?: string): string {
  * 事実宣言（fact）: 命題論理をサポートする平叙文
  */
 function renderFact(clause: ClauseNode, timeAdv?: string): string {
-  if (!clause.verbPhrase.logicOp) {
+  if (isCoordinatedVerbPhrase(clause.verbPhrase) || !clause.verbPhrase.logicOp) {
     return renderDeclarative(clause, timeAdv);
   }
   return renderLogicExpression(clause) + '。';
@@ -111,13 +114,13 @@ function renderFact(clause: ClauseNode, timeAdv?: string): string {
  */
 function renderLogicExpression(clause: ClauseNode): string {
   const { verbPhrase, tense, aspect } = clause;
-  const logicOp = verbPhrase.logicOp;
+  const logicOp = isCoordinatedVerbPhrase(verbPhrase) ? undefined : verbPhrase.logicOp;
 
   if (!logicOp) {
     return buildSOVParts(clause).filter(Boolean).join('');
   }
 
-  const makeClause = (vp: VerbPhraseNode): ClauseNode => ({
+  const makeClause = (vp: VerbPhraseConjunct): ClauseNode => ({
     type: 'clause',
     verbPhrase: vp,
     tense,
@@ -126,23 +129,27 @@ function renderLogicExpression(clause: ClauseNode): string {
   });
 
   // オペランドをレンダリング（入れ子の論理式なら再帰）
-  const renderOperand = (vp: VerbPhraseNode | undefined): string => {
+  const renderOperand = (vp: VerbPhraseConjunct | undefined): string => {
     if (!vp) return '___';
     const operandClause = makeClause(vp);
-    return vp.logicOp
+    return !isCoordinatedVerbPhrase(vp) && vp.logicOp
       ? renderLogicExpression(operandClause)
       : buildSOVParts(operandClause).filter(Boolean).join('');
   };
 
   // leftOperand があればそれを、なければ現在の verbPhrase から logicOp を外したものを使う
-  const leftVP: VerbPhraseNode = logicOp.leftOperand ?? { ...verbPhrase, logicOp: undefined };
+  const leftVP: VerbPhraseConjunct =
+    logicOp.leftOperand ??
+    (isCoordinatedVerbPhrase(verbPhrase) ? verbPhrase : { ...verbPhrase, logicOp: undefined });
   const left = renderOperand(leftVP);
 
   if (logicOp.operator === 'NOT') {
     // NOT(OR(P, Q)) は De Morgan で「PということもQということもない」
-    const innerOr = logicOp.leftOperand?.logicOp;
-    if (innerOr?.operator === 'OR' && logicOp.leftOperand) {
-      const innerLeft = renderOperand({ ...logicOp.leftOperand, logicOp: undefined });
+    const operandLeft = logicOp.leftOperand;
+    const innerOr =
+      operandLeft && !isCoordinatedVerbPhrase(operandLeft) ? operandLeft.logicOp : undefined;
+    if (innerOr?.operator === 'OR' && operandLeft && !isCoordinatedVerbPhrase(operandLeft)) {
+      const innerLeft = renderOperand({ ...operandLeft, logicOp: undefined });
       const innerRight = renderOperand(innerOr.rightOperand);
       return `${innerLeft}ということも、${innerRight}ということもない`;
     }
@@ -220,60 +227,67 @@ function renderSubjectFiller(filler: NounPhraseNode | CoordinatedNounPhraseNode)
   }
 }
 
+/** 等位接続ツリーの左端にある単一の動詞句を返す（引数・副詞の取り出し用） */
+function headVerbPhrase(node: VerbPhraseConjunct): VerbPhraseNode {
+  return isCoordinatedVerbPhrase(node) ? headVerbPhrase(node.conjuncts[0]) : node;
+}
+
+/**
+ * 等位接続ツリーを表層順に平坦化する
+ *
+ * 日本語には correlative（both / either）がなく、テ形接続のように語が線形に並ぶため、
+ * グループ構造そのものは表層に現れない。必要なのは「各要素の後にどの接続詞が来るか」だけ。
+ *
+ *   or(and(A, B), C)  →  [A(and), B(or), C(-)]
+ *   and(A, or(B, C))  →  [A(and), B(or), C(-)]
+ *
+ * ⚠ この2つは日本語では同じ並びになる（英語は correlative で書き分ける）。
+ *
+ * 意図的な判断であり、対応漏れではない。日本語でも「AかつBであるか、または C」のように
+ * 書けば範囲を明示できるが、日常の文としては不自然で契約書や条文の文体になってしまう。
+ * 本ツールは学習者が組み立てた文を自然な日本語で見せることを優先し、平坦化を選んでいる。
+ * 範囲を厳密に見たい場合は LinguaScript 出力（n項ツリーをそのまま反映）を参照する。
+ */
+function flattenCoordination(
+  node: VerbPhraseConjunct
+): { vp: VerbPhraseNode; nextConjunction: Conjunction | null }[] {
+  if (!isCoordinatedVerbPhrase(node)) {
+    return [{ vp: node, nextConjunction: null }];
+  }
+
+  const flattened: { vp: VerbPhraseNode; nextConjunction: Conjunction | null }[] = [];
+  node.conjuncts.forEach((child, index) => {
+    const part = flattenCoordination(child);
+    // 子の最後の要素は、この階層の接続詞で次の子へ繋がる
+    if (index < node.conjuncts.length - 1) {
+      part[part.length - 1].nextConjunction = node.conjunction;
+    }
+    flattened.push(...part);
+  });
+  return flattened;
+}
+
 /**
  * Phase 1: VP等位接続チェーンを収集
  */
-function collectVPChain(vp: VerbPhraseNode): VPChainItem[] {
-  const items: VPChainItem[] = [];
+function collectVPChain(node: VerbPhraseConjunct): VPChainItem[] {
+  const flattened = flattenCoordination(node);
+  let previousGroupId: string | null = null;
 
-  // 最初のVP
-  const firstGroupId = getSubjectGroupId(vp);
-  items.push({
-    vp,
-    conjunction: vp.coordinatedWith?.conjunction || 'and',
-    groupId: firstGroupId,
-    isFirst: true,
-    isLast: !vp.coordinatedWith,
-    isSameGroupAsPrev: true,  // 最初の要素は常にtrue
-    vpPolarity: vp.polarity === 'negative' ? 'negative' : 'affirmative',
-  });
-
-  if (!vp.coordinatedWith) {
-    return items;
-  }
-
-  // チェーンを辿る
-  let prevGroupId = firstGroupId;
-  let current = vp.coordinatedWith.verbPhrase;
-
-  while (current.coordinatedWith) {
-    const groupId = getSubjectGroupId(current);
-    items.push({
-      vp: current,
-      conjunction: current.coordinatedWith.conjunction,
+  return flattened.map(({ vp, nextConjunction }, index) => {
+    const groupId = getSubjectGroupId(vp);
+    const item: VPChainItem = {
+      vp,
+      conjunction: nextConjunction ?? 'and',  // 最後の要素では使われない
       groupId,
-      isFirst: false,
-      isLast: false,
-      isSameGroupAsPrev: groupId === prevGroupId,
-      vpPolarity: current.polarity === 'negative' ? 'negative' : 'affirmative',
-    });
-    prevGroupId = groupId;
-    current = current.coordinatedWith.verbPhrase;
-  }
-
-  // 最後のVP
-  const lastGroupId = getSubjectGroupId(current);
-  items.push({
-    vp: current,
-    conjunction: 'and',  // 最後なので使われない
-    groupId: lastGroupId,
-    isFirst: false,
-    isLast: true,
-    isSameGroupAsPrev: lastGroupId === prevGroupId,
-    vpPolarity: current.polarity === 'negative' ? 'negative' : 'affirmative',
+      isFirst: index === 0,
+      isLast: index === flattened.length - 1,
+      isSameGroupAsPrev: index === 0 || groupId === previousGroupId,
+      vpPolarity: vp.polarity === 'negative' ? 'negative' : 'affirmative',
+    };
+    previousGroupId = groupId;
+    return item;
   });
-
-  return items;
 }
 
 /**
@@ -332,7 +346,7 @@ function renderVPChainItem(
  * - 異なる主語の場合: 読点 + 主語が + 動詞
  */
 function renderVerbWithCoordination(
-  vp: VerbPhraseNode,
+  vp: VerbPhraseConjunct,
   tense: Tense,
   aspect: Aspect,
   polarity: Polarity,
@@ -345,7 +359,7 @@ function renderVerbWithCoordination(
 
   // 等位接続がなければ通常の活用
   if (chain.length === 1) {
-    const verb = conjugate(vp.verb.lemma, { tense, aspect, polarity, modal, modalPolarity });
+    const verb = conjugate(chain[0].vp.verb.lemma, { tense, aspect, polarity, modal, modalPolarity });
     return attributePrefix ? `${attributePrefix}${verb}` : verb;
   }
 
@@ -375,8 +389,10 @@ interface BuildOptions {
  */
 function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[] {
   const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
-  const args = verbPhrase.arguments;
-  const verbLemma = verbPhrase.verb.lemma;
+  // 引数・副詞・前置詞句は先頭の動詞句が持つ（等位接続でも主語などは先頭に付く）
+  const head = headVerbPhrase(verbPhrase);
+  const args = head.arguments;
+  const verbLemma = head.verb.lemma;
 
   // 引数を格助詞付きでレンダリング
   const argParts: { role: SemanticRole; text: string; isSubject: boolean; isAttribute: boolean }[] = [];
@@ -437,13 +453,13 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   const others = argParts.filter(p => !p.isSubject && !p.isAttribute);
 
   // 副詞（日本語に変換）
-  const adverbs = verbPhrase.adverbs.map(adv => translateAdverb(adv.lemma));
+  const adverbs = head.adverbs.map(adv => translateAdverb(adv.lemma));
 
   // 前置詞句（動詞修飾）
-  const prepPhrases = verbPhrase.prepositionalPhrases.map(pp => renderPrepositionalPhrase(pp));
+  const prepPhrases = head.prepositionalPhrases.map(pp => renderPrepositionalPhrase(pp));
 
   // 否定極性副詞（never, hardly, etc.）がある場合、動詞を否定形にする
-  const hasNegativePolarityAdverb = verbPhrase.adverbs.some(adv => isNegativePolarityAdverb(adv.lemma));
+  const hasNegativePolarityAdverb = head.adverbs.some(adv => isNegativePolarityAdverb(adv.lemma));
   const effectivePolarity: Polarity = hasNegativePolarityAdverb ? 'negative' : polarity as Polarity;
 
   // 日本語では future は present と同形
@@ -473,9 +489,9 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   }
 
   // be + 形容詞は繋辞を付けず、形容詞自体を述語として活用する（「私は悲しかった」）
-  const adjectivalPredicate = getAdjectivalPredicate(verbPhrase);
+  const adjectivalPredicate = getAdjectivalPredicate(head);
 
-  if (adjectivalPredicate && !modal && !verbPhrase.coordinatedWith) {
+  if (adjectivalPredicate && !modal && !isCoordinatedVerbPhrase(verbPhrase)) {
     const form = analyzeAdjective(adjectivalPredicate.head.lemma);
     result.push(
       renderDegree(adjectivalPredicate) +

@@ -185,6 +185,24 @@ const modality: RenderCase[] = [
   {
     name: 'モダリティ: obligation + 過去（迂言形式）',
     ast: decl(eatApple(), { modal: 'obligation', tense: 'past' }),
+    note: 'had to。以前は do-support が重複して "did have to" になっていた',
+  },
+  {
+    name: 'モダリティ: 義務のモダリティ否定（3人称単数）',
+    ast: decl(
+      vp('eat', [arg('agent', he()), arg('patient', anApple())]),
+      { modal: 'obligation', modalPolarity: 'negative' }
+    ),
+    note: "doesn't have to。以前は主語に一致せず \"He don't have to\" になっていた",
+  },
+  {
+    name: 'モダリティ: 意志のモダリティ否定 + 過去',
+    ast: decl(eatApple(), { modal: 'volition', tense: 'past', modalPolarity: 'negative' }),
+    note: 'was not going to。以前は否定が消えて "was going to" になっていた',
+  },
+  {
+    name: 'モダリティ: 迂言形式 + 完了相（had to have）',
+    ast: decl(eatApple(), { modal: 'obligation', tense: 'past', aspect: 'perfect' }),
   },
   {
     name: 'モダリティ: 動詞否定',
@@ -218,15 +236,12 @@ const modality: RenderCase[] = [
   {
     name: 'モダリティ: 迂言形式 + 進行相（had to）',
     ast: decl(eatApple(), { modal: 'obligation', tense: 'past', aspect: 'progressive' }),
-    note:
-      'KNOWN BUG: 英語が "I be eating an apple." になる（助動詞が落ちる）。\n' +
-      '迂言形式（had to / was going to）の特別扱いが単純相にしかなく、\n' +
-      'それ以外は通常経路に落ちて modalForm.auxiliary が undefined → 空文字になるため。',
+    note: '迂言形式 had to が相と合成される（助動詞 + 連結語に分解しているため）',
   },
   {
     name: 'モダリティ: 迂言形式 + 進行相（was going to）',
     ast: decl(eatApple(), { modal: 'volition', tense: 'past', aspect: 'progressive' }),
-    note: 'KNOWN BUG: 上と同じ理由で "I be eating an apple." になる',
+    note: '迂言形式 was going to が相と合成される',
   },
   {
     name: 'モダリティ: 義務の否定 + 進行相',
@@ -236,9 +251,7 @@ const modality: RenderCase[] = [
       aspect: 'progressive',
       modalPolarity: 'negative',
     }),
-    note:
-      'KNOWN BUG: 英語が "I not be eating an apple." になる。\n' +
-      "don't have to の特別扱いも単純相のみで、空文字の助動詞を否定して ' not' になる。",
+    note: "義務のモダリティ否定 didn't have to も相と合成される",
   },
 ];
 

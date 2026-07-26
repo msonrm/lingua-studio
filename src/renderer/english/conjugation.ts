@@ -84,35 +84,48 @@ type IsThirdSingularFn = (subject: NounPhraseNode | CoordinatedNounPhraseNode | 
 // Modal Forms
 // ============================================
 
+/**
+ * モダリティの表層形
+ *
+ * 迂言形式（"had to" / "was going to"）も助動詞 + 連結語に分解して表す。
+ * こうすると相（be + ing / have + pp）と素直に合成できる:
+ *
+ *   had to      + be eating  →  "had to be eating"
+ *   was going to + have eaten →  "was going to have eaten"
+ *
+ * 以前は迂言形式を1つの文字列として持ち、単純相だけを特別扱いしていたため、
+ * 進行相・完了相では助動詞が丸ごと落ちて "I be eating an apple." になっていた。
+ */
 interface ModalForm {
-  auxiliary?: string;
-  usePeriPhrastic?: 'was going to' | 'had to';
+  /** 助動詞（疑問文で倒置される部分） */
+  auxiliary: string;
+  /** 助動詞と動詞句の間に入る語（"to" / "going to" / "have to"） */
+  linker?: string;
 }
 
-function getModalForm(modal: ModalType, tense: Tense): ModalForm {
-  if (tense === 'past') {
-    switch (modal) {
-      case 'ability':    return { auxiliary: 'could' };
-      case 'permission': return { auxiliary: 'could' };
-      case 'possibility': return { auxiliary: 'might' };
-      case 'obligation': return { usePeriPhrastic: 'had to' };
-      case 'certainty':  return { auxiliary: 'must' };
-      case 'advice':     return { auxiliary: 'should' };
-      case 'volition':   return { usePeriPhrastic: 'was going to' };
-      case 'prediction': return { auxiliary: 'would' };
-    }
-  }
-  switch (modal) {
-    case 'ability':    return { auxiliary: 'can' };
-    case 'permission': return { auxiliary: 'may' };
-    case 'possibility': return { auxiliary: 'might' };
-    case 'obligation': return { auxiliary: 'must' };
-    case 'certainty':  return { auxiliary: 'must' };
-    case 'advice':     return { auxiliary: 'should' };
-    case 'volition':   return { auxiliary: 'will' };
-    case 'prediction': return { auxiliary: 'will' };
-  }
-}
+/** 時制ごとの助動詞。迂言形式になるものはここには入らない */
+const MODAL_AUXILIARIES: Record<'present' | 'past', Record<ModalType, string | null>> = {
+  present: {
+    ability: 'can',
+    permission: 'may',
+    possibility: 'might',
+    obligation: 'must',
+    certainty: 'must',
+    advice: 'should',
+    volition: 'will',
+    prediction: 'will',
+  },
+  past: {
+    ability: 'could',
+    permission: 'could',
+    possibility: 'might',
+    obligation: null,   // had to（迂言形式）
+    certainty: 'must',
+    advice: 'should',
+    volition: null,     // was/were going to（迂言形式）
+    prediction: 'would',
+  },
+};
 
 function negateModalAuxiliary(aux: string): string {
   const negationMap: Record<string, string> = {
@@ -258,56 +271,68 @@ function modalVerbParts(scope: ConjugationScope): string[] {
   }
 }
 
-/** 過去形で助動詞が変わる場合に記録する（can → could など） */
+/** 過去形で助動詞が変わる場合に記録する（can → could / must → had to など） */
 function recordModalPastShift(scope: ConjugationScope, modal: ModalType, pastForm: ModalForm): void {
   if (scope.ctx.tense !== 'past') return;
 
-  const presentAux = getModalForm(modal, 'present').auxiliary || '';
-  const pastAux = pastForm.auxiliary || pastForm.usePeriPhrastic || '';
+  const presentAux = MODAL_AUXILIARIES.present[modal] ?? '';
+  const pastAux = [pastForm.auxiliary, pastForm.linker].filter(Boolean).join(' ');
   if (presentAux && pastAux && presentAux !== pastAux) {
     scope.record('modal', presentAux, pastAux, 'MODAL_PAST', 'MODAL_PAST_DESC');
   }
 }
 
-function conjugateWithModal(scope: ConjugationScope, modal: ModalType): ConjugationResult {
-  const { verb, ctx, transforms, freqStr, notPart } = scope;
-  const { tense, aspect, modalPolarity } = ctx;
+/**
+ * モダリティの表層形を決める
+ *
+ * 迂言形式（過去の義務・意志）と、義務のモダリティ否定はここで組み立てる。
+ * どれも「助動詞 + 連結語」に落とすので、呼び出し側は相との合成だけを考えればよい。
+ */
+function resolveModalForm(
+  scope: ConjugationScope,
+  modal: ModalType,
+  isModalNegative: boolean
+): ModalForm {
+  const { ctx, beForm, isThirdPersonSingular } = scope;
+  const isPast = ctx.tense === 'past';
 
-  const modalForm = getModalForm(modal, tense);
-  const isModalNegative = modalPolarity === 'negative';
+  // 義務のモダリティ否定は must の否定ではなく have to の否定になる
+  //   "I must not eat"（動詞否定）と "I don't have to eat"（モダリティ否定）は意味が違う
+  if (isModalNegative && modal === 'obligation') {
+    return isPast
+      ? { auxiliary: "didn't", linker: 'have to' }
+      : { auxiliary: isThirdPersonSingular ? "doesn't" : "don't", linker: 'have to' };
+  }
 
-  recordModalPastShift(scope, modal, modalForm);
+  // 過去の義務は迂言形式 had to
+  if (modal === 'obligation' && isPast) {
+    return { auxiliary: 'had', linker: 'to' };
+  }
 
-  // 義務の否定は must の否定ではなく have to の否定になる（単純相のみ）
-  if (isModalNegative && modal === 'obligation' && aspect === 'simple') {
+  // 過去の意志は迂言形式 was/were going to（be 動詞なので主語に一致する）
+  if (modal === 'volition' && isPast) {
+    const be = beForm('past');
     return {
-      auxiliary: tense === 'past' ? "didn't have to" : "don't have to",
-      mainVerb: join(notPart, freqStr, verb.forms.base),
-      transforms,
+      auxiliary: isModalNegative ? `${be} not` : be,
+      linker: 'going to',
     };
   }
 
-  // 迂言形式（was going to / had to）も単純相のみ特別扱い。
-  // 単純相以外は下の通常処理へ落ち、助動詞なし（空文字）になる。
-  if (modalForm.usePeriPhrastic && aspect === 'simple') {
-    return modalForm.usePeriPhrastic === 'was going to'
-      ? {
-          auxiliary: 'was',
-          mainVerb: join('going to', notPart, freqStr, verb.forms.base),
-          transforms,
-        }
-      : {
-          auxiliary: 'did',
-          mainVerb: join('have to', notPart, freqStr, verb.forms.base),
-          transforms,
-        };
-  }
+  const auxiliary = MODAL_AUXILIARIES[isPast ? 'past' : 'present'][modal] ?? modal;
+  return { auxiliary: isModalNegative ? negateModalAuxiliary(auxiliary) : auxiliary };
+}
 
-  // 通常のモダリティ: 助動詞 + 相に応じた動詞句
-  const aux = modalForm.auxiliary || '';
+function conjugateWithModal(scope: ConjugationScope, modal: ModalType): ConjugationResult {
+  const { transforms, freqStr, notPart } = scope;
+  const isModalNegative = scope.ctx.modalPolarity === 'negative';
+
+  const form = resolveModalForm(scope, modal, isModalNegative);
+  recordModalPastShift(scope, modal, form);
+
+  // 助動詞 + 連結語 + 否定 + 頻度副詞 + 相に応じた動詞句
   return {
-    auxiliary: isModalNegative ? negateModalAuxiliary(aux) : aux,
-    mainVerb: join(notPart, freqStr, ...modalVerbParts(scope)),
+    auxiliary: form.auxiliary,
+    mainVerb: join(form.linker, notPart, freqStr, ...modalVerbParts(scope)),
     transforms,
   };
 }

@@ -1,0 +1,2113 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`'astGen/Logic' > 'Logic: AND' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "logicOp": {
+          "operator": "AND",
+          "rightOperand": {
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
+              },
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": undefined,
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "drink",
+            },
+          },
+        },
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "fact",
+    "type": "sentence",
+  },
+  "en": "⊨ Both I eat and I drink.",
+}
+`;
+
+exports[`'astGen/Logic' > 'Logic: BECAUSE' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "logicOp": {
+          "operator": "BECAUSE",
+          "rightOperand": {
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
+              },
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": undefined,
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "drink",
+            },
+          },
+        },
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "fact",
+    "type": "sentence",
+  },
+  "en": "⊨ I drink because I eat.",
+}
+`;
+
+exports[`'astGen/Logic' > 'Logic: IF' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "logicOp": {
+          "operator": "IF",
+          "rightOperand": {
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
+              },
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": undefined,
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "drink",
+            },
+          },
+        },
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "fact",
+    "type": "sentence",
+  },
+  "en": "⊨ If I eat, then I drink.",
+}
+`;
+
+exports[`'astGen/Logic' > 'Logic: NOT' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "logicOp": {
+          "operator": "NOT",
+        },
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "fact",
+    "type": "sentence",
+  },
+  "en": "⊨ It is not the case that I eat.",
+}
+`;
+
+exports[`'astGen/Logic' > 'Logic: OR' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "logicOp": {
+          "operator": "OR",
+          "rightOperand": {
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
+              },
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": undefined,
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "drink",
+            },
+          },
+        },
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "fact",
+    "type": "sentence",
+  },
+  "en": "⊨ Either I eat or I drink.",
+}
+`;
+
+exports[`'astGen/Logic' > 'Logic: 入れ子 AND(NOT(P), Q)' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "logicOp": {
+          "leftOperand": {
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
+              },
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": {
+              "operator": "NOT",
+            },
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "eat",
+            },
+          },
+          "operator": "AND",
+          "rightOperand": {
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
+              },
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": undefined,
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "drink",
+            },
+          },
+        },
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "fact",
+    "type": "sentence",
+  },
+  "en": "⊨ Both it is not the case that I eat and I drink.",
+}
+`;
+
+exports[`'astGen/動詞ラッパー' > 'ラッパー: frequency' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [
+          {
+            "advType": "frequency",
+            "lemma": "often",
+            "type": "adverb",
+          },
+        ],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "run",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I often run.",
+}
+`;
+
+exports[`'astGen/動詞ラッパー' > 'ラッパー: locative' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [
+          {
+            "advType": "place",
+            "lemma": "here",
+            "type": "adverb",
+          },
+        ],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "run",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I run here.",
+}
+`;
+
+exports[`'astGen/動詞ラッパー' > 'ラッパー: manner' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [
+          {
+            "advType": "manner",
+            "lemma": "quickly",
+            "type": "adverb",
+          },
+        ],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "run",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I run quickly.",
+}
+`;
+
+exports[`'astGen/動詞ラッパー' > 'ラッパー: negation' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "negative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I do not eat an apple.",
+}
+`;
+
+exports[`'astGen/動詞ラッパー' > 'ラッパー: preposition_verb' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [
+          {
+            "object": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "park",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "preposition": "to",
+            "type": "prepositionalPhrase",
+          },
+        ],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "go",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I go to a park.",
+}
+`;
+
+exports[`'astGen/動詞ラッパー' > 'ラッパー: time_adverb' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [
+          {
+            "advType": "time",
+            "lemma": "today",
+            "type": "adverb",
+          },
+        ],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "run",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I run today.",
+}
+`;
+
+exports[`'astGen/動詞ラッパー' > 'ラッパー: 多重（negation + frequency）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "negative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [
+          {
+            "advType": "frequency",
+            "lemma": "often",
+            "type": "adverb",
+          },
+        ],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "run",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I do not often run.",
+}
+`;
+
+exports[`'astGen/基本' > 'TimeChip: future' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "future",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I will eat an apple.",
+}
+`;
+
+exports[`'astGen/基本' > 'TimeChip: past' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "past",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I ate an apple.",
+}
+`;
+
+exports[`'astGen/基本' > 'TimeChip: perfect' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "perfect",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I have eaten an apple.",
+}
+`;
+
+exports[`'astGen/基本' > 'TimeChip: perfectProgressive' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "perfectProgressive",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I have been eating an apple.",
+}
+`;
+
+exports[`'astGen/基本' > 'TimeChip: progressive' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "progressive",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I am eating an apple.",
+}
+`;
+
+exports[`'astGen/基本' > '基本: I eat an apple' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I eat an apple.",
+}
+`;
+
+exports[`'astGen/基本' > '基本: 自動詞' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "run",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I run.",
+}
+`;
+
+exports[`'astGen/文ラッパー' > '文ラッパー: fact（timeless fact）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "fact",
+    "type": "sentence",
+  },
+  "en": "⊨ I eat an apple.",
+}
+`;
+
+exports[`'astGen/文ラッパー' > '文ラッパー: imperative' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": null,
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "imperative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "Eat an apple!",
+}
+`;
+
+exports[`'astGen/文ラッパー' > '文ラッパー: modal（ability）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": "ability",
+      "modalPolarity": "affirmative",
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I can eat an apple.",
+}
+`;
+
+exports[`'astGen/文ラッパー' > '文ラッパー: modal（obligation）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": "obligation",
+      "modalPolarity": "affirmative",
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I must eat an apple.",
+}
+`;
+
+exports[`'astGen/文ラッパー' > '文ラッパー: question' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "interrogative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "Do I eat an apple?",
+}
+`;
+
+exports[`'astGen/等位接続' > '等位接続: NP and' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "conjunction": "and",
+              "conjuncts": [
+                {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "he",
+                    "number": "singular",
+                    "person": 3,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+              ],
+              "type": "coordinatedNounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I and he eat an apple.",
+}
+`;
+
+exports[`'astGen/等位接続' > '等位接続: VP + 個別の否定' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "coordinatedWith": {
+          "conjunction": "and",
+          "verbPhrase": {
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
+              },
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": undefined,
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "drink",
+            },
+          },
+        },
+        "logicOp": undefined,
+        "polarity": "negative",
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I do not eat and drink.",
+}
+`;
+
+exports[`'astGen/等位接続' > '等位接続: VP and' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "coordinatedWith": {
+          "conjunction": "and",
+          "verbPhrase": {
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
+              },
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": undefined,
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "drink",
+            },
+          },
+        },
+        "logicOp": undefined,
+        "polarity": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I eat and drink.",
+}
+`;
+
+exports[`'astGen/等位接続' > '等位接続: VP or' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "coordinatedWith": {
+          "conjunction": "or",
+          "verbPhrase": {
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
+              },
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": undefined,
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "drink",
+            },
+          },
+        },
+        "logicOp": undefined,
+        "polarity": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I eat, or drink.",
+}
+`;
+
+exports[`'astGen/等位接続' > '等位接続: VP 入れ子 or(and(A, B), C)' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "coordinatedWith": {
+          "conjunction": "and",
+          "verbPhrase": {
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
+              },
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "coordinatedWith": {
+              "conjunction": "or",
+              "verbPhrase": {
+                "adverbs": [],
+                "arguments": [
+                  {
+                    "filler": {
+                      "adjectives": [],
+                      "head": {
+                        "lemma": "I",
+                        "number": "singular",
+                        "person": 1,
+                        "polaritySensitive": undefined,
+                        "pronounType": "personal",
+                        "type": "pronoun",
+                      },
+                      "type": "nounPhrase",
+                    },
+                    "role": "agent",
+                  },
+                ],
+                "logicOp": undefined,
+                "polarity": undefined,
+                "prepositionalPhrases": [],
+                "type": "verbPhrase",
+                "verb": {
+                  "lemma": "run",
+                },
+              },
+            },
+            "logicOp": undefined,
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "drink",
+            },
+          },
+        },
+        "logicOp": undefined,
+        "polarity": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "Both I eat and drink, or run.",
+}
+`;
+
+exports[`'astGen/限定詞' > '限定詞: 可算名詞に a が自動設定される' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I eat an apple.",
+}
+`;
+
+exports[`'astGen/限定詞' > '限定詞: 形容詞を挟んでも名詞を辿れる' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [
+                {
+                  "lemma": "red",
+                },
+              ],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I eat a red apple.",
+}
+`;

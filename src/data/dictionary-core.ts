@@ -550,6 +550,10 @@ export const adverbCores: AdverbCore[] = [
 
 // ============================================
 // ヘルパー関数
+//
+// 辞書モジュールの公開 API。品詞ごとに対称な形で揃えてある。
+// 現時点で呼ばれていないものもあるが、消すと辞書データ側（比較級・複数形など）まで
+// 到達不能になり巻き添えで失われるため、`@public` を付けて knip の対象外にしている。
 // ============================================
 export const findVerbCore = (lemma: string): VerbCore | undefined =>
   verbCores.find((v) => v.lemma === lemma);
@@ -560,9 +564,11 @@ export const findNounCore = (lemma: string): NounCore | undefined =>
 export const findPronounCore = (lemma: string): PronounCore | undefined =>
   pronounCores.find((p) => p.lemma === lemma);
 
+/** @public 辞書 API の対称性のために保持 */
 export const findAdjectiveCore = (lemma: string): AdjectiveCore | undefined =>
   adjectiveCores.find((a) => a.lemma === lemma);
 
+/** @public 辞書 API の対称性のために保持 */
 export const findAdverbCore = (lemma: string): AdverbCore | undefined =>
   adverbCores.find((a) => a.lemma === lemma);
 

@@ -51,7 +51,7 @@ export function conjugate(lemma: string, context: ConjugationContext): string {
 /**
  * VerbEntry を活用する
  */
-export function conjugateEntry(entry: VerbEntry, context: ConjugationContext): string {
+function conjugateEntry(entry: VerbEntry, context: ConjugationContext): string {
   const { tense, aspect, polarity } = context;
 
   // Perfect は日本語では Past と同形
@@ -84,7 +84,7 @@ export function conjugateEntry(entry: VerbEntry, context: ConjugationContext): s
  * タ形（過去形）を生成
  * 食べる → 食べた、書く → 書いた
  */
-export function toTaForm(entry: VerbEntry): string {
+function toTaForm(entry: VerbEntry): string {
   const { ja, type } = entry;
 
   switch (type) {
@@ -138,7 +138,7 @@ export function toTeForm(entry: VerbEntry): string {
  * ナイ形（否定形）を生成
  * 食べる → 食べない、書く → 書かない
  */
-export function toNaiForm(entry: VerbEntry): string {
+function toNaiForm(entry: VerbEntry): string {
   const { ja, type } = entry;
 
   switch (type) {
@@ -163,7 +163,7 @@ export function toNaiForm(entry: VerbEntry): string {
  * ナカッタ形（過去否定形）を生成
  * 食べる → 食べなかった、書く → 書かなかった
  */
-export function toNakattaForm(entry: VerbEntry): string {
+function toNakattaForm(entry: VerbEntry): string {
   // ナイ形から「ない」を「なかった」に置換
   const naiForm = toNaiForm(entry);
   return naiForm.slice(0, -2) + 'なかった';
@@ -177,6 +177,47 @@ export function toNakattaForm(entry: VerbEntry): string {
  */
 export function toNaideForm(entry: VerbEntry): string {
   return toNaiForm(entry) + 'で';
+}
+
+// ============================================
+// Adjectival Predicate（形容詞述語）
+// ============================================
+
+/**
+ * 形容詞を述語として活用する（繋辞 be + 形容詞 の場合）
+ *
+ * 日本語ではイ形容詞が述語になるとき、繋辞「である」は付かず形容詞自体が活用する。
+ * ナ形容詞は語幹に「である」が付く。
+ *
+ * | 型 | 現在・肯定 | 過去・肯定 | 現在・否定 | 過去・否定 |
+ * |---|---|---|---|---|
+ * | i  | 悲しい | 悲しかった | 悲しくない | 悲しくなかった |
+ * | na | 幸せである | 幸せであった | 幸せではない | 幸せではなかった |
+ *
+ * @param stem イ形容詞は「い」を除いた語幹、ナ形容詞は「な」「の」を除いた形
+ * @param type `analyzeAdjective()` が返す活用型（`other` は `na` と同じ扱い）
+ */
+export function conjugateAdjectivalPredicate(
+  stem: string,
+  type: 'i' | 'na' | 'other',
+  tense: Tense,
+  polarity: Polarity
+): string {
+  const isPast = tense === 'past';
+  const isNegative = polarity === 'negative';
+
+  if (type === 'i') {
+    if (isNegative) {
+      return stem + (isPast ? 'くなかった' : 'くない');
+    }
+    return stem + (isPast ? 'かった' : 'い');
+  }
+
+  // ナ形容詞・その他（動詞由来の「疲れた」など）は である を付ける
+  if (isNegative) {
+    return stem + (isPast ? 'ではなかった' : 'ではない');
+  }
+  return stem + (isPast ? 'であった' : 'である');
 }
 
 // ============================================
@@ -310,9 +351,26 @@ function conjugateGodanNai(ja: string): string {
  * - prediction: 辞書形/タ形 + だろう
  */
 function conjugateWithModal(entry: VerbEntry, context: ConjugationContext): string {
-  const { tense, polarity, modal } = context;
+  const { tense, aspect, polarity, modal, modalPolarity } = context;
 
-  return applyModal(entry, modal!, tense, polarity);
+  // Perfect は日本語では Past と同形（conjugateEntry と同じ規則）
+  const effectiveTense: Tense =
+    aspect === 'perfect' || aspect === 'perfectProgressive' ? 'past' : tense;
+
+  // 進行相はテ形 + いる を土台にしてからモダリティを付ける
+  // （「食べていることができる」。「いる」は一段動詞として扱う）
+  const isProgressive = aspect === 'progressive' || aspect === 'perfectProgressive';
+  const base: VerbEntry = isProgressive
+    ? { ja: toTeForm(entry) + 'いる', type: 'ichidan' }
+    : entry;
+
+  // モダリティ否定（modalPolarity）も動詞否定と同じくモダリティ側の否定形で表す。
+  // 日本語は「食べることができない」「食べなくてもいい」のようにモダリティ自体が
+  // 否定を担うため、英語の "can not eat" と "need not eat" のような区別を表層で持たない。
+  const effectivePolarity: Polarity =
+    polarity === 'negative' || modalPolarity === 'negative' ? 'negative' : 'affirmative';
+
+  return applyModal(base, modal!, effectiveTense, effectivePolarity);
 }
 
 /**
@@ -336,15 +394,16 @@ function applyModal(
       }
       return dictForm + (isPast ? 'ことができた' : 'ことができる');
 
-    case 'permission':
+    case 'permission': {
       // テ形 + もいい/はいけない
       const teForm = toTeForm(entry);
       if (isNegative) {
         return teForm + (isPast ? 'はいけなかった' : 'はいけない');
       }
       return teForm + (isPast ? 'もよかった' : 'もいい');
+    }
 
-    case 'possibility':
+    case 'possibility': {
       // 肯定: 辞書形/タ形 + かもしれない
       // 否定: ナイ形/ナカッタ形 + かもしれない
       if (isNegative) {
@@ -353,8 +412,9 @@ function applyModal(
       }
       const affForm = isPast ? toTaForm(entry) : dictForm;
       return affForm + 'かもしれない';
+    }
 
-    case 'obligation':
+    case 'obligation': {
       // ナイ形語幹 + ければならない（肯定）/ なくてもいい（否定）
       const naiForm = toNaiForm(entry);
       const naiStem = naiForm.slice(0, -1); // 「ない」の「い」を除去
@@ -362,8 +422,9 @@ function applyModal(
         return naiStem + (isPast ? 'くてもよかった' : 'くてもいい');
       }
       return naiStem + (isPast ? 'ければならなかった' : 'ければならない');
+    }
 
-    case 'certainty':
+    case 'certainty': {
       // 辞書形/タ形/ナイ形/ナカッタ形 + にちがいない
       if (isNegative) {
         const negForm = isPast ? toNakattaForm(entry) : toNaiForm(entry);
@@ -371,6 +432,7 @@ function applyModal(
       }
       const certForm = isPast ? toTaForm(entry) : dictForm;
       return certForm + 'にちがいない';
+    }
 
     case 'advice':
       // 辞書形 + べきだ/べきではない/べきだった/べきではなかった
@@ -386,7 +448,7 @@ function applyModal(
       }
       return dictForm + (isPast ? 'つもりだった' : 'つもりだ');
 
-    case 'prediction':
+    case 'prediction': {
       // 辞書形/タ形/ナイ形/ナカッタ形 + だろう
       if (isNegative) {
         const negForm = isPast ? toNakattaForm(entry) : toNaiForm(entry);
@@ -394,6 +456,7 @@ function applyModal(
       }
       const predForm = isPast ? toTaForm(entry) : dictForm;
       return predForm + 'だろう';
+    }
 
     default:
       return dictForm;

@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # 型チェック → Lint → テスト（package.json の "check" と同じ内容）
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint .
+
+      - name: Test
+        run: npx vitest run
+
+      - name: Build
+        run: npx vite build
+
+      # 未参照 export の棚卸し。Phase 1 で0件にしたので、増えたら失敗させる。
+      # 意図的に残す export には /** @public 理由 */ を付ける。
+      - name: Unused exports
+        run: npx knip

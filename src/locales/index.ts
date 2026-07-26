@@ -71,4 +71,4 @@ export function useLocale() {
 }
 
 // Export types
-export type { LocaleCode, LocaleData, UIMessages, BlocklyMessages, GrammarMessages };
+export type { LocaleCode, LocaleData, GrammarMessages };

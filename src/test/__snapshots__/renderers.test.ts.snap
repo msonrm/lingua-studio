@@ -1,0 +1,1079 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`'Logic Extension' > 'Logic: AND' 1`] = `
+{
+  "en": "⊨ Both I eat and I drink.",
+  "ja": "私は食べる、かつ私は飲む。",
+  "logs": [],
+  "ls": "fact(present+simple(AND(eat(agent:'I), drink(agent:'I))))",
+}
+`;
+
+exports[`'Logic Extension' > 'Logic: BECAUSE' 1`] = `
+{
+  "en": "⊨ I eat because I run.",
+  "ja": "私は走るので、私は食べる。",
+  "logs": [],
+  "ls": "fact(present+simple(BECAUSE(run(agent:'I), effect:eat(agent:'I))))",
+}
+`;
+
+exports[`'Logic Extension' > 'Logic: De Morgan NOT(OR(P, Q))' 1`] = `
+{
+  "en": "⊨ Neither I eat nor I drink.",
+  "ja": "私は食べるということも、私は飲むということもない。",
+  "logs": [],
+  "ls": "fact(present+simple(NOT(OR(eat(agent:'I), drink(agent:'I)))))",
+}
+`;
+
+exports[`'Logic Extension' > 'Logic: IF' 1`] = `
+{
+  "en": "⊨ If I run, then I eat.",
+  "ja": "私は走るならば、私は食べる。",
+  "logs": [],
+  "ls": "fact(present+simple(IF(run(agent:'I), then:eat(agent:'I))))",
+}
+`;
+
+exports[`'Logic Extension' > 'Logic: NOT' 1`] = `
+{
+  "en": "⊨ It is not the case that I eat.",
+  "ja": "私は食べるということはない。",
+  "logs": [],
+  "ls": "fact(present+simple(NOT(eat(agent:'I))))",
+}
+`;
+
+exports[`'Logic Extension' > 'Logic: OR' 1`] = `
+{
+  "en": "⊨ Either I eat or I drink.",
+  "ja": "私は食べる、または私は飲む。",
+  "logs": [],
+  "ls": "fact(present+simple(OR(eat(agent:'I), drink(agent:'I))))",
+}
+`;
+
+exports[`'Logic Extension' > 'Logic: 入れ子 AND(NOT(P), Q)' 1`] = `
+{
+  "en": "⊨ Both it is not the case that I eat and I drink.",
+  "ja": "私は食べるということはない、かつ私は飲む。",
+  "logs": [],
+  "ls": "fact(present+simple(AND(NOT(eat(agent:'I)), drink(agent:'I))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: ability + 過去' 1`] = `
+{
+  "en": "I could eat an apple.",
+  "ja": "私はりんごを食べることができた。",
+  "logs": [
+    "modal | can → could | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(ability:can, sentence(past+simple(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: ability' 1`] = `
+{
+  "en": "I can eat an apple.",
+  "ja": "私はりんごを食べることができる。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(ability:can, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: advice' 1`] = `
+{
+  "en": "I should eat an apple.",
+  "ja": "私はりんごを食べるべきだ。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(advice:should, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: certainty' 1`] = `
+{
+  "en": "I must eat an apple.",
+  "ja": "私はりんごを食べるにちがいない。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(certainty:must, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: obligation + 過去（迂言形式）' 1`] = `
+{
+  "en": "I did have to eat an apple.",
+  "ja": "私はりんごを食べなければならなかった。",
+  "logs": [
+    "modal | must → had to | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(obligation:must, sentence(past+simple(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: obligation' 1`] = `
+{
+  "en": "I must eat an apple.",
+  "ja": "私はりんごを食べなければならない。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(obligation:must, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: permission' 1`] = `
+{
+  "en": "I may eat an apple.",
+  "ja": "私はりんごを食べてもいい。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(permission:may, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: possibility' 1`] = `
+{
+  "en": "I might eat an apple.",
+  "ja": "私はりんごを食べるかもしれない。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(possibility:might, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: prediction' 1`] = `
+{
+  "en": "I will eat an apple.",
+  "ja": "私はりんごを食べるだろう。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(prediction:will, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: volition' 1`] = `
+{
+  "en": "I will eat an apple.",
+  "ja": "私はりんごを食べるつもりだ。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(volition:will, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: モダリティ否定' 1`] = `
+{
+  "en": "I don't have to eat an apple.",
+  "ja": "私はりんごを食べなくてもいい。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "not(modal(obligation:must, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: モダリティ否定（permission）' 1`] = `
+{
+  "en": "I may not eat an apple.",
+  "ja": "私はりんごを食べてはいけない。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "not(modal(permission:may, sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: 動詞否定' 1`] = `
+{
+  "en": "I can not eat an apple.",
+  "ja": "私はりんごを食べることができない。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:noun(det:'a, head:'apple))))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: 完了相' 1`] = `
+{
+  "en": "I can have eaten an apple.",
+  "ja": "私はりんごを食べることができた。",
+  "logs": [
+    "aspect | eat → have eaten | rule=ASPECT_PERFECT | trigger=ASPECT_PERFECT_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(ability:can, sentence(present+perfect(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: 進行相 + 過去' 1`] = `
+{
+  "en": "I could be eating an apple.",
+  "ja": "私はりんごを食べていることができた。",
+  "logs": [
+    "modal | can → could | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
+    "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(ability:can, sentence(past+progressive(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: 進行相' 1`] = `
+{
+  "en": "I can be eating an apple.",
+  "ja": "私はりんごを食べていることができる。",
+  "logs": [
+    "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(ability:can, sentence(present+progressive(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 二重目的語（give）' 1`] = `
+{
+  "en": "He gives me a green apple.",
+  "ja": "彼は緑のりんごを私にあげる。",
+  "logs": [
+    "agreement | give → gives | rule=AGREEMENT_3SG | trigger=AGREEMENT_3SG_DESC",
+    "case | I → me | rule=CASE_OBJECTIVE | trigger=CASE_OBJECTIVE_DESC",
+  ],
+  "ls": "sentence(present+simple(give(agent:'he, theme:noun(det:'a, adj:'green, head:'apple), recipient:'I)))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 他動詞（eat）' 1`] = `
+{
+  "en": "I eat an apple.",
+  "ja": "私はりんごを食べる。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 前置詞句（go to the park）' 1`] = `
+{
+  "en": "I go to the park.",
+  "ja": "私は公園に行く。",
+  "logs": [],
+  "ls": "sentence(present+simple(pp('to, noun(det:'the, head:'park), go(agent:'I))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 場所副詞' 1`] = `
+{
+  "en": "I run here.",
+  "ja": "私はここに走る。",
+  "logs": [],
+  "ls": "sentence(present+simple(locative('here, run(agent:'I))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 時間副詞' 1`] = `
+{
+  "en": "I run today.",
+  "ja": "私は今日走る。",
+  "logs": [],
+  "ls": "sentence(present+simple(time('today, run(agent:'I))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 様態副詞' 1`] = `
+{
+  "en": "I run quickly.",
+  "ja": "私は速く走る。",
+  "logs": [],
+  "ls": "sentence(present+simple(manner('quickly, run(agent:'I))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞以外の形容詞（seem）' 1`] = `
+{
+  "en": "I seem happy.",
+  "ja": "私は幸せに見える。",
+  "logs": [],
+  "ls": "sentence(present+simple(seem(theme:'I, attribute:'happy)))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + イ形容詞・否定）' 1`] = `
+{
+  "en": "I am not sad.",
+  "ja": "私は悲しくない。",
+  "logs": [],
+  "ls": "sentence(present+simple(not(be(theme:'I, attribute:'sad))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + イ形容詞・過去否定）' 1`] = `
+{
+  "en": "I was not sad.",
+  "ja": "私は悲しくなかった。",
+  "logs": [
+    "tense | be → was | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+  ],
+  "ls": "sentence(past+simple(not(be(theme:'I, attribute:'sad))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + イ形容詞・過去）' 1`] = `
+{
+  "en": "I was sad.",
+  "ja": "私は悲しかった。",
+  "logs": [
+    "tense | be → was | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+  ],
+  "ls": "sentence(past+simple(be(theme:'I, attribute:'sad)))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + イ形容詞）' 1`] = `
+{
+  "en": "I am sad.",
+  "ja": "私は悲しい。",
+  "logs": [],
+  "ls": "sentence(present+simple(be(theme:'I, attribute:'sad)))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + ナ形容詞・過去否定）' 1`] = `
+{
+  "en": "I was not happy.",
+  "ja": "私は幸せではなかった。",
+  "logs": [
+    "tense | be → was | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+  ],
+  "ls": "sentence(past+simple(not(be(theme:'I, attribute:'happy))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + ナ形容詞）' 1`] = `
+{
+  "en": "I am happy.",
+  "ja": "私は幸せである。",
+  "logs": [],
+  "ls": "sentence(present+simple(be(theme:'I, attribute:'happy)))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + ノ形容詞）' 1`] = `
+{
+  "en": "I am true.",
+  "ja": "私は本当である。",
+  "logs": [],
+  "ls": "sentence(present+simple(be(theme:'I, attribute:'true)))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + 名詞）' 1`] = `
+{
+  "en": "He is a teacher.",
+  "ja": "彼は先生である。",
+  "logs": [
+    "agreement | be → is | rule=AGREEMENT_3SG | trigger=AGREEMENT_3SG_DESC",
+  ],
+  "ls": "sentence(present+simple(be(theme:'he, attribute:noun(det:'a, head:'teacher))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + 形容詞 + モダリティ）' 1`] = `
+{
+  "en": "I can be happy.",
+  "ja": "私は幸せであることができる。",
+  "logs": [],
+  "ls": "modal(ability:can, sentence(present+simple(be(theme:'I, attribute:'happy))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + 形容詞 + 程度副詞）' 1`] = `
+{
+  "en": "I am happy.",
+  "ja": "私はとても幸せである。",
+  "logs": [],
+  "ls": "sentence(present+simple(be(theme:'I, attribute:degree('very, 'happy))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 自動詞（run）' 1`] = `
+{
+  "en": "I run.",
+  "ja": "私は走る。",
+  "logs": [],
+  "ls": "sentence(present+simple(run(agent:'I)))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 頻度副詞 + 否定' 1`] = `
+{
+  "en": "I do not often run.",
+  "ja": "私はよく走らない。",
+  "logs": [
+    "do-support | do → do not [V] | rule=DO_SUPPORT_NEGATIVE | trigger=DO_SUPPORT_NEGATIVE_DESC",
+  ],
+  "ls": "sentence(present+simple(not(frequency('often, run(agent:'I)))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 頻度副詞' 1`] = `
+{
+  "en": "I often run.",
+  "ja": "私はよく走る。",
+  "logs": [],
+  "ls": "sentence(present+simple(frequency('often, run(agent:'I))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: postDeterminer（many）' 1`] = `
+{
+  "en": "I eat many apples.",
+  "ja": "私はたくさんのりんごを食べる。",
+  "logs": [
+    "agreement | apple → apples | rule=NUMBER_PLURAL | trigger=NUMBER_PLURAL_DESC",
+  ],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(post:'many, head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: preDeterminer（all）' 1`] = `
+{
+  "en": "I eat all the apples.",
+  "ja": "私はすべてのりんごを食べる。",
+  "logs": [
+    "agreement | apple → apples | rule=NUMBER_PLURAL | trigger=NUMBER_PLURAL_DESC",
+  ],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(pre:'all, det:'the, head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 不定冠詞 + 母音（a → an）' 1`] = `
+{
+  "en": "I eat an apple.",
+  "ja": "私はりんごを食べる。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 代名詞（3人称単数）' 1`] = `
+{
+  "en": "He eats an apple.",
+  "ja": "彼はりんごを食べる。",
+  "logs": [
+    "agreement | eat → eats | rule=AGREEMENT_3SG | trigger=AGREEMENT_3SG_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+simple(eat(agent:'he, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 前置詞句修飾（the apple on the table）' 1`] = `
+{
+  "en": "I eat the apple on the table.",
+  "ja": "私はテーブルの上のりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'the, head:'apple, post:pp('on, noun(det:'the, head:'table))))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 定冠詞' 1`] = `
+{
+  "en": "I eat the apple.",
+  "ja": "私はりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'the, head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 形容詞1つ' 1`] = `
+{
+  "en": "I eat a red apple.",
+  "ja": "私は赤いりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'a, adj:'red, head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 形容詞2つ' 1`] = `
+{
+  "en": "I eat a big red apple.",
+  "ja": "私は大きい赤いりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'a, adj:['big, 'red], head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 所有格' 1`] = `
+{
+  "en": "I eat my apple.",
+  "ja": "私は私のりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'my, head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 指示詞' 1`] = `
+{
+  "en": "I eat this apple.",
+  "ja": "私はこのりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'this, head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 目的格への格変化' 1`] = `
+{
+  "en": "I see him.",
+  "ja": "私は彼を見る。",
+  "logs": [
+    "case | he → him | rule=CASE_OBJECTIVE | trigger=CASE_OBJECTIVE_DESC",
+  ],
+  "ls": "sentence(present+simple(see(experiencer:'I, stimulus:'he)))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 複数形' 1`] = `
+{
+  "en": "I eat apples.",
+  "ja": "私はりんごを食べる。",
+  "logs": [
+    "agreement | apple → apples | rule=NUMBER_PLURAL | trigger=NUMBER_PLURAL_DESC",
+  ],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(head:'apple))))",
+}
+`;
+
+exports[`'否定' > '否定: VPレベル（等位接続内）' 1`] = `
+{
+  "en": "I do not eat and drink.",
+  "ja": "私は食べないで飲む。",
+  "logs": [
+    "do-support | do → do not [V] | rule=DO_SUPPORT_NEGATIVE | trigger=DO_SUPPORT_NEGATIVE_DESC",
+  ],
+  "ls": "sentence(present+simple(and(not(eat(agent:'I)), drink(agent:'I))))",
+}
+`;
+
+exports[`'否定' > '否定: 二重否定（節 + VP）' 1`] = `
+{
+  "en": "I do not not eat.",
+  "ja": "私は食べない。",
+  "logs": [
+    "do-support | do → do not [V] | rule=DO_SUPPORT_NEGATIVE | trigger=DO_SUPPORT_NEGATIVE_DESC",
+  ],
+  "ls": "sentence(present+simple(not(not(eat(agent:'I)))))",
+}
+`;
+
+exports[`'否定' > '否定: 疑問文' 1`] = `
+{
+  "en": "Do I not eat an apple?",
+  "ja": "私はりんごを食べないか？",
+  "logs": [
+    "do-support | do → do [S V] | rule=DO_SUPPORT_QUESTION | trigger=DO_SUPPORT_QUESTION_DESC",
+    "inversion | I do → do I | rule=INVERSION_QUESTION | trigger=INVERSION_QUESTION_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "question(sentence(present+simple(not(eat(agent:'I, patient:noun(det:'a, head:'apple))))))",
+}
+`;
+
+exports[`'否定' > '否定: 節レベル + 3人称単数' 1`] = `
+{
+  "en": "He does not eat an apple.",
+  "ja": "彼はりんごを食べない。",
+  "logs": [
+    "agreement | do → does | rule=AGREEMENT_3SG | trigger=AGREEMENT_3SG_DESC",
+    "do-support | do → does not [V] | rule=DO_SUPPORT_NEGATIVE | trigger=DO_SUPPORT_NEGATIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+simple(not(eat(agent:'he, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'否定' > '否定: 節レベル（do-support）' 1`] = `
+{
+  "en": "I do not eat an apple.",
+  "ja": "私はりんごを食べない。",
+  "logs": [
+    "do-support | do → do not [V] | rule=DO_SUPPORT_NEGATIVE | trigger=DO_SUPPORT_NEGATIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+simple(not(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'否定' > '否定: 進行相' 1`] = `
+{
+  "en": "I am not eating an apple.",
+  "ja": "私はりんごを食べていない。",
+  "logs": [
+    "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+progressive(not(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'否定' > '否定: 過去' 1`] = `
+{
+  "en": "I did not eat an apple.",
+  "ja": "私はりんごを食べなかった。",
+  "logs": [
+    "tense | do → did | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+    "do-support | do → did not [V] | rule=DO_SUPPORT_NEGATIVE | trigger=DO_SUPPORT_NEGATIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(past+simple(not(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'文型' > 'Wh疑問文: ?how' 1`] = `
+{
+  "en": "How do I run?",
+  "ja": "私はどう走るか？",
+  "logs": [
+    "do-support | do → do [S V] | rule=DO_SUPPORT_QUESTION | trigger=DO_SUPPORT_QUESTION_DESC",
+  ],
+  "ls": "question(sentence(present+simple(manner(?how, run(agent:'I)))))",
+}
+`;
+
+exports[`'文型' > 'Wh疑問文: ?what（目的語疑問）' 1`] = `
+{
+  "en": "What do I eat?",
+  "ja": "私は何を食べるか？",
+  "logs": [
+    "wh-movement | what → move what | rule=WH_MOVEMENT_FRONT | trigger=WH_MOVEMENT_FRONT_DESC",
+    "do-support | do → do [S V] | rule=DO_SUPPORT_QUESTION | trigger=DO_SUPPORT_QUESTION_DESC",
+  ],
+  "ls": "question(sentence(present+simple(eat(agent:'I, patient:?what))))",
+}
+`;
+
+exports[`'文型' > 'Wh疑問文: ?when' 1`] = `
+{
+  "en": "When do I run?",
+  "ja": "私はいつ走るか？",
+  "logs": [
+    "do-support | do → do [S V] | rule=DO_SUPPORT_QUESTION | trigger=DO_SUPPORT_QUESTION_DESC",
+  ],
+  "ls": "question(sentence(present+simple(time(?when, run(agent:'I)))))",
+}
+`;
+
+exports[`'文型' > 'Wh疑問文: ?where' 1`] = `
+{
+  "en": "Where do I run?",
+  "ja": "私はどこで走るか？",
+  "logs": [
+    "do-support | do → do [S V] | rule=DO_SUPPORT_QUESTION | trigger=DO_SUPPORT_QUESTION_DESC",
+  ],
+  "ls": "question(sentence(present+simple(locative(?where, run(agent:'I)))))",
+}
+`;
+
+exports[`'文型' > 'Wh疑問文: ?who（主語疑問）' 1`] = `
+{
+  "en": "Who eats an apple?",
+  "ja": "誰がりんごを食べるか？",
+  "logs": [
+    "wh-movement | who → move who | rule=WH_MOVEMENT_FRONT | trigger=WH_MOVEMENT_FRONT_DESC",
+    "agreement | eat → eats | rule=AGREEMENT_3SG | trigger=AGREEMENT_3SG_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "question(sentence(present+simple(eat(agent:?who, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'文型' > '事実宣言（fact）' 1`] = `
+{
+  "en": "⊨ I eat an apple.",
+  "ja": "私はりんごを食べる。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "fact(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'文型' > '命令文: Eat an apple' 1`] = `
+{
+  "en": "Eat an apple!",
+  "ja": "りんごを食べる。",
+  "logs": [
+    "imperative | you eat → eat | rule=IMPERATIVE_SUBJECT_OMISSION | trigger=IMPERATIVE_SUBJECT_OMISSION_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "imperative(sentence(present+simple(eat(patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'文型' > '平叙文: I eat an apple' 1`] = `
+{
+  "en": "I eat an apple.",
+  "ja": "私はりんごを食べる。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'文型' > '時間副詞（TimeChip 由来）' 1`] = `
+{
+  "en": "I ate an apple Yesterday.",
+  "ja": "私は昨日りんごを食べた。",
+  "logs": [
+    "tense | eat → ate | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(past+simple(time('yesterday, eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'文型' > '疑問文（Yes/No）: 3人称単数' 1`] = `
+{
+  "en": "Does he eat an apple?",
+  "ja": "彼はりんごを食べるか？",
+  "logs": [
+    "agreement | do → does | rule=AGREEMENT_3SG | trigger=AGREEMENT_3SG_DESC",
+    "do-support | do → does [S V] | rule=DO_SUPPORT_QUESTION | trigger=DO_SUPPORT_QUESTION_DESC",
+    "inversion | he does → does he | rule=INVERSION_QUESTION | trigger=INVERSION_QUESTION_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "question(sentence(present+simple(eat(agent:'he, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'文型' > '疑問文（Yes/No）: do-support' 1`] = `
+{
+  "en": "Do I eat an apple?",
+  "ja": "私はりんごを食べるか？",
+  "logs": [
+    "do-support | do → do [S V] | rule=DO_SUPPORT_QUESTION | trigger=DO_SUPPORT_QUESTION_DESC",
+    "inversion | I do → do I | rule=INVERSION_QUESTION | trigger=INVERSION_QUESTION_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "question(sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'日本語固有' > '日本語: De Morgan（節レベル否定）' 1`] = `
+{
+  "en": "I do not eat and do not drink.",
+  "ja": "私は食べないで飲まない。",
+  "logs": [
+    "do-support | do → do not [V] | rule=DO_SUPPORT_NEGATIVE | trigger=DO_SUPPORT_NEGATIVE_DESC",
+    "do-support | do → do not [V] | rule=DO_SUPPORT_NEGATIVE | trigger=DO_SUPPORT_NEGATIVE_DESC",
+  ],
+  "ls": "sentence(present+simple(not(and(eat(agent:'I), drink(agent:'I)))))",
+}
+`;
+
+exports[`'日本語固有' > '日本語: ないで形（食べないで飲む）' 1`] = `
+{
+  "en": "I do not eat and drink.",
+  "ja": "私は食べないで飲む。",
+  "logs": [
+    "do-support | do → do not [V] | rule=DO_SUPPORT_NEGATIVE | trigger=DO_SUPPORT_NEGATIVE_DESC",
+  ],
+  "ls": "sentence(present+simple(and(not(eat(agent:'I)), drink(agent:'I))))",
+}
+`;
+
+exports[`'日本語固有' > '日本語: テ形接続（食べて飲む）' 1`] = `
+{
+  "en": "I eat and drink.",
+  "ja": "私は食べて飲む。",
+  "logs": [],
+  "ls": "sentence(present+simple(and(eat(agent:'I), drink(agent:'I))))",
+}
+`;
+
+exports[`'日本語固有' > '日本語: 前置詞 → 後置詞（公園に行く）' 1`] = `
+{
+  "en": "I go to the park.",
+  "ja": "私は公園に行く。",
+  "logs": [],
+  "ls": "sentence(present+simple(pp('to, noun(det:'the, head:'park), go(agent:'I))))",
+}
+`;
+
+exports[`'日本語固有' > '日本語: 名詞の前置詞句修飾（テーブルの上のりんご）' 1`] = `
+{
+  "en": "I eat the apple on the table.",
+  "ja": "私はテーブルの上のりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'the, head:'apple, post:pp('on, noun(det:'the, head:'table))))))",
+}
+`;
+
+exports[`'日本語固有' > '日本語: 否定限定詞 no' 1`] = `
+{
+  "en": "I eat no apple.",
+  "ja": "私はnoりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'no, head:'apple))))",
+}
+`;
+
+exports[`'日本語固有' > '日本語: 格助詞（が/を）' 1`] = `
+{
+  "en": "He eats an apple.",
+  "ja": "彼はりんごを食べる。",
+  "logs": [
+    "agreement | eat → eats | rule=AGREEMENT_3SG | trigger=AGREEMENT_3SG_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+simple(eat(agent:'he, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: future + perfect' 1`] = `
+{
+  "en": "I will have eaten an apple.",
+  "ja": "私はりんごを食べた。",
+  "logs": [
+    "tense | have → will have | rule=TENSE_FUTURE | trigger=TENSE_FUTURE_DESC",
+    "aspect | eat → have eaten | rule=ASPECT_PERFECT | trigger=ASPECT_PERFECT_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(future+perfect(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: future + perfectProgressive' 1`] = `
+{
+  "en": "I will have been eating an apple.",
+  "ja": "私はりんごを食べていた。",
+  "logs": [
+    "tense | have → will have | rule=TENSE_FUTURE | trigger=TENSE_FUTURE_DESC",
+    "aspect | eat → have been eating | rule=ASPECT_PERF_PROG | trigger=ASPECT_PERF_PROG_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(future+perfectProgressive(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: future + progressive' 1`] = `
+{
+  "en": "I will be eating an apple.",
+  "ja": "私はりんごを食べている。",
+  "logs": [
+    "tense | be → will be | rule=TENSE_FUTURE | trigger=TENSE_FUTURE_DESC",
+    "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(future+progressive(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: future + simple' 1`] = `
+{
+  "en": "I will eat an apple.",
+  "ja": "私はりんごを食べる。",
+  "logs": [
+    "tense | eat → will eat | rule=TENSE_FUTURE | trigger=TENSE_FUTURE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(future+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: past + perfect' 1`] = `
+{
+  "en": "I had eaten an apple.",
+  "ja": "私はりんごを食べた。",
+  "logs": [
+    "tense | have → had | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+    "aspect | eat → have eaten | rule=ASPECT_PERFECT | trigger=ASPECT_PERFECT_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(past+perfect(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: past + perfectProgressive' 1`] = `
+{
+  "en": "I had been eating an apple.",
+  "ja": "私はりんごを食べていた。",
+  "logs": [
+    "tense | have → had | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+    "aspect | eat → have been eating | rule=ASPECT_PERF_PROG | trigger=ASPECT_PERF_PROG_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(past+perfectProgressive(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: past + progressive' 1`] = `
+{
+  "en": "I was eating an apple.",
+  "ja": "私はりんごを食べていた。",
+  "logs": [
+    "tense | be → was | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+    "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(past+progressive(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: past + simple' 1`] = `
+{
+  "en": "I ate an apple.",
+  "ja": "私はりんごを食べた。",
+  "logs": [
+    "tense | eat → ate | rule=TENSE_PAST | trigger=TENSE_PAST_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(past+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: present + perfect' 1`] = `
+{
+  "en": "I have eaten an apple.",
+  "ja": "私はりんごを食べた。",
+  "logs": [
+    "aspect | eat → have eaten | rule=ASPECT_PERFECT | trigger=ASPECT_PERFECT_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+perfect(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: present + perfectProgressive' 1`] = `
+{
+  "en": "I have been eating an apple.",
+  "ja": "私はりんごを食べていた。",
+  "logs": [
+    "aspect | eat → have been eating | rule=ASPECT_PERF_PROG | trigger=ASPECT_PERF_PROG_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+perfectProgressive(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: present + progressive' 1`] = `
+{
+  "en": "I am eating an apple.",
+  "ja": "私はりんごを食べている。",
+  "logs": [
+    "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+progressive(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'時制×相' > '時制×相: present + simple' 1`] = `
+{
+  "en": "I eat an apple.",
+  "ja": "私はりんごを食べる。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'等位接続' > '等位接続: NP and' 1`] = `
+{
+  "en": "I and my father eat an apple.",
+  "ja": "私と私の父はりんごを食べる。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "sentence(present+simple(eat(agent:and('I, noun(det:'my, head:'father)), patient:noun(det:'a, head:'apple))))",
+}
+`;
+
+exports[`'等位接続' > '等位接続: NP or' 1`] = `
+{
+  "en": "I eat an apple, or an orange.",
+  "ja": "私はりんごかオレンジを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:or(noun(det:'an, head:'apple), noun(det:'an, head:'orange)))))",
+}
+`;
+
+exports[`'等位接続' > '等位接続: NP 入れ子（or(and(A, B), C)）' 1`] = `
+{
+  "en": "I eat apple and orange, or banana.",
+  "ja": "私はりんごとオレンジかバナナを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:or(and(noun(head:'apple), noun(head:'orange)), noun(head:'banana)))))",
+}
+`;
+
+exports[`'等位接続' > '等位接続: VP + 個別の否定' 1`] = `
+{
+  "en": "I do not eat and drink.",
+  "ja": "私は食べないで飲む。",
+  "logs": [
+    "do-support | do → do not [V] | rule=DO_SUPPORT_NEGATIVE | trigger=DO_SUPPORT_NEGATIVE_DESC",
+  ],
+  "ls": "sentence(present+simple(and(not(eat(agent:'I)), drink(agent:'I))))",
+}
+`;
+
+exports[`'等位接続' > '等位接続: VP and（同一主語 → 主語省略）' 1`] = `
+{
+  "en": "I eat and drink.",
+  "ja": "私は食べて飲む。",
+  "logs": [],
+  "ls": "sentence(present+simple(and(eat(agent:'I), drink(agent:'I))))",
+}
+`;
+
+exports[`'等位接続' > '等位接続: VP or' 1`] = `
+{
+  "en": "I eat, or drink.",
+  "ja": "私は食べるか飲む。",
+  "logs": [],
+  "ls": "sentence(present+simple(or(eat(agent:'I), drink(agent:'I))))",
+}
+`;
+
+exports[`'等位接続' > '等位接続: VP（異なる主語）' 1`] = `
+{
+  "en": "I eat, and my father runs.",
+  "ja": "私は食べて、私の父が走る。",
+  "logs": [
+    "agreement | run → runs | rule=AGREEMENT_3SG | trigger=AGREEMENT_3SG_DESC",
+  ],
+  "ls": "sentence(present+simple(and(eat(agent:'I), run(agent:noun(det:'my, head:'father)))))",
+}
+`;
+
+exports[`'等位接続' > '等位接続: 選択疑問（?which）' 1`] = `
+{
+  "en": "Do you drink tea, or coffee?",
+  "ja": "あなたはお茶かコーヒーを飲むか？",
+  "logs": [
+    "do-support | do → do [S V] | rule=DO_SUPPORT_QUESTION | trigger=DO_SUPPORT_QUESTION_DESC",
+    "inversion | you do → do you | rule=INVERSION_QUESTION | trigger=INVERSION_QUESTION_DESC",
+  ],
+  "ls": "question(sentence(present+simple(drink(agent:'you, patient:?which(noun(head:'tea), noun(head:'coffee))))))",
+}
+`;

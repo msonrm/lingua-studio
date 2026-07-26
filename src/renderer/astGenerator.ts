@@ -33,10 +33,6 @@ const findPronounCore = (lemma: string) => pronounCores.find(p => p.lemma === le
 // ============================================
 // BlocklyワークスペースからAST生成
 // ============================================
-export function generateAST(workspace: Blockly.Workspace): SentenceNode | null {
-  const sentences = generateMultipleAST(workspace);
-  return sentences.length > 0 ? sentences[0] : null;
-}
 
 // モダリティ情報を保持するインターフェース
 interface ModalInfo {
@@ -102,25 +98,7 @@ export function generateMultipleAST(workspace: Blockly.Workspace): SentenceNode[
       // time_frame がない場合は直接 verb chain を処理（timeless fact）
       const verbChain = parseVerbChain(innerBlock);
       if (verbChain) {
-        const verbPhrase: VerbPhraseNode = {
-          ...verbChain.verbPhrase,
-          adverbs: [
-            ...verbChain.mannerAdverbs,
-            ...verbChain.frequencyAdverbs,
-            ...verbChain.locativeAdverbs,
-            ...(verbChain.timeAdverbs || []),
-            ...verbChain.verbPhrase.adverbs,
-          ],
-          prepositionalPhrases: [
-            ...verbChain.prepositionalPhrases,
-            ...verbChain.verbPhrase.prepositionalPhrases,
-          ],
-          coordinatedWith: verbChain.coordination ? {
-            conjunction: verbChain.coordination.conjunction,
-            verbPhrase: verbChain.coordination.rightVerbPhrase,
-          } : undefined,
-          logicOp: verbChain.logicOp,
-        };
+        const verbPhrase = toVerbPhraseNode(verbChain, false);
         const clause: ClauseNode = {
           type: 'clause',
           verbPhrase,
@@ -264,6 +242,74 @@ interface VerbChainResult {
   };
 }
 
+/**
+ * 等位接続チェーンの末尾に接続を追加する。
+ *
+ * `coordinatedWith` は連結リストなので、既存の接続を上書きせず末尾へ繋ぐ必要がある。
+ * 上書きすると `or(and(A, B), C)` のような入れ子で内側の B が失われる。
+ *
+ *   or(and(A, B), C) → A ─and→ B ─or→ C
+ *
+ * AST は接続を1本の鎖でしか表現できないため、グループ化（優先順位）の情報は落ちるが、
+ * 少なくとも項が消えることはなくなる。レンダラー側も英語 (`appendCoordinatedVP`) /
+ * 日本語 (`collectVPChain`) ともに鎖を辿る実装になっている。
+ */
+function appendCoordination(
+  vp: VerbPhraseNode,
+  coordination: { conjunction: Conjunction; verbPhrase: VerbPhraseNode }
+): VerbPhraseNode {
+  if (!vp.coordinatedWith) {
+    return { ...vp, coordinatedWith: coordination };
+  }
+  return {
+    ...vp,
+    coordinatedWith: {
+      conjunction: vp.coordinatedWith.conjunction,
+      verbPhrase: appendCoordination(vp.coordinatedWith.verbPhrase, coordination),
+    },
+  };
+}
+
+/**
+ * VerbChainResult を VerbPhraseNode に畳み込む。
+ *
+ * ラッパーブロックが集めた副詞・前置詞句を動詞句へマージし、
+ * 等位接続をチェーンの末尾へ繋ぐ。
+ *
+ * @param withPolarity VP 個別の polarity を設定するか。
+ *   等位接続や論理演算のオペランドでは各 VP が個別に極性を持つため true。
+ *   節のトップレベルでは極性は ClauseNode 側が持つため false。
+ */
+function toVerbPhraseNode(chain: VerbChainResult, withPolarity: boolean): VerbPhraseNode {
+  const base: VerbPhraseNode = {
+    ...chain.verbPhrase,
+    adverbs: [
+      ...chain.mannerAdverbs,
+      ...chain.frequencyAdverbs,
+      ...chain.locativeAdverbs,
+      ...(chain.timeAdverbs || []),
+      ...chain.verbPhrase.adverbs,
+    ],
+    prepositionalPhrases: [
+      ...chain.prepositionalPhrases,
+      ...chain.verbPhrase.prepositionalPhrases,
+    ],
+    logicOp: chain.logicOp,
+  };
+
+  if (withPolarity) {
+    base.polarity = chain.polarity === 'negative' ? 'negative' : undefined;
+  }
+
+  // chain.verbPhrase 由来の内側の等位接続を保持したまま、外側の接続を末尾に足す
+  return chain.coordination
+    ? appendCoordination(base, {
+        conjunction: chain.coordination.conjunction,
+        verbPhrase: chain.coordination.rightVerbPhrase,
+      })
+    : base;
+}
+
 function parseTimeFrameBlock(
   block: Blockly.Block,
   modal?: ModalType,
@@ -285,28 +331,9 @@ function parseTimeFrameBlock(
     return null;
   }
 
-  // ラッパーから収集した副詞と前置詞句を動詞句に追加
-  const verbPhrase: VerbPhraseNode = {
-    ...verbChain.verbPhrase,
-    adverbs: [
-      ...verbChain.mannerAdverbs,
-      ...verbChain.frequencyAdverbs,
-      ...verbChain.locativeAdverbs,
-      ...(verbChain.timeAdverbs || []),
-      ...verbChain.verbPhrase.adverbs,
-    ],
-    prepositionalPhrases: [
-      ...verbChain.prepositionalPhrases,
-      ...verbChain.verbPhrase.prepositionalPhrases,
-    ],
-    // 等位接続の情報を追加
-    coordinatedWith: verbChain.coordination ? {
-      conjunction: verbChain.coordination.conjunction,
-      verbPhrase: verbChain.coordination.rightVerbPhrase,
-    } : undefined,
-    // 命題レベル論理演算の情報を追加（Logic Extension）
-    logicOp: verbChain.logicOp,
-  };
+  // ラッパーから収集した副詞・前置詞句を畳み込み、等位接続と論理演算を反映する
+  // （極性は下の ClauseNode 側が持つため、ここでは設定しない）
+  const verbPhrase = toVerbPhraseNode(verbChain, false);
 
   const clause: ClauseNode = {
     type: 'clause',
@@ -398,31 +425,9 @@ function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
   const blockType = block.type;
 
   // VerbChainResultをVerbPhraseNode（logicOp・coordinatedWith含む）に変換するヘルパー
-  // 等位接続や論理演算のオペランドで使用
-  const toVerbPhraseWithLogic = (result: VerbChainResult): VerbPhraseNode => {
-    return {
-      ...result.verbPhrase,
-      adverbs: [
-        ...result.mannerAdverbs,
-        ...result.frequencyAdverbs,
-        ...result.locativeAdverbs,
-        ...(result.timeAdverbs || []),
-        ...result.verbPhrase.adverbs,
-      ],
-      prepositionalPhrases: [
-        ...result.prepositionalPhrases,
-        ...result.verbPhrase.prepositionalPhrases,
-      ],
-      // VP個別のpolarity（否定の場合のみ設定）
-      polarity: result.polarity === 'negative' ? 'negative' : undefined,
-      logicOp: result.logicOp,
-      // 内側の等位接続を保持（入れ子対応）
-      coordinatedWith: result.coordination ? {
-        conjunction: result.coordination.conjunction,
-        verbPhrase: result.coordination.rightVerbPhrase,
-      } : undefined,
-    };
-  };
+  // 等位接続や論理演算のオペランドで使用。各VPが個別に極性を持つため withPolarity = true。
+  const toVerbPhraseWithLogic = (result: VerbChainResult): VerbPhraseNode =>
+    toVerbPhraseNode(result, true);
 
   // 否定ラッパーの処理
   if (blockType === 'negation_wrapper') {

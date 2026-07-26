@@ -25,7 +25,7 @@ import {
 // ============================================
 // 動詞活用形
 // ============================================
-export const verbFormsEn: VerbForms[] = [
+const verbFormsEn: VerbForms[] = [
   // Motion
   { lemma: "run", forms: { base: "run", past: "ran", pp: "run", ing: "running", s: "runs" } },
   { lemma: "walk", forms: { base: "walk", past: "walked", pp: "walked", ing: "walking", s: "walks" } },
@@ -141,7 +141,7 @@ export const verbFormsEn: VerbForms[] = [
 // ============================================
 // 代名詞格変化
 // ============================================
-export const pronounFormsEn: PronounForms[] = [
+const pronounFormsEn: PronounForms[] = [
   // Personal
   { lemma: "I", objectForm: "me", possessive: "my" },
   { lemma: "you", objectForm: "you", possessive: "your" },
@@ -176,7 +176,7 @@ export const pronounFormsEn: PronounForms[] = [
 // ============================================
 // 名詞複数形
 // ============================================
-export const nounFormsEn: NounForms[] = [
+const nounFormsEn: NounForms[] = [
   // Human
   { lemma: "father", plural: "fathers" },
   { lemma: "mother", plural: "mothers" },
@@ -317,7 +317,7 @@ export const nounFormsEn: NounForms[] = [
 // ============================================
 // 形容詞比較級・最上級
 // ============================================
-export const adjectiveFormsEn: AdjectiveForms[] = [
+const adjectiveFormsEn: AdjectiveForms[] = [
   // Size
   { lemma: "big", comparative: "bigger", superlative: "biggest" },
   { lemma: "small", comparative: "smaller", superlative: "smallest" },
@@ -567,6 +567,7 @@ export const findPronoun = (lemma: string): PronounEntry | undefined => {
  * 形容詞をルックアップ（Core + 英語比較級をマージ）
  * 検索順: ベース辞書 → 拡張辞書
  */
+/** @public 辞書 API の対称性のために保持（削除すると辞書データが到達不能になる） */
 export const findAdjective = (lemma: string): AdjectiveEntry | undefined => {
   // 1. ベース辞書を検索
   const core = adjectiveCores.find((a) => a.lemma === lemma);
@@ -597,6 +598,7 @@ export const findAdjective = (lemma: string): AdjectiveEntry | undefined => {
  * 副詞をルックアップ（副詞は活用なし）
  * 検索順: ベース辞書 → 拡張辞書
  */
+/** @public 辞書 API の対称性のために保持（削除すると辞書データが到達不能になる） */
 export const findAdverb = (lemma: string): AdverbEntry | undefined => {
   // 1. ベース辞書を検索
   const core = adverbCores.find((a) => a.lemma === lemma);
@@ -624,6 +626,7 @@ export const findAdverb = (lemma: string): AdverbEntry | undefined => {
 // カテゴリ別取得関数（ベース + 拡張辞書）
 // ============================================
 
+/** @public 辞書 API の対称性のために保持（削除すると辞書データが到達不能になる） */
 export const getVerbsByCategory = (category: VerbCategory): VerbEntry[] => {
   // ベース辞書
   const baseVerbs = verbCores
@@ -640,6 +643,7 @@ export const getVerbsByCategory = (category: VerbCategory): VerbEntry[] => {
   return [...baseVerbs, ...extVerbs];
 };
 
+/** @public 辞書 API の対称性のために保持（削除すると辞書データが到達不能になる） */
 export const getNounsByCategory = (category: NounCategory): NounEntry[] => {
   // ベース辞書
   const baseNouns = nounCores
@@ -656,6 +660,7 @@ export const getNounsByCategory = (category: NounCategory): NounEntry[] => {
   return [...baseNouns, ...extNouns];
 };
 
+/** @public 辞書 API の対称性のために保持（削除すると辞書データが到達不能になる） */
 export const getAdjectivesByCategory = (category: AdjectiveCategory): AdjectiveEntry[] => {
   // ベース辞書
   const baseAdjs = adjectiveCores
@@ -672,6 +677,7 @@ export const getAdjectivesByCategory = (category: AdjectiveCategory): AdjectiveE
   return [...baseAdjs, ...extAdjs];
 };
 
+/** @public 辞書 API の対称性のために保持（削除すると辞書データが到達不能になる） */
 export const isProperNoun = (lemma: string): boolean => {
   const noun = findNoun(lemma);
   return noun?.proper === true;

@@ -25,7 +25,7 @@ function msg(key: string, fallback: string): string {
 // ============================================
 // 型定義
 // ============================================
-export type GrammaticalNumber = 'singular' | 'plural' | 'uncountable';
+type GrammaticalNumber = 'singular' | 'plural' | 'uncountable';
 
 export interface DeterminerOption {
   label: string;
@@ -63,7 +63,7 @@ export function getPreDeterminers(): DeterminerOption[] {
 }
 
 // 後方互換性のため（リスト生成用）
-export const PRE_DETERMINERS = getPreDeterminers();
+const PRE_DETERMINERS = getPreDeterminers();
 
 // 中央限定詞（central determiner）- カテゴリ分類付き・ローカライズ可能
 export function getCentralDeterminers(): DeterminerOption[] {
@@ -112,7 +112,7 @@ export function getCentralDeterminers(): DeterminerOption[] {
 }
 
 // 後方互換性のため（リスト生成用）
-export const CENTRAL_DETERMINERS = getCentralDeterminers();
+const CENTRAL_DETERMINERS = getCentralDeterminers();
 
 // 後置限定詞（postdeterminer）- ローカライズ可能なラベルを動的に生成
 export function getPostDeterminers(): DeterminerOption[] {
@@ -457,7 +457,7 @@ const VALID_COMBINATIONS_BY_NOUN_TYPE: Record<string, Set<string>> = {
 /**
  * 指定された組み合わせが有効かどうか判定（名詞タイプ考慮）
  */
-export function isValidCombination(
+function isValidCombination(
   pre: string,
   central: string,
   post: string,

@@ -2,6 +2,118 @@
 
 > **Note**: このファイルは [TODO.md](./TODO.md) と連動しています。機能実装完了時は両方を更新してください。
 
+## 2026-07-26
+
+### Refactoring Phase 1: 死んだコードの整理
+
+アプリの振る舞いは変えていない（AST タブの復活のみ UI 変更）。差し引き -301行。
+
+#### 復活
+
+- [x] AST ビュー（`EditorMode` の `'ast'`）にタブを追加
+  - 表示分岐は元からあったが切り替え UI がなく到達不能だった
+  - `TAB_AST` は3ロケールとも既に定義済みで、欠けていたのはボタンだけ
+
+#### 削除
+
+- [x] `components/VisualizationPanel.tsx`（`App.tsx` でコメントアウト済みだった）
+- [x] `renderer/index.ts`（どこからも import されないバレル）
+- [x] `BlockChange` 収集経路（約90行）
+  - `BlocklyWorkspace.tsx` の `getReadableFieldName()` / `handleBlockChange()` /
+    `pendingChangesRef` / `onBlockChanges` prop、`App.tsx` の `_blockChanges`、
+    `types/grammarLog.ts` の `BlockChange` 型
+  - 2026-01-25 に「Your Changes」パネルとして追加され、2026-01-27 のサイドパネル移設で
+    表示側だけが落ちた残骸。復活させるなら `DerivationTracker.diff()` の上で作り直す
+- [x] `astGenerator.generateAST` / `english/renderer.renderToEnglish`（どちらも別関数のみ使用）
+- [x] `types/grammarLog.ts` の `GrammarLogCollector` / `formatLogStructured` /
+      `formatLogEnglish` / `FormattedLog`
+- [x] `types/schema.ts` の `CoordinatedVerbPhraseNode` / `DeterminerConfig`
+  - VP 等位接続は `coordinatedWith` の連結リストで表現しているため専用ノードは不要
+- [x] `japanese/renderer.ts` の default export、`definitions.ts` の未使用定数3つ
+
+#### 重複の解消
+
+- [x] `blocks/definitions.ts` が `dictionary-core.ts` のヘルパーを再実装していた
+  - ローカル定義の `findNounCore` / `getVerbCoresByCategory` を削除して import に置換
+  - インラインの `nounCores.filter(...)` / `adjectiveCores.filter(...)` を
+    `getNounCoresByCategory()` / `getAdjectiveCoresByCategory()` に置換
+  - これらの export が「未使用」に見えていた原因でもあった
+
+#### 未参照 export の整理（67件 + 型25件 → 0件）
+
+- [x] ファイル内でしか使われないものは `export` を外して内部化
+  - `japanese/index.ts` のバレルを `renderToJapanese` のみに絞る
+  - `lexicon.ts` の翻訳マップ12個、`conjugation.ts` の活用ヘルパー4個、
+    `dictionary-en.ts` の生データ配列4個、`det-rules-en.ts` / `nounPhrase.ts` の型 ほか
+- [x] 意図的に残すものは `/** @public 理由 */` を付けて knip の対象外にした
+  - 辞書モジュールの API（`findAdjectiveCore` など）— 削除すると比較級・最上級 108件などの
+    辞書データが到達不能になり巻き添えで失われるため
+  - `renderer/types.ts` の `RenderContext` 一式 — Phase 4-1 で引き回す予定
+- [x] `npm run knip` を CI で失敗させるようにした（レポートのみ → ゲート）
+
+### Refactoring Phase 0: テスト・静的解析の基盤整備
+
+リファクタリングの安全網。**アプリの振る舞いは変えていない**。
+計画全体は [docs/REFACTORING-PLAN.md](./docs/REFACTORING-PLAN.md)、構造の解説は [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)。
+
+- [x] Vitest 導入（`vitest.config.ts`、環境は `node`）
+- [x] ゴールデンテスト 2層（計583テスト / 118スナップショット）
+  - レイヤーA `src/test/renderers.test.ts` — AST → 英語 / 日本語 / LinguaScript / 導出ログ（86ケース）
+  - レイヤーB `src/test/astGenerator.test.ts` — Blockly ブロック木 → AST（32ケース）
+  - ヘルパー: `builders.ts`（AST）、`workspace.ts`（ヘッドレス Blockly）、`cases.ts`（ケース表）
+  - ヘッドレス Blockly が Node で動作。イベントをフラッシュすれば `determiner_unified` の限定詞自動補正まで検証できる
+- [x] ESLint + typescript-eslint 導入（`eslint.config.js`）
+- [x] knip 導入（`knip.json`）— 未参照 export の棚卸し（レポート専用）
+- [x] GitHub Actions CI（`.github/workflows/ci.yml`）— tsc / eslint / vitest / build
+- [x] npm scripts 追加: `test` / `test:watch` / `lint` / `check` / `knip`
+
+### Lint 対応（振る舞い不変）
+
+スナップショットに変化がないことで振る舞い不変を確認済み。
+
+- [x] `prefer-const` 4件
+- [x] `no-case-declarations` 6件（`japanese/conjugation.ts` の `case` をブロックで囲む）
+- [x] `no-this-alias` 1件（Blockly パターンのため理由コメント付きで inline disable）
+- [x] `package.json` の `"main": "index.js"` を削除（存在しないファイルへの参照）
+
+### Phase 0 で発見した不具合の修正
+
+Phase 0 のゴールデンテストが検出した6件をすべて修正した。
+
+#### 入れ子 VP 等位接続で項が消えるバグ
+
+- [x] `or(and(A, B), C)` で B が AST から丸ごと消える問題を修正
+  - `coordinatedWith` は連結リストなので、上書きせず**末尾に追加**する `appendCoordination()` を追加
+  - `VerbChainResult → VerbPhraseNode` の変換が3箇所（`parseTimeFrameBlock` / fact の timeless 分岐 /
+    `toVerbPhraseWithLogic`）に複製され、いずれも同じ上書きをしていたため
+    `toVerbPhraseNode()` に共通化
+  - AST は `eat ─and→ drink ─or→ run` の鎖になる
+  - 英語は `coordination.ts` の設計どおり correlative で構造を明示: "Both I eat and drink, or run."
+
+#### 日本語レンダラー
+
+- [x] 繋辞の形容詞を日本語訳するよう修正（「私はhappyである」→「私は幸せである」）
+  - 辞書の値は**連体形**（「幸せな」「悲しい」）なので、述語で使うには変換が必要
+  - `analyzeAdjective()` を追加し、連体形から語幹・連用形・活用型（イ／ナ／その他）を求める
+  - `conjugateAdjectivalPredicate()` を追加。イ形容詞は繋辞を付けず形容詞自体が活用する
+    - 「私は悲しい」「私は悲しかった」「私は悲しくない」「私は悲しくなかった」
+    - ナ形容詞・ノ形容詞は語幹 + である（「幸せである」「本当である」）
+  - be 以外の動詞に係る形容詞は連用形にする（「私は幸せに見える」）
+- [x] 命題論理（`logicOp`）に対応
+  - AND=「〜、かつ〜」/ OR=「〜、または〜」/ NOT=「〜ということはない」
+  - IF=「〜ならば、〜」/ BECAUSE=「〜ので、〜」（英語と違い日本語は原因が先）
+  - De Morgan: `NOT(OR(P, Q))` →「Pということも、Qということもない」
+- [x] モダリティ否定（`modalPolarity`）を反映するよう修正
+  - obligation: 「食べなければならない」→「食べなくてもいい」（EN: don't have to）
+  - permission: 「食べてはいけない」（EN: may not）
+  - 日本語はモダリティ自体が否定を担うため、動詞否定と表層で区別しない
+- [x] モダリティ使用時に相が落ちる問題を修正
+  - 進行相はテ形 + いる を土台にする（「食べていることができる」）
+  - 完了相は過去と同形にする（`conjugateEntry` と同じ規則）
+- [x] 未使用の `verb` 変数を削除（2パス方式リファクタの残骸）
+  - `renderVerbWithCoordination()` が同じ lemma・同じ文脈で `conjugate()` を呼ぶため、
+    例外挙動を含めて完全に冗長だった
+
 ## 2026-02-01
 
 ### DET Block Improvements

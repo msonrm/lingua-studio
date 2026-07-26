@@ -2,13 +2,11 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { BlocklyWorkspace, BlocklyWorkspaceHandle } from './components/BlocklyWorkspace';
 import { LinguaScriptBar } from './components/LinguaScriptBar';
 import { LinguaScriptView } from './components/LinguaScriptView';
-// VisualizationPanel is replaced by DictionaryPanel
-// import { VisualizationPanel } from './components/VisualizationPanel';
 import { GrammarPanel } from './components/GrammarPanel';
 import { DictionaryPanel } from './components/DictionaryPanel';
 import { SentenceNode } from './types/schema';
 import { renderToLinguaScript } from './renderer/linguaScriptRenderer';
-import { TransformLog, BlockChange } from './types/grammarLog';
+import { TransformLog } from './types/grammarLog';
 import {
   LocaleContext,
   LocaleCode,
@@ -72,7 +70,6 @@ function App() {
   const [sentences, setSentences] = useState<string[]>([]);
   const [japaneseSentences, setJapaneseSentences] = useState<string[]>([]);
   const [grammarLogs, setGrammarLogs] = useState<TransformLog[]>([]);
-  const [_blockChanges, setBlockChanges] = useState<BlockChange[]>([]);
   const [resetNotice, setResetNotice] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>('blocks');
   const [localeCode, setLocaleCode] = useState<LocaleCode>(getStoredLocale());
@@ -185,6 +182,12 @@ function App() {
               >
                 {t.TAB_LINGUASCRIPT}
               </button>
+              <button
+                className={`mode-tab ${editorMode === 'ast' ? 'active' : ''}`}
+                onClick={() => handleEditorModeChange('ast')}
+              >
+                {t.TAB_AST}
+              </button>
             </div>
           </div>
           <div className="header-right">
@@ -228,7 +231,6 @@ function App() {
                     onSentenceChange={setSentences}
                     onJapaneseSentenceChange={setJapaneseSentences}
                     onLogsChange={setGrammarLogs}
-                    onBlockChanges={setBlockChanges}
                     onResetNotice={setResetNotice}
                     initialState={workspaceState}
                   />

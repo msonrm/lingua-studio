@@ -1130,7 +1130,9 @@ function renderFiller(
   } else if (filler.type === 'coordinatedNounPhrase') {
     return renderCoordinatedNounPhrase(filler as CoordinatedNounPhraseNode, isSubject, polarity);
   } else if (filler.type === 'adjectivePhrase') {
-    return (filler as AdjectivePhraseNode).head.lemma;
+    const adjective = filler as AdjectivePhraseNode;
+    // 程度副詞（very / quite など）は形容詞の前に置く
+    return [adjective.degree?.lemma, adjective.head.lemma].filter(Boolean).join(' ');
   }
   return '';
 }

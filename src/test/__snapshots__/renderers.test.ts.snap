@@ -110,7 +110,7 @@ exports[`'モダリティ' > 'モダリティ: certainty' 1`] = `
 
 exports[`'モダリティ' > 'モダリティ: obligation + 過去（迂言形式）' 1`] = `
 {
-  "en": "I did have to eat an apple.",
+  "en": "I had to eat an apple.",
   "ja": "私はりんごを食べなければならなかった。",
   "logs": [
     "modal | must → had to | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
@@ -220,12 +220,35 @@ exports[`'モダリティ' > 'モダリティ: 完了相' 1`] = `
 }
 `;
 
+exports[`'モダリティ' > 'モダリティ: 意志のモダリティ否定 + 過去' 1`] = `
+{
+  "en": "I was not going to eat an apple.",
+  "ja": "私はりんごを食べるつもりはなかった。",
+  "logs": [
+    "modal | will → was not going to | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "not(modal(volition:will, sentence(past+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: 義務のモダリティ否定（3人称単数）' 1`] = `
+{
+  "en": "He doesn't have to eat an apple.",
+  "ja": "彼はりんごを食べなくてもいい。",
+  "logs": [
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "not(modal(obligation:must, sentence(present+simple(eat(agent:'he, patient:noun(det:'a, head:'apple))))))",
+}
+`;
+
 exports[`'モダリティ' > 'モダリティ: 義務の否定 + 進行相' 1`] = `
 {
-  "en": "I not be eating an apple.",
+  "en": "I didn't have to be eating an apple.",
   "ja": "私はりんごを食べていなくてもよかった。",
   "logs": [
-    "modal | must → had to | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
+    "modal | must → didn't have to | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
     "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
     "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
   ],
@@ -233,9 +256,22 @@ exports[`'モダリティ' > 'モダリティ: 義務の否定 + 進行相' 1`] 
 }
 `;
 
+exports[`'モダリティ' > 'モダリティ: 迂言形式 + 完了相（had to have）' 1`] = `
+{
+  "en": "I had to have eaten an apple.",
+  "ja": "私はりんごを食べなければならなかった。",
+  "logs": [
+    "modal | must → had to | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
+    "aspect | eat → have eaten | rule=ASPECT_PERFECT | trigger=ASPECT_PERFECT_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(obligation:must, sentence(past+perfect(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
 exports[`'モダリティ' > 'モダリティ: 迂言形式 + 進行相（had to）' 1`] = `
 {
-  "en": "I be eating an apple.",
+  "en": "I had to be eating an apple.",
   "ja": "私はりんごを食べていなければならなかった。",
   "logs": [
     "modal | must → had to | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
@@ -248,7 +284,7 @@ exports[`'モダリティ' > 'モダリティ: 迂言形式 + 進行相（had to
 
 exports[`'モダリティ' > 'モダリティ: 迂言形式 + 進行相（was going to）' 1`] = `
 {
-  "en": "I be eating an apple.",
+  "en": "I was going to be eating an apple.",
   "ja": "私はりんごを食べているつもりだった。",
   "logs": [
     "modal | will → was going to | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
@@ -443,7 +479,7 @@ exports[`'動詞句' > '動詞句: 繋辞（be + 形容詞 + モダリティ）'
 
 exports[`'動詞句' > '動詞句: 繋辞（be + 形容詞 + 程度副詞）' 1`] = `
 {
-  "en": "I am happy.",
+  "en": "I am very happy.",
   "ja": "私はとても幸せである。",
   "logs": [],
   "ls": "sentence(present+simple(be(theme:'I, attribute:degree('very, 'happy))))",

@@ -4,6 +4,41 @@
 
 ## 2026-07-27
 
+### 既知の不整合3件の修正
+
+#### モダリティの迂言形式が相と合成できない問題
+
+`had to` / `was going to` を1つの文字列として持ち、単純相だけを特別扱いしていたため、
+進行相・完了相では助動詞が丸ごと落ちて英語が壊れていた。
+
+```
+I did have to eat an apple.    →  I had to eat an apple.
+I be eating an apple.          →  I had to be eating an apple.
+I be eating an apple.          →  I was going to be eating an apple.
+I not be eating an apple.      →  I didn't have to be eating an apple.
+He don't have to eat an apple. →  He doesn't have to eat an apple.
+I was going to eat an apple.   →  I was not going to eat an apple.（modalPolarity 否定）
+```
+
+- [x] `ModalForm` を「助動詞 + 連結語」に分解し、相（be + ing / have + pp）と合成できるようにした
+  - `had to` = `{ auxiliary: 'had', linker: 'to' }`
+  - `was going to` = `{ auxiliary: beForm('past'), linker: 'going to' }`（主語に一致）
+  - `don't have to` = `{ auxiliary: "don't" | "doesn't", linker: 'have to' }`（主語に一致）
+- [x] 併せて直った問題: 過去の義務の do-support 重複、`don't have to` の主語一致、
+      過去の意志のモダリティ否定で否定が消える
+
+#### `AdjectivePhraseNode.degree` を英語レンダラーが無視する問題
+
+- [x] 英語レンダラーが程度副詞を出すようにした（`I am very happy.`）
+  - これで3レンダラーすべてが `degree` を扱える
+  - 程度副詞ブロックはまだないので UI からは到達しないが、追加すればそのまま動く
+
+#### 副詞ラッパーのラベル行スキップが到達不能
+
+- [x] `parseAdverbWrapper` の `skipLabelRows` を削除
+  - `labelValidator` が `setFieldValue` とワークスペース復元の両方でラベル行を弾くことを
+    実測で確認し、回帰テストとして固定した
+
 ### 等位接続の統一とカンマの修正
 
 VP の等位接続を連結リストから n項ツリーに変え、名詞句と対称な表現にした。

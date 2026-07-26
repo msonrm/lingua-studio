@@ -139,331 +139,359 @@ export interface ConjugationDependencies {
   isThirdSingular: IsThirdSingularFn;
 }
 
+/** 部品を結合（空文字は除去） */
+function join(...parts: (string | null | undefined)[]): string {
+  return parts.filter(p => p && p.length > 0).join(' ');
+}
+
 /**
- * 統一された動詞活用関数
+ * 活用の計算中ずっと共有される文脈。
  *
- * lemma から最終的な活用形を計算し、
- * 適用されたすべての変形を記録する。
+ * 元は `conjugateVerb` 内のクロージャだったものを、相ごとのハンドラへ
+ * 渡せるように束ねたもの。`record()` は `transforms` を破壊的に更新する。
  */
-export function conjugateVerb(
+interface ConjugationScope {
+  lemma: string;
+  verb: VerbEntry;
+  ctx: ConjugationContext;
+  transforms: Transform[];
+  isThirdPersonSingular: boolean;
+  /** 否定・疑問では do-support 側に一致と時制が乗る */
+  usesDoSupport: boolean;
+  /** 頻度副詞をつないだ文字列 */
+  freqStr: string;
+  /** 否定部分（'' / 'not' / 'not not'） */
+  notPart: string;
+  /** 変形を記録する（変化がある場合のみ） */
+  record: (
+    type: TransformationType,
+    from: string,
+    to: string,
+    rule: string,
+    description: string
+  ) => void;
+  /** 主語に合わせた be 動詞の形 */
+  beForm: (tense: Tense) => string;
+  /** 主語に合わせた have 動詞の形 */
+  haveForm: (tense: Tense) => string;
+}
+
+function createScope(
   lemma: string,
+  verb: VerbEntry,
   ctx: ConjugationContext,
   deps: ConjugationDependencies
-): ConjugationResult {
+): ConjugationScope {
   const transforms: Transform[] = [];
-  const { findVerb, getPersonNumber, isThirdSingular } = deps;
+  const { polarity, doubleNegation, isQuestion, subject, frequencyAdverbs = [] } = ctx;
 
-  const verbEntry = findVerb(lemma);
-  if (!verbEntry) {
-    return { auxiliary: null, mainVerb: lemma, transforms: [] };
-  }
-
-  const { tense, aspect, polarity, doubleNegation, isQuestion, subject, modal, modalPolarity, frequencyAdverbs = [] } = ctx;
   const isNegative = polarity === 'negative';
-  const usesDoSupport = isNegative || isQuestion;  // do-supportを使う場合、agreement/tenseはdoに適用
-  const isThirdPersonSingular = isThirdSingular(subject);
-  const personNumber = getPersonNumber(subject);
-  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
+  const isThirdPersonSingular = deps.isThirdSingular(subject);
+  const personNumber = deps.getPersonNumber(subject);
 
-  // 否定部分を計算（二重否定対応）
-  const getNotPart = () => {
-    if (!isNegative) return '';
-    return doubleNegation ? 'not not' : 'not';
-  };
-
-  // Helper: 記録付きで変形を追加
-  const record = (type: TransformationType, from: string, to: string, rule: string, description: string) => {
-    if (from !== to) {
-      transforms.push({ type, from, to, rule, description });
-    }
-  };
-
-  // Helper: be動詞の活用形を取得
-  const getBeForm = (t: Tense): string => {
+  const beForm = (t: Tense): string => {
     if (t === 'future') return 'will be';
-    const beVerb = findVerb('be');
+    const beVerb = deps.findVerb('be');
     if (beVerb?.forms.irregular) {
       const key = `${personNumber.person}${personNumber.number === 'singular' ? 'sg' : 'pl'}_${t}`;
       const form = beVerb.forms.irregular[key];
       if (form) return form;
     }
     if (t === 'past') {
-      return (personNumber.person === 1 || personNumber.person === 3) && personNumber.number === 'singular' ? 'was' : 'were';
+      return (personNumber.person === 1 || personNumber.person === 3) &&
+        personNumber.number === 'singular'
+        ? 'was'
+        : 'were';
     }
-    return isThirdPersonSingular ? 'is' : (personNumber.person === 1 && personNumber.number === 'singular' ? 'am' : 'are');
+    return isThirdPersonSingular
+      ? 'is'
+      : personNumber.person === 1 && personNumber.number === 'singular'
+        ? 'am'
+        : 'are';
   };
 
-  // Helper: have動詞の活用形を取得
-  const getHaveForm = (t: Tense): string => {
+  const haveForm = (t: Tense): string => {
     if (t === 'future') return 'will have';
     if (t === 'past') return 'had';
     return isThirdPersonSingular ? 'has' : 'have';
   };
 
-  // Helper: 部品を結合（空文字除去）
-  const join = (...parts: (string | null | undefined)[]): string => {
-    return parts.filter(p => p && p.length > 0).join(' ');
+  return {
+    lemma,
+    verb,
+    ctx,
+    transforms,
+    isThirdPersonSingular,
+    usesDoSupport: Boolean(isNegative || isQuestion),
+    freqStr: frequencyAdverbs.map(a => a.lemma).join(' '),
+    notPart: isNegative ? (doubleNegation ? 'not not' : 'not') : '',
+    record: (type, from, to, rule, description) => {
+      if (from !== to) {
+        transforms.push({ type, from, to, rule, description });
+      }
+    },
+    beForm,
+    haveForm,
   };
+}
 
-  // ============================================
-  // モダリティ処理
-  // ============================================
-  if (modal) {
-    const modalForm = getModalForm(modal, tense);
-    const isModalNegative = modalPolarity === 'negative';
+// ============================================
+// モダリティあり
+// ============================================
 
-    // モダル変換を記録
-    if (tense === 'past') {
-      const presentForm = getModalForm(modal, 'present');
-      const presentAux = presentForm.auxiliary || '';
-      const pastAux = modalForm.auxiliary || modalForm.usePeriPhrastic || '';
-      if (presentAux && pastAux && presentAux !== pastAux) {
-        record('modal', presentAux, pastAux, 'MODAL_PAST', 'MODAL_PAST_DESC');
-      }
-    }
+/** 相に応じた動詞句の語を返し、必要なら相の変形を記録する */
+function modalVerbParts(scope: ConjugationScope): string[] {
+  const { lemma, verb, ctx, record } = scope;
 
-    // 義務の否定（特殊処理: must → don't have to）
-    if (isModalNegative && modal === 'obligation') {
-      const haveToAux = tense === 'past' ? "didn't have to" : "don't have to";
-      const notPart = getNotPart();
+  switch (ctx.aspect) {
+    case 'progressive':
+      record('aspect', lemma, `be ${verb.forms.ing}`, 'ASPECT_PROGRESSIVE', 'ASPECT_PROGRESSIVE_DESC');
+      return ['be', verb.forms.ing];
+    case 'perfect':
+      record('aspect', lemma, `have ${verb.forms.pp}`, 'ASPECT_PERFECT', 'ASPECT_PERFECT_DESC');
+      return ['have', verb.forms.pp];
+    case 'perfectProgressive':
+      record('aspect', lemma, `have been ${verb.forms.ing}`, 'ASPECT_PERF_PROG', 'ASPECT_PERF_PROG_DESC');
+      return ['have', 'been', verb.forms.ing];
+    default:
+      return [verb.forms.base];
+  }
+}
 
-      if (aspect === 'simple') {
-        return {
-          auxiliary: haveToAux,
-          mainVerb: join(notPart, freqStr, verbEntry.forms.base),
+/** 過去形で助動詞が変わる場合に記録する（can → could など） */
+function recordModalPastShift(scope: ConjugationScope, modal: ModalType, pastForm: ModalForm): void {
+  if (scope.ctx.tense !== 'past') return;
+
+  const presentAux = getModalForm(modal, 'present').auxiliary || '';
+  const pastAux = pastForm.auxiliary || pastForm.usePeriPhrastic || '';
+  if (presentAux && pastAux && presentAux !== pastAux) {
+    scope.record('modal', presentAux, pastAux, 'MODAL_PAST', 'MODAL_PAST_DESC');
+  }
+}
+
+function conjugateWithModal(scope: ConjugationScope, modal: ModalType): ConjugationResult {
+  const { verb, ctx, transforms, freqStr, notPart } = scope;
+  const { tense, aspect, modalPolarity } = ctx;
+
+  const modalForm = getModalForm(modal, tense);
+  const isModalNegative = modalPolarity === 'negative';
+
+  recordModalPastShift(scope, modal, modalForm);
+
+  // 義務の否定は must の否定ではなく have to の否定になる（単純相のみ）
+  if (isModalNegative && modal === 'obligation' && aspect === 'simple') {
+    return {
+      auxiliary: tense === 'past' ? "didn't have to" : "don't have to",
+      mainVerb: join(notPart, freqStr, verb.forms.base),
+      transforms,
+    };
+  }
+
+  // 迂言形式（was going to / had to）も単純相のみ特別扱い。
+  // 単純相以外は下の通常処理へ落ち、助動詞なし（空文字）になる。
+  if (modalForm.usePeriPhrastic && aspect === 'simple') {
+    return modalForm.usePeriPhrastic === 'was going to'
+      ? {
+          auxiliary: 'was',
+          mainVerb: join('going to', notPart, freqStr, verb.forms.base),
+          transforms,
+        }
+      : {
+          auxiliary: 'did',
+          mainVerb: join('have to', notPart, freqStr, verb.forms.base),
           transforms,
         };
-      }
-    }
-
-    // 迂言形式（was going to, had to）
-    if (modalForm.usePeriPhrastic) {
-      const peri = modalForm.usePeriPhrastic;
-      const notPart = getNotPart();
-
-      if (peri === 'was going to') {
-        if (aspect === 'simple') {
-          return {
-            auxiliary: 'was',
-            mainVerb: join('going to', notPart, freqStr, verbEntry.forms.base),
-            transforms,
-          };
-        }
-      } else if (peri === 'had to') {
-        if (aspect === 'simple') {
-          return {
-            auxiliary: 'did',
-            mainVerb: join('have to', notPart, freqStr, verbEntry.forms.base),
-            transforms,
-          };
-        }
-      }
-    }
-
-    // 通常のモダリティ
-    const aux = modalForm.auxiliary || '';
-    const negatedAux = isModalNegative ? negateModalAuxiliary(aux) : aux;
-    const notPart = getNotPart();
-
-    if (aspect === 'simple') {
-      return {
-        auxiliary: negatedAux,
-        mainVerb: join(notPart, freqStr, verbEntry.forms.base),
-        transforms,
-      };
-    }
-    if (aspect === 'progressive') {
-      record('aspect', lemma, `be ${verbEntry.forms.ing}`, 'ASPECT_PROGRESSIVE', 'ASPECT_PROGRESSIVE_DESC');
-      return {
-        auxiliary: negatedAux,
-        mainVerb: join(notPart, freqStr, 'be', verbEntry.forms.ing),
-        transforms,
-      };
-    }
-    if (aspect === 'perfect') {
-      record('aspect', lemma, `have ${verbEntry.forms.pp}`, 'ASPECT_PERFECT', 'ASPECT_PERFECT_DESC');
-      return {
-        auxiliary: negatedAux,
-        mainVerb: join(notPart, freqStr, 'have', verbEntry.forms.pp),
-        transforms,
-      };
-    }
-    if (aspect === 'perfectProgressive') {
-      record('aspect', lemma, `have been ${verbEntry.forms.ing}`, 'ASPECT_PERF_PROG', 'ASPECT_PERF_PROG_DESC');
-      return {
-        auxiliary: negatedAux,
-        mainVerb: join(notPart, freqStr, 'have', 'been', verbEntry.forms.ing),
-        transforms,
-      };
-    }
   }
 
-  // ============================================
-  // Simple Aspect（モダリティなし）
-  // ============================================
-  if (aspect === 'simple') {
-    const notPart = getNotPart();
+  // 通常のモダリティ: 助動詞 + 相に応じた動詞句
+  const aux = modalForm.auxiliary || '';
+  return {
+    auxiliary: isModalNegative ? negateModalAuxiliary(aux) : aux,
+    mainVerb: join(notPart, freqStr, ...modalVerbParts(scope)),
+    transforms,
+  };
+}
 
-    // be動詞の特別処理
-    if (lemma === 'be') {
-      const beForm = getBeForm(tense);
+// ============================================
+// モダリティなし・相ごとの処理
+// ============================================
 
-      if (tense === 'future') {
-        record('tense', 'be', 'will be', 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
-        return {
-          auxiliary: 'will',
-          mainVerb: join(notPart, freqStr, 'be'),
-          transforms,
-        };
-      }
+/** 単純相の be 動詞（"I am happy" のように be 自体が主動詞になる） */
+function conjugateSimpleBe(scope: ConjugationScope): ConjugationResult {
+  const { ctx, transforms, freqStr, notPart, record, beForm, isThirdPersonSingular } = scope;
+  const { tense } = ctx;
 
-      if (tense === 'past') {
-        record('tense', 'be', beForm, 'TENSE_PAST', 'TENSE_PAST_DESC');
-      } else if (isThirdPersonSingular) {
-        record('agreement', 'be', beForm, 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
-      }
+  if (tense === 'future') {
+    record('tense', 'be', 'will be', 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
+    return { auxiliary: 'will', mainVerb: join(notPart, freqStr, 'be'), transforms };
+  }
 
-      return {
-        auxiliary: beForm,
-        mainVerb: join(notPart, freqStr),
-        transforms,
-      };
-    }
+  const form = beForm(tense);
+  if (tense === 'past') {
+    record('tense', 'be', form, 'TENSE_PAST', 'TENSE_PAST_DESC');
+  } else if (isThirdPersonSingular) {
+    record('agreement', 'be', form, 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
+  }
 
-    // 一般動詞
-    if (tense === 'future') {
-      record('tense', lemma, `will ${verbEntry.forms.base}`, 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
-      return {
-        auxiliary: 'will',
-        mainVerb: join(notPart, freqStr, verbEntry.forms.base),
-        transforms,
-      };
-    }
+  return { auxiliary: form, mainVerb: join(notPart, freqStr), transforms };
+}
 
-    if (tense === 'past') {
-      if (usesDoSupport) {
-        // do-support使用時: doの時制変化 do → did
-        record('tense', 'do', 'did', 'TENSE_PAST', 'TENSE_PAST_DESC');
-      } else {
-        // 平叙肯定文: 本動詞の時制変化 eat → ate
-        record('tense', verbEntry.forms.base, verbEntry.forms.past, 'TENSE_PAST', 'TENSE_PAST_DESC');
-      }
-      return {
-        auxiliary: 'did',
-        mainVerb: join(notPart, freqStr, verbEntry.forms.base),
-        transforms,
-      };
-    }
+function conjugateSimple(scope: ConjugationScope): ConjugationResult {
+  const { lemma, verb, ctx, transforms, freqStr, notPart, record, usesDoSupport, isThirdPersonSingular } = scope;
+  const { tense } = ctx;
 
-    // present
-    if (isThirdPersonSingular) {
-      if (usesDoSupport) {
-        // do-support使用時: doの一致 do → does
-        record('agreement', 'do', 'does', 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
-      } else {
-        // 平叙肯定文: 本動詞の一致 eat → eats
-        record('agreement', verbEntry.forms.base, verbEntry.forms.thirdSg, 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
-      }
-    }
-    const doForm = isThirdPersonSingular ? 'does' : 'do';
+  if (lemma === 'be') {
+    return conjugateSimpleBe(scope);
+  }
+
+  if (tense === 'future') {
+    record('tense', lemma, `will ${verb.forms.base}`, 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
     return {
-      auxiliary: doForm,
-      mainVerb: join(notPart, freqStr, verbEntry.forms.base),
+      auxiliary: 'will',
+      mainVerb: join(notPart, freqStr, verb.forms.base),
       transforms,
     };
   }
 
-  // ============================================
-  // Progressive Aspect
-  // ============================================
-  if (aspect === 'progressive') {
-    const notPart = getNotPart();
-    const beForm = getBeForm(tense);
-
-    if (tense === 'future') {
-      record('tense', 'be', 'will be', 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
-    } else if (tense === 'past') {
-      record('tense', 'be', beForm, 'TENSE_PAST', 'TENSE_PAST_DESC');
+  if (tense === 'past') {
+    // do-support を使う文では時制が do に乗る（do → did）。
+    // 平叙肯定文では本動詞が変化する（eat → ate）。
+    if (usesDoSupport) {
+      record('tense', 'do', 'did', 'TENSE_PAST', 'TENSE_PAST_DESC');
+    } else {
+      record('tense', verb.forms.base, verb.forms.past, 'TENSE_PAST', 'TENSE_PAST_DESC');
     }
-    record('aspect', lemma, `be ${verbEntry.forms.ing}`, 'ASPECT_PROGRESSIVE', 'ASPECT_PROGRESSIVE_DESC');
-
-    if (tense === 'future') {
-      return {
-        auxiliary: 'will',
-        mainVerb: join(notPart, freqStr, 'be', verbEntry.forms.ing),
-        transforms,
-      };
-    }
-
     return {
-      auxiliary: beForm,
-      mainVerb: join(notPart, freqStr, verbEntry.forms.ing),
+      auxiliary: 'did',
+      mainVerb: join(notPart, freqStr, verb.forms.base),
       transforms,
     };
   }
 
-  // ============================================
-  // Perfect Aspect
-  // ============================================
-  if (aspect === 'perfect') {
-    const notPart = getNotPart();
-    const haveForm = getHaveForm(tense);
-
-    if (tense === 'future') {
-      record('tense', 'have', 'will have', 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
-    } else if (tense === 'past') {
-      record('tense', 'have', 'had', 'TENSE_PAST', 'TENSE_PAST_DESC');
-    } else if (isThirdPersonSingular) {
-      record('agreement', 'have', 'has', 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
+  // present — 一致も同じく do-support の有無で乗る先が変わる
+  if (isThirdPersonSingular) {
+    if (usesDoSupport) {
+      record('agreement', 'do', 'does', 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
+    } else {
+      record('agreement', verb.forms.base, verb.forms.thirdSg, 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
     }
-    record('aspect', lemma, `have ${verbEntry.forms.pp}`, 'ASPECT_PERFECT', 'ASPECT_PERFECT_DESC');
+  }
 
-    if (tense === 'future') {
-      return {
-        auxiliary: 'will',
-        mainVerb: join(notPart, freqStr, 'have', verbEntry.forms.pp),
-        transforms,
-      };
-    }
+  return {
+    auxiliary: isThirdPersonSingular ? 'does' : 'do',
+    mainVerb: join(notPart, freqStr, verb.forms.base),
+    transforms,
+  };
+}
 
+function conjugateProgressive(scope: ConjugationScope): ConjugationResult {
+  const { lemma, verb, ctx, transforms, freqStr, notPart, record, beForm } = scope;
+  const { tense } = ctx;
+  const form = beForm(tense);
+
+  if (tense === 'future') {
+    record('tense', 'be', 'will be', 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
+  } else if (tense === 'past') {
+    record('tense', 'be', form, 'TENSE_PAST', 'TENSE_PAST_DESC');
+  }
+  record('aspect', lemma, `be ${verb.forms.ing}`, 'ASPECT_PROGRESSIVE', 'ASPECT_PROGRESSIVE_DESC');
+
+  if (tense === 'future') {
     return {
-      auxiliary: haveForm,
-      mainVerb: join(notPart, freqStr, verbEntry.forms.pp),
+      auxiliary: 'will',
+      mainVerb: join(notPart, freqStr, 'be', verb.forms.ing),
       transforms,
     };
   }
 
-  // ============================================
-  // Perfect Progressive Aspect
-  // ============================================
-  if (aspect === 'perfectProgressive') {
-    const notPart = getNotPart();
-    const haveForm = getHaveForm(tense);
+  return { auxiliary: form, mainVerb: join(notPart, freqStr, verb.forms.ing), transforms };
+}
 
-    if (tense === 'future') {
-      record('tense', 'have', 'will have', 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
-    } else if (tense === 'past') {
-      record('tense', 'have', 'had', 'TENSE_PAST', 'TENSE_PAST_DESC');
-    } else if (isThirdPersonSingular) {
-      record('agreement', 'have', 'has', 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
-    }
-    record('aspect', lemma, `have been ${verbEntry.forms.ing}`, 'ASPECT_PERF_PROG', 'ASPECT_PERF_PROG_DESC');
+/** 完了相・完了進行相で共通の時制変形を記録する（have → will have / had / has） */
+function recordPerfectTense(scope: ConjugationScope): void {
+  const { ctx, record, isThirdPersonSingular } = scope;
 
-    if (tense === 'future') {
-      return {
-        auxiliary: 'will',
-        mainVerb: join(notPart, freqStr, 'have', 'been', verbEntry.forms.ing),
-        transforms,
-      };
-    }
+  if (ctx.tense === 'future') {
+    record('tense', 'have', 'will have', 'TENSE_FUTURE', 'TENSE_FUTURE_DESC');
+  } else if (ctx.tense === 'past') {
+    record('tense', 'have', 'had', 'TENSE_PAST', 'TENSE_PAST_DESC');
+  } else if (isThirdPersonSingular) {
+    record('agreement', 'have', 'has', 'AGREEMENT_3SG', 'AGREEMENT_3SG_DESC');
+  }
+}
 
+function conjugatePerfect(scope: ConjugationScope): ConjugationResult {
+  const { lemma, verb, ctx, transforms, freqStr, notPart, record, haveForm } = scope;
+
+  recordPerfectTense(scope);
+  record('aspect', lemma, `have ${verb.forms.pp}`, 'ASPECT_PERFECT', 'ASPECT_PERFECT_DESC');
+
+  if (ctx.tense === 'future') {
     return {
-      auxiliary: haveForm,
-      mainVerb: join(notPart, freqStr, 'been', verbEntry.forms.ing),
+      auxiliary: 'will',
+      mainVerb: join(notPart, freqStr, 'have', verb.forms.pp),
       transforms,
     };
   }
 
-  // Fallback
-  return { auxiliary: null, mainVerb: lemma, transforms: [] };
+  return {
+    auxiliary: haveForm(ctx.tense),
+    mainVerb: join(notPart, freqStr, verb.forms.pp),
+    transforms,
+  };
+}
+
+function conjugatePerfectProgressive(scope: ConjugationScope): ConjugationResult {
+  const { lemma, verb, ctx, transforms, freqStr, notPart, record, haveForm } = scope;
+
+  recordPerfectTense(scope);
+  record('aspect', lemma, `have been ${verb.forms.ing}`, 'ASPECT_PERF_PROG', 'ASPECT_PERF_PROG_DESC');
+
+  if (ctx.tense === 'future') {
+    return {
+      auxiliary: 'will',
+      mainVerb: join(notPart, freqStr, 'have', 'been', verb.forms.ing),
+      transforms,
+    };
+  }
+
+  return {
+    auxiliary: haveForm(ctx.tense),
+    mainVerb: join(notPart, freqStr, 'been', verb.forms.ing),
+    transforms,
+  };
+}
+
+const ASPECT_HANDLERS: Record<Aspect, (scope: ConjugationScope) => ConjugationResult> = {
+  simple: conjugateSimple,
+  progressive: conjugateProgressive,
+  perfect: conjugatePerfect,
+  perfectProgressive: conjugatePerfectProgressive,
+};
+
+// ============================================
+// エントリポイント
+// ============================================
+
+/**
+ * 統一された動詞活用関数
+ *
+ * lemma から最終的な活用形を計算し、適用されたすべての変形を記録する。
+ * モダリティの有無で経路が分かれ、その先は相ごとのハンドラが担当する。
+ */
+export function conjugateVerb(
+  lemma: string,
+  ctx: ConjugationContext,
+  deps: ConjugationDependencies
+): ConjugationResult {
+  const verb = deps.findVerb(lemma);
+  if (!verb) {
+    return { auxiliary: null, mainVerb: lemma, transforms: [] };
+  }
+
+  const scope = createScope(lemma, verb, ctx, deps);
+
+  return ctx.modal
+    ? conjugateWithModal(scope, ctx.modal)
+    : ASPECT_HANDLERS[ctx.aspect](scope);
 }

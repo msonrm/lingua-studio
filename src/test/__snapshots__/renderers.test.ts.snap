@@ -220,6 +220,45 @@ exports[`'モダリティ' > 'モダリティ: 完了相' 1`] = `
 }
 `;
 
+exports[`'モダリティ' > 'モダリティ: 義務の否定 + 進行相' 1`] = `
+{
+  "en": "I not be eating an apple.",
+  "ja": "私はりんごを食べていなくてもよかった。",
+  "logs": [
+    "modal | must → had to | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
+    "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "not(modal(obligation:must, sentence(past+progressive(eat(agent:'I, patient:noun(det:'a, head:'apple))))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: 迂言形式 + 進行相（had to）' 1`] = `
+{
+  "en": "I be eating an apple.",
+  "ja": "私はりんごを食べていなければならなかった。",
+  "logs": [
+    "modal | must → had to | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
+    "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(obligation:must, sentence(past+progressive(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
+exports[`'モダリティ' > 'モダリティ: 迂言形式 + 進行相（was going to）' 1`] = `
+{
+  "en": "I be eating an apple.",
+  "ja": "私はりんごを食べているつもりだった。",
+  "logs": [
+    "modal | will → was going to | rule=MODAL_PAST | trigger=MODAL_PAST_DESC",
+    "aspect | eat → be eating | rule=ASPECT_PROGRESSIVE | trigger=ASPECT_PROGRESSIVE_DESC",
+    "article | a → an | rule=ARTICLE_A_AN | trigger=ARTICLE_A_AN_DESC",
+  ],
+  "ls": "modal(volition:will, sentence(past+progressive(eat(agent:'I, patient:noun(det:'a, head:'apple)))))",
+}
+`;
+
 exports[`'モダリティ' > 'モダリティ: 進行相 + 過去' 1`] = `
 {
   "en": "I could be eating an apple.",

@@ -13,7 +13,10 @@
   - 復活: `EditorMode` の `'ast'`（タブを追加。`TAB_AST` は3ロケールとも既にあった）
   - 未参照 export 67件・型25件 → **0件**（`npm run knip` が CI で失敗するようになった）
   - `definitions.ts` が `dictionary-core` のヘルパーを再実装していた重複を解消
-- [ ] **Phase 2**: 巨大関数の分割（`parseVerbChain` 426行 → テーブル駆動、`conjugateVerb` 322行 → 決定表）
+- [x] **Phase 2**: 巨大関数の分割 — 2026-07-26 完了
+  - `parseVerbChain` 426行 → ディスパッチャ39行 + ハンドラ6個（テーブル駆動）
+  - `conjugateVerb` 322行 → エントリ16行 + ハンドラ10個（相ごとに分割）
+  - 初期ブロック配置を `blocks/initialWorkspace.ts` へ切り出し（`BlocklyWorkspace.tsx` 312→173行）
 - [ ] **Phase 3**: `blocks/definitions.ts`（1,709行 / ブロック41個）をカテゴリ別に分割
 - [ ] **Phase 4**: 構造的な改善（tracker のモジュールグローバル解消 / 英日レンダラーの共通骨格抽出 / UI 層）
 
@@ -28,13 +31,55 @@
 
 ### 残っている既知の不整合
 
+- [ ] **等位接続の英語出力（カンマ・correlative）を通しで見直す** ★要検討
+  - 現状の出力:
+    ```
+    I eat an apple, or an orange.      ← 2要素なのにカンマ。"an apple or an orange" が自然
+    I eat, or drink.                    ← 同上
+    I eat apple and orange, or banana.  ← オックスフォードカンマの扱いが混在
+    Both I eat and drink, or run.       ← correlative は正しいがカンマは要検討
+    I eat, and my father runs.          ← 異なる主語の等位節。カンマは妥当
+    Do you drink tea, or coffee?        ← 選択疑問。カンマの是非は要検討
+    ```
+  - **原因の当たり**: `english/coordination.ts` の `groupElements()` が
+    最初の要素の接続詞を `elem.conjunction || 'and'` で `'and'` にデフォルトしている。
+    純粋な OR の等位接続でも「最初は and グループ / 2番目は or グループ」と割れ、
+    `joinGroups()` がグループ間に必ず `, ` を挟むためカンマが出る。
+  - 併せて検討したい点:
+    - グループ内3要素以上のオックスフォードカンマ（`formatGroup`）を有効にするか
+    - 複数階層のとき correlative（both / either）を出す条件
+    - 節の等位（異なる主語）と句の等位でカンマの扱いを分けるか
+  - 出力を変えるとスナップショットが広範囲に動くので、独立した変更として扱うこと
+- [ ] **`NOT` のオペランド構築が二項演算子と揃っていない**
+  - `astGenerator.ts` の `parseNotLogic()` は `toVerbPhraseWithLogic()` を使わず
+    自前で `VerbPhraseNode` を組んでおり、`polarity` を載せず内側の等位接続も繋がない
+  - `parseBinaryLogic()`（AND/OR/IF/BECAUSE）は `toVerbPhraseWithLogic()` を使う
+  - 統一すると `NOT(and(A, B))` のような入れ子で振る舞いが変わるため、
+    Phase 2（機械的な分割）では現状を保った。揃えるなら独立した変更として扱うこと
+- [ ] **副詞ラッパーのラベル行スキップが到達不能な防御コードになっている**
+  - `parseAdverbWrapper()` の `skipLabelRows`（manner / locative / time_adverb）は
+    フィールド値が `__` 始まりのとき副詞を足さず素通しする
+  - しかし `definitions.ts` の `labelValidator` がラベル行の選択自体を拒否するため、
+    UI 経由でこの値になることはない（`astGenerator.test.ts` で確認済み）
+  - 消してよいか、逆にバリデータ側を緩めるべきかは要判断
 - [ ] **`AdjectivePhraseNode.degree` がスキーマにあるのに UI から到達不能**
   - `astGenerator` は degree を一切生成せず、消費しているのは `linguaScriptRenderer` のみ
   - 英語レンダラーは degree を無視する（`degree('very, 'happy)` でも EN は "I am happy."）
   - 日本語レンダラーは対応済み（「とても幸せである」）
   - 程度副詞ブロックを追加する際は英語側の対応も必要
-- [ ] **`obligation` + 過去の英語が "I did have to eat" になる**
-  - 迂言形式 `had to` に do-support が重複している疑い（`english/conjugation.ts`）
+- [ ] **モダリティの迂言形式が単純相にしか対応しておらず、英語が壊れる**
+  - `english/conjugation.ts` の `conjugateWithModal()`
+  - `had to` / `was going to` / `don't have to` の特別扱いが `aspect === 'simple'` の場合のみ。
+    それ以外は通常経路に落ち、`modalForm.auxiliary` が undefined → 空文字になる
+  - 実際の出力:
+    ```
+    obligation + past + progressive        → "I be eating an apple."      ← 助動詞が落ちる
+    volition   + past + progressive        → "I be eating an apple."      ← 同上
+    obligation + past + progressive + 否定 → "I not be eating an apple."  ← 空文字を否定して ' not'
+    ```
+  - 単純相の `obligation` + 過去も `"I did have to eat an apple."` と do-support が重複している
+  - 日本語は正しく出ている（「食べていなければならなかった」）
+  - `Phase 2` のテストで現状を固定済み（`cases.ts` の KNOWN BUG コメント参照）
 - [ ] **日本語は動詞否定とモダリティ否定を表層で区別しない**
   - 英語の "can not eat"（動詞否定）と "need not eat"（モダリティ否定）が
     日本語ではどちらもモダリティ側の否定形になる

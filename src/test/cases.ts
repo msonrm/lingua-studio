@@ -214,6 +214,31 @@ const modality: RenderCase[] = [
     name: 'モダリティ: 進行相 + 過去',
     ast: decl(eatApple(), { modal: 'ability', aspect: 'progressive', tense: 'past' }),
   },
+  {
+    name: 'モダリティ: 迂言形式 + 進行相（had to）',
+    ast: decl(eatApple(), { modal: 'obligation', tense: 'past', aspect: 'progressive' }),
+    note:
+      'KNOWN BUG: 英語が "I be eating an apple." になる（助動詞が落ちる）。\n' +
+      '迂言形式（had to / was going to）の特別扱いが単純相にしかなく、\n' +
+      'それ以外は通常経路に落ちて modalForm.auxiliary が undefined → 空文字になるため。',
+  },
+  {
+    name: 'モダリティ: 迂言形式 + 進行相（was going to）',
+    ast: decl(eatApple(), { modal: 'volition', tense: 'past', aspect: 'progressive' }),
+    note: 'KNOWN BUG: 上と同じ理由で "I be eating an apple." になる',
+  },
+  {
+    name: 'モダリティ: 義務の否定 + 進行相',
+    ast: decl(eatApple(), {
+      modal: 'obligation',
+      tense: 'past',
+      aspect: 'progressive',
+      modalPolarity: 'negative',
+    }),
+    note:
+      'KNOWN BUG: 英語が "I not be eating an apple." になる。\n' +
+      "don't have to の特別扱いも単純相のみで、空文字の助動詞を否定して ' not' になる。",
+  },
 ];
 
 // ============================================

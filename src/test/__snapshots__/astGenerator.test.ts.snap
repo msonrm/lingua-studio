@@ -629,6 +629,57 @@ exports[`'astGen/動詞ラッパー' > 'ラッパー: manner' 1`] = `
 }
 `;
 
+exports[`'astGen/動詞ラッパー' > 'ラッパー: manner（ラベル行は labelValidator が弾く）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [
+          {
+            "advType": "manner",
+            "lemma": "quickly",
+            "type": "adverb",
+          },
+        ],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "run",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I run quickly.",
+}
+`;
+
 exports[`'astGen/動詞ラッパー' > 'ラッパー: negation' 1`] = `
 {
   "ast": {
@@ -748,6 +799,65 @@ exports[`'astGen/動詞ラッパー' > 'ラッパー: preposition_verb' 1`] = `
     "type": "sentence",
   },
   "en": "I go to a park.",
+}
+`;
+
+exports[`'astGen/動詞ラッパー' > 'ラッパー: preposition_verb（目的語なし）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [
+          {
+            "object": {
+              "adjectives": [],
+              "head": {
+                "lemma": "___",
+                "number": "singular",
+                "type": "noun",
+              },
+              "type": "nounPhrase",
+            },
+            "preposition": "to",
+            "type": "prepositionalPhrase",
+          },
+        ],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "go",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I go to ___.",
 }
 `;
 

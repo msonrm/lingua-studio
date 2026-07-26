@@ -420,407 +420,316 @@ function hasInterrogativePronoun(filler: FilledArgumentSlot['filler']): boolean 
   return false;
 }
 
-// 動詞ラッパーチェーンを解析
+// ============================================
+// 動詞ラッパーチェーンの解析
+//
+// ブロックは「ラッパーが動詞を包む」入れ子構造になっている。
+//   negation_wrapper( frequency_wrapper( verb_action ) )
+// parseVerbChain はこれを内側へ辿りながら VerbChainResult を組み立てる。
+//
+// 分岐はブロック種別ごとのテーブルで引く。同じ形をした分岐（副詞ラッパー5種、
+// 二項の命題論理4種、等位接続2種）は仕様データにまとめてある。
+// ============================================
+
+/**
+ * VerbChainResult を VerbPhraseNode に変換する。
+ * 等位接続や論理演算のオペランドで使用。各 VP が個別に極性を持つため withPolarity = true。
+ */
+const toVerbPhraseWithLogic = (result: VerbChainResult): VerbPhraseNode =>
+  toVerbPhraseNode(result, true);
+
+/** 副詞・前置詞句を何も持たない VerbChainResult */
+function emptyChain(verbPhrase: VerbPhraseNode): VerbChainResult {
+  return {
+    verbPhrase,
+    polarity: 'affirmative',
+    frequencyAdverbs: [],
+    mannerAdverbs: [],
+    locativeAdverbs: [],
+    timeAdverbs: [],
+    prepositionalPhrases: [],
+  };
+}
+
+/** 指定した入力に繋がっているブロックを再帰的に解析する */
+function parseInnerChain(block: Blockly.Block, inputName: string): VerbChainResult | null {
+  const inner = block.getInputTargetBlock(inputName);
+  return inner ? parseVerbChain(inner) : null;
+}
+
+// --- 副詞ラッパー -----------------------------------------------------------
+
+type AdverbTarget = 'mannerAdverbs' | 'frequencyAdverbs' | 'locativeAdverbs' | 'timeAdverbs';
+
+interface AdverbWrapperSpec {
+  /** 副詞の値が入っているフィールド名 */
+  field: string;
+  /** フィールド値から副詞の種類と格納先を決める（Wh副詞は値によって変わる） */
+  resolve: (value: string) => { advType: AdverbNode['advType']; target: AdverbTarget };
+  /** ドロップダウンのラベル行（`__` 始まり）を選んだとき、副詞を足さず素通しするか */
+  skipLabelRows: boolean;
+}
+
+/** ?where / ?when / ?how を対応する副詞の種類に振り分ける */
+function resolveWhAdverb(value: string): { advType: AdverbNode['advType']; target: AdverbTarget } {
+  switch (value) {
+    case '?where':
+      return { advType: 'place', target: 'locativeAdverbs' };
+    case '?when':
+      return { advType: 'time', target: 'timeAdverbs' };
+    default:
+      // ?how およびそれ以外は様態として扱う
+      return { advType: 'manner', target: 'mannerAdverbs' };
+  }
+}
+
+const ADVERB_WRAPPERS: Record<string, AdverbWrapperSpec> = {
+  frequency_wrapper: {
+    field: 'FREQ_VALUE',
+    resolve: () => ({ advType: 'frequency', target: 'frequencyAdverbs' }),
+    skipLabelRows: false,
+  },
+  manner_wrapper: {
+    field: 'MANNER_VALUE',
+    resolve: () => ({ advType: 'manner', target: 'mannerAdverbs' }),
+    skipLabelRows: true,
+  },
+  locative_wrapper: {
+    field: 'LOCATIVE_VALUE',
+    resolve: () => ({ advType: 'place', target: 'locativeAdverbs' }),
+    skipLabelRows: true,
+  },
+  time_adverb_wrapper: {
+    field: 'TIME_ADVERB_VALUE',
+    resolve: () => ({ advType: 'time', target: 'timeAdverbs' }),
+    skipLabelRows: true,
+  },
+  wh_adverb_block: {
+    field: 'WH_ADVERB_VALUE',
+    resolve: resolveWhAdverb,
+    skipLabelRows: false,
+  },
+};
+
+/** 収集済みの副詞リストの先頭に1つ足した VerbChainResult を返す */
+function withAdverb(
+  result: VerbChainResult,
+  target: AdverbTarget,
+  adverb: AdverbNode
+): VerbChainResult {
+  const existing = result[target] ?? [];
+  switch (target) {
+    case 'mannerAdverbs':
+      return { ...result, mannerAdverbs: [adverb, ...existing] };
+    case 'frequencyAdverbs':
+      return { ...result, frequencyAdverbs: [adverb, ...existing] };
+    case 'locativeAdverbs':
+      return { ...result, locativeAdverbs: [adverb, ...existing] };
+    case 'timeAdverbs':
+      return { ...result, timeAdverbs: [adverb, ...existing] };
+  }
+}
+
+function parseAdverbWrapper(
+  block: Blockly.Block,
+  spec: AdverbWrapperSpec
+): VerbChainResult | null {
+  const value = block.getFieldValue(spec.field) as string;
+
+  // ラベル行が選ばれている場合は副詞として扱わず、内側をそのまま返す
+  if (spec.skipLabelRows && value?.startsWith('__')) {
+    return parseInnerChain(block, 'VERB');
+  }
+
+  const inner = parseInnerChain(block, 'VERB');
+  if (!inner) {
+    return null;
+  }
+
+  const { advType, target } = spec.resolve(value);
+  return withAdverb(inner, target, { type: 'adverb', lemma: value, advType });
+}
+
+// --- 前置詞ラッパー ---------------------------------------------------------
+
+function parsePrepositionWrapper(block: Blockly.Block): VerbChainResult | null {
+  const inner = parseInnerChain(block, 'VERB');
+  if (!inner) {
+    return null;
+  }
+
+  const prepValue = block.getFieldValue('PREP_VALUE');
+  const objectBlock = block.getInputTargetBlock('OBJECT');
+
+  // 欠損時は ___ マーカーを使用（Grammar Console対応時に警告表示予定）
+  const objectNP = objectBlock
+    ? parseNounPhraseBlock(objectBlock)
+    : {
+        type: 'nounPhrase' as const,
+        adjectives: [],
+        head: { type: 'noun' as const, lemma: '___', number: 'singular' as const },
+      };
+
+  return {
+    ...inner,
+    prepositionalPhrases: [
+      ...inner.prepositionalPhrases,
+      { type: 'prepositionalPhrase', preposition: prepValue, object: objectNP },
+    ],
+  };
+}
+
+// --- 命題論理（Logic Extension） --------------------------------------------
+// 等位接続 and/or とは異なり、大文字 AND/OR/NOT/IF/BECAUSE で出力する
+
+interface BinaryLogicSpec {
+  operator: PropositionalOperator;
+  leftInput: string;
+  rightInput: string;
+}
+
+const BINARY_LOGIC: Record<string, BinaryLogicSpec> = {
+  logic_and_block: { operator: 'AND', leftInput: 'LEFT', rightInput: 'RIGHT' },
+  logic_or_block: { operator: 'OR', leftInput: 'LEFT', rightInput: 'RIGHT' },
+  logic_if_block: { operator: 'IF', leftInput: 'CONDITION', rightInput: 'CONSEQUENCE' },
+  logic_because_block: { operator: 'BECAUSE', leftInput: 'CAUSE', rightInput: 'EFFECT' },
+};
+
+function parseBinaryLogic(block: Blockly.Block, spec: BinaryLogicSpec): VerbChainResult | null {
+  const left = parseInnerChain(block, spec.leftInput);
+  if (!left) {
+    return null;
+  }
+
+  const right = parseInnerChain(block, spec.rightInput);
+  const rightOperand = right ? toVerbPhraseWithLogic(right) : undefined;
+
+  // 左側が複合式（logicOp を持つ）なら leftOperand として保持する。
+  // 単純な命題ならスプレッドで引き継がれるため leftOperand は置かない。
+  const logicOp = left.logicOp
+    ? { operator: spec.operator, leftOperand: toVerbPhraseWithLogic(left), rightOperand }
+    : { operator: spec.operator, rightOperand };
+
+  return { ...left, logicOp };
+}
+
+function parseNotLogic(block: Blockly.Block): VerbChainResult | null {
+  const inner = parseInnerChain(block, 'PROPOSITION');
+  if (!inner) {
+    return null;
+  }
+
+  if (!inner.logicOp) {
+    return { ...inner, logicOp: { operator: 'NOT' } };
+  }
+
+  // 内側が複合式の場合は完全な VerbPhraseNode として leftOperand に格納する。
+  //
+  // ⚠ ここは二項演算子（parseBinaryLogic）と違い toVerbPhraseWithLogic を使っていない。
+  //    polarity を載せず、内側の等位接続も末尾に繋がない点が異なる。
+  //    統一すべきに見えるが振る舞いが変わるため、Phase 2（機械的な分割）では現状を保つ。
+  //    TODO.md「NOT のオペランド構築が二項演算子と揃っていない」を参照。
+  const innerVP: VerbPhraseNode = {
+    ...inner.verbPhrase,
+    adverbs: [
+      ...inner.mannerAdverbs,
+      ...inner.frequencyAdverbs,
+      ...inner.locativeAdverbs,
+      ...(inner.timeAdverbs || []),
+      ...inner.verbPhrase.adverbs,
+    ],
+    prepositionalPhrases: [
+      ...inner.prepositionalPhrases,
+      ...inner.verbPhrase.prepositionalPhrases,
+    ],
+    logicOp: inner.logicOp,
+  };
+
+  return { ...inner, logicOp: { operator: 'NOT', leftOperand: innerVP } };
+}
+
+// --- 等位接続（動詞） -------------------------------------------------------
+
+const VERB_COORDINATION: Record<string, Conjunction> = {
+  coordination_verb_and: 'and',
+  coordination_verb_or: 'or',
+};
+
+function parseVerbCoordination(
+  block: Blockly.Block,
+  conjunction: Conjunction
+): VerbChainResult | null {
+  const left = parseInnerChain(block, 'LEFT');
+  if (!left) {
+    return null;
+  }
+
+  const right = parseInnerChain(block, 'RIGHT');
+
+  // 欠損時は ___ マーカーの動詞句を置く
+  const defaultVP: VerbPhraseNode = {
+    type: 'verbPhrase',
+    verb: { lemma: '___' },
+    arguments: [],
+    adverbs: [],
+    prepositionalPhrases: [],
+  };
+
+  // 左側は内側の等位接続を含む完全な VerbPhraseNode に変換する。
+  // 副詞・前置詞句も leftVP へ畳み込まれるので、返す Result 側は空にする。
+  // polarity は各 VP が個別に持つためここでは hoist しない。
+  return {
+    verbPhrase: toVerbPhraseWithLogic(left),
+    polarity: 'affirmative',
+    frequencyAdverbs: [],
+    mannerAdverbs: [],
+    locativeAdverbs: [],
+    timeAdverbs: [],
+    prepositionalPhrases: [],
+    coordination: {
+      conjunction,
+      rightVerbPhrase: right ? toVerbPhraseWithLogic(right) : defaultVP,
+    },
+  };
+}
+
+// --- ディスパッチャ ---------------------------------------------------------
+
 function parseVerbChain(block: Blockly.Block): VerbChainResult | null {
   const blockType = block.type;
 
-  // VerbChainResultをVerbPhraseNode（logicOp・coordinatedWith含む）に変換するヘルパー
-  // 等位接続や論理演算のオペランドで使用。各VPが個別に極性を持つため withPolarity = true。
-  const toVerbPhraseWithLogic = (result: VerbChainResult): VerbPhraseNode =>
-    toVerbPhraseNode(result, true);
-
-  // 否定ラッパーの処理
   if (blockType === 'negation_wrapper') {
-    const innerBlock = block.getInputTargetBlock('VERB');
-    if (!innerBlock) {
-      return null;
-    }
-    const innerResult = parseVerbChain(innerBlock);
-    if (!innerResult) {
-      return null;
-    }
-    return {
-      ...innerResult,
-      polarity: 'negative',
-    };
+    const inner = parseInnerChain(block, 'VERB');
+    return inner ? { ...inner, polarity: 'negative' } : null;
   }
 
-  // 頻度副詞ラッパーの処理
-  if (blockType === 'frequency_wrapper') {
-    const freqValue = block.getFieldValue('FREQ_VALUE');
-    const innerBlock = block.getInputTargetBlock('VERB');
-    if (!innerBlock) {
-      return null;
-    }
-    const innerResult = parseVerbChain(innerBlock);
-    if (!innerResult) {
-      return null;
-    }
-    return {
-      ...innerResult,
-      frequencyAdverbs: [
-        { type: 'adverb', lemma: freqValue, advType: 'frequency' },
-        ...innerResult.frequencyAdverbs,
-      ],
-    };
+  const adverbSpec = ADVERB_WRAPPERS[blockType];
+  if (adverbSpec) {
+    return parseAdverbWrapper(block, adverbSpec);
   }
 
-  // 様態副詞ラッパーの処理
-  if (blockType === 'manner_wrapper') {
-    const mannerValue = block.getFieldValue('MANNER_VALUE');
-    // ラベル行はスキップ
-    if (mannerValue?.startsWith('__')) {
-      const innerBlock = block.getInputTargetBlock('VERB');
-      return innerBlock ? parseVerbChain(innerBlock) : null;
-    }
-    const innerBlock = block.getInputTargetBlock('VERB');
-    if (!innerBlock) {
-      return null;
-    }
-    const innerResult = parseVerbChain(innerBlock);
-    if (!innerResult) {
-      return null;
-    }
-    return {
-      ...innerResult,
-      mannerAdverbs: [
-        { type: 'adverb', lemma: mannerValue, advType: 'manner' },
-        ...innerResult.mannerAdverbs,
-      ],
-    };
-  }
-
-  // 場所副詞ラッパーの処理
-  if (blockType === 'locative_wrapper') {
-    const locativeValue = block.getFieldValue('LOCATIVE_VALUE');
-    // ラベル行はスキップ
-    if (locativeValue?.startsWith('__')) {
-      const innerBlock = block.getInputTargetBlock('VERB');
-      return innerBlock ? parseVerbChain(innerBlock) : null;
-    }
-    const innerBlock = block.getInputTargetBlock('VERB');
-    if (!innerBlock) {
-      return null;
-    }
-    const innerResult = parseVerbChain(innerBlock);
-    if (!innerResult) {
-      return null;
-    }
-    return {
-      ...innerResult,
-      locativeAdverbs: [
-        { type: 'adverb', lemma: locativeValue, advType: 'place' },
-        ...innerResult.locativeAdverbs,
-      ],
-    };
-  }
-
-  // 時間副詞ラッパーの処理
-  if (blockType === 'time_adverb_wrapper') {
-    const timeAdverbValue = block.getFieldValue('TIME_ADVERB_VALUE');
-    // ラベル行はスキップ
-    if (timeAdverbValue?.startsWith('__')) {
-      const innerBlock = block.getInputTargetBlock('VERB');
-      return innerBlock ? parseVerbChain(innerBlock) : null;
-    }
-    const innerBlock = block.getInputTargetBlock('VERB');
-    if (!innerBlock) {
-      return null;
-    }
-    const innerResult = parseVerbChain(innerBlock);
-    if (!innerResult) {
-      return null;
-    }
-    return {
-      ...innerResult,
-      timeAdverbs: [
-        { type: 'adverb', lemma: timeAdverbValue, advType: 'time' },
-        ...(innerResult.timeAdverbs || []),
-      ],
-    };
-  }
-
-  // Wh副詞ブロックの処理（Question用）
-  if (blockType === 'wh_adverb_block') {
-    const whAdverbValue = block.getFieldValue('WH_ADVERB_VALUE');
-    const innerBlock = block.getInputTargetBlock('VERB');
-    if (!innerBlock) {
-      return null;
-    }
-    const innerResult = parseVerbChain(innerBlock);
-    if (!innerResult) {
-      return null;
-    }
-    // ?where, ?when, ?how を適切な advType に振り分け
-    let advType: 'place' | 'time' | 'manner' = 'manner';
-    let targetArray: 'locativeAdverbs' | 'timeAdverbs' | 'mannerAdverbs' = 'mannerAdverbs';
-    if (whAdverbValue === '?where') {
-      advType = 'place';
-      targetArray = 'locativeAdverbs';
-    } else if (whAdverbValue === '?when') {
-      advType = 'time';
-      targetArray = 'timeAdverbs';
-    } else if (whAdverbValue === '?how') {
-      advType = 'manner';
-      targetArray = 'mannerAdverbs';
-    }
-    return {
-      ...innerResult,
-      [targetArray]: [
-        { type: 'adverb', lemma: whAdverbValue, advType },
-        ...(innerResult[targetArray] || []),
-      ],
-    };
-  }
-
-  // 前置詞ラッパー（動詞用）の処理
   if (blockType === 'preposition_verb') {
-    const prepValue = block.getFieldValue('PREP_VALUE');
-    const innerBlock = block.getInputTargetBlock('VERB');
-    const objectBlock = block.getInputTargetBlock('OBJECT');
-    if (!innerBlock) {
-      return null;
-    }
-    const innerResult = parseVerbChain(innerBlock);
-    if (!innerResult) {
-      return null;
-    }
-    // 欠損時は ___ マーカーを使用（Grammar Console対応時に警告表示予定）
-    const objectNP = objectBlock ? parseNounPhraseBlock(objectBlock) : {
-      type: 'nounPhrase' as const,
-      adjectives: [],
-      head: { type: 'noun' as const, lemma: '___', number: 'singular' as const },
-      prepositionalPhrases: [],
-    };
-    return {
-      ...innerResult,
-      prepositionalPhrases: [
-        ...innerResult.prepositionalPhrases,
-        { type: 'prepositionalPhrase', preposition: prepValue, object: objectNP },
-      ],
-    };
+    return parsePrepositionWrapper(block);
   }
 
-  // 命題レベル論理演算ブロックの処理（Logic Extension: AND, OR, NOT）
-  // 等位接続 and/or とは異なり、大文字 AND/OR/NOT で出力
-  if (blockType === 'logic_and_block' || blockType === 'logic_or_block') {
-    const operator: PropositionalOperator = blockType === 'logic_and_block' ? 'AND' : 'OR';
-    const leftBlock = block.getInputTargetBlock('LEFT');
-    const rightBlock = block.getInputTargetBlock('RIGHT');
-    if (!leftBlock) {
-      return null;
-    }
-    const leftResult = parseVerbChain(leftBlock);
-    if (!leftResult) {
-      return null;
-    }
-    // 右側も解析
-    const rightResult = rightBlock ? parseVerbChain(rightBlock) : null;
-
-    // 右側がlogicOpを持つ場合（例: OR(Q, R)）、それも含める
-    const rightVP = rightResult ? toVerbPhraseWithLogic(rightResult) : undefined;
-
-    // 左側が複合式（logicOpを持つ）の場合、leftOperandとして格納
-    // そうでなければ従来通りスプレッド
-    if (leftResult.logicOp) {
-      const leftVP = toVerbPhraseWithLogic(leftResult);
-      return {
-        ...leftResult,
-        logicOp: {
-          operator,
-          leftOperand: leftVP,
-          rightOperand: rightVP,
-        },
-      };
-    }
-
-    return {
-      ...leftResult,
-      logicOp: {
-        operator,
-        rightOperand: rightVP,
-      },
-    };
+  const logicSpec = BINARY_LOGIC[blockType];
+  if (logicSpec) {
+    return parseBinaryLogic(block, logicSpec);
   }
 
   if (blockType === 'logic_not_block') {
-    const innerBlock = block.getInputTargetBlock('PROPOSITION');
-    if (!innerBlock) {
-      return null;
-    }
-    const innerResult = parseVerbChain(innerBlock);
-    if (!innerResult) {
-      return null;
-    }
-
-    // 内側が複合式（logicOpを持つ）の場合、leftOperandとして格納
-    if (innerResult.logicOp) {
-      // 内側が複合式の場合、完全なVerbPhraseNodeとしてleftOperandに格納
-      const innerVP: VerbPhraseNode = {
-        ...innerResult.verbPhrase,
-        adverbs: [
-          ...innerResult.mannerAdverbs,
-          ...innerResult.frequencyAdverbs,
-          ...innerResult.locativeAdverbs,
-          ...(innerResult.timeAdverbs || []),
-          ...innerResult.verbPhrase.adverbs,
-        ],
-        prepositionalPhrases: [
-          ...innerResult.prepositionalPhrases,
-          ...innerResult.verbPhrase.prepositionalPhrases,
-        ],
-        logicOp: innerResult.logicOp,
-      };
-      return {
-        ...innerResult,
-        logicOp: {
-          operator: 'NOT' as PropositionalOperator,
-          leftOperand: innerVP,
-        },
-      };
-    }
-
-    return {
-      ...innerResult,
-      logicOp: {
-        operator: 'NOT' as PropositionalOperator,
-      },
-    };
+    return parseNotLogic(block);
   }
 
-  // Logic Extension: IF ブロック（条件・含意）
-  // IF(P, then:Q) - 「PならばQ」
-  if (blockType === 'logic_if_block') {
-    const conditionBlock = block.getInputTargetBlock('CONDITION');
-    const consequenceBlock = block.getInputTargetBlock('CONSEQUENCE');
-    if (!conditionBlock) {
-      return null;
-    }
-    const conditionResult = parseVerbChain(conditionBlock);
-    if (!conditionResult) {
-      return null;
-    }
-    const consequenceResult = consequenceBlock ? parseVerbChain(consequenceBlock) : null;
-    const consequenceVP = consequenceResult ? toVerbPhraseWithLogic(consequenceResult) : undefined;
-
-    // AND/OR と同じパターン: 左側が複合式の場合のみ leftOperand を設定
-    if (conditionResult.logicOp) {
-      const conditionVP = toVerbPhraseWithLogic(conditionResult);
-      return {
-        ...conditionResult,
-        logicOp: {
-          operator: 'IF' as PropositionalOperator,
-          leftOperand: conditionVP,
-          rightOperand: consequenceVP,
-        },
-      };
-    }
-
-    return {
-      ...conditionResult,
-      logicOp: {
-        operator: 'IF' as PropositionalOperator,
-        rightOperand: consequenceVP,
-      },
-    };
+  const conjunction = VERB_COORDINATION[blockType];
+  if (conjunction) {
+    return parseVerbCoordination(block, conjunction);
   }
 
-  // Logic Extension: BECAUSE ブロック（因果関係）
-  // BECAUSE(P, effect:Q) - 「Pだから、Q」
-  if (blockType === 'logic_because_block') {
-    const causeBlock = block.getInputTargetBlock('CAUSE');
-    const effectBlock = block.getInputTargetBlock('EFFECT');
-    if (!causeBlock) {
-      return null;
-    }
-    const causeResult = parseVerbChain(causeBlock);
-    if (!causeResult) {
-      return null;
-    }
-    const effectResult = effectBlock ? parseVerbChain(effectBlock) : null;
-    const effectVP = effectResult ? toVerbPhraseWithLogic(effectResult) : undefined;
-
-    // AND/OR と同じパターン: 左側が複合式の場合のみ leftOperand を設定
-    if (causeResult.logicOp) {
-      const causeVP = toVerbPhraseWithLogic(causeResult);
-      return {
-        ...causeResult,
-        logicOp: {
-          operator: 'BECAUSE' as PropositionalOperator,
-          leftOperand: causeVP,
-          rightOperand: effectVP,
-        },
-      };
-    }
-
-    return {
-      ...causeResult,
-      logicOp: {
-        operator: 'BECAUSE' as PropositionalOperator,
-        rightOperand: effectVP,
-      },
-    };
-  }
-
-  // 等位接続ラッパー（動詞用）の処理
-  if (blockType === 'coordination_verb_and' || blockType === 'coordination_verb_or') {
-    const conjValue: Conjunction = blockType === 'coordination_verb_and' ? 'and' : 'or';
-    const leftBlock = block.getInputTargetBlock('LEFT');
-    const rightBlock = block.getInputTargetBlock('RIGHT');
-    if (!leftBlock) {
-      return null;
-    }
-    const leftResult = parseVerbChain(leftBlock);
-    if (!leftResult) {
-      return null;
-    }
-    // 右側も解析（logicOpを含めて完全なVerbPhraseNodeに変換）
-    const rightResult = rightBlock ? parseVerbChain(rightBlock) : null;
-
-    // デフォルトの動詞句（欠損時は ___ マーカー）
-    const defaultVP: VerbPhraseNode = {
-      type: 'verbPhrase',
-      verb: { lemma: '___' },
-      arguments: [],
-      adverbs: [],
-      prepositionalPhrases: [],
-    };
-
-    // 左側を完全なVerbPhraseNodeに変換（内側の等位接続を含む）
-    // これにより or(and(A, B), C) で B が失われるバグを防ぐ
-    // polarityは各VP個別に持つため、ここではhoistしない
-    const leftVP = toVerbPhraseWithLogic(leftResult);
-
-    return {
-      verbPhrase: leftVP,
-      polarity: 'affirmative',  // 節レベルは肯定、VP個別のpolarityはleftVPに含まれる
-      frequencyAdverbs: [],  // leftVP に含まれている
-      mannerAdverbs: [],
-      locativeAdverbs: [],
-      timeAdverbs: [],
-      prepositionalPhrases: [],
-      coordination: {
-        conjunction: conjValue,
-        rightVerbPhrase: rightResult ? toVerbPhraseWithLogic(rightResult) : defaultVP,
-      },
-    };
-  }
-
-  // 実際の動詞ブロックの処理（verb, verb_motion, verb_action, etc.）
+  // 実際の動詞ブロック（verb, verb_motion, verb_action, etc.）
   if (blockType === 'verb' || blockType.startsWith('verb_')) {
     const verbPhrase = parseVerbBlock(block);
-    if (!verbPhrase) {
-      return null;
-    }
-    return {
-      verbPhrase,
-      polarity: 'affirmative',
-      frequencyAdverbs: [],
-      mannerAdverbs: [],
-      locativeAdverbs: [],
-      timeAdverbs: [],
-      prepositionalPhrases: [],
-    };
+    return verbPhrase ? emptyChain(verbPhrase) : null;
   }
 
   return null;

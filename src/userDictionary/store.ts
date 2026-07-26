@@ -106,7 +106,9 @@ function saveToStorage(): void {
 // パッケージ操作
 // ============================================
 
-export function importPackage(pkg: DictionaryPackage): { added: number; skipped: number } {
+export function importPackage(raw: DictionaryPackage): { added: number; skipped: number } {
+  // エクスポート済みの旧形式 JSON を取り込めるよう、必ず移行を通す
+  const pkg = migratePackage(raw);
   let added = 0;
   let skipped = 0;
 

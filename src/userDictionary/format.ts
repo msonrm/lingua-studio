@@ -31,8 +31,17 @@ import type {
   ArgumentSlot,
 } from '../types/schema';
 
-/** 現行の保存形式バージョン */
-export const STORAGE_VERSION = '2';
+/**
+ * 保存形式のバージョン
+ *
+ * ここが「正式版」の 1。それ以前のデータも `version: "1.0"` を名乗っていたが、
+ * 日本語レンダラーへの配線も入力 UI も無く実質機能していなかったため、
+ * 正式に動く形をあらためて 1 とした。
+ *
+ * 旧形式は version 文字列では区別できないので、**中身の形**で見分ける
+ * （`hasLegacyShape()` を参照）。
+ */
+export const STORAGE_VERSION = '1';
 
 /** 言語ごとの語形。キーは言語パックの `userEntryFields` に対応する */
 export type LanguageFormValues = Record<string, string>;
@@ -93,7 +102,7 @@ function guessJapaneseVerbType(surface: string): { verbType: string; certain: bo
   return { verbType: 'godan', certain: false };
 }
 
-/** v1 の `translations.ja` を v2 の `forms.ja` に変換する */
+/** 旧形式の `translations.ja` を現行形式の `forms.ja` に変換する */
 function migrateJapaneseForm(
   translation: unknown,
   isVerb: boolean
@@ -119,7 +128,7 @@ function migrateJapaneseForm(
   return undefined;
 }
 
-/** v1 のエントリ共通部分を v2 に変換する */
+/** 旧形式のエントリ共通部分を現行形式に変換する */
 function migrateEntry(
   raw: Record<string, unknown>,
   englishForms: LanguageFormValues,
@@ -146,8 +155,8 @@ function migrateEntry(
   };
 }
 
-/** v1 のパッケージを v2 に変換する */
-function migrateFromV1(pkg: Record<string, unknown>): UserDictionaryPackage {
+/** 旧形式のパッケージを現行形式に変換する */
+function migrateFromLegacy(pkg: Record<string, unknown>): UserDictionaryPackage {
   const words = (pkg.words ?? {}) as Record<string, Record<string, unknown>[] | undefined>;
 
   const verbs = (words.verbs ?? []).map(raw => {
@@ -203,9 +212,40 @@ function migrateFromV1(pkg: Record<string, unknown>): UserDictionaryPackage {
 }
 
 /**
+ * 旧形式のエントリが混ざっているか
+ *
+ * 旧形式の目印:
+ * - `translations`（言語ごとのスロットを直書きしていた）
+ * - `forms.base` が文字列（英語の語形が `forms` 直下にあった）
+ * - `plural` / `comparative` / `superlative` がエントリ直下にある
+ *
+ * 現行形式の `forms` は「言語コード → 語形マップ」なので、値はオブジェクトになる。
+ */
+function hasLegacyShape(pkg: Record<string, unknown>): boolean {
+  const words = (pkg.words ?? {}) as Record<string, Record<string, unknown>[] | undefined>;
+  const entries = [
+    ...(words.verbs ?? []),
+    ...(words.nouns ?? []),
+    ...(words.adjectives ?? []),
+    ...(words.adverbs ?? []),
+  ];
+
+  return entries.some(entry => {
+    if ('translations' in entry) return true;
+    if ('plural' in entry || 'comparative' in entry || 'superlative' in entry) return true;
+    const forms = entry.forms as Record<string, unknown> | undefined;
+    return typeof forms?.base === 'string';
+  });
+}
+
+/**
  * 保存されたパッケージを現行形式に変換する
  *
- * 未知のバージョンは中身を捨てて空のパッケージを返す。
+ * 新旧の判定は version 文字列ではなく**中身の形**で行う。
+ * 旧形式も `version: "1.0"` を名乗っていたため、正式版の `"1"` と文字列では
+ * 区別できないため。手書きのパッケージでバージョンが誤っていても正しく読める利点もある。
+ *
+ * 未来のバージョンは中身を捨てて空のパッケージを返す。
  * 読めないデータで壊れるより、辞書が空になるほうが復旧しやすいため
  * （エクスポートした JSON があれば取り込み直せる）。
  */
@@ -213,12 +253,25 @@ export function migratePackage(raw: unknown): UserDictionaryPackage {
   const pkg = (raw ?? {}) as Record<string, unknown>;
   const version = String(pkg.version ?? '');
 
-  if (version === STORAGE_VERSION) {
-    return pkg as unknown as UserDictionaryPackage;
+  if (hasLegacyShape(pkg)) {
+    return migrateFromLegacy(pkg);
   }
 
-  if (version.startsWith('1')) {
-    return migrateFromV1(pkg);
+  // 現行形式、または中身が空の旧形式（"1.0" など）
+  const major = version.split('.')[0];
+  if (version === '' || major === STORAGE_VERSION || major === '0') {
+    const words = (pkg.words ?? {}) as UserDictionaryPackage['words'];
+    return {
+      name: (pkg.name as string) ?? 'user-dictionary',
+      version: STORAGE_VERSION,
+      ...(pkg.description ? { description: pkg.description as string } : {}),
+      words: {
+        verbs: words.verbs ?? [],
+        nouns: words.nouns ?? [],
+        adjectives: words.adjectives ?? [],
+        adverbs: words.adverbs ?? [],
+      },
+    };
   }
 
   console.warn(`ユーザー辞書: 未知の保存形式バージョン "${version}" のため読み込みをスキップしました`);

@@ -9,14 +9,18 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { migratePackage, STORAGE_VERSION } from '../userDictionary';
 
 /**
- * v1 の実データ
+ * 旧形式の実データ
+ *
+ * `version: "1.0"` を名乗っていたが、日本語レンダラーへの配線も入力 UI も無く
+ * 実質機能していなかった。正式に動く形をあらためて 1 としたため、
+ * 新旧は version 文字列ではなく**中身の形**で見分ける。
  *
  * 当時の形式:
  * - 英語の語形が `forms` に直接入っている
  * - 他言語は `translations` に入る。動詞だけ `{ surface, type }` で活用タイプを持ち、
  *   名詞・形容詞・副詞は文字列（活用しないので足りる）
  */
-const V1_PACKAGE = {
+const LEGACY_PACKAGE = {
   name: 'user-dictionary',
   version: '1.0',
   words: {
@@ -69,10 +73,10 @@ describe('保存形式の移行', () => {
   let migrated: ReturnType<typeof migratePackage>;
 
   beforeEach(() => {
-    migrated = migratePackage(structuredClone(V1_PACKAGE));
+    migrated = migratePackage(structuredClone(LEGACY_PACKAGE));
   });
 
-  it('v1 のパッケージを読み込める', () => {
+  it('旧形式のパッケージを読み込める', () => {
     expect(migrated.version).toBe(STORAGE_VERSION);
     expect(migrated.words.verbs).toHaveLength(3);
     expect(migrated.words.nouns).toHaveLength(1);
@@ -105,7 +109,7 @@ describe('保存形式の移行', () => {
   });
 
   it('動詞の活用タイプをそのまま引き継ぐ', () => {
-    // v1 でも動詞は { surface, type } で活用タイプを保存していたので、推測は不要
+    // 旧形式でも動詞は { surface, type } で活用タイプを保存していたので、推測は不要
     const verbs = migrated.words.verbs!;
     expect(verbs.find(v => v.lemma === 'prepare')!.forms.ja).toEqual({
       ja: '準備する',
@@ -152,7 +156,7 @@ describe('保存形式の移行', () => {
     expect(arrive.unverified ?? []).not.toContain('ja');
   });
 
-  it('v1 の語はすべて確認済み扱いにする（活用タイプが保存されているため）', () => {
+  it('旧形式の語はすべて確認済み扱いにする（活用タイプが保存されているため）', () => {
     for (const verb of migrated.words.verbs!) {
       expect(verb.unverified ?? []).toEqual([]);
     }
@@ -175,10 +179,31 @@ describe('保存形式の移行', () => {
     expect(again).toEqual(migrated);
   });
 
-  it('未知のバージョンでも壊れずに空を返す', () => {
+  it('未来のバージョンは中身を捨てて空を返す', () => {
     const result = migratePackage({ name: 'x', version: '99', words: {} });
     expect(result.version).toBe(STORAGE_VERSION);
     expect(result.words.verbs ?? []).toEqual([]);
+  });
+
+  it('新旧の判定は version 文字列ではなく中身の形で行う', () => {
+    // 旧形式も "1.0" を名乗っていたため、正式版 "1" と文字列では区別できない。
+    // バージョンが現行と同じでも、中身が旧形式なら変換する
+    const mislabeled = migratePackage({
+      ...structuredClone(LEGACY_PACKAGE),
+      version: STORAGE_VERSION,
+    });
+    expect(mislabeled.words.verbs![0].forms.en).toBeDefined();
+    expect(mislabeled.words.verbs![0].forms.ja?.ja).toBe('準備する');
+
+    // 逆に、バージョンが旧いままでも中身が現行形式ならそのまま通す
+    const current = migratePackage({ ...structuredClone(migrated), version: '1.0' });
+    expect(current.words.verbs).toEqual(migrated.words.verbs);
+  });
+
+  it('中身が空の旧形式も読める', () => {
+    const result = migratePackage({ name: 'x', version: '1.0', words: {} });
+    expect(result.version).toBe(STORAGE_VERSION);
+    expect(result.words.verbs).toEqual([]);
   });
 });
 

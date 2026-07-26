@@ -46,15 +46,20 @@
 修正後: EN: I prepared.   JA: 私は準備した。
 ```
 
-#### 保存形式（v1 → v2）
+#### 保存形式（正式版 1）
 
 言語ごとのスロットを `translations` に直書きする形をやめ、
 `forms[言語コード]` の**文字列マップ**にした。
 
 ```
-v1: { lemma, forms: {base,past,pp,ing,s}, translations: { ja: {surface, type} } }
-v2: { lemma, forms: { en: {past,pp,ing,s}, ja: {ja, verbType} } }
+旧: { lemma, forms: {base,past,pp,ing,s}, translations: { ja: {surface, type} } }
+新: { lemma, forms: { en: {past,pp,ing,s}, ja: {ja, verbType} } }
 ```
+
+旧形式も `version: "1.0"` を名乗っていたが、日本語レンダラーへの配線も
+入力 UI も無く実質機能していなかった。正式に動く形をあらためて **1** とし、
+新旧は version 文字列ではなく**中身の形**で見分ける（`hasLegacyShape()`）。
+手書きパッケージでバージョンが誤っていても正しく読める利点もある。
 
 キーは言語パックの `userEntryFields` が宣言するものと一致する。
 これで **UI の入力欄・保存形式・言語パックの読み取りが1本の線で繋がり**、
@@ -63,12 +68,13 @@ v2: { lemma, forms: { en: {past,pp,ing,s}, ja: {ja, verbType} } }
 #### 移行
 
 - [x] `version` を読むようにした（書かれていたが参照されていなかった）
-- [x] v1 のデータを自動で v2 に変換する（既存ユーザーの localStorage を壊さない）
-- [x] 動詞の活用タイプは v1 でも保存されていたのでそのまま引き継ぐ
+- [x] 旧形式のデータを自動で変換する（既存ユーザーの localStorage を壊さない）
+- [x] 動詞の活用タイプは旧形式でも保存されていたのでそのまま引き継ぐ
 - [x] 活用タイプが欠けている場合だけ推測し、確実でなければ `unverified` に記録する
   - 「〜する」「来る」は確実に判定できる
   - 「〜る」は五段（走る）と一段（集める）の区別がつかないので仮に五段とし、要確認にする
-- [x] 未知のバージョンは中身を捨てて空を返す（読めないデータで壊れるより復旧しやすい）
+- [x] 未来のバージョンは中身を捨てて空を返す（読めないデータで壊れるより復旧しやすい）
+- [x] `importPackage()` も移行を通すようにした（旧形式でエクスポートした JSON を取り込める）
 
 移行テスト（`userDictionaryMigration.test.ts`）を先に書いてから実装した。
 

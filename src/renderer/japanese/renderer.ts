@@ -242,6 +242,11 @@ function headVerbPhrase(node: VerbPhraseConjunct): VerbPhraseNode {
  *   and(A, or(B, C))  →  [A(and), B(or), C(-)]
  *
  * ⚠ この2つは日本語では同じ並びになる（英語は correlative で書き分ける）。
+ *
+ * 意図的な判断であり、対応漏れではない。日本語でも「AかつBであるか、または C」のように
+ * 書けば範囲を明示できるが、日常の文としては不自然で契約書や条文の文体になってしまう。
+ * 本ツールは学習者が組み立てた文を自然な日本語で見せることを優先し、平坦化を選んでいる。
+ * 範囲を厳密に見たい場合は LinguaScript 出力（n項ツリーをそのまま反映）を参照する。
  */
 function flattenCoordination(
   node: VerbPhraseConjunct

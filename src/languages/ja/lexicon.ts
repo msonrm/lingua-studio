@@ -12,6 +12,7 @@
 
 import { SemanticRole } from '../../types/schema';
 import { verbCores } from '../../concepts';
+import { findUserForms } from '../../userDictionary';
 
 export type Particle = 'は' | 'が' | 'を' | 'に' | 'で' | 'から' | 'まで' | 'と' | 'へ' | '';
 
@@ -402,7 +403,7 @@ const nounToJapanese: Record<string, string> = {
  * 名詞を日本語に変換（見つからなければそのまま返す）
  */
 export function translateNoun(lemma: string): string {
-  return nounToJapanese[lemma] || lemma;
+  return nounToJapanese[lemma] ?? findUserForms(lemma, 'ja')?.ja ?? lemma;
 }
 
 // ============================================
@@ -546,8 +547,22 @@ const verbToJapanese: Record<string, VerbEntry> = {
 /**
  * 動詞エントリを取得（見つからなければデフォルト値を返す）
  */
+/**
+ * 動詞エントリを取得（ベース辞書 → ユーザー辞書 → 既定値）
+ *
+ * 未登録でも既定値を返す（レンダラーが落ちないため）。
+ * 「引けたかどうか」を判定したい場合は言語パックの `lookupVerb()` を使う。
+ */
 export function getVerbEntry(lemma: string): VerbEntry {
-  return verbToJapanese[lemma] || { ja: lemma, type: 'godan' };
+  const base = verbToJapanese[lemma];
+  if (base) return base;
+
+  const user = findUserForms(lemma, 'ja');
+  if (user?.ja) {
+    // 活用タイプが無ければ五段とみなす（ユーザー辞書では必須入力）
+    return { ja: user.ja, type: (user.verbType as VerbType) ?? 'godan' };
+  }
+  return { ja: lemma, type: 'godan' };
 }
 
 // ============================================
@@ -718,7 +733,7 @@ const adjectiveToJapanese: Record<string, string> = {
  *    語幹と型を取り出すこと。「幸せなである」のような誤りを防ぐため。
  */
 export function translateAdjective(lemma: string): string {
-  return adjectiveToJapanese[lemma] || lemma;
+  return adjectiveToJapanese[lemma] ?? findUserForms(lemma, 'ja')?.ja ?? lemma;
 }
 
 /**
@@ -885,7 +900,7 @@ const adverbToJapanese: Record<string, string> = {
  * 副詞を日本語に変換（見つからなければそのまま返す）
  */
 export function translateAdverb(lemma: string): string {
-  return adverbToJapanese[lemma] || lemma;
+  return adverbToJapanese[lemma] ?? findUserForms(lemma, 'ja')?.ja ?? lemma;
 }
 
 // ============================================

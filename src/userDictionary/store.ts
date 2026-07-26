@@ -13,72 +13,24 @@
 import {
   VerbCore, NounCore, AdjectiveCore, AdverbCore,
   VerbForms, NounForms, AdjectiveForms,
-  VerbCategory, NounCategory, AdjectiveCategory,
-  ArgumentSlot,
-} from './types/schema';
+} from '../types/schema';
+import {
+  STORAGE_VERSION,
+  migratePackage,
+  type UserDictionaryPackage,
+  type UserVerbEntry,
+  type UserNounEntry,
+  type UserAdjectiveEntry,
+  type UserAdverbEntry,
+  type LanguageFormValues,
+} from './format';
 
-// ============================================
-// パッケージ形式の型定義
-// ============================================
-
-export interface DictionaryPackage {
-  name: string;
-  version: string;
-  description?: string;
-  words: {
-    verbs?: ExtVerbEntry[];
-    nouns?: ExtNounEntry[];
-    adjectives?: ExtAdjectiveEntry[];
-    adverbs?: ExtAdverbEntry[];
-  };
-}
-
-// 拡張エントリ型（Core + Forms + 将来の多言語対応用）
-export interface ExtVerbEntry {
-  lemma: string;
-  type: "action" | "stative";
-  category: VerbCategory;
-  valency: ArgumentSlot[];
-  forms: {
-    base: string;
-    past: string;
-    pp: string;
-    ing: string;
-    s: string;
-  };
-  translations?: {
-    ja?: { surface: string; type: "godan" | "ichidan" | "suru" | "kuru" };
-  };
-}
-
-export interface ExtNounEntry {
-  lemma: string;
-  category: NounCategory;
-  countable: boolean;
-  plural: string;
-  proper?: boolean;
-  translations?: {
-    ja?: string;
-  };
-}
-
-export interface ExtAdjectiveEntry {
-  lemma: string;
-  category: AdjectiveCategory;
-  comparative?: string;
-  superlative?: string;
-  translations?: {
-    ja?: string;
-  };
-}
-
-export interface ExtAdverbEntry {
-  lemma: string;
-  type: "manner" | "frequency" | "degree" | "time" | "place";
-  translations?: {
-    ja?: string;
-  };
-}
+/** 旧名の別名（既存の import を壊さないため） */
+export type DictionaryPackage = UserDictionaryPackage;
+export type ExtVerbEntry = UserVerbEntry;
+export type ExtNounEntry = UserNounEntry;
+export type ExtAdjectiveEntry = UserAdjectiveEntry;
+export type ExtAdverbEntry = UserAdverbEntry;
 
 // ============================================
 // ストレージキー
@@ -90,10 +42,10 @@ const STORAGE_KEY = 'lingua-studio-dictionary-ext';
 // 拡張辞書データ（メモリ上）
 // ============================================
 
-let extVerbs: ExtVerbEntry[] = [];
-let extNouns: ExtNounEntry[] = [];
-let extAdjectives: ExtAdjectiveEntry[] = [];
-let extAdverbs: ExtAdverbEntry[] = [];
+let extVerbs: UserVerbEntry[] = [];
+let extNouns: UserNounEntry[] = [];
+let extAdjectives: UserAdjectiveEntry[] = [];
+let extAdverbs: UserAdverbEntry[] = [];
 
 // 変更通知用のリスナー
 type ChangeListener = () => void;
@@ -119,7 +71,8 @@ function loadFromStorage(): void {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) {
-      const parsed = JSON.parse(data) as DictionaryPackage;
+      // 旧形式で保存されていても読めるよう、必ず移行を通す
+      const parsed = migratePackage(JSON.parse(data));
       extVerbs = parsed.words.verbs || [];
       extNouns = parsed.words.nouns || [];
       extAdjectives = parsed.words.adjectives || [];
@@ -133,9 +86,9 @@ function loadFromStorage(): void {
 
 function saveToStorage(): void {
   try {
-    const data: DictionaryPackage = {
+    const data: UserDictionaryPackage = {
       name: 'user-dictionary',
-      version: '1.0',
+      version: STORAGE_VERSION,
       words: {
         verbs: extVerbs,
         nouns: extNouns,
@@ -305,10 +258,31 @@ export function findExtVerbCore(lemma: string): VerbCore | undefined {
 export function findExtVerbForms(lemma: string): VerbForms | undefined {
   const verb = extVerbs.find(v => v.lemma === lemma);
   if (!verb) return undefined;
+  const en = verb.forms.en ?? {};
+  // 空欄は規則変化から補う（英語は lemma から導出できる）
   return {
     lemma: verb.lemma,
-    forms: verb.forms,
+    forms: {
+      base: verb.lemma,
+      past: en.past || `${verb.lemma}ed`,
+      pp: en.pp || `${verb.lemma}ed`,
+      ing: en.ing || `${verb.lemma}ing`,
+      s: en.s || `${verb.lemma}s`,
+    },
   };
+}
+
+/** 指定した言語の語形を引く（言語パックが自分のスライスを読むための入口） */
+export function findUserForms(
+  lemma: string,
+  language: string
+): LanguageFormValues | undefined {
+  const entry =
+    extVerbs.find(v => v.lemma === lemma) ??
+    extNouns.find(n => n.lemma === lemma) ??
+    extAdjectives.find(a => a.lemma === lemma) ??
+    extAdverbs.find(a => a.lemma === lemma);
+  return entry?.forms[language];
 }
 
 export function findExtNounCore(lemma: string): NounCore | undefined {
@@ -327,7 +301,7 @@ export function findExtNounForms(lemma: string): NounForms | undefined {
   if (!noun) return undefined;
   return {
     lemma: noun.lemma,
-    plural: noun.plural,
+    plural: noun.forms.en?.plural || `${noun.lemma}s`,
   };
 }
 
@@ -343,10 +317,11 @@ export function findExtAdjectiveCore(lemma: string): AdjectiveCore | undefined {
 export function findExtAdjectiveForms(lemma: string): AdjectiveForms | undefined {
   const adj = extAdjectives.find(a => a.lemma === lemma);
   if (!adj) return undefined;
+  const en = adj.forms.en ?? {};
   return {
     lemma: adj.lemma,
-    comparative: adj.comparative,
-    superlative: adj.superlative,
+    ...(en.comparative ? { comparative: en.comparative } : {}),
+    ...(en.superlative ? { superlative: en.superlative } : {}),
   };
 }
 

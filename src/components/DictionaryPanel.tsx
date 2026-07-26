@@ -83,7 +83,8 @@ export function DictionaryPanel() {
       s = base + 's';
     }
 
-    return { base, past, pp, ing, s };
+    // base は lemma と同じなので保存しない
+    return { past, pp, ing, s };
   };
 
   const generateNounPlural = (lemma: string) => {
@@ -111,7 +112,7 @@ export function DictionaryPanel() {
           type: 'action',
           category: newCategory as VerbCategory,
           valency: defaultValencyPatterns[newValencyPattern],
-          forms: generateVerbForms(lemma),
+          forms: { en: generateVerbForms(lemma) },
         });
         break;
       case 'noun':
@@ -119,19 +120,21 @@ export function DictionaryPanel() {
           lemma,
           category: newCategory as NounCategory,
           countable: newCountable,
-          plural: generateNounPlural(lemma),
+          forms: { en: { plural: generateNounPlural(lemma) } },
         });
         break;
       case 'adjective':
         success = addAdjective({
           lemma,
           category: newCategory as AdjectiveCategory,
+          forms: {},
         });
         break;
       case 'adverb':
         success = addAdverb({
           lemma,
           type: newCategory as 'manner' | 'frequency' | 'degree' | 'time' | 'place',
+          forms: {},
         });
         break;
     }

@@ -11,7 +11,9 @@ import {
   translateAdjective,
   translateAdverb,
   type VerbEntry,
+  type VerbType,
 } from './lexicon';
+import { findUserForms } from '../../userDictionary';
 
 export interface JapaneseForms extends LanguageForms {
   /** 辞書形 + 活用タイプ */
@@ -52,16 +54,32 @@ const userEntryFields: UserEntryField[] = [
   },
 ];
 
-/** 未登録なら undefined を返す（`getVerbEntry` は既定値を返すため、ここで判別する） */
+/**
+ * ベース辞書 → ユーザー辞書 の順で引く
+ *
+ * `getVerbEntry` は未登録でも既定値（lemma + 五段）を返すので、ここで未登録を判別する。
+ */
 function lookupVerb(lemma: string): VerbEntry | undefined {
-  const entry = getVerbEntry(lemma);
-  return entry.ja === lemma ? undefined : entry;
+  const base = getVerbEntry(lemma);
+  if (base.ja !== lemma) return base;
+
+  const user = findUserForms(lemma, 'ja');
+  if (user?.ja) {
+    // 活用タイプが無ければ五段とみなす（ユーザー辞書では必須入力にしているので通常は入る）
+    return { ja: user.ja, type: (user.verbType as VerbType) ?? 'godan' };
+  }
+  return undefined;
 }
 
-/** 未登録なら undefined（`translate*` は lemma をそのまま返すため、ここで判別する） */
+/**
+ * ベース辞書 → ユーザー辞書 の順で引く
+ *
+ * `translate*` は未登録なら lemma をそのまま返すので、ここで未登録を判別する。
+ */
 const lookupBy = (translate: (lemma: string) => string) => (lemma: string): string | undefined => {
   const form = translate(lemma);
-  return form === lemma ? undefined : form;
+  if (form !== lemma) return form;
+  return findUserForms(lemma, 'ja')?.ja;
 };
 
 export const japanese: LanguagePack<JapaneseForms> = {

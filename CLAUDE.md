@@ -53,7 +53,7 @@ npm run check       # tsc --noEmit + eslint + vitest（コミット前はこれ�
 npm test            # vitest run
 npm run test:watch  # vitest（ウォッチ）
 npm run lint        # eslint
-npm run knip        # 未参照 export の棚卸し（レポートのみ、CI では失敗させない）
+npm run knip        # 未参照 export の棚卸し（現在0件。増やさないこと）
 ```
 
 ### テスト
@@ -105,8 +105,7 @@ Blockly Workspace
 - **`VerbPhraseNode` に結合機構が3つ同居**: `coordinatedWith`（統語論的な and/or）、`logicOp`（命題論理 AND/OR/NOT/IF/BECAUSE）、`polarity`（VP 個別の否定。`ClauseNode.polarity` とは別物）。両方が negative なら二重否定
 - **ロケール切り替えはワークスペースを再マウントする**（`workspaceKey` を +1）。既存ブロックのラベルは動的更新できないため。切り替え前に `saveState()` で退避している
 - **`blocks/definitions.ts` は副作用 import**。`import '../blocks/definitions'` した時点でブロックが登録される
-- **未参照の export が大量にある**（`npm run knip` で未使用ファイル2件 / export 67件 / 型25件）。`tsconfig` の `noUnusedLocals` では検出できないため蓄積している。既存コードを参考にする際は、その関数が実際に使われているか確認すること
-- **到達不能なコードがある**: `VisualizationPanel.tsx`、`EditorMode` の `'ast'`、`BlockChange` の収集経路（詳細は ARCHITECTURE.md §9）
+- **`npm run knip` は0件を保つこと**。意図的に残す export には `/** @public 理由 */` を付ける（`knip.json` の `tags: ["-public"]` で除外される）。現在タグが付いているのは辞書モジュールの API（消すと辞書データが到達不能になる）と、Phase 4-1 で使う予定の `RenderContext` 一式のみ
 - **`coordinatedWith` は連結リスト**。新しい等位接続を足すときは上書きせず `appendCoordination()` で末尾に繋ぐこと。上書きすると `or(and(A, B), C)` の B が消える（2026-07-26 に修正済みの実バグ）
 - **`japanese/lexicon.ts` の `translateAdjective()` が返すのは連体形**（「幸せな」「悲しい」）。述語や連用修飾で使うときは `analyzeAdjective()` で語幹・連用形・活用型を取ること。そのまま繋げると「幸せなである」になる
 - **`AdjectivePhraseNode.degree` は UI から到達不能**。`astGenerator` が生成せず、消費しているのは `linguaScriptRenderer` と日本語レンダラーのみ。英語レンダラーは未対応

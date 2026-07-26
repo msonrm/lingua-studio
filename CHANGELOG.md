@@ -4,6 +4,53 @@
 
 ## 2026-07-26
 
+### Refactoring Phase 1: 死んだコードの整理
+
+アプリの振る舞いは変えていない（AST タブの復活のみ UI 変更）。差し引き -301行。
+
+#### 復活
+
+- [x] AST ビュー（`EditorMode` の `'ast'`）にタブを追加
+  - 表示分岐は元からあったが切り替え UI がなく到達不能だった
+  - `TAB_AST` は3ロケールとも既に定義済みで、欠けていたのはボタンだけ
+
+#### 削除
+
+- [x] `components/VisualizationPanel.tsx`（`App.tsx` でコメントアウト済みだった）
+- [x] `renderer/index.ts`（どこからも import されないバレル）
+- [x] `BlockChange` 収集経路（約90行）
+  - `BlocklyWorkspace.tsx` の `getReadableFieldName()` / `handleBlockChange()` /
+    `pendingChangesRef` / `onBlockChanges` prop、`App.tsx` の `_blockChanges`、
+    `types/grammarLog.ts` の `BlockChange` 型
+  - 2026-01-25 に「Your Changes」パネルとして追加され、2026-01-27 のサイドパネル移設で
+    表示側だけが落ちた残骸。復活させるなら `DerivationTracker.diff()` の上で作り直す
+- [x] `astGenerator.generateAST` / `english/renderer.renderToEnglish`（どちらも別関数のみ使用）
+- [x] `types/grammarLog.ts` の `GrammarLogCollector` / `formatLogStructured` /
+      `formatLogEnglish` / `FormattedLog`
+- [x] `types/schema.ts` の `CoordinatedVerbPhraseNode` / `DeterminerConfig`
+  - VP 等位接続は `coordinatedWith` の連結リストで表現しているため専用ノードは不要
+- [x] `japanese/renderer.ts` の default export、`definitions.ts` の未使用定数3つ
+
+#### 重複の解消
+
+- [x] `blocks/definitions.ts` が `dictionary-core.ts` のヘルパーを再実装していた
+  - ローカル定義の `findNounCore` / `getVerbCoresByCategory` を削除して import に置換
+  - インラインの `nounCores.filter(...)` / `adjectiveCores.filter(...)` を
+    `getNounCoresByCategory()` / `getAdjectiveCoresByCategory()` に置換
+  - これらの export が「未使用」に見えていた原因でもあった
+
+#### 未参照 export の整理（67件 + 型25件 → 0件）
+
+- [x] ファイル内でしか使われないものは `export` を外して内部化
+  - `japanese/index.ts` のバレルを `renderToJapanese` のみに絞る
+  - `lexicon.ts` の翻訳マップ12個、`conjugation.ts` の活用ヘルパー4個、
+    `dictionary-en.ts` の生データ配列4個、`det-rules-en.ts` / `nounPhrase.ts` の型 ほか
+- [x] 意図的に残すものは `/** @public 理由 */` を付けて knip の対象外にした
+  - 辞書モジュールの API（`findAdjectiveCore` など）— 削除すると比較級・最上級 108件などの
+    辞書データが到達不能になり巻き添えで失われるため
+  - `renderer/types.ts` の `RenderContext` 一式 — Phase 4-1 で引き回す予定
+- [x] `npm run knip` を CI で失敗させるようにした（レポートのみ → ゲート）
+
 ### Refactoring Phase 0: テスト・静的解析の基盤整備
 
 リファクタリングの安全網。**アプリの振る舞いは変えていない**。

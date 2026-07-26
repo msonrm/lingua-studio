@@ -7,10 +7,12 @@
 計画: [docs/REFACTORING-PLAN.md](./docs/REFACTORING-PLAN.md) / 構造: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
 
 - [x] **Phase 0**: テスト・静的解析の基盤（Vitest / ESLint / knip / CI）— 2026-07-26 完了
-- [ ] **Phase 1**: 死んだコードの整理
-  - 削除: `VisualizationPanel.tsx` / `BlockChange` 収集経路 / `renderer/index.ts` / `generateAST` / `renderToEnglish` ほか
-  - 復活: `EditorMode` の `'ast'`（タブ追加 + `TAB_AST` を3ロケールに）
-  - ⚠ `DerivationTracker` の未参照メソッド7つは「Grammar Console 詳細表示モード」用の先行実装なので**残す**
+- [x] **Phase 1**: 死んだコードの整理 — 2026-07-26 完了
+  - 削除: `VisualizationPanel.tsx` / `renderer/index.ts` / `BlockChange` 収集経路 /
+    `generateAST` / `renderToEnglish` / `GrammarLogCollector` ほか（-301行）
+  - 復活: `EditorMode` の `'ast'`（タブを追加。`TAB_AST` は3ロケールとも既にあった）
+  - 未参照 export 67件・型25件 → **0件**（`npm run knip` が CI で失敗するようになった）
+  - `definitions.ts` が `dictionary-core` のヘルパーを再実装していた重複を解消
 - [ ] **Phase 2**: 巨大関数の分割（`parseVerbChain` 426行 → テーブル駆動、`conjugateVerb` 322行 → 決定表）
 - [ ] **Phase 3**: `blocks/definitions.ts`（1,709行 / ブロック41個）をカテゴリ別に分割
 - [ ] **Phase 4**: 構造的な改善（tracker のモジュールグローバル解消 / 英日レンダラーの共通骨格抽出 / UI 層）

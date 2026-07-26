@@ -31,7 +31,7 @@ jobs:
       - name: Build
         run: npx vite build
 
-      # 未参照 export の棚卸し。Phase 1 で解消するまで大量に出るため、
-      # 失敗させずレポートのみ行う。
-      - name: Unused exports (report only)
-        run: npx knip || true
+      # 未参照 export の棚卸し。Phase 1 で0件にしたので、増えたら失敗させる。
+      # 意図的に残す export には /** @public 理由 */ を付ける。
+      - name: Unused exports
+        run: npx knip

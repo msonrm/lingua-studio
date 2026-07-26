@@ -19,6 +19,7 @@ import {
   pron,
   noun,
   coordNP,
+  coordVp,
   adjP,
   adv,
   pp,
@@ -144,10 +145,10 @@ const negation: RenderCase[] = [
   {
     name: '否定: VPレベル（等位接続内）',
     ast: decl(
-      vp('eat', [arg('agent', I())], {
-        polarity: 'negative',
-        coordinatedWith: { conjunction: 'and', verbPhrase: vp('drink', [arg('agent', I())]) },
-      })
+      coordVp('and', [
+        vp('eat', [arg('agent', I())], { polarity: 'negative' }),
+        vp('drink', [arg('agent', I())]),
+      ])
     ),
   },
   {
@@ -479,37 +480,31 @@ const coordination: RenderCase[] = [
   {
     name: '等位接続: VP and（同一主語 → 主語省略）',
     ast: decl(
-      vp('eat', [arg('agent', I())], {
-        coordinatedWith: { conjunction: 'and', verbPhrase: vp('drink', [arg('agent', I())]) },
-      })
+      coordVp('and', [vp('eat', [arg('agent', I())]), vp('drink', [arg('agent', I())])])
     ),
   },
   {
     name: '等位接続: VP or',
     ast: decl(
-      vp('eat', [arg('agent', I())], {
-        coordinatedWith: { conjunction: 'or', verbPhrase: vp('drink', [arg('agent', I())]) },
-      })
+      coordVp('or', [vp('eat', [arg('agent', I())]), vp('drink', [arg('agent', I())])])
     ),
   },
   {
     name: '等位接続: VP（異なる主語）',
     ast: decl(
-      vp('eat', [arg('agent', I())], {
-        coordinatedWith: {
-          conjunction: 'and',
-          verbPhrase: vp('run', [arg('agent', noun('father', { det: 'my' }))]),
-        },
-      })
+      coordVp('and', [
+        vp('eat', [arg('agent', I())]),
+        vp('run', [arg('agent', noun('father', { det: 'my' }))]),
+      ])
     ),
   },
   {
     name: '等位接続: VP + 個別の否定',
     ast: decl(
-      vp('eat', [arg('agent', I())], {
-        polarity: 'negative',
-        coordinatedWith: { conjunction: 'and', verbPhrase: vp('drink', [arg('agent', I())]) },
-      })
+      coordVp('and', [
+        vp('eat', [arg('agent', I())], { polarity: 'negative' }),
+        vp('drink', [arg('agent', I())]),
+      ])
     ),
   },
   {
@@ -634,26 +629,22 @@ const japaneseSpecific: RenderCase[] = [
   {
     name: '日本語: テ形接続（食べて飲む）',
     ast: decl(
-      vp('eat', [arg('agent', I())], {
-        coordinatedWith: { conjunction: 'and', verbPhrase: vp('drink', [arg('agent', I())]) },
-      })
+      coordVp('and', [vp('eat', [arg('agent', I())]), vp('drink', [arg('agent', I())])])
     ),
   },
   {
     name: '日本語: ないで形（食べないで飲む）',
     ast: decl(
-      vp('eat', [arg('agent', I())], {
-        polarity: 'negative',
-        coordinatedWith: { conjunction: 'and', verbPhrase: vp('drink', [arg('agent', I())]) },
-      })
+      coordVp('and', [
+        vp('eat', [arg('agent', I())], { polarity: 'negative' }),
+        vp('drink', [arg('agent', I())]),
+      ])
     ),
   },
   {
     name: '日本語: De Morgan（節レベル否定）',
     ast: decl(
-      vp('eat', [arg('agent', I())], {
-        coordinatedWith: { conjunction: 'and', verbPhrase: vp('drink', [arg('agent', I())]) },
-      }),
+      coordVp('and', [vp('eat', [arg('agent', I())]), vp('drink', [arg('agent', I())])]),
       { polarity: 'negative' }
     ),
   },

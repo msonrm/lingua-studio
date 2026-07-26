@@ -102,11 +102,12 @@ Blockly Workspace
 作業前に把握しておくべき既知の罠:
 
 - **`english/renderer.ts` の `tracker` はモジュールレベルの可変シングルトン**。`renderToEnglishWithLogs()` が毎回作り直すが、レンダリング中の全関数が暗黙に参照している。並行レンダリング不可
-- **`VerbPhraseNode` に結合機構が3つ同居**: `coordinatedWith`（統語論的な and/or）、`logicOp`（命題論理 AND/OR/NOT/IF/BECAUSE）、`polarity`（VP 個別の否定。`ClauseNode.polarity` とは別物）。両方が negative なら二重否定
+- **否定が2階層ある**: `ClauseNode.polarity`（節レベル）と `VerbPhraseNode.polarity`（VP 個別、等位接続内で使う）。両方が negative なら二重否定
 - **ロケール切り替えはワークスペースを再マウントする**（`workspaceKey` を +1）。既存ブロックのラベルは動的更新できないため。切り替え前に `saveState()` で退避している
 - **`blocks/index.ts` は副作用 import**。`import '../blocks'` した時点で全ブロックが登録される。import 順に意味がある（データ → ブロック定義 → 拡張 → ツールボックス）
 - **`npm run knip` は0件を保つこと**。意図的に残す export には `/** @public 理由 */` を付ける（`knip.json` の `tags: ["-public"]` で除外される）。現在タグが付いているのは辞書モジュールの API（消すと辞書データが到達不能になる）と、Phase 4-1 で使う予定の `RenderContext` 一式のみ
-- **`coordinatedWith` は連結リスト**。新しい等位接続を足すときは上書きせず `appendCoordination()` で末尾に繋ぐこと。上書きすると `or(and(A, B), C)` の B が消える（2026-07-26 に修正済みの実バグ）
+- **等位接続は n項ツリー**。`ClauseNode.verbPhrase` は `VerbPhraseConjunct`（単一 or `CoordinatedVerbPhraseNode`）の union なので、`clause.verbPhrase.verb` のように直接読まず `isCoordinatedVerbPhrase()` で分岐すること
+- **英語のカンマ・correlative は `english/coordination.ts` が構造から決める**。接続詞の並びから推測してはいけない（それが不要なカンマの原因だった）
 - **`japanese/lexicon.ts` の `translateAdjective()` が返すのは連体形**（「幸せな」「悲しい」）。述語や連用修飾で使うときは `analyzeAdjective()` で語幹・連用形・活用型を取ること。そのまま繋げると「幸せなである」になる
 - **`AdjectivePhraseNode.degree` は UI から到達不能**。`astGenerator` が生成せず、消費しているのは `linguaScriptRenderer` と日本語レンダラーのみ。英語レンダラーは未対応
 

@@ -1743,31 +1743,40 @@ exports[`'astGen/等位接続' > '等位接続: VP + 個別の否定' 1`] = `
       "tense": "present",
       "type": "clause",
       "verbPhrase": {
-        "adverbs": [],
-        "arguments": [
+        "conjunction": "and",
+        "conjuncts": [
           {
-            "filler": {
-              "adjectives": [],
-              "head": {
-                "lemma": "I",
-                "number": "singular",
-                "person": 1,
-                "polaritySensitive": undefined,
-                "pronounType": "personal",
-                "type": "pronoun",
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
               },
-              "type": "nounPhrase",
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": undefined,
+            "polarity": "negative",
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "eat",
             },
-            "role": "agent",
           },
           {
-            "filler": null,
-            "role": "patient",
-          },
-        ],
-        "coordinatedWith": {
-          "conjunction": "and",
-          "verbPhrase": {
             "adverbs": [],
             "arguments": [
               {
@@ -1798,14 +1807,8 @@ exports[`'astGen/等位接続' > '等位接続: VP + 個別の否定' 1`] = `
               "lemma": "drink",
             },
           },
-        },
-        "logicOp": undefined,
-        "polarity": "negative",
-        "prepositionalPhrases": [],
-        "type": "verbPhrase",
-        "verb": {
-          "lemma": "eat",
-        },
+        ],
+        "type": "coordinatedVerbPhrase",
       },
     },
     "sentenceType": "declarative",
@@ -1827,31 +1830,40 @@ exports[`'astGen/等位接続' > '等位接続: VP and' 1`] = `
       "tense": "present",
       "type": "clause",
       "verbPhrase": {
-        "adverbs": [],
-        "arguments": [
+        "conjunction": "and",
+        "conjuncts": [
           {
-            "filler": {
-              "adjectives": [],
-              "head": {
-                "lemma": "I",
-                "number": "singular",
-                "person": 1,
-                "polaritySensitive": undefined,
-                "pronounType": "personal",
-                "type": "pronoun",
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
               },
-              "type": "nounPhrase",
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": undefined,
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "eat",
             },
-            "role": "agent",
           },
           {
-            "filler": null,
-            "role": "patient",
-          },
-        ],
-        "coordinatedWith": {
-          "conjunction": "and",
-          "verbPhrase": {
             "adverbs": [],
             "arguments": [
               {
@@ -1882,14 +1894,8 @@ exports[`'astGen/等位接続' > '等位接続: VP and' 1`] = `
               "lemma": "drink",
             },
           },
-        },
-        "logicOp": undefined,
-        "polarity": undefined,
-        "prepositionalPhrases": [],
-        "type": "verbPhrase",
-        "verb": {
-          "lemma": "eat",
-        },
+        ],
+        "type": "coordinatedVerbPhrase",
       },
     },
     "sentenceType": "declarative",
@@ -1911,31 +1917,40 @@ exports[`'astGen/等位接続' > '等位接続: VP or' 1`] = `
       "tense": "present",
       "type": "clause",
       "verbPhrase": {
-        "adverbs": [],
-        "arguments": [
+        "conjunction": "or",
+        "conjuncts": [
           {
-            "filler": {
-              "adjectives": [],
-              "head": {
-                "lemma": "I",
-                "number": "singular",
-                "person": 1,
-                "polaritySensitive": undefined,
-                "pronounType": "personal",
-                "type": "pronoun",
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
               },
-              "type": "nounPhrase",
+              {
+                "filler": null,
+                "role": "patient",
+              },
+            ],
+            "logicOp": undefined,
+            "polarity": undefined,
+            "prepositionalPhrases": [],
+            "type": "verbPhrase",
+            "verb": {
+              "lemma": "eat",
             },
-            "role": "agent",
           },
           {
-            "filler": null,
-            "role": "patient",
-          },
-        ],
-        "coordinatedWith": {
-          "conjunction": "or",
-          "verbPhrase": {
             "adverbs": [],
             "arguments": [
               {
@@ -1966,21 +1981,15 @@ exports[`'astGen/等位接続' > '等位接続: VP or' 1`] = `
               "lemma": "drink",
             },
           },
-        },
-        "logicOp": undefined,
-        "polarity": undefined,
-        "prepositionalPhrases": [],
-        "type": "verbPhrase",
-        "verb": {
-          "lemma": "eat",
-        },
+        ],
+        "type": "coordinatedVerbPhrase",
       },
     },
     "sentenceType": "declarative",
     "timeAdverbial": undefined,
     "type": "sentence",
   },
-  "en": "I eat, or drink.",
+  "en": "I eat or drink.",
 }
 `;
 
@@ -1995,56 +2004,12 @@ exports[`'astGen/等位接続' > '等位接続: VP 入れ子 or(and(A, B), C)' 1
       "tense": "present",
       "type": "clause",
       "verbPhrase": {
-        "adverbs": [],
-        "arguments": [
+        "conjunction": "or",
+        "conjuncts": [
           {
-            "filler": {
-              "adjectives": [],
-              "head": {
-                "lemma": "I",
-                "number": "singular",
-                "person": 1,
-                "polaritySensitive": undefined,
-                "pronounType": "personal",
-                "type": "pronoun",
-              },
-              "type": "nounPhrase",
-            },
-            "role": "agent",
-          },
-          {
-            "filler": null,
-            "role": "patient",
-          },
-        ],
-        "coordinatedWith": {
-          "conjunction": "and",
-          "verbPhrase": {
-            "adverbs": [],
-            "arguments": [
+            "conjunction": "and",
+            "conjuncts": [
               {
-                "filler": {
-                  "adjectives": [],
-                  "head": {
-                    "lemma": "I",
-                    "number": "singular",
-                    "person": 1,
-                    "polaritySensitive": undefined,
-                    "pronounType": "personal",
-                    "type": "pronoun",
-                  },
-                  "type": "nounPhrase",
-                },
-                "role": "agent",
-              },
-              {
-                "filler": null,
-                "role": "patient",
-              },
-            ],
-            "coordinatedWith": {
-              "conjunction": "or",
-              "verbPhrase": {
                 "adverbs": [],
                 "arguments": [
                   {
@@ -2062,32 +2027,82 @@ exports[`'astGen/等位接続' > '等位接続: VP 入れ子 or(and(A, B), C)' 1
                     },
                     "role": "agent",
                   },
+                  {
+                    "filler": null,
+                    "role": "patient",
+                  },
                 ],
                 "logicOp": undefined,
                 "polarity": undefined,
                 "prepositionalPhrases": [],
                 "type": "verbPhrase",
                 "verb": {
-                  "lemma": "run",
+                  "lemma": "eat",
                 },
               },
-            },
+              {
+                "adverbs": [],
+                "arguments": [
+                  {
+                    "filler": {
+                      "adjectives": [],
+                      "head": {
+                        "lemma": "I",
+                        "number": "singular",
+                        "person": 1,
+                        "polaritySensitive": undefined,
+                        "pronounType": "personal",
+                        "type": "pronoun",
+                      },
+                      "type": "nounPhrase",
+                    },
+                    "role": "agent",
+                  },
+                  {
+                    "filler": null,
+                    "role": "patient",
+                  },
+                ],
+                "logicOp": undefined,
+                "polarity": undefined,
+                "prepositionalPhrases": [],
+                "type": "verbPhrase",
+                "verb": {
+                  "lemma": "drink",
+                },
+              },
+            ],
+            "type": "coordinatedVerbPhrase",
+          },
+          {
+            "adverbs": [],
+            "arguments": [
+              {
+                "filler": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "I",
+                    "number": "singular",
+                    "person": 1,
+                    "polaritySensitive": undefined,
+                    "pronounType": "personal",
+                    "type": "pronoun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "role": "agent",
+              },
+            ],
             "logicOp": undefined,
             "polarity": undefined,
             "prepositionalPhrases": [],
             "type": "verbPhrase",
             "verb": {
-              "lemma": "drink",
+              "lemma": "run",
             },
           },
-        },
-        "logicOp": undefined,
-        "polarity": undefined,
-        "prepositionalPhrases": [],
-        "type": "verbPhrase",
-        "verb": {
-          "lemma": "eat",
-        },
+        ],
+        "type": "coordinatedVerbPhrase",
       },
     },
     "sentenceType": "declarative",

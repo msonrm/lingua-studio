@@ -15,24 +15,28 @@
 - [ ] **Phase 3**: `blocks/definitions.ts`（1,709行 / ブロック41個）をカテゴリ別に分割
 - [ ] **Phase 4**: 構造的な改善（tracker のモジュールグローバル解消 / 英日レンダラーの共通骨格抽出 / UI 層）
 
-## Phase 0 で発見した不具合（未修正）
+## Phase 0 で発見した不具合
 
-いずれも再現テスト付きで現状をスナップショット固定済み。修正時はスナップショット差分をレビューすること。
+- [x] 入れ子 VP 等位接続 `or(and(A, B), C)` で B が AST から消える — 2026-07-26 修正
+- [x] 繋辞の形容詞が日本語訳されない（「私はhappyである」）— 2026-07-26 修正
+- [x] 日本語レンダラーが `logicOp` を扱わない — 2026-07-26 修正
+- [x] 日本語がモダリティ否定を無視する — 2026-07-26 修正
+- [x] 日本語がモダリティ使用時に相を落とす — 2026-07-26 修正
+- [x] `japanese/renderer.ts` の未使用 `verb` 変数 — 2026-07-26 削除
 
-- [ ] **入れ子 VP 等位接続 `or(and(A, B), C)` で B が AST から消える**
-  - `astGenerator.ts` の `parseTimeFrameBlock:303` と `toVerbPhraseWithLogic:420` が、
-    スプレッドで引き継いだ内側の `coordinatedWith` を外側の `coordination` で無条件に上書きしている
-  - 2026-01-31 の修正（`parseVerbChain:787`）は左辺 VP の構築までは正しいが、消費側2箇所で潰れる
-  - `coordinatedWith` は連結リストなので、`or(and(A,B),C)` は eat →(and)→ drink →(or)→ run の鎖として表現するのが素直
-- [ ] **繋辞の形容詞が日本語訳されない**（「私はhappyである」）
-  - `japanese/lexicon.ts` に `happy → 幸せな` があるのに、`japanese/renderer.ts:435` の `renderFiller()` が
-    `adjectivePhrase` で `translateAdjective()` を通さず `head.lemma` をそのまま返している
-- [ ] **日本語レンダラーが `logicOp` を扱わない** — AND/OR/IF/BECAUSE の右オペランドが落ち、NOT も否定されない
-- [ ] **日本語がモダリティ否定を無視する** — 英語 "don't have to" に対し「食べなければならない」
-- [ ] **日本語がモダリティ使用時に相を落とす** — 英語 "can be eating" に対し「食べることができる」
-- [ ] **`japanese/renderer.ts` の `verb` 変数の結果が使われていない**
-  - 実際の動詞文字列は `renderVerbWithCoordination()` が生成。2026-01-31 の2パス方式リファクタの残骸
-  - `conjugate()` が例外を投げうるため、削除は振る舞いを変える可能性がある
+### 残っている既知の不整合
+
+- [ ] **`AdjectivePhraseNode.degree` がスキーマにあるのに UI から到達不能**
+  - `astGenerator` は degree を一切生成せず、消費しているのは `linguaScriptRenderer` のみ
+  - 英語レンダラーは degree を無視する（`degree('very, 'happy)` でも EN は "I am happy."）
+  - 日本語レンダラーは対応済み（「とても幸せである」）
+  - 程度副詞ブロックを追加する際は英語側の対応も必要
+- [ ] **`obligation` + 過去の英語が "I did have to eat" になる**
+  - 迂言形式 `had to` に do-support が重複している疑い（`english/conjugation.ts`）
+- [ ] **日本語は動詞否定とモダリティ否定を表層で区別しない**
+  - 英語の "can not eat"（動詞否定）と "need not eat"（モダリティ否定）が
+    日本語ではどちらもモダリティ側の否定形になる
+  - 日本語の性質上ある程度は妥当だが、教育ツールとして区別を見せたいなら要設計
 
 ## Session Log (2026-01-31)
 

@@ -29,18 +29,43 @@
 - [x] `no-this-alias` 1件（Blockly パターンのため理由コメント付きで inline disable）
 - [x] `package.json` の `"main": "index.js"` を削除（存在しないファイルへの参照）
 
-### Phase 0 で発見した不具合（未修正・現状をスナップショットで固定）
+### Phase 0 で発見した不具合の修正
 
-すべて再現テスト付き。詳細は REFACTORING-PLAN.md「Phase 0 実施結果」。
+Phase 0 のゴールデンテストが検出した6件をすべて修正した。
 
-- [ ] 入れ子 VP 等位接続 `or(and(A, B), C)` で B が AST から消える
-  - `parseTimeFrameBlock:303` と `toVerbPhraseWithLogic:420` が内側の `coordinatedWith` を上書きしている
-  - 2026-01-31 の修正は左辺 VP の構築までは正しいが、消費側2箇所で潰れる
-- [ ] 繋辞の形容詞が日本語訳されない（`renderFiller()` が `translateAdjective()` を通していない）
-- [ ] 日本語レンダラーが `logicOp` を扱わない（AND/OR/IF/BECAUSE の右オペランドが落ちる）
-- [ ] 日本語がモダリティ否定を無視する
-- [ ] 日本語がモダリティ使用時に相を落とす
-- [ ] `japanese/renderer.ts` の `verb` 変数の結果が使われていない（2パス方式リファクタの残骸）
+#### 入れ子 VP 等位接続で項が消えるバグ
+
+- [x] `or(and(A, B), C)` で B が AST から丸ごと消える問題を修正
+  - `coordinatedWith` は連結リストなので、上書きせず**末尾に追加**する `appendCoordination()` を追加
+  - `VerbChainResult → VerbPhraseNode` の変換が3箇所（`parseTimeFrameBlock` / fact の timeless 分岐 /
+    `toVerbPhraseWithLogic`）に複製され、いずれも同じ上書きをしていたため
+    `toVerbPhraseNode()` に共通化
+  - AST は `eat ─and→ drink ─or→ run` の鎖になる
+  - 英語は `coordination.ts` の設計どおり correlative で構造を明示: "Both I eat and drink, or run."
+
+#### 日本語レンダラー
+
+- [x] 繋辞の形容詞を日本語訳するよう修正（「私はhappyである」→「私は幸せである」）
+  - 辞書の値は**連体形**（「幸せな」「悲しい」）なので、述語で使うには変換が必要
+  - `analyzeAdjective()` を追加し、連体形から語幹・連用形・活用型（イ／ナ／その他）を求める
+  - `conjugateAdjectivalPredicate()` を追加。イ形容詞は繋辞を付けず形容詞自体が活用する
+    - 「私は悲しい」「私は悲しかった」「私は悲しくない」「私は悲しくなかった」
+    - ナ形容詞・ノ形容詞は語幹 + である（「幸せである」「本当である」）
+  - be 以外の動詞に係る形容詞は連用形にする（「私は幸せに見える」）
+- [x] 命題論理（`logicOp`）に対応
+  - AND=「〜、かつ〜」/ OR=「〜、または〜」/ NOT=「〜ということはない」
+  - IF=「〜ならば、〜」/ BECAUSE=「〜ので、〜」（英語と違い日本語は原因が先）
+  - De Morgan: `NOT(OR(P, Q))` →「Pということも、Qということもない」
+- [x] モダリティ否定（`modalPolarity`）を反映するよう修正
+  - obligation: 「食べなければならない」→「食べなくてもいい」（EN: don't have to）
+  - permission: 「食べてはいけない」（EN: may not）
+  - 日本語はモダリティ自体が否定を担うため、動詞否定と表層で区別しない
+- [x] モダリティ使用時に相が落ちる問題を修正
+  - 進行相はテ形 + いる を土台にする（「食べていることができる」）
+  - 完了相は過去と同形にする（`conjugateEntry` と同じ規則）
+- [x] 未使用の `verb` 変数を削除（2パス方式リファクタの残骸）
+  - `renderVerbWithCoordination()` が同じ lemma・同じ文脈で `conjugate()` を呼ぶため、
+    例外挙動を含めて完全に冗長だった
 
 ## 2026-02-01
 

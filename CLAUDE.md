@@ -107,8 +107,9 @@ Blockly Workspace
 - **`blocks/definitions.ts` は副作用 import**。`import '../blocks/definitions'` した時点でブロックが登録される
 - **未参照の export が大量にある**（`npm run knip` で未使用ファイル2件 / export 67件 / 型25件）。`tsconfig` の `noUnusedLocals` では検出できないため蓄積している。既存コードを参考にする際は、その関数が実際に使われているか確認すること
 - **到達不能なコードがある**: `VisualizationPanel.tsx`、`EditorMode` の `'ast'`、`BlockChange` の収集経路（詳細は ARCHITECTURE.md §9）
-- **`japanese/renderer.ts` の `verb` 変数は結果が使われていない**（実際の動詞文字列は `renderVerbWithCoordination()` が生成）。2026-01-31 の2パス方式リファクタの残骸。`TODO(Phase 1)` コメント付きで温存してある
-- **入れ子の VP 等位接続 `or(and(A, B), C)` で B が AST から消えるバグがある**。`astGenerator.ts` の `parseTimeFrameBlock:303` と `toVerbPhraseWithLogic:420` が内側の `coordinatedWith` を上書きしている。テストで現状を固定済み（`astGenerator.test.ts` の「等位接続: VP 入れ子」）
+- **`coordinatedWith` は連結リスト**。新しい等位接続を足すときは上書きせず `appendCoordination()` で末尾に繋ぐこと。上書きすると `or(and(A, B), C)` の B が消える（2026-07-26 に修正済みの実バグ）
+- **`japanese/lexicon.ts` の `translateAdjective()` が返すのは連体形**（「幸せな」「悲しい」）。述語や連用修飾で使うときは `analyzeAdjective()` で語幹・連用形・活用型を取ること。そのまま繋げると「幸せなである」になる
+- **`AdjectivePhraseNode.degree` は UI から到達不能**。`astGenerator` が生成せず、消費しているのは `linguaScriptRenderer` と日本語レンダラーのみ。英語レンダラーは未対応
 
 ## Documentation
 

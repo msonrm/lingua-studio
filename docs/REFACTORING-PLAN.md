@@ -110,9 +110,10 @@ GitHub Actions で `tsc && vitest run && eslint` を PR ごとに実行。既存
 - **ESLint の指摘が 14件しかなかった。** `any` の警告はゼロ。既存コードは想定よりずっと綺麗だった
 - **knip は手動スキャンより多く検出した**（未使用ファイル2 / export 67 / 型25）。`definitions.ts` の `toolbox` や `japanese/renderer.ts` の default export など、grep ベースの調査では拾えなかったものがある
 
-### Phase 0 で見つかった不具合（未修正・現状をスナップショットで固定）
+### Phase 0 で見つかった不具合（**すべて 2026-07-26 に修正済み**）
 
-Phase 0 は現状固定が役目なので**いずれも直していない**。すべて再現テスト付き。
+Phase 0 の時点では現状固定に留め、その後まとめて修正した。修正内容は CHANGELOG.md を参照。
+以下は発見時の記録。
 
 1. **入れ子 VP 等位接続で項が消える（重度）** — `or(and(A, B), C)` で B が AST から丸ごと消える。
    `astGenerator.ts` の `parseTimeFrameBlock:303` と `toVerbPhraseWithLogic:420` が、スプレッドで引き継いだ内側の `coordinatedWith` を外側の `coordination` で無条件に上書きしている。

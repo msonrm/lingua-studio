@@ -28,6 +28,37 @@
 
 ### 残っている既知の不整合
 
+- [ ] **等位接続の英語出力（カンマ・correlative）を通しで見直す** ★要検討
+  - 現状の出力:
+    ```
+    I eat an apple, or an orange.      ← 2要素なのにカンマ。"an apple or an orange" が自然
+    I eat, or drink.                    ← 同上
+    I eat apple and orange, or banana.  ← オックスフォードカンマの扱いが混在
+    Both I eat and drink, or run.       ← correlative は正しいがカンマは要検討
+    I eat, and my father runs.          ← 異なる主語の等位節。カンマは妥当
+    Do you drink tea, or coffee?        ← 選択疑問。カンマの是非は要検討
+    ```
+  - **原因の当たり**: `english/coordination.ts` の `groupElements()` が
+    最初の要素の接続詞を `elem.conjunction || 'and'` で `'and'` にデフォルトしている。
+    純粋な OR の等位接続でも「最初は and グループ / 2番目は or グループ」と割れ、
+    `joinGroups()` がグループ間に必ず `, ` を挟むためカンマが出る。
+  - 併せて検討したい点:
+    - グループ内3要素以上のオックスフォードカンマ（`formatGroup`）を有効にするか
+    - 複数階層のとき correlative（both / either）を出す条件
+    - 節の等位（異なる主語）と句の等位でカンマの扱いを分けるか
+  - 出力を変えるとスナップショットが広範囲に動くので、独立した変更として扱うこと
+- [ ] **`NOT` のオペランド構築が二項演算子と揃っていない**
+  - `astGenerator.ts` の `parseNotLogic()` は `toVerbPhraseWithLogic()` を使わず
+    自前で `VerbPhraseNode` を組んでおり、`polarity` を載せず内側の等位接続も繋がない
+  - `parseBinaryLogic()`（AND/OR/IF/BECAUSE）は `toVerbPhraseWithLogic()` を使う
+  - 統一すると `NOT(and(A, B))` のような入れ子で振る舞いが変わるため、
+    Phase 2（機械的な分割）では現状を保った。揃えるなら独立した変更として扱うこと
+- [ ] **副詞ラッパーのラベル行スキップが到達不能な防御コードになっている**
+  - `parseAdverbWrapper()` の `skipLabelRows`（manner / locative / time_adverb）は
+    フィールド値が `__` 始まりのとき副詞を足さず素通しする
+  - しかし `definitions.ts` の `labelValidator` がラベル行の選択自体を拒否するため、
+    UI 経由でこの値になることはない（`astGenerator.test.ts` で確認済み）
+  - 消してよいか、逆にバリデータ側を緩めるべきかは要判断
 - [ ] **`AdjectivePhraseNode.degree` がスキーマにあるのに UI から到達不能**
   - `astGenerator` は degree を一切生成せず、消費しているのは `linguaScriptRenderer` のみ
   - 英語レンダラーは degree を無視する（`degree('very, 'happy)` でも EN は "I am happy."）

@@ -103,6 +103,29 @@ const verbWrappers: WorkspaceCase[] = [
     }),
   },
   {
+    name: 'ラッパー: preposition_verb（目的語なし）',
+    note: '欠損時は ___ マーカーの名詞句が入る',
+    spec: timeFrame('current', {
+      type: 'preposition_verb',
+      fields: { PREP_VALUE: 'to' },
+      inputs: {
+        VERB: { type: 'verb_motion', fields: { VERB: 'go' }, inputs: { ARG_0: pronoun('I') } },
+      },
+    }),
+  },
+  {
+    name: 'ラッパー: manner（ラベル行は labelValidator が弾く）',
+    note:
+      'ラベル行（__ 始まり）を setFieldValue しても definitions.ts の labelValidator が\n' +
+      '変更を拒否するため、フィールドはデフォルト値（quickly）のまま。\n' +
+      'つまり parseAdverbWrapper の skipLabelRows 分岐は UI 経由では到達しない防御的コード。',
+    spec: timeFrame('current', {
+      type: 'manner_wrapper',
+      fields: { MANNER_VALUE: '__label_common__' },
+      inputs: { VERB: runVerb() },
+    }),
+  },
+  {
     name: 'ラッパー: 多重（negation + frequency）',
     spec: timeFrame('current', {
       type: 'negation_wrapper',

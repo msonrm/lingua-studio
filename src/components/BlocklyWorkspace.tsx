@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 
 import * as Blockly from 'blockly';
 import '../blocks/definitions';
 import { createToolbox, setToolboxUpdateCallback } from '../blocks/definitions';
+import { placeInitialBlocks } from '../blocks/initialWorkspace';
 import { generateMultipleAST } from '../renderer/astGenerator';
 import { renderToEnglishWithLogs } from '../renderer/english/renderer';
 import { renderToJapanese } from '../renderer/japanese';
@@ -129,72 +130,7 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       if (initialState) {
         Blockly.serialization.workspaces.load(initialState, workspace);
       } else {
-        // 初期ブロックを配置: "I eat an apple."
-        // sentence(present+simple(eat(agent:'I, patient:noun(det:'a, head:'apple))))
-
-        // 1. time_frame
-        const sentenceBlock = workspace.newBlock('time_frame');
-        sentenceBlock.initSvg();
-        sentenceBlock.render();
-        sentenceBlock.moveBy(50, 50);
-
-        // 2. time_chip_abstract ([Present])
-        const timeChipBlock = workspace.newBlock('time_chip_abstract');
-        timeChipBlock.setFieldValue('current', 'MODIFIER_VALUE');
-        timeChipBlock.initSvg();
-        timeChipBlock.render();
-
-        // TIME_CHIPをtime_frameに接続
-        const timeChipConnection = sentenceBlock.getInput('TIME_CHIP')?.connection;
-        if (timeChipConnection) {
-          timeChipConnection.connect(timeChipBlock.outputConnection);
-        }
-
-        // 3. verb_action (eat)
-        const verbBlock = workspace.newBlock('verb_action');
-        verbBlock.setFieldValue('eat', 'VERB');
-        verbBlock.initSvg();
-        verbBlock.render();
-
-        // ACTION verbをSENTENCEのactionスロットに接続
-        const actionConnection = sentenceBlock.getInput('ACTION')?.connection;
-        if (actionConnection) {
-          actionConnection.connect(verbBlock.previousConnection);
-        }
-
-        // 3. PRONOUN "I" を作成してARG_0（agent）に接続
-        const pronounBlock = workspace.newBlock('pronoun_block');
-        pronounBlock.setFieldValue('I', 'PRONOUN_VALUE');
-        pronounBlock.initSvg();
-        pronounBlock.render();
-
-        const agentConnection = verbBlock.getInput('ARG_0')?.connection;
-        if (agentConnection) {
-          agentConnection.connect(pronounBlock.outputConnection);
-        }
-
-        // 4. object_block (apple)
-        const nounBlock = workspace.newBlock('object_block');
-        nounBlock.setFieldValue('apple', 'OBJECT_VALUE');
-        nounBlock.initSvg();
-        nounBlock.render();
-
-        // 5. determiner_unified (a) - appleを接続すると自動でaが設定される
-        const detBlock = workspace.newBlock('determiner_unified');
-        detBlock.initSvg();
-        detBlock.render();
-
-        // appleをDETのNOUNに接続
-        const detNounConnection = detBlock.getInput('NOUN')?.connection;
-        if (detNounConnection) {
-          detNounConnection.connect(nounBlock.outputConnection);
-        }
-
-        // DETをARG_1（patient）に接続
-        const patientConnection = verbBlock.getInput('ARG_1')?.connection;
-        if (patientConnection) {
-          patientConnection.connect(detBlock.outputConnection);
-        }
+        placeInitialBlocks(workspace);
       }
 
       // 変更リスナーを追加

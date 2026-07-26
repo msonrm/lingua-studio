@@ -13,7 +13,10 @@
   - 復活: `EditorMode` の `'ast'`（タブを追加。`TAB_AST` は3ロケールとも既にあった）
   - 未参照 export 67件・型25件 → **0件**（`npm run knip` が CI で失敗するようになった）
   - `definitions.ts` が `dictionary-core` のヘルパーを再実装していた重複を解消
-- [ ] **Phase 2**: 巨大関数の分割（`parseVerbChain` 426行 → テーブル駆動、`conjugateVerb` 322行 → 決定表）
+- [x] **Phase 2**: 巨大関数の分割 — 2026-07-26 完了
+  - `parseVerbChain` 426行 → ディスパッチャ39行 + ハンドラ6個（テーブル駆動）
+  - `conjugateVerb` 322行 → エントリ16行 + ハンドラ10個（相ごとに分割）
+  - 初期ブロック配置を `blocks/initialWorkspace.ts` へ切り出し（`BlocklyWorkspace.tsx` 312→173行）
 - [ ] **Phase 3**: `blocks/definitions.ts`（1,709行 / ブロック41個）をカテゴリ別に分割
 - [ ] **Phase 4**: 構造的な改善（tracker のモジュールグローバル解消 / 英日レンダラーの共通骨格抽出 / UI 層）
 

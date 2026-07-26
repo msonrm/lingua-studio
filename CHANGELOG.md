@@ -4,6 +4,40 @@
 
 ## 2026-07-26
 
+### Refactoring Phase 2: 巨大関数の分割
+
+振る舞いは変えていない（既存スナップショットに差分なし）。
+
+#### `astGenerator.parseVerbChain`: 426行 → ディスパッチャ39行 + ハンドラ6個
+
+- 同じ形をした分岐を仕様データにまとめた
+  - `ADVERB_WRAPPERS`: 副詞ラッパー5種（frequency / manner / locative / time_adverb / wh_adverb）
+  - `BINARY_LOGIC`: 二項の命題論理4種（AND / OR / IF / BECAUSE）。演算子と入力名だけが違い中身は同一だった
+  - `VERB_COORDINATION`: 等位接続2種
+- `resolveWhAdverb()` で ?where / ?when / ?how の振り分けを分離
+
+#### `english/conjugation.conjugateVerb`: 322行 → エントリ16行 + ハンドラ10個
+
+- `conjugateVerb` 内のクロージャ（record / getBeForm / getHaveForm / getNotPart / join）が
+  すべての分岐から暗黙に参照されていたため、`ConjugationScope` にまとめて明示的に渡す形にした
+- `ASPECT_HANDLERS` で相ごとのハンドラへディスパッチ
+
+#### コンポーネントの整理
+
+- [x] 初期ブロック配置（約70行）を `blocks/initialWorkspace.ts` へ切り出し
+  - 手続き的な組み立てを宣言的な `INITIAL_BLOCKS` 仕様に置き換えた
+  - `BlocklyWorkspace.tsx` は 312行 → 173行（Phase 1 の削除分と合わせて）
+  - 仕様はヘッドレスで検証（`initialWorkspace.test.ts`）。SVG 経路は
+    実際にブラウザで起動して初期表示・AST タブ・コンソールエラーなしを確認済み
+
+#### Phase 2 で見つかった問題（未修正・現状をスナップショットで固定）
+
+- [ ] モダリティの迂言形式が単純相にしか対応しておらず、英語が壊れる
+  - `obligation + past + progressive` → `"I be eating an apple."`（助動詞が落ちる）
+  - 同 + 否定 → `"I not be eating an apple."`
+- [ ] `parseNotLogic` のオペランド構築が二項演算子と揃っていない（polarity と等位接続の扱い）
+- [ ] 副詞ラッパーのラベル行スキップが `labelValidator` により到達不能な防御コードになっている
+
 ### Refactoring Phase 1: 死んだコードの整理
 
 アプリの振る舞いは変えていない（AST タブの復活のみ UI 変更）。差し引き -301行。

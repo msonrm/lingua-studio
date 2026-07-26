@@ -3,6 +3,8 @@ import {
   ClauseNode,
   NounPhraseNode,
   VerbPhraseNode,
+  VerbPhraseConjunct,
+  isCoordinatedVerbPhrase,
   NounHead,
   PronounHead,
   AdjectivePhraseNode,
@@ -104,7 +106,17 @@ function getAspectWrapper(
   return aspect;
 }
 
-function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
+function renderVerbPhraseToScript(node: VerbPhraseConjunct): string {
+  // 等位接続は n項ツリー。同じ接続詞の要素をまとめて and(A, B, C) と出す
+  if (isCoordinatedVerbPhrase(node)) {
+    const parts = node.conjuncts.map(renderVerbPhraseToScript);
+    return `${node.conjunction}(${parts.join(', ')})`;
+  }
+
+  return renderSingleVerbPhraseToScript(node);
+}
+
+function renderSingleVerbPhraseToScript(vp: VerbPhraseNode): string {
   // 意味役割の名前付き引数形式（仕様: verb(agent:'x, theme:'y, ...)）
   const args = vp.arguments
     .filter(arg => arg.filler !== null)
@@ -154,12 +166,6 @@ function renderVerbPhraseToScript(vp: VerbPhraseNode): string {
   // VP個別のpolarity（等位接続内で個別に否定される場合）
   if (vp.polarity === 'negative') {
     result = `not(${result})`;
-  }
-
-  // 等位接続をラップ（小文字 and/or - NP/VP の接続）
-  if (vp.coordinatedWith) {
-    const coordScript = renderVerbPhraseToScript(vp.coordinatedWith.verbPhrase);
-    result = `${vp.coordinatedWith.conjunction}(${result}, ${coordScript})`;
   }
 
   // 命題レベル論理演算をラップ（大文字 AND/OR/NOT/IF/BECAUSE - Logic Extension）

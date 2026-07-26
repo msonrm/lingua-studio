@@ -11,6 +11,9 @@ import {
   PrepositionalPhraseNode,
   CoordinatedNounPhraseNode,
   VerbPhraseNode,
+  VerbPhraseConjunct,
+  CoordinatedVerbPhraseNode,
+  isCoordinatedVerbPhrase,
   ModalType,
 } from '../../types/schema';
 import { findVerb, findNoun, findPronoun } from '../../data/dictionary-en';
@@ -33,8 +36,11 @@ import {
   NounPhraseDependencies,
 } from './nounPhrase';
 import {
-  renderCoordinationUnified,
-  CoordElement,
+  renderCoordination,
+  leaf,
+  group,
+  type CoordGroup,
+  type CoordItem,
 } from './coordination';
 
 // Derivation tracker (module-level, reset on each render)
@@ -321,8 +327,8 @@ interface ClauseContext {
 }
 
 /** ClauseNodeから共通コンテキストを準備 */
-function prepareClauseContext(clause: ClauseNode): ClauseContext {
-  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
+function prepareClauseContext(clause: ClauseNode, verbPhrase: VerbPhraseNode): ClauseContext {
+  const { tense, aspect, polarity, modal, modalPolarity } = clause;
   const verbEntry = findVerb(verbPhrase.verb.lemma);
 
   // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
@@ -440,98 +446,102 @@ function renderAdverbsAndPrepPhrases(ctx: ClauseContext): {
   };
 }
 
-/** 等位接続動詞句を処理して結果に追加 */
-function appendCoordinatedVP(
-  result: string,
-  ctx: ClauseContext
+/**
+ * 等位接続された動詞句をレンダリングする
+ *
+ * AST は n項ツリーなので、グループ構造をそのまま `renderCoordination` へ渡す。
+ * カンマや correlative（both / either）の判断はそちらが構造から決める。
+ *
+ * 主語の省略だけは表層の並び順で決まるため、ここで葉を出現順に走査して計算する。
+ *   例: "I eat and drink"（同じ主語 → 2つ目以降は省略）
+ *       "I eat, and my father runs"（主語が違う → 省略しない）
+ *
+ * @param renderFirst 先頭の葉をレンダリングする関数。時間副詞などを含む
+ *   通常の節の経路を使うため、2つ目以降（`renderSingleVerbPhrase`）とは別扱いにする。
+ */
+function renderCoordinatedVerbPhrase(
+  clause: ClauseNode,
+  node: CoordinatedVerbPhraseNode,
+  renderFirst: (vp: VerbPhraseNode) => string
 ): string {
-  if (!ctx.verbPhrase.coordinatedWith) return result;
+  const leaves = collectVerbPhraseLeaves(node);
 
-  // 主語のグループIDを取得するヘルパー
-  // シンプルなロジック:
-  //   - 主語フィラーがある → JSON.stringify(filler)
-  //   - 主語フィラーがない → ユニークなプレースホルダーID
+  // 主語が同じかどうかを判定するキー。主語がない場合は毎回ユニークにして別グループ扱いにする
   let placeholderCount = 0;
-  const getSubjectGroupId = (vp: VerbPhraseNode): string => {
+  const subjectKey = (vp: VerbPhraseNode): string => {
     const verbEntry = findVerb(vp.verb.lemma);
     for (const role of SUBJECT_ROLES) {
       if (verbEntry?.valency.some((v: { role: SemanticRole }) => v.role === role)) {
         const slot = vp.arguments.find((a: FilledArgumentSlot) => a.role === role);
-        if (slot?.filler) {
-          return JSON.stringify(slot.filler);
-        }
+        if (slot?.filler) return JSON.stringify(slot.filler);
       }
     }
-    // 主語がない → 各プレースホルダーはユニーク（別グループ）
     return `__placeholder_${placeholderCount++}__`;
   };
 
-  // 全チェーンを収集
-  interface VPInfo {
-    vp: VerbPhraseNode;
-    rendered: string;
-    groupId: string;
-  }
+  // 葉を出現順にレンダリングする（主語の省略は直前の葉との比較で決まる）
+  const rendered = new Map<VerbPhraseNode, string>();
+  // 主語を省略しなかった2番目以降の葉は独立した節。カンマの判断に使う
+  const startsNewClause = new Set<VerbPhraseNode>();
+  let previousKey: string | null = null;
 
-  const vpInfos: VPInfo[] = [];
-
-  // 最初の要素（既にレンダリング済み）
-  // 最初の要素も同じロジックでgroupIdを計算
-  const firstGroupId = getSubjectGroupId(ctx.verbPhrase);
-  vpInfos.push({
-    vp: ctx.verbPhrase,
-    rendered: result,
-    groupId: firstGroupId,
-  });
-
-  // チェーンを辿る
-  // 同じグループの2番目以降は主語を省略するため、前回のグループIDを追跡
-  let prevGroupId = firstGroupId;
-  let currentVP: VerbPhraseNode | undefined = ctx.verbPhrase;
-  while (currentVP?.coordinatedWith) {
-    const coord: { conjunction: 'and' | 'or'; verbPhrase: VerbPhraseNode } = currentVP.coordinatedWith;
-    const nextVP: VerbPhraseNode = coord.verbPhrase;
-    const groupId = getSubjectGroupId(nextVP);
-
-    // 同じグループの2番目以降は主語を省略
-    const omitSubject = groupId === prevGroupId;
-
-    // VP個別のpolarityと節レベルのpolarityを組み合わせる
-    const vpNegative = nextVP.polarity === 'negative';
-    const clauseNegative = ctx.polarity === 'negative';
-    const doubleNegation = vpNegative && clauseNegative;
-    const effectivePolarity = (vpNegative || clauseNegative) ? 'negative' : 'affirmative';
-    const rendered = renderSingleVerbPhrase(
-      nextVP, ctx.tense, ctx.aspect, effectivePolarity,
-      undefined,  // 継承なし、各VPは独立してレンダリング
-      ctx.modal, ctx.modalPolarity,
-      doubleNegation,
-      omitSubject
-    );
-
-    vpInfos.push({ vp: nextVP, rendered, groupId });
-    prevGroupId = groupId;
-    currentVP = nextVP;
-  }
-
-  // CoordElement配列に変換
-  const elements: CoordElement<string>[] = vpInfos.map((info, index) => {
-    // 接続詞を取得（最初の要素はnull、それ以降は前の要素のcoordinatedWithから）
-    let conjunction: 'and' | 'or' | null = null;
-    if (index > 0) {
-      const prevVP = vpInfos[index - 1].vp;
-      conjunction = prevVP.coordinatedWith?.conjunction || 'and';
+  leaves.forEach((vp, index) => {
+    const key = subjectKey(vp);
+    const omitSubject = index > 0 && key === previousKey;
+    previousKey = key;
+    if (index > 0 && !omitSubject) {
+      startsNewClause.add(vp);
     }
 
-    return {
-      value: info.rendered,
-      groupId: info.groupId,
-      conjunction,
-    };
+    if (index === 0) {
+      rendered.set(vp, renderFirst(vp));
+      return;
+    }
+
+    // VP個別のpolarityと節レベルのpolarityを組み合わせる
+    const vpNegative = vp.polarity === 'negative';
+    const clauseNegative = clause.polarity === 'negative';
+    rendered.set(
+      vp,
+      renderSingleVerbPhrase(
+        vp,
+        clause.tense,
+        clause.aspect,
+        vpNegative || clauseNegative ? 'negative' : 'affirmative',
+        undefined, // 継承なし、各VPは独立してレンダリング
+        clause.modal,
+        clause.modalPolarity,
+        vpNegative && clauseNegative,
+        omitSubject
+      )
+    );
   });
 
-  // 統一モジュールでレンダリング
-  return renderCoordinationUnified(elements, s => s);
+  return renderCoordination(
+    toCoordGroup(node, vp => rendered.get(vp) ?? '___', vp => startsNewClause.has(vp)),
+    s => s
+  );
+}
+
+/** 等位接続ツリーの葉（単一の動詞句）を出現順に集める */
+function collectVerbPhraseLeaves(node: VerbPhraseConjunct): VerbPhraseNode[] {
+  return isCoordinatedVerbPhrase(node)
+    ? node.conjuncts.flatMap(collectVerbPhraseLeaves)
+    : [node];
+}
+
+/** AST の等位接続ツリーを、レンダリング済み文字列のツリーに変換する */
+function toCoordGroup(
+  node: CoordinatedVerbPhraseNode,
+  renderLeaf: (vp: VerbPhraseNode) => string,
+  startsNewClause: (vp: VerbPhraseNode) => boolean
+): CoordGroup<string> {
+  const toItem = (child: VerbPhraseConjunct): CoordItem<string> =>
+    isCoordinatedVerbPhrase(child)
+      ? group(toCoordGroup(child, renderLeaf, startsNewClause))
+      : leaf(renderLeaf(child), startsNewClause(child));
+
+  return { conjunction: node.conjunction, items: node.conjuncts.map(toItem) };
 }
 
 // ============================================
@@ -565,7 +575,8 @@ function findInterrogativeInNounPhrase(np: NounPhraseNode): string | null {
 
 // ClauseNodeから疑問詞情報を検出
 function findInterrogativeInClause(clause: ClauseNode): WhWordInfo | null {
-  const { verbPhrase } = clause;
+  const verbPhrase = clause.verbPhrase;
+  if (isCoordinatedVerbPhrase(verbPhrase)) return null;
   const verbEntry = findVerb(verbPhrase.verb.lemma);
 
   // 動詞のvalencyから実際の主語ロールを決定
@@ -595,7 +606,8 @@ function findInterrogativeInClause(clause: ClauseNode): WhWordInfo | null {
 
 // ClauseNodeから疑問副詞を検出
 function findInterrogativeAdverbInClause(clause: ClauseNode): WhAdverbInfo | null {
-  const { verbPhrase } = clause;
+  const verbPhrase = clause.verbPhrase;
+  if (isCoordinatedVerbPhrase(verbPhrase)) return null;
 
   for (const adverb of verbPhrase.adverbs) {
     if (adverb.lemma.startsWith('?')) {
@@ -676,7 +688,14 @@ export function renderToEnglishWithLogs(ast: SentenceNode): RenderResult {
 }
 
 function renderClause(clause: ClauseNode): string {
-  const ctx = prepareClauseContext(clause);
+  return isCoordinatedVerbPhrase(clause.verbPhrase)
+    ? renderCoordinatedVerbPhrase(clause, clause.verbPhrase, vp => renderDeclarativeVp(clause, vp))
+    : renderDeclarativeVp(clause, clause.verbPhrase);
+}
+
+/** 平叙文を単一の動詞句としてレンダリングする */
+function renderDeclarativeVp(clause: ClauseNode, vp: VerbPhraseNode): string {
+  const ctx = prepareClauseContext(clause, vp);
 
   // VP個別のpolarityと節レベルのpolarityを組み合わせる
   const vpNegative = ctx.verbPhrase.polarity === 'negative';
@@ -705,10 +724,7 @@ function renderClause(clause: ClauseNode): string {
   const parts = [ctx.subjectStr, verbForm, otherArgs, prepPhrasesStr, mannerStr, locativeStr, timeStr]
     .filter(p => p.length > 0);
 
-  const result = parts.join(' ');
-
-  // 等位接続動詞句を処理
-  return appendCoordinatedVP(result, ctx);
+  return parts.join(' ');
 }
 
 // 事実宣言の節をレンダリング（Logic Extension）
@@ -716,8 +732,8 @@ function renderClause(clause: ClauseNode): string {
 function renderFactClause(clause: ClauseNode): string {
   const { verbPhrase } = clause;
 
-  // 論理演算がある場合は特別処理
-  if (verbPhrase.logicOp) {
+  // 論理演算がある場合は特別処理（logicOp は単一動詞句にのみ付く）
+  if (!isCoordinatedVerbPhrase(verbPhrase) && verbPhrase.logicOp) {
     return renderLogicExpression(clause);
   }
 
@@ -728,14 +744,14 @@ function renderFactClause(clause: ClauseNode): string {
 // 命題レベルの論理演算をレンダリング
 function renderLogicExpression(clause: ClauseNode): string {
   const { verbPhrase, tense, aspect } = clause;
-  const logicOp = verbPhrase.logicOp;
+  const logicOp = isCoordinatedVerbPhrase(verbPhrase) ? undefined : verbPhrase.logicOp;
 
   if (!logicOp) {
     return renderClause(clause);
   }
 
   // VerbPhraseNodeからClauseNodeを作成するヘルパー
-  const makeClause = (vp: VerbPhraseNode): ClauseNode => ({
+  const makeClause = (vp: VerbPhraseConjunct): ClauseNode => ({
     type: 'clause',
     verbPhrase: vp,
     tense,
@@ -743,32 +759,40 @@ function renderLogicExpression(clause: ClauseNode): string {
     polarity: 'affirmative',
   });
 
-  // VerbPhraseNodeをレンダリングするヘルパー（logicOpがあれば再帰）
-  const renderVerbPhrase = (vp: VerbPhraseNode): string => {
-    const vpClause = makeClause(vp);
-    return vp.logicOp ? renderLogicExpression(vpClause) : renderClause(vpClause);
+  // オペランドをレンダリングするヘルパー（logicOpがあれば再帰）
+  const renderOperand = (node: VerbPhraseConjunct): string => {
+    const operandClause = makeClause(node);
+    return !isCoordinatedVerbPhrase(node) && node.logicOp
+      ? renderLogicExpression(operandClause)
+      : renderClause(operandClause);
   };
+
+  /** logicOp を外したノード（オペランド自身を平叙文として描くため） */
+  const withoutLogicOp = (node: VerbPhraseConjunct): VerbPhraseConjunct =>
+    isCoordinatedVerbPhrase(node) ? node : { ...node, logicOp: undefined };
 
   // 左側の命題をレンダリング
   // leftOperandがある場合はそれを使用、なければ現在のverbPhrase（logicOp除去）を使用
-  const leftVP: VerbPhraseNode = logicOp.leftOperand ?? { ...verbPhrase, logicOp: undefined };
-  const leftStr = renderVerbPhrase(leftVP);
+  const leftStr = renderOperand(logicOp.leftOperand ?? withoutLogicOp(verbPhrase));
 
   // NOT演算子の特殊処理
   if (logicOp.operator === 'NOT') {
     // NOT(OR(P, Q)) → "neither P nor Q" (De Morgan対応)
-    if (logicOp.leftOperand?.logicOp?.operator === 'OR') {
-      const innerOr = logicOp.leftOperand.logicOp;
-      const innerLeftVP: VerbPhraseNode = { ...logicOp.leftOperand, logicOp: undefined };
-      const innerLeftStr = renderClause(makeClause(innerLeftVP));
-      const innerRightStr = render(innerOr.rightOperand, renderVerbPhrase);
+    const innerLeft = logicOp.leftOperand;
+    const innerOr =
+      innerLeft && !isCoordinatedVerbPhrase(innerLeft) && innerLeft.logicOp?.operator === 'OR'
+        ? innerLeft.logicOp
+        : undefined;
+    if (innerLeft && innerOr) {
+      const innerLeftStr = renderClause(makeClause(withoutLogicOp(innerLeft)));
+      const innerRightStr = render(innerOr.rightOperand, renderOperand);
       return `neither ${innerLeftStr} nor ${innerRightStr}`;
     }
     return `it is not the case that ${leftStr}`;
   }
 
   // 右側の命題をレンダリング
-  const rightStr = render(logicOp.rightOperand, renderVerbPhrase);
+  const rightStr = render(logicOp.rightOperand, renderOperand);
 
   // 演算子に応じたフォーマット
   switch (logicOp.operator) {
@@ -800,7 +824,14 @@ function renderInterrogativeClause(clause: ClauseNode): string {
   }
 
   // Yes/No疑問文の場合
-  const ctx = prepareClauseContext(clause);
+  return isCoordinatedVerbPhrase(clause.verbPhrase)
+    ? renderCoordinatedVerbPhrase(clause, clause.verbPhrase, vp => renderYesNoQuestionVp(clause, vp))
+    : renderYesNoQuestionVp(clause, clause.verbPhrase);
+}
+
+/** Yes/No疑問文を単一の動詞句としてレンダリングする */
+function renderYesNoQuestionVp(clause: ClauseNode, vp: VerbPhraseNode): string {
+  const ctx = prepareClauseContext(clause, vp);
 
   // VP個別のpolarityと節レベルのpolarityを組み合わせる
   const vpNegative = ctx.verbPhrase.polarity === 'negative';
@@ -835,15 +866,13 @@ function renderInterrogativeClause(clause: ClauseNode): string {
   const parts = [auxiliary, ctx.subjectStr, mainVerb, otherArgs, prepPhrasesStr, mannerStr, locativeStr]
     .filter(p => p.length > 0);
 
-  const result = parts.join(' ');
-
-  // 等位接続動詞句を処理
-  return appendCoordinatedVP(result, ctx);
+  return parts.join(' ');
 }
 
 // Wh疑問文をレンダリング
 function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
-  const ctx = prepareClauseContext(clause);
+  // Wh検出は単一動詞句のときだけ成立する（findInterrogativeInClause 参照）
+  const ctx = prepareClauseContext(clause, clause.verbPhrase as VerbPhraseNode);
   const { mannerStr, locativeStr, prepPhrasesStr } = renderAdverbsAndPrepPhrases(ctx);
 
   // VP個別のpolarityと節レベルのpolarityを組み合わせる
@@ -904,7 +933,8 @@ function renderWhQuestion(clause: ClauseNode, whInfo: WhWordInfo): string {
 
 // Wh副詞疑問文をレンダリング（Where/When/How did you...?）
 function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo): string {
-  const ctx = prepareClauseContext(clause);
+  // Wh検出は単一動詞句のときだけ成立する（findInterrogativeAdverbInClause 参照）
+  const ctx = prepareClauseContext(clause, clause.verbPhrase as VerbPhraseNode);
 
   // VP個別のpolarityと節レベルのpolarityを組み合わせる
   const vpNegative = ctx.verbPhrase.polarity === 'negative';
@@ -948,16 +978,20 @@ function renderWhAdverbQuestion(clause: ClauseNode, whAdverbInfo: WhAdverbInfo):
   const parts = [whAdverbInfo.whWord, auxiliary, ctx.subjectStr, mainVerb, otherArgs, prepPhrasesStr, mannerStr, locativeStr, timeStr]
     .filter(p => p.length > 0);
 
-  const result = parts.join(' ');
-
-  // 等位接続動詞句を処理
-  return appendCoordinatedVP(result, ctx);
+  return parts.join(' ');
 }
 
 // 命令文の節をレンダリング（主語省略、動詞原形）
 function renderImperativeClause(clause: ClauseNode): string {
-  const ctx = prepareClauseContext(clause);
-  const { verbPhrase, polarity, modal } = clause;
+  return isCoordinatedVerbPhrase(clause.verbPhrase)
+    ? renderCoordinatedVerbPhrase(clause, clause.verbPhrase, vp => renderImperativeVp(clause, vp))
+    : renderImperativeVp(clause, clause.verbPhrase);
+}
+
+/** 命令文を単一の動詞句としてレンダリングする */
+function renderImperativeVp(clause: ClauseNode, verbPhrase: VerbPhraseNode): string {
+  const ctx = prepareClauseContext(clause, verbPhrase);
+  const { polarity, modal } = clause;
 
   // 動詞形を決定（命令文は原形）
   const freqStr = ctx.adverbs.frequency.map(a => a.lemma).join(' ');
@@ -991,90 +1025,9 @@ function renderImperativeClause(clause: ClauseNode): string {
 
   // 語順: Verb + Objects + PrepPhrases + Manner + Location（主語なし）
   const parts = [verbForm, otherArgs, prepPhrasesStr, mannerStr, locativeStr].filter(p => p.length > 0);
-  let result = parts.join(' ');
-
-  // 等位接続を処理（命令文専用）
-  if (verbPhrase.coordinatedWith) {
-    const conjunction = verbPhrase.coordinatedWith.conjunction;
-    const coordVerbStr = render(verbPhrase.coordinatedWith.verbPhrase, vp =>
-      renderImperativeCoordinatedVP(vp, polarity, modal)
-    );
-    result += ` ${conjunction} ${coordVerbStr}`;
-  }
-
-  return result;
+  return parts.join(' ');
 }
 
-// 命令文の等位接続動詞句をレンダリング
-function renderImperativeCoordinatedVP(
-  vp: VerbPhraseNode,
-  polarity: 'affirmative' | 'negative',
-  modal?: string
-): string {
-  const verbEntry = findVerb(vp.verb.lemma);
-
-  // 副詞を種類別に分類
-  const frequencyAdverbs = vp.adverbs.filter(a => a.advType === 'frequency');
-  const mannerAdverbs = vp.adverbs.filter(a => a.advType === 'manner');
-  const locativeAdverbs = vp.adverbs.filter(a => a.advType === 'place');
-
-  // 動詞形を決定（命令文は原形）
-  const freqStr = frequencyAdverbs.map(a => a.lemma).join(' ');
-  const baseForm = verbEntry?.forms.base || vp.verb.lemma;
-
-  // 等位接続の2番目以降は、否定でも do not を繰り返さない（原形のみ）
-  // "Don't run and eat" ではなく "Don't run or eat" が自然だが、
-  // ここでは単純に原形を使う
-  const verbForm = freqStr ? `${freqStr} ${baseForm}` : baseForm;
-
-  // 主語ロールを決定（valency内のSUBJECT_ROLEを優先順で探す）
-  let subjectRole: SemanticRole | undefined;
-  for (const role of SUBJECT_ROLES) {
-    if (verbEntry?.valency.some(v => v.role === role)) {
-      subjectRole = role;
-      break;
-    }
-  }
-
-  // その他の引数（目的語など）- 主語ロール以外、英語語順にソート
-  const otherArgs = sortValencyForEnglish(verbEntry?.valency || [], subjectRole ? [subjectRole] : [])
-    .map(v => {
-      const argSlot = vp.arguments.find(a => a.role === v.role);
-      const preposition = v.preposition;
-      const value = render(argSlot?.filler, f => renderFiller(f, false, polarity));
-      return {
-        text: preposition ? `${preposition} ${value}` : value,
-        skip: !v.required && !argSlot?.filler,
-      };
-    })
-    .filter(item => !item.skip)
-    .map(item => item.text)
-    .join(' ');
-
-  // 様態副詞は文末（Wh副詞は?を除去）
-  const mannerStr = mannerAdverbs.map(a => stripWhPrefix(a.lemma)).join(' ');
-
-  // 場所副詞は最後（極性感応: somewhere ↔ anywhere、Wh副詞は?を除去）
-  const locativeStr = locativeAdverbs.map(a => renderLocativeAdverb(stripWhPrefix(a.lemma), polarity)).join(' ');
-
-  // 前置詞句（動詞修飾）
-  const prepPhrases = vp.prepositionalPhrases
-    .map(pp => renderPrepositionalPhrase(pp, polarity))
-    .join(' ');
-
-  const parts = [verbForm, otherArgs, prepPhrases, mannerStr, locativeStr].filter(p => p.length > 0);
-  let result = parts.join(' ');
-
-  // 再帰的に等位接続を処理
-  if (vp.coordinatedWith) {
-    const coordVPInner = vp.coordinatedWith.verbPhrase;
-    const conjunctionInner = vp.coordinatedWith.conjunction;
-    const coordVerbStr = renderImperativeCoordinatedVP(coordVPInner, polarity, modal);
-    result += ` ${conjunctionInner} ${coordVerbStr}`;
-  }
-
-  return result;
-}
 /** 単一の動詞句をレンダリング（等位接続を処理しない） */
 function renderSingleVerbPhrase(
   vp: VerbPhraseNode,

@@ -13,7 +13,7 @@ import type {
   CoordinatedNounPhraseNode,
 } from '../../types/schema';
 import type { TransformationType } from '../types';
-import { renderCoordinationUnified, CoordElement } from './coordination';
+import { renderCoordination, leaf, group, type CoordItem } from './coordination';
 
 // ============================================
 // Types
@@ -368,17 +368,21 @@ export function renderCoordinatedNounPhraseUnified(
     }
   };
 
-  // CoordElement配列に変換
-  // 名詞句は全て同じグループ（入れ子の場合は再帰で処理済み）
-  const elements: CoordElement<NounPhraseNode | CoordinatedNounPhraseNode>[] =
-    cnp.conjuncts.map((conjunct, index) => ({
-      value: conjunct,
-      groupId: 'np',  // 名詞句は全て同一グループ
-      conjunction: index === 0 ? null : cnp.conjunction,
-    }));
+  // 入れ子の等位接続はグループとして渡し、構造を保ったままレンダリングする
+  const toItem = (
+    conjunct: NounPhraseNode | CoordinatedNounPhraseNode
+  ): CoordItem<NounPhraseNode> =>
+    conjunct.type === 'coordinatedNounPhrase'
+      ? group({
+          conjunction: conjunct.conjunction,
+          items: conjunct.conjuncts.map(toItem),
+        })
+      : leaf(conjunct);
 
-  // 統一等位接続モジュールを使用
-  const form = renderCoordinationUnified(elements, renderConjunct);
+  const form = renderCoordination(
+    { conjunction: cnp.conjunction, items: cnp.conjuncts.map(toItem) },
+    renderConjunct
+  );
 
   return { form, transforms };
 }

@@ -1,15 +1,18 @@
 /**
  * 統一等位接続レンダリングモジュール
  *
- * 名詞句・動詞句で共通の等位接続処理を提供
+ * 名詞句・動詞句で共通の等位接続処理を提供する。
  *
  * 設計原則:
- * 1. 収集（抽象化）: 要素をグループ情報と共に収集
- * 2. グルーピング: 同じグループ・接続詞でまとめる
- * 3. フォーマット規則の適用:
- *    - 1階層 → 素の接続詞（A and B, A, B, and C）
- *    - 複数階層 → correlative で構造明示（both A and B, either A or B）
- * 4. 具体化（レンダリング）: 文字列生成
+ * 1. **構造をそのまま受け取る。** AST の等位接続は n項ツリー
+ *    （`CoordinatedNounPhraseNode` / `CoordinatedVerbPhraseNode`）なので、
+ *    グループ化の情報を平坦化せずツリーのまま渡す。
+ *    以前は要素の並びと接続詞から構造を推測していたため、
+ *    純粋な OR の等位接続でもグループが割れて不要なカンマが入っていた。
+ * 2. 入れ子のグループは correlative（both / either）で範囲を明示する。
+ *    これにより `(A and B) or C` と `A and (B or C)` を書き分けられる。
+ * 3. カンマは「3要素以上（オックスフォードカンマ）」または
+ *    「末尾以外にグループがある」ときだけ打つ。
  */
 
 import { Conjunction } from '../../types/schema';
@@ -18,32 +21,34 @@ import { Conjunction } from '../../types/schema';
 // 型定義
 // ============================================
 
-/** 等位接続の要素 */
-export interface CoordElement<T> {
-  /** 要素の値 */
-  value: T;
-  /** グループID（同じIDは同一グループ、例: 主語が同じ） */
-  groupId: string;
-  /** この要素への接続詞（最初の要素はnull） */
-  conjunction: Conjunction | null;
-}
+/** 等位接続の要素: 単一要素（葉）か、入れ子のグループ */
+export type CoordItem<T> =
+  | {
+      kind: 'leaf';
+      value: T;
+      /**
+       * この要素が独立した節として始まるか（自分の主語を持つ）。
+       * "I eat, and my father runs." のように節を繋ぐ場合はカンマが要る。
+       * 主語を共有する句の等位（"I eat and drink"）では false。
+       */
+      startsNewClause?: boolean;
+    }
+  | { kind: 'group'; group: CoordGroup<T> };
 
-/** グルーピング結果 */
-interface CoordGroup<T> {
-  /** グループ内の要素 */
-  elements: T[];
-  /** グループの接続詞 */
+/** 等位接続のグループ */
+export interface CoordGroup<T> {
   conjunction: Conjunction;
-  /** グループID */
-  groupId: string;
+  items: CoordItem<T>[];
 }
 
-/** フォーマット済みグループ */
-interface FormattedGroup {
-  /** レンダリング済み文字列 */
-  text: string;
-  /** 次のグループへの接続詞 */
-  conjunction: Conjunction | null;
+/** 葉を作る短縮関数 */
+export function leaf<T>(value: T, startsNewClause = false): CoordItem<T> {
+  return { kind: 'leaf', value, startsNewClause };
+}
+
+/** グループを要素として包む短縮関数 */
+export function group<T>(g: CoordGroup<T>): CoordItem<T> {
+  return { kind: 'group', group: g };
 }
 
 // ============================================
@@ -51,144 +56,74 @@ interface FormattedGroup {
 // ============================================
 
 /**
- * 等位接続をレンダリング
+ * 等位接続をレンダリングする
  *
- * @param elements - 接続する要素の配列
- * @param renderElement - 各要素をレンダリングする関数
- * @returns フォーマット済み文字列
- *
- * @example
- * // 1階層（フラット）: "A and B" or "A, B, and C"
- * renderCoordinationUnified([
- *   { value: a, groupId: 'x', conjunction: null },
- *   { value: b, groupId: 'x', conjunction: 'and' },
- * ], render)
+ * @param g - 等位接続のツリー
+ * @param renderLeaf - 葉をレンダリングする関数
  *
  * @example
- * // 複数階層: "both A and B, and C"
- * renderCoordinationUnified([
- *   { value: a, groupId: 'x', conjunction: null },
- *   { value: b, groupId: 'x', conjunction: 'and' },
- *   { value: c, groupId: 'y', conjunction: 'and' },
- * ], render)
+ * // フラット2要素:      "A and B"        （カンマなし）
+ * // フラット3要素:      "A, B, and C"    （オックスフォードカンマ）
+ * // or(and(A,B), C):    "both A and B, or C"
+ * // and(A, or(B,C)):    "A and either B or C"
  */
-export function renderCoordinationUnified<T>(
-  elements: CoordElement<T>[],
-  renderElement: (elem: T) => string
+export function renderCoordination<T>(
+  g: CoordGroup<T>,
+  renderLeaf: (value: T) => string
 ): string {
-  if (elements.length === 0) return '___';
-  if (elements.length === 1) return renderElement(elements[0].value);
-
-  // 1. グルーピング: 連続する同一グループ・同一接続詞をまとめる
-  const groups = groupElements(elements);
-
-  // 2. 階層判定: 複数グループがあるか
-  const isNested = groups.length > 1;
-
-  // 3. 各グループをフォーマット
-  const formattedGroups: FormattedGroup[] = groups.map((group, index) => {
-    const renderedElements = group.elements.map(renderElement);
-    const text = formatGroup(renderedElements, group.conjunction, isNested);
-
-    // 次のグループへの接続詞（最後のグループはnull）
-    const nextConjunction = index < groups.length - 1
-      ? groups[index + 1].conjunction
-      : null;
-
-    return { text, conjunction: nextConjunction };
-  });
-
-  // 4. グループを結合
-  return joinGroups(formattedGroups);
+  return renderGroup(g, renderLeaf, false);
 }
 
 // ============================================
 // ヘルパー関数
 // ============================================
 
-/**
- * 要素をグループにまとめる
- * 連続する同一groupId・同一conjunctionの要素を1グループに
- */
-function groupElements<T>(elements: CoordElement<T>[]): CoordGroup<T>[] {
-  const groups: CoordGroup<T>[] = [];
-
-  let currentGroup: CoordGroup<T> | null = null;
-
-  for (const elem of elements) {
-    const conjunction = elem.conjunction || 'and'; // 最初の要素はデフォルト'and'
-
-    if (
-      currentGroup &&
-      currentGroup.groupId === elem.groupId &&
-      currentGroup.conjunction === conjunction
-    ) {
-      // 同じグループに追加
-      currentGroup.elements.push(elem.value);
-    } else {
-      // 新しいグループ開始
-      if (currentGroup) {
-        groups.push(currentGroup);
-      }
-      currentGroup = {
-        elements: [elem.value],
-        conjunction,
-        groupId: elem.groupId,
-      };
-    }
-  }
-
-  if (currentGroup) {
-    groups.push(currentGroup);
-  }
-
-  return groups;
-}
-
-/**
- * グループ内の要素をフォーマット
- *
- * @param elements - レンダリング済み要素
- * @param conjunction - 接続詞
- * @param useCorrelative - correlative（both/either）を使うか
- */
-function formatGroup(
-  elements: string[],
-  conjunction: Conjunction,
-  useCorrelative: boolean
+function renderGroup<T>(
+  g: CoordGroup<T>,
+  renderLeaf: (value: T) => string,
+  isNested: boolean
 ): string {
-  if (elements.length === 0) return '___';
-  if (elements.length === 1) return elements[0];
+  const parts = g.items.map(item =>
+    item.kind === 'leaf' ? renderLeaf(item.value) : renderGroup(item.group, renderLeaf, true)
+  );
 
-  if (elements.length === 2) {
-    if (useCorrelative) {
-      // 複数階層: both A and B / either A or B
-      const correlative = conjunction === 'and' ? 'both' : 'either';
-      return `${correlative} ${elements[0]} ${conjunction} ${elements[1]}`;
-    } else {
-      // 1階層: A and B
-      return `${elements[0]} ${conjunction} ${elements[1]}`;
-    }
+  if (parts.length === 0) return '___';
+  if (parts.length === 1) return parts[0];
+
+  const joined = joinParts(parts, g.conjunction, needsComma(g, parts.length));
+
+  // 入れ子の2要素グループは correlative で範囲を明示する。
+  // 3要素以上ではカンマの位置が範囲を示すので付けない（"both A, B, and C" は非文法的）。
+  if (isNested && parts.length === 2) {
+    const correlative = g.conjunction === 'and' ? 'both' : 'either';
+    return `${correlative} ${joined}`;
   }
 
-  // 3要素以上: A, B, and C（オックスフォードカンマ）
-  const allButLast = elements.slice(0, -1);
-  const last = elements[elements.length - 1];
-  return `${allButLast.join(', ')}, ${conjunction} ${last}`;
+  return joined;
 }
 
 /**
- * フォーマット済みグループを結合
+ * 最後の接続詞の前にカンマを打つかどうか
+ *
+ * - 3要素以上 → オックスフォードカンマ
+ * - 末尾以外にグループがある → 区切りを明示する
+ *   （末尾のグループには correlative が付くのでカンマは不要）
+ * - 2要素目以降が独立した節 → 節の等位接続なのでカンマを打つ
+ *   "I eat, and my father runs."（主語が違う）
+ *   "I eat and drink."（主語を共有 → カンマなし）
  */
-function joinGroups(groups: FormattedGroup[]): string {
-  if (groups.length === 0) return '___';
-  if (groups.length === 1) return groups[0].text;
+function needsComma<T>(g: CoordGroup<T>, partCount: number): boolean {
+  if (partCount >= 3) return true;
+  if (g.items.slice(0, -1).some(item => item.kind === 'group')) return true;
+  return g.items.slice(1).some(item => item.kind === 'leaf' && item.startsNewClause);
+}
 
-  let result = groups[0].text;
-  for (let i = 1; i < groups.length; i++) {
-    const prevConjunction = groups[i - 1].conjunction || 'and';
-    result += `, ${prevConjunction} ${groups[i].text}`;
+function joinParts(parts: string[], conjunction: Conjunction, comma: boolean): string {
+  const allButLast = parts.slice(0, -1);
+  const last = parts[parts.length - 1];
+
+  if (!comma) {
+    return `${allButLast.join(' ')} ${conjunction} ${last}`;
   }
-
-  return result;
+  return `${allButLast.join(', ')}, ${conjunction} ${last}`;
 }

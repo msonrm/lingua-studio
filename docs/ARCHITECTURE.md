@@ -76,7 +76,10 @@ src/
 │       ├── morphology.ts      五段/一段/サ変/カ変の活用
 │       └── index.ts           LanguagePack 実装
 │
-├── userDictionary.ts          ユーザー拡張辞書（localStorage）
+├── userDictionary/            ユーザー拡張辞書
+│   ├── format.ts              保存形式と旧形式からの移行
+│   ├── store.ts               メモリ上の辞書 + localStorage
+│   └── index.ts
 │
 ├── renderer/
 │   ├── astGenerator.ts        Blockly ブロック木 → AST（1,187行）
@@ -149,9 +152,15 @@ renderer/<lang>/   語順の組み立て。どの順で並べ、何を省略す�
 
 ```
 1. ベース辞書
-2. ユーザー辞書（第3段階で接続予定）
+2. ユーザー辞書（forms[言語コード] を読む）
 3. 規則変化からの導出（英語のみ。日本語は活用タイプが推論できないため不可）
 ```
+
+ユーザー辞書の保存形式は `forms[言語コード]` の文字列マップで、キーは
+言語パックの `userEntryFields` が宣言するものと一致する。
+旧形式は `migratePackage()` が読み込み時に自動変換する。
+新旧の判定は version 文字列ではなく**中身の形**で行う（旧形式も `"1.0"` を
+名乗っていたため）。インポート時も同じ経路を通る。
 
 未登録なら `undefined` を返す。lemma をそのまま返して「引けた」と誤認しないことを
 `languagePacks.test.ts` の契約テストで担保している。

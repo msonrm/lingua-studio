@@ -266,6 +266,15 @@ export interface BlocklyMessages {
   DICT_DITRANS: string;
   DICT_COUNTABLE: string;
   DICT_ADD: string;
+  DICT_FIELD_PAST: string;
+  DICT_FIELD_PP: string;
+  DICT_FIELD_ING: string;
+  DICT_FIELD_S: string;
+  DICT_FIELD_PLURAL: string;
+  DICT_FIELD_COMPARATIVE: string;
+  DICT_FIELD_SUPERLATIVE: string;
+  DICT_FIELD_JA: string;
+  DICT_FIELD_JA_VERB_TYPE: string;
 }
 
 // Grammar log messages (for GrammarPanel)

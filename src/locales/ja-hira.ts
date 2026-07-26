@@ -266,6 +266,15 @@ export const jaHira: LocaleData = {
     DICT_DITRANS: 'にじゅうたどうし（3こ）',
     DICT_COUNTABLE: 'かぞえられる',
     DICT_ADD: 'ついか',
+    DICT_FIELD_PAST: 'かこけい',
+    DICT_FIELD_PP: 'かこぶんし',
+    DICT_FIELD_ING: '-ing のかたち',
+    DICT_FIELD_S: 'さんたんげん',
+    DICT_FIELD_PLURAL: 'ふくすうけい',
+    DICT_FIELD_COMPARATIVE: 'ひかくきゅう',
+    DICT_FIELD_SUPERLATIVE: 'さいじょうきゅう',
+    DICT_FIELD_JA: 'にほんごやく',
+    DICT_FIELD_JA_VERB_TYPE: 'かつようタイプ',
   },
   ui: {
     // Header

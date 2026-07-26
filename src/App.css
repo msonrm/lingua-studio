@@ -937,3 +937,53 @@ body {
   color: #888;
   font-size: 0.85rem;
 }
+
+/* ユーザー辞書: 言語別の入力欄 */
+.dict-language-section {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dict-language-heading {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+
+.dict-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.dict-field label {
+  flex: 0 0 96px;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.dict-field input,
+.dict-field select {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+}
+
+.dict-required {
+  color: #e0806a;
+  margin-left: 2px;
+}
+
+.dict-form-error {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #e0806a;
+}

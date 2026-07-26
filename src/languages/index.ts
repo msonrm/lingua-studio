@@ -17,4 +17,4 @@ export { english, japanese };
  * @public 言語パックの契約。ユーザー辞書（DictionaryPanel）が
  * 入力欄を組み立てるときに参照する（第3段階で使用）。
  */
-export type { LanguagePack, LanguageForms, UserEntryField } from './types';
+export type { LanguagePack, LanguageForms, UserEntryField, PartOfSpeech } from './types';

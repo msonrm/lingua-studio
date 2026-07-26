@@ -2,6 +2,38 @@
 
 > **Note**: このファイルは [CHANGELOG.md](./CHANGELOG.md) と連動しています。機能実装完了時は両方を更新してください。
 
+## リファクタリング（進行中）
+
+計画: [docs/REFACTORING-PLAN.md](./docs/REFACTORING-PLAN.md) / 構造: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+
+- [x] **Phase 0**: テスト・静的解析の基盤（Vitest / ESLint / knip / CI）— 2026-07-26 完了
+- [ ] **Phase 1**: 死んだコードの整理
+  - 削除: `VisualizationPanel.tsx` / `BlockChange` 収集経路 / `renderer/index.ts` / `generateAST` / `renderToEnglish` ほか
+  - 復活: `EditorMode` の `'ast'`（タブ追加 + `TAB_AST` を3ロケールに）
+  - ⚠ `DerivationTracker` の未参照メソッド7つは「Grammar Console 詳細表示モード」用の先行実装なので**残す**
+- [ ] **Phase 2**: 巨大関数の分割（`parseVerbChain` 426行 → テーブル駆動、`conjugateVerb` 322行 → 決定表）
+- [ ] **Phase 3**: `blocks/definitions.ts`（1,709行 / ブロック41個）をカテゴリ別に分割
+- [ ] **Phase 4**: 構造的な改善（tracker のモジュールグローバル解消 / 英日レンダラーの共通骨格抽出 / UI 層）
+
+## Phase 0 で発見した不具合（未修正）
+
+いずれも再現テスト付きで現状をスナップショット固定済み。修正時はスナップショット差分をレビューすること。
+
+- [ ] **入れ子 VP 等位接続 `or(and(A, B), C)` で B が AST から消える**
+  - `astGenerator.ts` の `parseTimeFrameBlock:303` と `toVerbPhraseWithLogic:420` が、
+    スプレッドで引き継いだ内側の `coordinatedWith` を外側の `coordination` で無条件に上書きしている
+  - 2026-01-31 の修正（`parseVerbChain:787`）は左辺 VP の構築までは正しいが、消費側2箇所で潰れる
+  - `coordinatedWith` は連結リストなので、`or(and(A,B),C)` は eat →(and)→ drink →(or)→ run の鎖として表現するのが素直
+- [ ] **繋辞の形容詞が日本語訳されない**（「私はhappyである」）
+  - `japanese/lexicon.ts` に `happy → 幸せな` があるのに、`japanese/renderer.ts:435` の `renderFiller()` が
+    `adjectivePhrase` で `translateAdjective()` を通さず `head.lemma` をそのまま返している
+- [ ] **日本語レンダラーが `logicOp` を扱わない** — AND/OR/IF/BECAUSE の右オペランドが落ち、NOT も否定されない
+- [ ] **日本語がモダリティ否定を無視する** — 英語 "don't have to" に対し「食べなければならない」
+- [ ] **日本語がモダリティ使用時に相を落とす** — 英語 "can be eating" に対し「食べることができる」
+- [ ] **`japanese/renderer.ts` の `verb` 変数の結果が使われていない**
+  - 実際の動詞文字列は `renderVerbWithCoordination()` が生成。2026-01-31 の2パス方式リファクタの残骸
+  - `conjugate()` が例外を投げうるため、削除は振る舞いを変える可能性がある
+
 ## Session Log (2026-01-31)
 
 ### UI改善

@@ -2,6 +2,46 @@
 
 > **Note**: このファイルは [TODO.md](./TODO.md) と連動しています。機能実装完了時は両方を更新してください。
 
+## 2026-07-26
+
+### Refactoring Phase 0: テスト・静的解析の基盤整備
+
+リファクタリングの安全網。**アプリの振る舞いは変えていない**。
+計画全体は [docs/REFACTORING-PLAN.md](./docs/REFACTORING-PLAN.md)、構造の解説は [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)。
+
+- [x] Vitest 導入（`vitest.config.ts`、環境は `node`）
+- [x] ゴールデンテスト 2層（計583テスト / 118スナップショット）
+  - レイヤーA `src/test/renderers.test.ts` — AST → 英語 / 日本語 / LinguaScript / 導出ログ（86ケース）
+  - レイヤーB `src/test/astGenerator.test.ts` — Blockly ブロック木 → AST（32ケース）
+  - ヘルパー: `builders.ts`（AST）、`workspace.ts`（ヘッドレス Blockly）、`cases.ts`（ケース表）
+  - ヘッドレス Blockly が Node で動作。イベントをフラッシュすれば `determiner_unified` の限定詞自動補正まで検証できる
+- [x] ESLint + typescript-eslint 導入（`eslint.config.js`）
+- [x] knip 導入（`knip.json`）— 未参照 export の棚卸し（レポート専用）
+- [x] GitHub Actions CI（`.github/workflows/ci.yml`）— tsc / eslint / vitest / build
+- [x] npm scripts 追加: `test` / `test:watch` / `lint` / `check` / `knip`
+
+### Lint 対応（振る舞い不変）
+
+スナップショットに変化がないことで振る舞い不変を確認済み。
+
+- [x] `prefer-const` 4件
+- [x] `no-case-declarations` 6件（`japanese/conjugation.ts` の `case` をブロックで囲む）
+- [x] `no-this-alias` 1件（Blockly パターンのため理由コメント付きで inline disable）
+- [x] `package.json` の `"main": "index.js"` を削除（存在しないファイルへの参照）
+
+### Phase 0 で発見した不具合（未修正・現状をスナップショットで固定）
+
+すべて再現テスト付き。詳細は REFACTORING-PLAN.md「Phase 0 実施結果」。
+
+- [ ] 入れ子 VP 等位接続 `or(and(A, B), C)` で B が AST から消える
+  - `parseTimeFrameBlock:303` と `toVerbPhraseWithLogic:420` が内側の `coordinatedWith` を上書きしている
+  - 2026-01-31 の修正は左辺 VP の構築までは正しいが、消費側2箇所で潰れる
+- [ ] 繋辞の形容詞が日本語訳されない（`renderFiller()` が `translateAdjective()` を通していない）
+- [ ] 日本語レンダラーが `logicOp` を扱わない（AND/OR/IF/BECAUSE の右オペランドが落ちる）
+- [ ] 日本語がモダリティ否定を無視する
+- [ ] 日本語がモダリティ使用時に相を落とす
+- [ ] `japanese/renderer.ts` の `verb` 変数の結果が使われていない（2パス方式リファクタの残骸）
+
 ## 2026-02-01
 
 ### DET Block Improvements

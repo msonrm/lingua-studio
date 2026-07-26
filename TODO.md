@@ -17,7 +17,9 @@
   - `parseVerbChain` 426行 → ディスパッチャ39行 + ハンドラ6個（テーブル駆動）
   - `conjugateVerb` 322行 → エントリ16行 + ハンドラ10個（相ごとに分割）
   - 初期ブロック配置を `blocks/initialWorkspace.ts` へ切り出し（`BlocklyWorkspace.tsx` 312→173行）
-- [ ] **Phase 3**: `blocks/definitions.ts`（1,709行 / ブロック41個）をカテゴリ別に分割
+- [x] **Phase 3**: `blocks/definitions.ts`（1,703行 / ブロック41個）をカテゴリ別に分割 — 2026-07-26 完了
+  - 13ファイルに分割（最大238行）。`index.ts` が副作用登録を集約
+  - `blockData.ts` を Blockly 非依存にし、astGenerator がブロック定義を読まずにデータを参照できるように
 - [ ] **Phase 4**: 構造的な改善（tracker のモジュールグローバル解消 / 英日レンダラーの共通骨格抽出 / UI 層）
 
 ## Phase 0 で発見した不具合

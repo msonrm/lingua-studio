@@ -2,7 +2,7 @@
 
 > 作成日: 2026-07-26 / 計画時の対象コミット: `c1628f9`
 >
-> **進捗**: Phase 0 ✅ / Phase 1 ✅ / Phase 2 ✅ / Phase 3〜4 未着手（2026-07-26 時点）
+> **進捗**: Phase 0 ✅ / Phase 1 ✅ / Phase 2 ✅ / Phase 3 ✅ / Phase 4 未着手（2026-07-26 時点）
 > 各 Phase の実施結果は [CHANGELOG.md](../CHANGELOG.md) を参照。
 
 前提となる構造の理解は [ARCHITECTURE.md](./ARCHITECTURE.md) を参照。

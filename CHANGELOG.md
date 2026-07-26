@@ -4,6 +4,37 @@
 
 ## 2026-07-26
 
+### Refactoring Phase 3: blocks/definitions.ts の分割
+
+1,703行の1ファイル（ブロック定義41個 + ツールボックス）を13ファイルに分割した。
+振る舞いは変えていない（既存スナップショットに差分なし）。
+
+```
+src/blocks/
+├── index.ts             28行  登録の集約（副作用 import の受け口）+ 公開 API
+├── shared.ts            79行  COLORS / msg() / labelValidator
+├── blockData.ts         63行  TimeChip・限定詞のデータ（Blockly 非依存）
+├── prepositions.ts      42行  前置詞データ（動詞用・名詞用の両方が使う）
+├── sentence.ts         206行  time_frame / 各種ラッパー / time_chip_*
+├── verbs.ts             79行  カテゴリ別の動詞ブロック
+├── verbModifiers.ts    233行  副詞ラッパー / 前置詞句 / 等位接続
+├── nouns.ts            212行  代名詞 / カテゴリ別の名詞
+├── determiner.ts       238行  determiner_unified
+├── nounModifiers.ts    112行  形容詞 / 前置詞句 / 等位接続
+├── question.ts          68行  choice_question / wh_*
+├── logic.ts            116行  fact_wrapper / logic_*
+├── extensions.ts       156行  拡張辞書ブロックの動的生成
+└── toolbox.ts          210行  createToolbox()
+```
+
+- `index.ts` が import 順を保証する（データ → ブロック定義 → 拡張 → ツールボックス）。
+  利用側は `import '../blocks'` するだけでよい
+- `blockData.ts` を Blockly 非依存にしたので、`astGenerator` が
+  `TIME_CHIP_DATA` / `DETERMINER_DATA` を参照するのにブロック定義を読み込まなくて済む
+- 検証: 691テストに加え、実際にブラウザで起動して**ツールボックス8カテゴリ・
+  計55ブロックすべてが登録されている**こと、初期ブロック・AST タブ・
+  コンソールエラーなしを確認した（副作用 import の順序依存が効いているかの確認）
+
 ### Refactoring Phase 2: 巨大関数の分割
 
 振る舞いは変えていない（既存スナップショットに差分なし）。

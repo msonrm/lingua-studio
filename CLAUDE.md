@@ -89,7 +89,7 @@ Blockly Workspace
 
 ## Key Files
 
-- `src/blocks/definitions.ts` - Blockly ブロック定義41個 + ツールボックス（1,709行、トップレベル副作用あり）
+- `src/blocks/` - Blockly ブロック定義41個 + ツールボックス。カテゴリ別に分割済み（`index.ts` が登録を集約）
 - `src/blocks/det-rules-en.ts` - 限定詞ルール
 - `src/renderer/astGenerator.ts` - ブロック木 → AST（`parseVerbChain` が426行）
 - `src/renderer/english/` - 英語レンダラー
@@ -104,7 +104,7 @@ Blockly Workspace
 - **`english/renderer.ts` の `tracker` はモジュールレベルの可変シングルトン**。`renderToEnglishWithLogs()` が毎回作り直すが、レンダリング中の全関数が暗黙に参照している。並行レンダリング不可
 - **`VerbPhraseNode` に結合機構が3つ同居**: `coordinatedWith`（統語論的な and/or）、`logicOp`（命題論理 AND/OR/NOT/IF/BECAUSE）、`polarity`（VP 個別の否定。`ClauseNode.polarity` とは別物）。両方が negative なら二重否定
 - **ロケール切り替えはワークスペースを再マウントする**（`workspaceKey` を +1）。既存ブロックのラベルは動的更新できないため。切り替え前に `saveState()` で退避している
-- **`blocks/definitions.ts` は副作用 import**。`import '../blocks/definitions'` した時点でブロックが登録される
+- **`blocks/index.ts` は副作用 import**。`import '../blocks'` した時点で全ブロックが登録される。import 順に意味がある（データ → ブロック定義 → 拡張 → ツールボックス）
 - **`npm run knip` は0件を保つこと**。意図的に残す export には `/** @public 理由 */` を付ける（`knip.json` の `tags: ["-public"]` で除外される）。現在タグが付いているのは辞書モジュールの API（消すと辞書データが到達不能になる）と、Phase 4-1 で使う予定の `RenderContext` 一式のみ
 - **`coordinatedWith` は連結リスト**。新しい等位接続を足すときは上書きせず `appendCoordination()` で末尾に繋ぐこと。上書きすると `or(and(A, B), C)` の B が消える（2026-07-26 に修正済みの実バグ）
 - **`japanese/lexicon.ts` の `translateAdjective()` が返すのは連体形**（「幸せな」「悲しい」）。述語や連用修飾で使うときは `analyzeAdjective()` で語幹・連用形・活用型を取ること。そのまま繋げると「幸せなである」になる

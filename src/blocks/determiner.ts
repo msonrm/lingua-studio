@@ -49,7 +49,10 @@ Blockly.Blocks['determiner_unified'] = {
         'place_block': 'PLACE_VALUE',
         'abstract_block': 'ABSTRACT_VALUE',
       };
-      const fieldName = fieldMap[targetBlock.type];
+      // 拡張名詞ブロック（noun_<category>_ext）は lemma を LEMMA フィールドに持つ
+      const fieldName = targetBlock.type.endsWith('_ext')
+        ? 'LEMMA'
+        : fieldMap[targetBlock.type];
       if (!fieldName) return null;
       const nounLemma = targetBlock.getFieldValue(fieldName);
       if (!nounLemma || nounLemma.startsWith('__')) return null;

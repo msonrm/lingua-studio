@@ -7,6 +7,7 @@
 
 import * as Blockly from 'blockly';
 import { adverbCores } from '../concepts';
+import { getExtAdverbs } from '../userDictionary';
 import { COLORS, msg, labelValidator } from './shared';
 import { getPrepositionOptions } from './prepositions';
 
@@ -26,6 +27,19 @@ const FREQUENCY_ADVERBS = [
 // 様態副詞データ定義
 // ============================================
 const MANNER_ADVERBS = adverbCores.filter(a => a.type === 'manner');
+
+/**
+ * ユーザー辞書の副詞をドロップダウン項目にする
+ *
+ * 副詞は独立したブロックではなくラッパーのドロップダウン項目なので、
+ * 動詞・名詞・形容詞のような `*_ext` ブロックは作らず、ここで合流させる。
+ * ドロップダウンは開くたびに評価されるため、辞書の変更が即座に反映される。
+ */
+function extAdverbOptions(type: string): [string, string][] {
+  return getExtAdverbs()
+    .filter(a => a.type === type)
+    .map(a => [`+${a.lemma}`, a.lemma] as [string, string]);
+}
 
 // ============================================
 // 否定ラッパーブロック（動詞修飾）
@@ -47,12 +61,15 @@ Blockly.Blocks['negation_wrapper'] = {
 // ============================================
 Blockly.Blocks['frequency_wrapper'] = {
   init: function() {
-    const options: [string, string][] = FREQUENCY_ADVERBS.map(a => [a.label, a.value]);
+    const getOptions = (): [string, string][] => [
+      ...FREQUENCY_ADVERBS.map(a => [a.label, a.value] as [string, string]),
+      ...extAdverbOptions('frequency'),
+    ];
 
     this.appendStatementInput("VERB")
         .setCheck("verb")
         .appendField(msg('FREQUENCY_LABEL', 'FREQ'))
-        .appendField(new Blockly.FieldDropdown(options), "FREQ_VALUE");
+        .appendField(new Blockly.FieldDropdown(getOptions), "FREQ_VALUE");
 
     this.setPreviousStatement(true, "verb");
     this.setColour(COLORS.frequency);
@@ -69,6 +86,7 @@ Blockly.Blocks['manner_wrapper'] = {
     const getOptions = (): [string, string][] => [
       [msg('GROUP_COMMON', '── Common ──'), '__label_common__'],
       ...MANNER_ADVERBS.filter(a => !a.lemma.startsWith('?')).map(a => [a.lemma, a.lemma] as [string, string]),
+      ...extAdverbOptions('manner'),
       [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), '__label_interrogative__'],
       ['?how', '?how'],
     ];
@@ -104,6 +122,7 @@ Blockly.Blocks['locative_wrapper'] = {
     const getOptions = (): [string, string][] => [
       [msg('GROUP_COMMON', '── Common ──'), '__label_common__'],
       ...LOCATIVE_ADVERBS.filter(a => !a.lemma.startsWith('?')).map(a => [a.lemma, a.lemma] as [string, string]),
+      ...extAdverbOptions('place'),
       [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), '__label_interrogative__'],
       ['?where', '?where'],
     ];
@@ -148,6 +167,7 @@ Blockly.Blocks['time_adverb_wrapper'] = {
     const getOptions = (): [string, string][] => [
       [msg('GROUP_COMMON', '── Common ──'), '__label_common__'],
       ...TIME_ADVERBS.map(a => [a.label, a.value] as [string, string]),
+      ...extAdverbOptions('time'),
       [msg('GROUP_INTERROGATIVE', '── Interrogative ──'), '__label_interrogative__'],
       ['?when', '?when'],
     ];

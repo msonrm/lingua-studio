@@ -4,7 +4,7 @@
  * 拡張辞書の内容を反映するため、ロケール切り替えや辞書変更のたびに再生成する。
  */
 
-import { getExtVerbs, getExtNouns } from '../userDictionary';
+import { getExtVerbs, getExtNouns, getExtAdjectives } from '../userDictionary';
 import type { VerbCategory, NounCategory } from '../types/schema';
 import { COLORS, msg } from './shared';
 
@@ -91,6 +91,28 @@ function buildVerbToolboxContents() {
   return contents;
 }
 
+/**
+ * 形容詞ツールボックスの内容を生成
+ *
+ * ベースブロックの直後に、そのカテゴリの拡張ブロックを並べる
+ * （動詞・名詞と同じ並べ方）。
+ */
+function buildAdjectiveToolboxContents() {
+  const extAdjectives = getExtAdjectives();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const contents: any[] = [];
+
+  const categories = ['size', 'age', 'color', 'physical', 'quality', 'emotion'] as const;
+  for (const category of categories) {
+    contents.push({ kind: 'block', type: `adjective_${category}` });
+    if (extAdjectives.some(a => a.category === category)) {
+      contents.push({ kind: 'block', type: `adjective_${category}_ext` });
+    }
+  }
+
+  return contents;
+}
+
 // ============================================
 // ツールボックス定義（動的生成）
 // ============================================
@@ -161,12 +183,7 @@ export function createToolbox() {
         contents: [
           { kind: "block", type: "determiner_unified" },
           { kind: "label", text: msg('SECTION_ADJECTIVES', '── Adjectives ──') },
-          { kind: "block", type: "adjective_size" },
-          { kind: "block", type: "adjective_age" },
-          { kind: "block", type: "adjective_color" },
-          { kind: "block", type: "adjective_physical" },
-          { kind: "block", type: "adjective_quality" },
-          { kind: "block", type: "adjective_emotion" },
+          ...buildAdjectiveToolboxContents(),
           { kind: "label", text: msg('SECTION_PREPOSITION', '── Preposition ──') },
           { kind: "block", type: "preposition_noun" },
           { kind: "label", text: msg('SECTION_COORDINATION', '── Coordination ──') },

@@ -20,9 +20,11 @@ export type SemanticRole =
 export interface ArgumentSlot {
   role: SemanticRole;
   required: boolean;
-  preposition?: string;
   label?: string;  // UI表示用のラベル（例: "what", "to whom"）
 }
+
+// 項をどう標示するか（英語なら前置詞、日本語なら格助詞）は言語ごとに違うので、
+// ここには持たない。英語は languages/en/verbPrepositions.ts を参照。
 
 // 動詞カテゴリ（意味論的分類）
 export type VerbCategory =

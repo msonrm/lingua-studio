@@ -58,14 +58,16 @@ npm run knip        # 未参照 export の棚卸し（現在0件。増やさな�
 
 ### テスト
 
-`src/test/` に2層のゴールデンテストがある（計583テスト / 118スナップショット）。
+`src/test/` に2層のゴールデンテストがある（計922テスト / 147スナップショット）。
 
 | 層 | ファイル | 対象 |
 |---|---|---|
 | A | `renderers.test.ts` | AST → 英語 / 日本語 / LinguaScript / 導出ログ |
 | B | `astGenerator.test.ts` | Blockly ブロック木 → AST |
+| - | `coverage.test.ts` | 上2層の**網羅性**（出力ではなく構造を見る） |
 
-- ケースは `cases.ts`（レイヤーA）とテストファイル内（レイヤーB）に表として定義。AST は `builders.ts`、ワークスペースは `workspace.ts` のヘルパーで組む
+- ケースは `cases.ts`（レイヤーA）と `astGenerator.cases.ts`（レイヤーB）に表として定義。AST は `builders.ts`、ワークスペースは `workspace.ts` のヘルパーで組む
+- **`coverage.test.ts` は「痩せたテスト」を検出する**。過去の不具合の多くは「テストが無い」ではなく「痩せた形でしかテストされていない」ことが原因で、スナップショット差分ゼロのまま修正が入った（VP 等位接続のケースが全部目的語なしだった等）。ブロックを足したら `astGenerator.cases.ts` の `blockCoverage` に1件足すこと
 - **スナップショットは「正しい出力」ではなく「固定時点の出力」**。既知のバグも現状のまま固定してあり、`KNOWN ISSUE` / `KNOWN BUG` コメントが付いている
 - 意図的に出力を変えたときは `npx vitest run -u` で更新し、**差分を必ずレビューする**
 - ヘッドレス Blockly（`new Blockly.Workspace()`）が Node 環境で動くため、`Blockly.inject` なしで astGenerator を検証できる。ただし **Blockly はイベントを非同期にフラッシュする**ので、`determiner_unified` の限定詞自動補正など `onchange` 依存の挙動は `flushBlocklyEvents()` を待つ必要がある（`buildWorkspace()` は内部で待っている）

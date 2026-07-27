@@ -73,13 +73,28 @@ export function isSubjectRole(role: SemanticRole, verbLemma: string): boolean {
 }
 
 /**
+ * 役割の既定の格助詞を上書きする動詞
+ *
+ * 場所を表す「で」は**動作が行われる場所**を指す（「公園で食べる」）。
+ * 存在・居住は「に」を取る（「公園に住む」であって「公園で住む」ではない）。
+ *
+ * 英語が `verbPrepositions.ts` で動詞ごとの前置詞を持つのと対になる。
+ * どちらも「項をどう標示するか」で、言語ごとに違うので言語パックに置く。
+ */
+const verbParticleOverride: Record<string, Partial<Record<SemanticRole, Particle>>> = {
+  live: { location: 'に' },
+  reside: { location: 'に' },
+  stay: { location: 'に' },
+};
+
+/**
  * 役割に対応する格助詞を取得（主語は「は」、それ以外はデフォルトマッピング）
  */
 export function getParticle(role: SemanticRole, verbLemma: string): Particle | undefined {
   if (isSubjectRole(role, verbLemma)) {
     return 'は';
   }
-  return roleToParticleDefault[role];
+  return verbParticleOverride[verbLemma]?.[role] ?? roleToParticleDefault[role];
 }
 
 // ============================================

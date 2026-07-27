@@ -485,11 +485,24 @@ function renderCoordinatedVerbPhrase(
   // 主語を省略しなかった2番目以降の葉は独立した節。カンマの判断に使う
   const startsNewClause = new Set<VerbPhraseNode>();
   let previousKey: string | null = null;
+  let previousVerb: string | null = null;
 
   leaves.forEach((vp, index) => {
     const key = subjectKey(vp);
-    const omitSubject = index > 0 && key === previousKey;
+    // 動詞まで同じなら主語を省略しない。
+    //
+    // "I have a pen and have an apple." のように同じ動詞が続くと英語として不自然で、
+    // 実際には主語を繰り返すか（"I have a pen, and I have an apple."）動詞を省略する
+    // （"I have a pen and an apple."）。動詞を省略すると have(and(pen, apple)) と
+    // 表層が同じになり、2つの述語なのか1つの述語に等位目的語なのかが復元できなくなる
+    // （"lift a table and lift a chair" は別々に、"lift a table and a chair" は
+    // 一緒に持ち上げうる）ので、主語を繰り返すほうを採る。
+    //
+    // カンマは startsNewClause 経由で coordination.ts が構造から決める。
+    const sameVerb = vp.verb.lemma === previousVerb;
+    const omitSubject = index > 0 && key === previousKey && !sameVerb;
     previousKey = key;
+    previousVerb = vp.verb.lemma;
     if (index > 0 && !omitSubject) {
       startsNewClause.add(vp);
     }

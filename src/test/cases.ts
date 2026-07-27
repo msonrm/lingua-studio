@@ -579,6 +579,64 @@ const coordination: RenderCase[] = [
     ),
   },
   {
+    name: '等位接続: VP and（各項が目的語を持つ）',
+    ast: decl(
+      coordVp('and', [
+        vp('eat', [arg('agent', I()), arg('patient', noun('apple', { det: 'an' }))]),
+        vp('drink', [arg('agent', I()), arg('patient', noun('water'))]),
+      ])
+    ),
+    note:
+      '2つ目以降の項が持つ目的語が落ちないことの回帰テスト。\n' +
+      '日本語レンダラーは先頭の動詞句からしか項を取っておらず、\n' +
+      '「私はりんごを食べて飲む」と water が消えていた。',
+  },
+  {
+    name: '等位接続: VP and（同一動詞 → 主語を繰り返す）',
+    ast: decl(
+      coordVp('and', [
+        vp('have', [arg('possessor', I()), arg('theme', noun('pen', { det: 'a' }))]),
+        vp('have', [arg('possessor', I()), arg('theme', noun('apple', { det: 'an' }))]),
+      ])
+    ),
+    note:
+      '英語は同じ動詞が続くと主語を省略しない。\n' +
+      '"I have a pen and have an apple." が不自然なため。\n' +
+      '動詞を省略する（"a pen and an apple"）と have(and(pen, apple)) と\n' +
+      '表層が同じになり、述語が2つなのか1つなのかが復元できなくなるので採らない。',
+  },
+  {
+    name: '等位接続: VP（異なる主語・各項が目的語を持つ）',
+    ast: decl(
+      coordVp('and', [
+        vp('have', [arg('possessor', I()), arg('theme', noun('pen', { det: 'a' }))]),
+        vp('have', [
+          arg('possessor', pron('you')),
+          arg('theme', noun('apple', { det: 'an' })),
+        ]),
+      ])
+    ),
+  },
+  {
+    name: '等位接続: VP or（各項が目的語を持つ）',
+    ast: decl(
+      coordVp('or', [
+        vp('eat', [arg('agent', I()), arg('patient', noun('apple', { det: 'an' }))]),
+        vp('drink', [arg('agent', I()), arg('patient', noun('water'))]),
+      ])
+    ),
+  },
+  {
+    name: '等位接続: VP 3項（各項が目的語を持つ）',
+    ast: decl(
+      coordVp('and', [
+        vp('eat', [arg('agent', I()), arg('patient', noun('apple', { det: 'an' }))]),
+        vp('drink', [arg('agent', I()), arg('patient', noun('water'))]),
+        vp('run', [arg('agent', I())]),
+      ])
+    ),
+  },
+  {
     name: '等位接続: VP + 個別の否定',
     ast: decl(
       coordVp('and', [

@@ -4,6 +4,50 @@
 
 ## 2026-07-27
 
+### VP 等位接続の項の欠落と、同一動詞の不自然さを修正
+
+#### 日本語で2つ目以降の項が消えていた
+
+`buildSOVParts` が `headVerbPhrase()` で**先頭の動詞句からしか項を取っておらず**、
+2つ目以降の目的語・副詞・前置詞句が丸ごと落ちていた。
+
+| AST | 修正前 | 修正後 |
+|---|---|---|
+| `and(eat(I, apple), drink(I, water))` | 私はりんごを食べて飲む。 | 私はりんごを食べて**水を**飲む。 |
+| `and(have(I, pen), have(I, apple))` | 私はペンを持って持つ。 | 私はペンを持って**りんごを**持つ。 |
+| `and(have(I, pen), have(you, apple))` | 私はペンを持って、あなたが持つ。 | 私はペンを持って、あなたが**りんごを**持つ。 |
+
+項の組み立てを `buildVpSurfaceParts()` として動詞句単位に切り出し、
+等位接続の各項が自分の項を出すようにした。主語だけは文全体で1回なので
+先頭の動詞句から取る（主語が変わる項は従来どおり「、Xが」を付ける）。
+
+Phase 0 で直した「`or(and(A,B),C)` で B が消える」と同じ情報欠落の系統。
+英語レンダラーは各項を独立にレンダリングしていたため影響を受けていなかった。
+
+#### 英語は同一動詞のとき主語を繰り返す
+
+`I have a pen and have an apple.` は非文ではないが、同じ動詞が続くと
+英語として不自然で、実際には主語を繰り返すか動詞を省略する。
+
+動詞を省略する（`I have a pen and an apple.`）と `have(and(pen, apple))` と
+表層が同じになり、**述語が2つなのか1つに等位目的語なのかが復元できなくなる**。
+`lift a table and lift a chair`（別々に）と `lift a table and a chair`（一緒に）は
+意味が違うので、この区別を潰さないほうを採った。
+
+| AST | 修正前 | 修正後 |
+|---|---|---|
+| `and(have(I, pen), have(I, apple))` | I have a pen and have an apple. | I have a pen, **and I** have an apple. |
+| `and(eat(I, apple), drink(I, water))` | I eat an apple and drink water. | 変化なし |
+
+カンマは既存の `startsNewClause` 経由で `coordination.ts` が構造から決めるので、
+主語の省略判定に「動詞が同じか」を足すだけで済んでいる。
+
+#### 安全網の穴
+
+この2件はどちらもスナップショットが1件も変わらなかった。ゴールデンケースの
+VP 等位接続が**すべて目的語なし**（`I eat and drink.`）だったため。
+各項が目的語を持つケースを5件追加した。
+
 ### 限定詞なしの可算名詞を修正（`I am biggest man.`）
 
 可算名詞の単数が限定詞なしで出力され、`I am man.` `I am big man.`

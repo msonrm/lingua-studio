@@ -812,6 +812,112 @@ const japaneseSpecific: RenderCase[] = [
 // ============================================
 // 全ケース
 // ============================================
+// ============================================
+// 入れ子の文脈
+//
+// 同じノード型でも「どこに置かれるか」で経路が変わる。
+// 単独では豊かに使われていても、入れ子の中では痩せた形でしか
+// テストされていない箇所を埋める（VP 等位接続の項欠落がこの穴だった）。
+// ============================================
+
+const nestedContexts: RenderCase[] = [
+  {
+    name: '入れ子: 前置詞句の目的語が限定詞と形容詞を持つ',
+    ast: decl(
+      vp('run', [arg('agent', I())], {
+        pps: [pp('in', noun('park', { det: 'the', adjectives: ['big'] }))],
+      })
+    ),
+  },
+  {
+    name: '入れ子: NP 等位接続の各項が限定詞と形容詞を持つ',
+    ast: decl(
+      vp('eat', [
+        arg('agent', I()),
+        arg(
+          'patient',
+          coordNP('and', [
+            noun('apple', { det: 'the', adjectives: ['red'] }),
+            noun('orange', { det: 'the', adjectives: ['big'] }),
+          ])
+        ),
+      ])
+    ),
+  },
+  {
+    name: '入れ子: NP 等位接続の入れ子 and(A, or(B, C))',
+    ast: decl(
+      vp('eat', [
+        arg('agent', I()),
+        arg(
+          'patient',
+          coordNP('and', [
+            noun('apple', { det: 'an' }),
+            coordNP('or', [noun('orange', { det: 'an' }), noun('banana', { det: 'a' })]),
+          ])
+        ),
+      ])
+    ),
+    note: '英語は either で内側の範囲を明示する。日本語は平坦化する',
+  },
+  {
+    name: '入れ子: 論理演算のオペランドが目的語を持つ',
+    ast: sentence(
+      clause(
+        vp(
+          'eat',
+          [arg('agent', I()), arg('patient', noun('apple', { det: 'an' }))],
+          {
+            logicOp: {
+              operator: 'AND',
+              rightOperand: vp('drink', [arg('agent', I()), arg('patient', noun('water'))]),
+            },
+          }
+        )
+      ),
+      { sentenceType: 'fact' }
+    ),
+  },
+  {
+    name: '入れ子: 論理演算のオペランドが副詞を持つ',
+    ast: sentence(
+      clause(
+        vp(
+          'eat',
+          [arg('agent', I()), arg('patient', noun('apple', { det: 'an' }))],
+          {
+            logicOp: {
+              operator: 'IF',
+              rightOperand: vp('run', [arg('agent', I())], {
+                adverbs: [adv('quickly', 'manner')],
+              }),
+            },
+          }
+        )
+      ),
+      { sentenceType: 'fact' }
+    ),
+  },
+  {
+    name: '入れ子: VP 等位接続の2つ目が副詞を持つ',
+    ast: decl(
+      coordVp('and', [
+        vp('eat', [arg('agent', I()), arg('patient', noun('apple', { det: 'an' }))]),
+        vp('run', [arg('agent', I())], { adverbs: [adv('quickly', 'manner')] }),
+      ])
+    ),
+  },
+  {
+    name: '入れ子: VP 等位接続の2つ目が前置詞句を持つ',
+    ast: decl(
+      coordVp('and', [
+        vp('eat', [arg('agent', I()), arg('patient', noun('apple', { det: 'an' }))],),
+        vp('run', [arg('agent', I())], { pps: [pp('in', noun('park', { det: 'the' }))] }),
+      ])
+    ),
+  },
+];
+
 export const allCases: { group: string; cases: RenderCase[] }[] = [
   { group: '文型', cases: sentenceTypes },
   { group: '時制×相', cases: tenseAspect },
@@ -822,4 +928,5 @@ export const allCases: { group: string; cases: RenderCase[] }[] = [
   { group: '等位接続', cases: coordination },
   { group: 'Logic Extension', cases: logic },
   { group: '日本語固有', cases: japaneseSpecific },
+  { group: '入れ子の文脈', cases: nestedContexts },
 ];

@@ -320,6 +320,69 @@ exports[`'モダリティ' > 'モダリティ: 進行相' 1`] = `
 }
 `;
 
+exports[`'入れ子の文脈' > '入れ子: NP 等位接続の入れ子 and(A, or(B, C))' 1`] = `
+{
+  "en": "I eat an apple and either an orange or a banana.",
+  "ja": "私はりんごとオレンジかバナナを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:and(noun(det:'an, head:'apple), or(noun(det:'an, head:'orange), noun(det:'a, head:'banana))))))",
+}
+`;
+
+exports[`'入れ子の文脈' > '入れ子: NP 等位接続の各項が限定詞と形容詞を持つ' 1`] = `
+{
+  "en": "I eat the red apple and the big orange.",
+  "ja": "私は赤いりんごと大きいオレンジを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:and(noun(det:'the, adj:'red, head:'apple), noun(det:'the, adj:'big, head:'orange)))))",
+}
+`;
+
+exports[`'入れ子の文脈' > '入れ子: VP 等位接続の2つ目が前置詞句を持つ' 1`] = `
+{
+  "en": "I eat an apple and run in the park.",
+  "ja": "私はりんごを食べて公園で走る。",
+  "logs": [],
+  "ls": "sentence(present+simple(and(eat(agent:'I, patient:noun(det:'an, head:'apple)), pp('in, noun(det:'the, head:'park), run(agent:'I)))))",
+}
+`;
+
+exports[`'入れ子の文脈' > '入れ子: VP 等位接続の2つ目が副詞を持つ' 1`] = `
+{
+  "en": "I eat an apple and run quickly.",
+  "ja": "私はりんごを食べて速く走る。",
+  "logs": [],
+  "ls": "sentence(present+simple(and(eat(agent:'I, patient:noun(det:'an, head:'apple)), manner('quickly, run(agent:'I)))))",
+}
+`;
+
+exports[`'入れ子の文脈' > '入れ子: 前置詞句の目的語が限定詞と形容詞を持つ' 1`] = `
+{
+  "en": "I run in the big park.",
+  "ja": "私は大きい公園で走る。",
+  "logs": [],
+  "ls": "sentence(present+simple(pp('in, noun(det:'the, adj:'big, head:'park), run(agent:'I))))",
+}
+`;
+
+exports[`'入れ子の文脈' > '入れ子: 論理演算のオペランドが副詞を持つ' 1`] = `
+{
+  "en": "⊨ If I eat an apple, then I run quickly.",
+  "ja": "私はりんごを食べるならば、私は速く走る。",
+  "logs": [],
+  "ls": "fact(present+simple(IF(eat(agent:'I, patient:noun(det:'an, head:'apple)), then:manner('quickly, run(agent:'I)))))",
+}
+`;
+
+exports[`'入れ子の文脈' > '入れ子: 論理演算のオペランドが目的語を持つ' 1`] = `
+{
+  "en": "⊨ Both I eat an apple and I drink water.",
+  "ja": "私はりんごを食べる、かつ私は水を飲む。",
+  "logs": [],
+  "ls": "fact(present+simple(AND(eat(agent:'I, patient:noun(det:'an, head:'apple)), drink(agent:'I, patient:noun(head:'water)))))",
+}
+`;
+
 exports[`'動詞句' > '動詞句: 二重目的語（give）' 1`] = `
 {
   "en": "He gives me a green apple.",

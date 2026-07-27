@@ -7,6 +7,7 @@
 import * as Blockly from 'blockly';
 import type { VerbCategory } from '../types/schema';
 import { getVerbCoresByCategory } from '../concepts';
+import { displayVerbLemma } from '../languages/en/verbPrepositions';
 import { COLORS, msg } from './shared';
 
 // ============================================
@@ -28,7 +29,9 @@ function createVerbCategoryBlock(category: VerbCategory) {
 
   Blockly.Blocks[`verb_${category}`] = {
     init: function() {
-      const verbOptions: [string, string][] = categoryVerbs.map(v => [v.lemma, v.lemma]);
+      // 前置詞動詞は "belong to" と前置詞込みで見せる。
+      // 前置詞とセットで1語なので、そう覚えるのが正しい（値は lemma のまま）
+      const verbOptions: [string, string][] = categoryVerbs.map(v => [displayVerbLemma(v.lemma), v.lemma]);
       const label = msg(config.msgKey, config.fallback);
 
       this.appendDummyInput()

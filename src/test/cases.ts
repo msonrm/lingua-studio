@@ -276,6 +276,28 @@ const nounPhrases: RenderCase[] = [
     ast: decl(vp('eat', [arg('agent', I()), arg('patient', noun('apple', { det: 'my' }))])),
   },
   {
+    name: '名詞句: 限定詞なし（可算名詞の単数）',
+    ast: decl(vp('eat', [arg('agent', I()), arg('patient', noun('apple'))])),
+    note:
+      '可算名詞の単数には限定詞が必須。DET ブロックを繋がずに接続できてしまうため、' +
+      '欠けていることを ___ で示す（必須スロットの欠損を示す既存の慣習にならう）。' +
+      '黙って a を補うとブロック上に無いものが出力に現れ WYSIWYG が崩れるため。',
+  },
+  {
+    name: '名詞句: 限定詞なし（複数形は正当）',
+    ast: decl(
+      vp('eat', [arg('agent', I()), arg('patient', noun('apple', { number: 'plural' }))])
+    ),
+  },
+  {
+    name: '名詞句: 限定詞なし（不可算は正当）',
+    ast: decl(vp('drink', [arg('agent', I()), arg('patient', noun('water'))])),
+  },
+  {
+    name: '名詞句: 限定詞なし（固有名詞は正当）',
+    ast: decl(vp('see', [arg('experiencer', I()), arg('stimulus', noun('John'))])),
+  },
+  {
     name: '名詞句: 複数形',
     ast: decl(
       vp('eat', [arg('agent', I()), arg('patient', noun('apple', { number: 'plural' }))])
@@ -528,8 +550,8 @@ const coordination: RenderCase[] = [
         arg(
           'patient',
           coordNP('or', [
-            coordNP('and', [noun('apple'), noun('orange')]),
-            noun('banana'),
+            coordNP('and', [noun('apple', { det: 'an' }), noun('orange', { det: 'an' })]),
+            noun('banana', { det: 'a' }),
           ])
         ),
       ])

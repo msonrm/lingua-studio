@@ -25,3 +25,11 @@ dist-ssr
 
 # Claude Code のローカル設定（各自の環境依存）
 .claude/settings.local.json
+
+# 実験の生出力（結果は docs/EXPERIMENT-RESULT.md に要約）
+
+# Phase 0 の生成物。決定的かつ LLM 不要で数秒で再生成できるので追跡しない
+# （LLM の応答は再生成できないので experiments/out/phase*.json は追跡する）
+experiments/out/all.json
+experiments/out/collisions-en.json
+experiments/out/collisions-ja.json

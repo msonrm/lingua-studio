@@ -1,0 +1,15 @@
+{
+  "attempted": 6000,
+  "failed": 0,
+  "distinctAsts": 3700,
+  "en": {
+    "distinctSurfaces": 2620,
+    "collisionGroups": 1000,
+    "astsInvolved": 2080
+  },
+  "ja": {
+    "distinctSurfaces": 1455,
+    "collisionGroups": 895,
+    "astsInvolved": 3140
+  }
+}

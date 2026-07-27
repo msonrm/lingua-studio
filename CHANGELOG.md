@@ -4,6 +4,47 @@
 
 ## 2026-07-27
 
+### 比較級・最上級を実装
+
+辞書に108件の `comparative` / `superlative` が入っていたが、比較の構文が無く
+一度も使われていなかった。「大きい → より大きい → 最も大きい」は英語教材として
+基本項目なので実装した。
+
+#### 級は語彙ではなく文法範疇として扱う
+
+`big` と `bigger` は別語ではなく同じ概念の別の級なので、時制や相と同じく
+AST では素性として持ち、表層形は各言語のレンダラーが決める。
+
+```lisp
+noun(det:'the, adj:comparative('big), head:'apple)
+be(theme:'I, attribute:superlative('big))
+```
+
+| 級 | 英語 | 日本語 |
+|---|---|---|
+| positive | big | 大きい |
+| comparative | bigger / more beautiful / better | より大きい |
+| superlative | the biggest | 最も大きい |
+
+`-er` 型・`more` 型・不規則型は規則から導出できないので辞書を引く
+（辞書に無ければ規則変化で補う）。日本語は副詞で表すため語彙の追加は不要。
+
+最上級は英語では定冠詞を伴う。名詞修飾では限定詞スロットが担い、
+述語位置ではレンダラーが補う（"I am the biggest."）。
+
+#### 変更点
+
+- [x] `AdjectiveGrade` を schema に追加（`NounPhraseNode.adjectives` と
+      `AdjectivePhraseNode` の両方。省略時は原級なので既存データと後方互換）
+- [x] 形容詞ブロックに級のプルダウンを追加（拡張ブロックにも）
+- [x] `languages/en/lexicon.ts` に `gradeAdjective()`、
+      `languages/ja/lexicon.ts` に `gradePrefix()`
+- [x] 3レンダラーすべてに配線（名詞修飾・述語の両方）
+- [x] LinguaScript 文法仕様書を更新
+
+仕様書は当初「専用構文を設けず `adj:'bigger` と表層形を置く」としていたが、
+それでは辞書データが使われず日本語も訳せないため、設計を変更して理由を明記した。
+
 ### 形容詞・副詞をユーザー辞書から使えるようにする（第5段階）
 
 **辞書に追加できるのにツールボックスに現れない**品詞が2つあった。

@@ -720,21 +720,54 @@ sentence(passive(eat(agent:'I, patient:'apple)))
 
 ---
 
-## 名詞句（比較級・最上級）
+## 比較級・最上級
 
-専用構文を設けず、名詞句の形容詞・後置修飾として表現する。
+級は**語彙ではなく文法範疇**として扱う。`big` と `bigger` は別語ではなく
+同じ概念の別の級なので、時制や相と同じく演算子で包む。
 
 ```lisp
 ;; "the bigger apple"
-noun(det:'the, adj:'bigger, head:'apple)
+noun(det:'the, adj:comparative('big), head:'apple)
 
 ;; "the biggest apple"
-noun(det:'the, adj:'biggest, head:'apple)
+noun(det:'the, adj:superlative('big), head:'apple)
 
-;; "an apple bigger than that one"
+;; "I am bigger."
+be(theme:'I, attribute:comparative('big))
+
+;; 原級は演算子を付けない
+noun(det:'a, adj:'big, head:'apple)
+```
+
+### 設計の理由
+
+表層形を直接置く（`adj:'bigger`）案もあるが、以下の理由で採らない。
+
+1. **表層形は言語ごとに違う。** 英語は `bigger` / `more beautiful` / `better` と
+   規則が混在し辞書を引く必要があるが、日本語は「より大きい」と副詞で表す。
+   概念レベルの AST に英語の表層形を置くと、他言語のレンダラーが訳せない。
+2. **`-er` 型・`more` 型・不規則型は規則から導出できない。**
+   辞書に `comparative` / `superlative` を持つ設計と整合させる必要がある。
+3. AST を言語非依存に保つという全体方針と揃う。
+
+| 級 | 英語 | 日本語 |
+|---|---|---|
+| positive | big | 大きい |
+| comparative | bigger | より大きい |
+| superlative | the biggest | 最も大きい |
+
+最上級は英語では定冠詞を伴う。名詞修飾では限定詞スロットが担い、
+述語位置ではレンダラーが補う（"I am the biggest."）。
+
+### 比較対象（than 句）
+
+未実装。後置修飾として表現する予定。
+
+```lisp
+;; "an apple bigger than that one"（将来）
 noun(det:'a, head:'apple, post:than('that_one))
 
-;; "an apple as big as that one"
+;; "an apple as big as that one"（将来）
 noun(det:'a, head:'apple, post:as('big, 'that_one))
 ```
 
@@ -1109,7 +1142,7 @@ sentence(past+simple(eat(agent:'I, theme:'apple)))
 <noun-lemma>    ::= "apple" | "book" | "teacher" | "park" | ...
 
 <np-post-mod>   ::= "post:pp('" <preposition> ", " <noun-expr> ")"   ;; 前置詞句修飾
-                  | "post:than(" <noun-expr> ")"                     ;; 比較
+                  | "post:than(" <noun-expr> ")"                     ;; 比較対象（未実装）
                   | "post:as('" <adjective> ", " <noun-expr> ")"     ;; 同等比較
 
 ;; ============================================

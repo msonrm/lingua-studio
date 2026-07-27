@@ -486,6 +486,24 @@ exports[`'動詞句' > '動詞句: 繋辞（be + 形容詞 + 程度副詞）' 1`
 }
 `;
 
+exports[`'動詞句' > '動詞句: 繋辞（be + 最上級）' 1`] = `
+{
+  "en": "I am the biggest.",
+  "ja": "私は最も大きい。",
+  "logs": [],
+  "ls": "sentence(present+simple(be(theme:'I, attribute:superlative('big))))",
+}
+`;
+
+exports[`'動詞句' > '動詞句: 繋辞（be + 比較級）' 1`] = `
+{
+  "en": "I am bigger.",
+  "ja": "私はより大きい。",
+  "logs": [],
+  "ls": "sentence(present+simple(be(theme:'I, attribute:comparative('big))))",
+}
+`;
+
 exports[`'動詞句' > '動詞句: 自動詞（run）' 1`] = `
 {
   "en": "I run.",
@@ -611,6 +629,42 @@ exports[`'名詞句' > '名詞句: 指示詞' 1`] = `
   "ja": "私はこのりんごを食べる。",
   "logs": [],
   "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'this, head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 最上級（-est 型）' 1`] = `
+{
+  "en": "I eat the biggest apple.",
+  "ja": "私は最も大きいりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'the, adj:superlative('big), head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 比較級（-er 型）' 1`] = `
+{
+  "en": "I eat the bigger apple.",
+  "ja": "私はより大きいりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'the, adj:comparative('big), head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 比較級（more 型）' 1`] = `
+{
+  "en": "I eat the more beautiful apple.",
+  "ja": "私はより美しいりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'the, adj:comparative('beautiful), head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 比較級（不規則）' 1`] = `
+{
+  "en": "I eat the better apple.",
+  "ja": "私はより良いりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(det:'the, adj:comparative('good), head:'apple))))",
 }
 `;
 

@@ -14,6 +14,7 @@ import type {
 } from '../../types/schema';
 import type { TransformationType } from '../types';
 import { renderCoordination, leaf, group, type CoordItem } from './coordination';
+import { gradeAdjective } from '../../languages/en/lexicon';
 
 // ============================================
 // Types
@@ -248,7 +249,7 @@ export function renderNounPhraseUnified(
     // 不定代名詞 + 形容詞: "something good", "someone important"
     // 形容詞は後置される
     if (pronounHead.pronounType === 'indefinite' && np.adjectives.length > 0) {
-      const adjs = np.adjectives.map(adj => adj.lemma).join(' ');
+      const adjs = np.adjectives.map(adj => gradeAdjective(adj.lemma, adj.grade)).join(' ');
       result += ' ' + adjs;
     }
 
@@ -291,7 +292,7 @@ export function renderNounPhraseUnified(
 
   // 形容詞
   np.adjectives.forEach(adj => {
-    parts.push(adj.lemma);
+    parts.push(gradeAdjective(adj.lemma, adj.grade));
   });
 
   // 名詞（複数形処理）

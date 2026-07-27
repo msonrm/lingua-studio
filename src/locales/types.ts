@@ -266,6 +266,9 @@ export interface BlocklyMessages {
   DICT_DITRANS: string;
   DICT_COUNTABLE: string;
   DICT_ADD: string;
+  ADJ_GRADE_POSITIVE: string;
+  ADJ_GRADE_COMPARATIVE: string;
+  ADJ_GRADE_SUPERLATIVE: string;
   DICT_FIELD_PAST: string;
   DICT_FIELD_PP: string;
   DICT_FIELD_ING: string;

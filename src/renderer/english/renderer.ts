@@ -16,7 +16,7 @@ import {
   isCoordinatedVerbPhrase,
   ModalType,
 } from '../../types/schema';
-import { findVerb, findNoun, findPronoun } from '../../languages/en/lexicon';
+import { findVerb, findNoun, findPronoun, gradeAdjective } from '../../languages/en/lexicon';
 import { nounCores } from '../../concepts';
 import { RenderResult } from '../../types/grammarLog';
 import { DerivationTracker } from '../DerivationTracker';
@@ -1131,8 +1131,12 @@ function renderFiller(
     return renderCoordinatedNounPhrase(filler as CoordinatedNounPhraseNode, isSubject, polarity);
   } else if (filler.type === 'adjectivePhrase') {
     const adjective = filler as AdjectivePhraseNode;
+    const graded = gradeAdjective(adjective.head.lemma, adjective.grade);
+    // 最上級は述語位置でも定冠詞を伴う（"I am the biggest."）。
+    // 名詞修飾では限定詞スロットが担うので、ここでだけ補う。
+    const article = adjective.grade === 'superlative' ? 'the' : undefined;
     // 程度副詞（very / quite など）は形容詞の前に置く
-    return [adjective.degree?.lemma, adjective.head.lemma].filter(Boolean).join(' ');
+    return [article, adjective.degree?.lemma, graded].filter(Boolean).join(' ');
   }
   return '';
 }

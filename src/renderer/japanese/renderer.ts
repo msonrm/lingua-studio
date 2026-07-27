@@ -26,7 +26,7 @@ import {
   ModalType,
   PrepositionalPhraseNode,
 } from '../../types/schema';
-import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction, translatePreposition, translatePrepositionAsModifier, analyzeAdjective } from '../../languages/ja/lexicon';
+import { getParticle, isSubjectRole, translatePronoun, translateNoun, translateAdjective, translateAdverb, translateDeterminer, translatePreDeterminer, translatePostDeterminer, isNegativePolarityAdverb, translateConjunction, translatePreposition, translatePrepositionAsModifier, analyzeAdjective, gradePrefix } from '../../languages/ja/lexicon';
 import { conjugate, conjugateAdjectivalPredicate, toTeForm, toNaideForm, Tense, Aspect, Polarity } from '../../languages/ja/morphology';
 import { getVerbEntry } from '../../languages/ja/lexicon';
 import { findVerbCore } from '../../concepts';
@@ -495,6 +495,7 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
     const form = analyzeAdjective(adjectivalPredicate.head.lemma);
     result.push(
       renderDegree(adjectivalPredicate) +
+        gradePrefix(adjectivalPredicate.grade) +
         conjugateAdjectivalPredicate(form.stem, form.type, effectiveTense, effectivePolarity)
     );
     return result;
@@ -508,7 +509,9 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
   if (adjectivalPredicate) {
     const form = analyzeAdjective(adjectivalPredicate.head.lemma);
     attributePrefix =
-      renderDegree(adjectivalPredicate) + (form.type === 'i' ? form.attributive : form.stem);
+      renderDegree(adjectivalPredicate) +
+      gradePrefix(adjectivalPredicate.grade) +
+      (form.type === 'i' ? form.attributive : form.stem);
   } else if (attribute && verbLemma === 'be') {
     attributePrefix = attribute.text;
   }
@@ -575,7 +578,7 @@ function renderFiller(
       // 連体形をそのまま返す（「幸せな」「悲しい」）。
       // 繋辞の述語位置では buildSOVParts が別経路で活用させるため、ここには来ない。
       const degree = filler.degree ? translateAdverb(filler.degree.lemma) : '';
-      return degree + translateAdjective(filler.head.lemma);
+      return degree + gradePrefix(filler.grade) + translateAdjective(filler.head.lemma);
     }
     case 'coordinatedNounPhrase':
       return renderCoordinatedNounPhrase(filler);
@@ -617,7 +620,7 @@ function renderNounPhrase(np: NounPhraseNode): string {
 
   // Adjectives（日本語に変換）
   for (const adj of np.adjectives) {
-    parts.push(translateAdjective(adj.lemma));
+    parts.push(gradePrefix(adj.grade) + translateAdjective(adj.lemma));
   }
 
   // 前置詞句修飾（the book on the table → テーブルの上の本）

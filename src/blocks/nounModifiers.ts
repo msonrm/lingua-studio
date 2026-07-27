@@ -23,6 +23,20 @@ const ADJECTIVE_CATEGORY_KEYS: Record<AdjectiveCategory, { msgKey: string; fallb
   emotion: { msgKey: 'ADJ_EMOTION', fallback: 'EMOTION', color: COLORS.adjective },
 };
 
+/**
+ * 級のプルダウン項目
+ *
+ * 級は語彙ではなく文法範疇（時制や相と同じ）なので、
+ * 形容詞ごとに別ブロックを作らずフィールドで切り替える。
+ */
+export function gradeOptions(): [string, string][] {
+  return [
+    [msg('ADJ_GRADE_POSITIVE', 'positive'), 'positive'],
+    [msg('ADJ_GRADE_COMPARATIVE', 'comparative'), 'comparative'],
+    [msg('ADJ_GRADE_SUPERLATIVE', 'superlative'), 'superlative'],
+  ];
+}
+
 // カテゴリ別形容詞ブロック生成関数
 function createAdjectiveCategoryBlock(category: AdjectiveCategory) {
   const config = ADJECTIVE_CATEGORY_KEYS[category];
@@ -36,7 +50,8 @@ function createAdjectiveCategoryBlock(category: AdjectiveCategory) {
       this.appendValueInput("NOUN")
           .setCheck(["noun", "adjective"])
           .appendField(label)
-          .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE");
+          .appendField(new Blockly.FieldDropdown(adjOptions), "ADJ_VALUE")
+          .appendField(new Blockly.FieldDropdown(gradeOptions), "GRADE");
 
       this.setOutput(true, "adjective");
       this.setColour(config.color);

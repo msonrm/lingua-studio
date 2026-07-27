@@ -266,12 +266,31 @@ export interface FilledArgumentSlot {
   filler: NounPhraseNode | AdjectivePhraseNode | CoordinatedNounPhraseNode | null;
 }
 
+/**
+ * 形容詞の級
+ *
+ * 語彙ではなく文法範疇として扱う。`big` と `bigger` は別語ではなく同じ概念の別の級なので、
+ * AST では時制や相と同じく素性として持ち、表層形は各言語のレンダラーが決める。
+ *
+ *   英語:   big / bigger / the biggest   （辞書の comparative・superlative を引く）
+ *   日本語: 大きい / より大きい / 最も大きい
+ *
+ * 省略時は原級（positive）。
+ */
+export type AdjectiveGrade = "positive" | "comparative" | "superlative";
+
+/** 名詞を修飾する形容詞 */
+export interface AttributiveAdjective {
+  lemma: string;
+  grade?: AdjectiveGrade;
+}
+
 export interface NounPhraseNode {
   type: "nounPhrase";
   preDeterminer?: string;  // all, both, half
   determiner?: string;     // the, a, this, that, my, your, no（単純な文字列）
   postDeterminer?: string; // one, two, many, few, some, several, plural, uncountable
-  adjectives: { lemma: string }[];
+  adjectives: AttributiveAdjective[];
   head: NounHead | PronounHead;
   prepModifier?: PrepositionalPhraseNode;  // 前置詞句修飾 ("the apple ON THE DESK")
 }
@@ -293,7 +312,10 @@ export interface PronounHead {
 
 export interface AdjectivePhraseNode {
   type: "adjectivePhrase";
+  /** 程度副詞（very / quite など） */
   degree?: { lemma: string };
+  /** 級。省略時は原級 */
+  grade?: AdjectiveGrade;
   head: { lemma: string };
 }
 

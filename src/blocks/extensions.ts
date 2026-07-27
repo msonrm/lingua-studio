@@ -11,6 +11,7 @@ import {
   addChangeListener as addDictChangeListener,
 } from '../userDictionary';
 import { COLORS, msg } from './shared';
+import { gradeOptions } from './nounModifiers';
 import { VERB_CATEGORY_KEYS } from './verbs';
 
 // ============================================
@@ -152,7 +153,8 @@ function createExtAdjectiveCategoryBlock(category: AdjectiveCategory) {
               : ([['(empty)', '__empty__']] as [string, string][]);
           }),
           'ADJ_VALUE'
-        );
+        )
+        .appendField(new Blockly.FieldDropdown(gradeOptions), 'GRADE');
 
       this.setOutput(true, 'adjective');
       this.setColour(COLORS.adjective);

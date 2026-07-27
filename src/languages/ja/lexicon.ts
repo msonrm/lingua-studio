@@ -10,7 +10,7 @@
  * - 英語をハブとし、各言語がそこに接続する構造
  */
 
-import { SemanticRole } from '../../types/schema';
+import { SemanticRole, AdjectiveGrade } from '../../types/schema';
 import { verbCores } from '../../concepts';
 import { findUserForms } from '../../userDictionary';
 
@@ -734,6 +734,20 @@ const adjectiveToJapanese: Record<string, string> = {
  */
 export function translateAdjective(lemma: string): string {
   return adjectiveToJapanese[lemma] ?? findUserForms(lemma, 'ja')?.ja ?? lemma;
+}
+
+/**
+ * 級を表す接頭辞を付ける
+ *
+ * 日本語は形態変化ではなく副詞で級を表すので、連体形・述語形の
+ * どちらにも前置するだけでよい。
+ *
+ *   原級: 大きい / 比較級: より大きい / 最上級: 最も大きい
+ */
+export function gradePrefix(grade: AdjectiveGrade | undefined): string {
+  if (grade === 'comparative') return 'より';
+  if (grade === 'superlative') return '最も';
+  return '';
 }
 
 /**

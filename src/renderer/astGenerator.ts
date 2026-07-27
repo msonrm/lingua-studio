@@ -9,6 +9,8 @@ import {
   NounPhraseNode,
   FilledArgumentSlot,
   AdverbNode,
+  AdjectiveGrade,
+  AttributiveAdjective,
   PronounHead,
   PrepositionalPhraseNode,
   CoordinatedNounPhraseNode,
@@ -956,6 +958,8 @@ function parseDeterminerUnifiedBlock(block: Blockly.Block): NounPhraseNode | Coo
 
 function parseAdjectiveWrapperBlock(block: Blockly.Block): NounPhraseNode | CoordinatedNounPhraseNode {
   const adjValue = block.getFieldValue('ADJ_VALUE');
+  // 級は原級が既定。原級のときは AST に載せない（省略時と同じ扱い）
+  const grade = block.getFieldValue('GRADE') as AdjectiveGrade | null;
   const nounBlock = block.getInputTargetBlock('NOUN');
 
   // 内部の名詞ブロックを解析
@@ -973,9 +977,12 @@ function parseAdjectiveWrapperBlock(block: Blockly.Block): NounPhraseNode | Coor
   const innerNP = innerResult as NounPhraseNode;
 
   // 形容詞を先頭に追加（外側の形容詞が先）
+  const adjective: AttributiveAdjective =
+    grade && grade !== 'positive' ? { lemma: adjValue, grade } : { lemma: adjValue };
+
   return {
     ...innerNP,
-    adjectives: [{ lemma: adjValue }, ...innerNP.adjectives],
+    adjectives: [adjective, ...innerNP.adjectives],
   };
 }
 

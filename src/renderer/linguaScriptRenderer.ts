@@ -204,12 +204,23 @@ function renderFillerToScript(filler: NounPhraseNode | AdjectivePhraseNode | Coo
     return renderCoordinatedNounPhraseToScript(filler as CoordinatedNounPhraseNode);
   } else if (filler.type === 'adjectivePhrase') {
     const ap = filler as AdjectivePhraseNode;
+    // 級は comparative('big) / superlative('big) で包む（語彙ではなく文法範疇）
+    const graded = ap.grade && ap.grade !== 'positive'
+      ? `${ap.grade}('${ap.head.lemma})`
+      : `'${ap.head.lemma}`;
     if (ap.degree) {
-      return `degree('${ap.degree.lemma}, '${ap.head.lemma})`;
+      return `degree('${ap.degree.lemma}, ${graded})`;
     }
-    return `'${ap.head.lemma}`;
+    return graded;
   }
   return '?';
+}
+
+/** 形容詞を級つきで出す（原級はそのまま、比較級・最上級は演算子で包む） */
+function renderAdjectiveToScript(adj: { lemma: string; grade?: string }): string {
+  return adj.grade && adj.grade !== 'positive'
+    ? `${adj.grade}('${adj.lemma})`
+    : `'${adj.lemma}`;
 }
 
 function renderCoordinatedNounPhraseToScript(coordNP: CoordinatedNounPhraseNode): string {
@@ -245,9 +256,9 @@ function renderNounPhraseToScript(np: NounPhraseNode): string {
     // 形容詞（不定代名詞 + 形容詞: "something beautiful"）
     if (np.adjectives.length > 0) {
       if (np.adjectives.length === 1) {
-        parts.push(`adj:'${np.adjectives[0].lemma}`);
+        parts.push(`adj:${renderAdjectiveToScript(np.adjectives[0])}`);
       } else {
-        const adjList = np.adjectives.map(adj => `'${adj.lemma}`).join(', ');
+        const adjList = np.adjectives.map(renderAdjectiveToScript).join(', ');
         parts.push(`adj:[${adjList}]`);
       }
     }
@@ -294,9 +305,9 @@ function renderNounPhraseToScript(np: NounPhraseNode): string {
   // 形容詞
   if (np.adjectives.length > 0) {
     if (np.adjectives.length === 1) {
-      parts.push(`adj:'${np.adjectives[0].lemma}`);
+      parts.push(`adj:${renderAdjectiveToScript(np.adjectives[0])}`);
     } else {
-      const adjList = np.adjectives.map(adj => `'${adj.lemma}`).join(', ');
+      const adjList = np.adjectives.map(renderAdjectiveToScript).join(', ');
       parts.push(`adj:[${adjList}]`);
     }
   }

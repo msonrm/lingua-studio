@@ -16,6 +16,8 @@ import type {
   NounPhraseNode,
   CoordinatedNounPhraseNode,
   AdjectivePhraseNode,
+  AdjectiveGrade,
+  AttributiveAdjective,
   AdverbNode,
   PrepositionalPhraseNode,
   FilledArgumentSlot,
@@ -33,7 +35,7 @@ export interface NounOptions {
   det?: string;
   preDet?: string;
   postDet?: string;
-  adjectives?: string[];
+  adjectives?: (string | AttributiveAdjective)[];
   number?: 'singular' | 'plural' | 'uncountable';
   prepModifier?: PrepositionalPhraseNode;
 }
@@ -42,7 +44,7 @@ export interface NounOptions {
 export function noun(lemma: string, opts: NounOptions = {}): NounPhraseNode {
   const np: NounPhraseNode = {
     type: 'nounPhrase',
-    adjectives: (opts.adjectives ?? []).map(a => ({ lemma: a })),
+    adjectives: (opts.adjectives ?? []).map(a => (typeof a === 'string' ? { lemma: a } : a)),
     head: { type: 'noun', lemma, number: opts.number ?? 'singular' },
   };
   if (opts.preDet) np.preDeterminer = opts.preDet;
@@ -88,10 +90,15 @@ export function coordNP(
 }
 
 /** 形容詞句（繋辞の attribute 用）: adjP('happy') */
-export function adjP(lemma: string, degree?: string): AdjectivePhraseNode {
+export function adjP(
+  lemma: string,
+  degree?: string,
+  grade?: AdjectiveGrade
+): AdjectivePhraseNode {
   return {
     type: 'adjectivePhrase',
     ...(degree ? { degree: { lemma: degree } } : {}),
+    ...(grade ? { grade } : {}),
     head: { lemma },
   };
 }

@@ -291,6 +291,43 @@ const nounPhrases: RenderCase[] = [
     ),
   },
   {
+    name: '名詞句: 比較級（-er 型）',
+    ast: decl(
+      vp('eat', [
+        arg('agent', I()),
+        arg('patient', noun('apple', { det: 'the', adjectives: [{ lemma: 'big', grade: 'comparative' }] })),
+      ])
+    ),
+  },
+  {
+    name: '名詞句: 最上級（-est 型）',
+    ast: decl(
+      vp('eat', [
+        arg('agent', I()),
+        arg('patient', noun('apple', { det: 'the', adjectives: [{ lemma: 'big', grade: 'superlative' }] })),
+      ])
+    ),
+  },
+  {
+    name: '名詞句: 比較級（more 型）',
+    ast: decl(
+      vp('eat', [
+        arg('agent', I()),
+        arg('patient', noun('apple', { det: 'the', adjectives: [{ lemma: 'beautiful', grade: 'comparative' }] })),
+      ])
+    ),
+    note: '規則からは導出できないので辞書の comparative を引く',
+  },
+  {
+    name: '名詞句: 比較級（不規則）',
+    ast: decl(
+      vp('eat', [
+        arg('agent', I()),
+        arg('patient', noun('apple', { det: 'the', adjectives: [{ lemma: 'good', grade: 'comparative' }] })),
+      ])
+    ),
+  },
+  {
     name: '名詞句: 形容詞2つ',
     ast: decl(
       vp('eat', [
@@ -363,6 +400,15 @@ const verbPhrases: RenderCase[] = [
     name: '動詞句: 繋辞（be + ナ形容詞）',
     ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('happy'))])),
     note: '日本語は語幹 + である →「私は幸せである」',
+  },
+  {
+    name: '動詞句: 繋辞（be + 比較級）',
+    ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('big', undefined, 'comparative'))])),
+  },
+  {
+    name: '動詞句: 繋辞（be + 最上級）',
+    ast: decl(vp('be', [arg('theme', I()), arg('attribute', adjP('big', undefined, 'superlative'))])),
+    note: '最上級は述語位置でも定冠詞を伴う（"I am the biggest."）',
   },
   {
     name: '動詞句: 繋辞（be + イ形容詞）',

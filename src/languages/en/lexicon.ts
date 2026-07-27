@@ -14,6 +14,7 @@ import {
   VerbForms, NounForms, PronounForms, AdjectiveForms,
   VerbEntry, NounEntry, PronounEntry, AdjectiveEntry, AdverbEntry,
   VerbCategory, NounCategory, AdjectiveCategory,
+  AdjectiveGrade,
 } from '../../types/schema';
 import { verbCores, nounCores, pronounCores, adjectiveCores, adverbCores } from '../../concepts';
 import {
@@ -567,7 +568,6 @@ export const findPronoun = (lemma: string): PronounEntry | undefined => {
  * 形容詞をルックアップ（Core + 英語比較級をマージ）
  * 検索順: ベース辞書 → 拡張辞書
  */
-/** @public 辞書 API の対称性のために保持（削除すると辞書データが到達不能になる） */
 export const findAdjective = (lemma: string): AdjectiveEntry | undefined => {
   // 1. ベース辞書を検索
   const core = adjectiveCores.find((a) => a.lemma === lemma);
@@ -682,3 +682,37 @@ export const isProperNoun = (lemma: string): boolean => {
   const noun = findNoun(lemma);
   return noun?.proper === true;
 };
+
+
+// ============================================
+// 形容詞の級
+// ============================================
+
+/**
+ * 形容詞を指定した級の表層形にする
+ *
+ * `-er` 型（big → bigger）、`more` 型（beautiful → more beautiful）、
+ * 不規則型（good → better）が混在し、規則からは導出できないので辞書を引く。
+ * 辞書に無ければ規則変化で補う。
+ */
+export function gradeAdjective(lemma: string, grade: AdjectiveGrade | undefined): string {
+  if (!grade || grade === 'positive') return lemma;
+
+  const entry = findAdjective(lemma);
+  if (grade === 'comparative') {
+    return entry?.comparative ?? regularComparative(lemma);
+  }
+  return entry?.superlative ?? regularSuperlative(lemma);
+}
+
+function regularComparative(lemma: string): string {
+  if (lemma.endsWith('e')) return `${lemma}r`;
+  if (lemma.endsWith('y')) return `${lemma.slice(0, -1)}ier`;
+  return `${lemma}er`;
+}
+
+function regularSuperlative(lemma: string): string {
+  if (lemma.endsWith('e')) return `${lemma}st`;
+  if (lemma.endsWith('y')) return `${lemma.slice(0, -1)}iest`;
+  return `${lemma}est`;
+}

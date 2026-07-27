@@ -690,6 +690,44 @@ exports[`'名詞句' > '名詞句: 複数形' 1`] = `
 }
 `;
 
+exports[`'名詞句' > '名詞句: 限定詞なし（不可算は正当）' 1`] = `
+{
+  "en": "I drink water.",
+  "ja": "私は水を飲む。",
+  "logs": [],
+  "ls": "sentence(present+simple(drink(agent:'I, patient:noun(head:'water))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 限定詞なし（可算名詞の単数）' 1`] = `
+{
+  "en": "I eat ___ apple.",
+  "ja": "私はりんごを食べる。",
+  "logs": [],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(head:'apple))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 限定詞なし（固有名詞は正当）' 1`] = `
+{
+  "en": "I see John.",
+  "ja": "私はジョンを見る。",
+  "logs": [],
+  "ls": "sentence(present+simple(see(experiencer:'I, stimulus:noun(head:'John))))",
+}
+`;
+
+exports[`'名詞句' > '名詞句: 限定詞なし（複数形は正当）' 1`] = `
+{
+  "en": "I eat apples.",
+  "ja": "私はりんごを食べる。",
+  "logs": [
+    "agreement | apple → apples | rule=NUMBER_PLURAL | trigger=NUMBER_PLURAL_DESC",
+  ],
+  "ls": "sentence(present+simple(eat(agent:'I, patient:noun(head:'apple))))",
+}
+`;
+
 exports[`'否定' > '否定: VPレベル（等位接続内）' 1`] = `
 {
   "en": "I do not eat and drink.",
@@ -1148,10 +1186,10 @@ exports[`'等位接続' > '等位接続: NP or' 1`] = `
 
 exports[`'等位接続' > '等位接続: NP 入れ子（or(and(A, B), C)）' 1`] = `
 {
-  "en": "I eat both apple and orange, or banana.",
+  "en": "I eat both an apple and an orange, or a banana.",
   "ja": "私はりんごとオレンジかバナナを食べる。",
   "logs": [],
-  "ls": "sentence(present+simple(eat(agent:'I, patient:or(and(noun(head:'apple), noun(head:'orange)), noun(head:'banana)))))",
+  "ls": "sentence(present+simple(eat(agent:'I, patient:or(and(noun(det:'an, head:'apple), noun(det:'an, head:'orange)), noun(det:'a, head:'banana)))))",
 }
 `;
 

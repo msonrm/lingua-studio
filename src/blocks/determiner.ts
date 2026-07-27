@@ -65,6 +65,22 @@ Blockly.Blocks['determiner_unified'] = {
       };
     };
 
+    /**
+     * 接続された形容詞チェーンに最上級が含まれるか
+     *
+     * 最上級は定冠詞を伴う（"the biggest man"）ので、可算名詞の既定値 a では非文になる。
+     */
+    const hasSuperlative = (): boolean => {
+      const nounInput = block.getInput('NOUN');
+      let targetBlock = nounInput?.connection?.targetBlock();
+
+      while (targetBlock && targetBlock.type.startsWith('adjective_')) {
+        if (targetBlock.getFieldValue('GRADE') === 'superlative') return true;
+        targetBlock = targetBlock.getInput('NOUN')?.connection?.targetBlock() ?? null;
+      }
+      return false;
+    };
+
     // 名詞タイプを判定
     const getNounType = (): NounType | null => {
       const nounInfo = getConnectedNounInfo();
@@ -167,6 +183,7 @@ Blockly.Blocks['determiner_unified'] = {
     // 内部関数を保存（onchangeで使用）
     this._getNounType = getNounType;
     this._getCurrentValues = getCurrentValues;
+    this._hasSuperlative = hasSuperlative;
 
     // 一括更新関数（バリデーションをスキップして値をまとめて設定）
     this._bulkSetValues = (values: { PRE: string; CENTRAL: string; POST: string }) => {
@@ -193,11 +210,16 @@ Blockly.Blocks['determiner_unified'] = {
 
     // BLOCK_MOVE: ブロック接続/切断
     // BLOCK_CHANGE: 接続中の名詞ブロック内のドロップダウン変更
+    // BLOCK_CHANGE は直下だけでなく形容詞チェーンの奥（級の変更）も拾う
+    const changedId = (e as Blockly.Events.BlockChange).blockId;
+    const isInNounSubtree =
+      !!connectedBlock &&
+      !!changedId &&
+      connectedBlock.getDescendants(false).some((b: Blockly.Block) => b.id === changedId);
+
     const isRelevantEvent =
       e.type === Blockly.Events.BLOCK_MOVE ||
-      (e.type === Blockly.Events.BLOCK_CHANGE &&
-       connectedBlock &&
-       (e as Blockly.Events.BlockChange).blockId === connectedBlock.id);
+      (e.type === Blockly.Events.BLOCK_CHANGE && isInNounSubtree);
 
     if (!isRelevantEvent) return;
 
@@ -212,6 +234,16 @@ Blockly.Blocks['determiner_unified'] = {
     if (newValues) {
       // 計算した値を一括で適用（バリデーションをバイパス）
       this._bulkSetValues?.(newValues);
+    }
+
+    // 最上級は定冠詞を伴う（"the biggest man"）。
+    // 可算名詞の既定値は a なので、そのままだと "a biggest man" になってしまう。
+    const isSuperlative = (this._hasSuperlative as (() => boolean) | undefined)?.() ?? false;
+    if (isSuperlative && nounType === 'countable') {
+      const central = (newValues ?? currentValues).CENTRAL;
+      if (central === 'a' || central === '__none__') {
+        this._bulkSetValues?.({ ...(newValues ?? currentValues), CENTRAL: 'the' });
+      }
     }
 
     // ドロップダウンの表示を強制更新（×マーク状態が変わる可能性があるため）

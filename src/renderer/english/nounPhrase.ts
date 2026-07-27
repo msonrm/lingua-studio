@@ -53,6 +53,9 @@ interface NounEntry {
   lemma: string;
   plural: string;
   countable: boolean;
+  /** 固有名詞（冠詞なし） */
+  proper?: boolean;
+  /** 特殊な無冠詞用法（at home, go to school 等） */
   zeroArticle?: boolean;
 }
 
@@ -86,6 +89,28 @@ export interface NounPhraseDependencies {
   findPronoun: FindPronounFn;
   renderPrepositionalPhrase: RenderPPFn;
   renderCoordinatedNounPhrase: RenderCoordinatedNPFn;
+}
+
+/**
+ * 限定詞が必須なのに欠けているか
+ *
+ * 対象は**可算名詞の単数**のみ。以下は限定詞なしで正当:
+ * - 複数形（"I eat apples."）
+ * - 不可算（"I drink water."）
+ * - 固有名詞（"I am John."）
+ * - 無冠詞用法（zeroArticle: "at home", "go to school"）
+ * - 代名詞（そもそも限定詞を取らない）
+ */
+function needsDeterminer(np: NounPhraseNode, deps: NounPhraseDependencies): boolean {
+  if (np.preDeterminer || np.determiner || np.postDeterminer) return false;
+  if (np.head.type !== 'noun') return false;
+
+  const head = np.head as NounHead;
+  if (head.number !== 'singular') return false;
+
+  const entry = deps.findNoun(head.lemma);
+  if (!entry) return false;
+  return entry.countable && !entry.proper && !entry.zeroArticle;
 }
 
 // ============================================
@@ -265,6 +290,16 @@ export function renderNounPhraseUnified(
   // 名詞の処理
   // ============================================
   const parts: string[] = [];
+
+  // 可算名詞の単数は限定詞が必須。欠けていれば ___ で示す。
+  //
+  // DET ブロックを繋がずに名詞を直接接続できるため、限定詞なしの名詞句が
+  // AST に入りうる（"I am man." のような非文になる）。
+  // 黙って a を補うとブロック上に無いものが出力に現れて WYSIWYG が崩れるので、
+  // 必須スロットの欠損を示す既存の慣習にならって ___ を出す。
+  if (needsDeterminer(np, deps)) {
+    parts.push('___');
+  }
 
   // 前置限定詞（all, both, half）
   // 複合限定詞のアンダーバーをスペースに変換（e.g., 'a_few' → 'a few'）

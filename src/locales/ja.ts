@@ -207,6 +207,9 @@ export const ja: LocaleData = {
     ROLE_GOAL: '着点',
     ROLE_LOCATION: '位置',
     ROLE_SUBJECT: '主語',
+    ROLE_DESTINATION: '行き先',
+    ROLE_AWAITED: '待つ相手',
+    ROLE_OWNER: '所有者',
 
     // Adjective categories
     ADJ_SIZE: '大きさ',

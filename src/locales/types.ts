@@ -207,6 +207,9 @@ export interface BlocklyMessages {
   ROLE_GOAL: string;
   ROLE_LOCATION: string;
   ROLE_SUBJECT: string;
+  ROLE_DESTINATION: string;
+  ROLE_AWAITED: string;
+  ROLE_OWNER: string;
 
   // Adjective categories
   ADJ_SIZE: string;

@@ -17,6 +17,7 @@ import {
   ModalType,
 } from '../../types/schema';
 import { findVerb, findNoun, findPronoun, gradeAdjective } from '../../languages/en/lexicon';
+import { findPrepositionRule } from '../../languages/en/verbPrepositions';
 import { nounCores } from '../../concepts';
 import { RenderResult } from '../../types/grammarLog';
 import { DerivationTracker } from '../DerivationTracker';
@@ -386,15 +387,20 @@ const ENGLISH_ROLE_ORDER: SemanticRole[] = ['recipient', 'theme', 'goal', 'sourc
 
 /** valencyを英語の語順にソート */
 function sortValencyForEnglish(
-  valency: Array<{ role: SemanticRole; preposition?: string; required: boolean; label?: string }>,
+  valency: Array<{ role: SemanticRole; required: boolean; label?: string }>,
+  verbLemma: string,
   excludeRoles: SemanticRole[] = []
 ) {
+  const takesPreposition = (role: SemanticRole) => !!findPrepositionRule(verbLemma, role);
+
   return [...valency]
     .filter(v => !excludeRoles.includes(v.role))
     .sort((a, b) => {
-      // 前置詞付きは後ろに
-      if (a.preposition && !b.preposition) return 1;
-      if (!a.preposition && b.preposition) return -1;
+      // 前置詞付きは後ろに（"give you an apple" に対し "put an apple in a park"）
+      const aPrep = takesPreposition(a.role);
+      const bPrep = takesPreposition(b.role);
+      if (aPrep && !bPrep) return 1;
+      if (!aPrep && bPrep) return -1;
       // 両方前置詞なし、または両方前置詞あり → ENGLISH_ROLE_ORDERで比較
       const aIndex = ENGLISH_ROLE_ORDER.indexOf(a.role);
       const bIndex = ENGLISH_ROLE_ORDER.indexOf(b.role);
@@ -405,6 +411,27 @@ function sortValencyForEnglish(
     });
 }
 
+/**
+ * 項に前置詞を付ける
+ *
+ * - `fixed`（belong **to**）は語彙的に決まっているので、そのまま出す。
+ *   AST には入っていない（情報を担わないため）ので、ここで補うのが正しい
+ * - `choice`（live **in** / put **on**）は利用者が選ぶもの。ブロックに無いものを
+ *   勝手に補うと WYSIWYG が崩れるので、限定詞欠損と同じ `___` で欠けを示す
+ */
+function markPreposition(
+  verbLemma: string,
+  role: SemanticRole,
+  value: string,
+  hasFiller: boolean
+): string {
+  const rule = findPrepositionRule(verbLemma, role);
+  if (!rule) return value;
+  if (rule.kind === 'fixed') return `${rule.preposition} ${value}`;
+  // 項そのものが空なら value が既に ___ なので、前置詞の ___ は重ねない
+  return hasFiller ? `___ ${value}` : value;
+}
+
 /** 引数（目的語など）をレンダリング */
 function renderOtherArguments(
   ctx: ClauseContext,
@@ -412,14 +439,14 @@ function renderOtherArguments(
 ): string {
   const { verbEntry, subjectRole, verbPhrase, polarity } = ctx;
   const allExcluded = subjectRole ? [subjectRole, ...excludeRoles] : excludeRoles;
+  const verbLemma = verbPhrase.verb.lemma;
 
-  return sortValencyForEnglish(verbEntry?.valency || [], allExcluded)
+  return sortValencyForEnglish(verbEntry?.valency || [], verbLemma, allExcluded)
     .map(v => {
       const argSlot = verbPhrase.arguments.find(a => a.role === v.role);
-      const preposition = v.preposition;
       const value = render(argSlot?.filler, f => renderFiller(f, false, polarity));
       return {
-        text: preposition ? `${preposition} ${value}` : value,
+        text: markPreposition(verbLemma, v.role, value, !!argSlot?.filler),
         skip: !v.required && !argSlot?.filler,
       };
     })
@@ -1110,13 +1137,16 @@ function renderSingleVerbPhrase(
         : '');
 
   // その他の引数（英語語順にソート）
-  const otherArgs = sortValencyForEnglish(verbEntry?.valency || [], subjectRole ? [subjectRole] : [])
+  const otherArgs = sortValencyForEnglish(
+    verbEntry?.valency || [],
+    vp.verb.lemma,
+    subjectRole ? [subjectRole] : []
+  )
     .map(v => {
       const argSlot = vp.arguments.find(a => a.role === v.role);
-      const preposition = v.preposition;
       const value = render(argSlot?.filler, f => renderFiller(f, false, polarity));
       return {
-        text: preposition ? `${preposition} ${value}` : value,
+        text: markPreposition(vp.verb.lemma, v.role, value, !!argSlot?.filler),
         skip: !v.required && !argSlot?.filler,
       };
     })

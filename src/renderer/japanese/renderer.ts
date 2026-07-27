@@ -312,6 +312,19 @@ function renderVPChainItem(
     }
   }
 
+  // 2つ目以降の項・副詞・前置詞句
+  //
+  // 先頭の動詞句の分は buildSOVParts が既に出している。ここで出さないと
+  // 「私はりんごを食べて飲む」のように2つ目の目的語が消える。
+  if (!item.isFirst) {
+    const surface = buildVpSurfaceParts(item.vp);
+    for (const other of surface.others) parts.push(other.text);
+    // be の attribute は繋辞の直前に置く（「先生である」）
+    if (surface.attribute) parts.push(surface.attribute.text);
+    for (const adv of surface.adverbs) parts.push(adv);
+    for (const pp of surface.prepPhrases) parts.push(pp);
+  }
+
   if (item.isLast) {
     // 最後のVP: 通常活用（時制・相・極性を適用）
     const effectivePolarity = (item.vpPolarity === 'negative' || clausePolarity === 'negative')
@@ -387,15 +400,37 @@ interface BuildOptions {
  * be動詞の場合: [主語+は] [attribute+動詞]
  * 例: "I am a dog" → "私は 犬である"
  */
-function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[] {
-  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
-  // 引数・副詞・前置詞句は先頭の動詞句が持つ（等位接続でも主語などは先頭に付く）
-  const head = headVerbPhrase(verbPhrase);
-  const args = head.arguments;
-  const verbLemma = head.verb.lemma;
+/** 1つの動詞句が表層に出す要素。動詞そのものは含まない */
+interface VpSurfaceParts {
+  subject?: ArgPart;
+  attribute?: ArgPart;
+  others: ArgPart[];
+  adverbs: string[];
+  prepPhrases: string[];
+  /** never / hardly などの否定極性副詞を含むか */
+  hasNegativePolarityAdverb: boolean;
+}
+
+interface ArgPart {
+  role: SemanticRole;
+  text: string;
+  isSubject: boolean;
+  isAttribute: boolean;
+}
+
+/**
+ * 動詞句の項・副詞・前置詞句を格助詞付きで組み立てる
+ *
+ * 等位接続では**各項がそれぞれ自分の項を持つ**ので、先頭の動詞句だけでなく
+ * 2つ目以降からも呼ぶ（以前は先頭しか見ておらず「私はりんごを食べて飲む」と
+ * 2つ目の目的語が消えていた）。
+ */
+function buildVpSurfaceParts(vp: VerbPhraseNode, options: BuildOptions = {}): VpSurfaceParts {
+  const args = vp.arguments;
+  const verbLemma = vp.verb.lemma;
 
   // 引数を格助詞付きでレンダリング
-  const argParts: { role: SemanticRole; text: string; isSubject: boolean; isAttribute: boolean }[] = [];
+  const argParts: ArgPart[] = [];
 
   // valency から required 情報を取得
   const verbCore = findVerbCore(verbLemma);
@@ -447,19 +482,37 @@ function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[]
     });
   }
 
-  // 主語を先頭に、その他を続ける
-  const subject = argParts.find(p => p.isSubject);
-  const attribute = argParts.find(p => p.isAttribute);
-  const others = argParts.filter(p => !p.isSubject && !p.isAttribute);
+  return {
+    // 主語を先頭に、その他を続ける
+    subject: argParts.find(p => p.isSubject),
+    attribute: argParts.find(p => p.isAttribute),
+    others: argParts.filter(p => !p.isSubject && !p.isAttribute),
+    // 副詞（日本語に変換）
+    adverbs: vp.adverbs.map(adv => translateAdverb(adv.lemma)),
+    // 前置詞句（動詞修飾）
+    prepPhrases: vp.prepositionalPhrases.map(pp => renderPrepositionalPhrase(pp)),
+    hasNegativePolarityAdverb: vp.adverbs.some(adv => isNegativePolarityAdverb(adv.lemma)),
+  };
+}
 
-  // 副詞（日本語に変換）
-  const adverbs = head.adverbs.map(adv => translateAdverb(adv.lemma));
+/**
+ * SOV語順のパーツを構築
+ * [主語+は] [目的語+を] [間接目的語+に] ... [動詞（活用済み）]
+ *
+ * be動詞の場合: [主語+は] [attribute+動詞]
+ * 例: "I am a dog" → "私は 犬である"
+ */
+function buildSOVParts(clause: ClauseNode, options: BuildOptions = {}): string[] {
+  const { verbPhrase, tense, aspect, polarity, modal, modalPolarity } = clause;
+  // 主語は文全体で1回だけ出すので先頭の動詞句から取る。
+  // 2つ目以降の項・副詞は各項が自分で出す（renderVPChainItem）
+  const head = headVerbPhrase(verbPhrase);
+  const verbLemma = head.verb.lemma;
 
-  // 前置詞句（動詞修飾）
-  const prepPhrases = head.prepositionalPhrases.map(pp => renderPrepositionalPhrase(pp));
+  const { subject, attribute, others, adverbs, prepPhrases, hasNegativePolarityAdverb } =
+    buildVpSurfaceParts(head, options);
 
   // 否定極性副詞（never, hardly, etc.）がある場合、動詞を否定形にする
-  const hasNegativePolarityAdverb = head.adverbs.some(adv => isNegativePolarityAdverb(adv.lemma));
   const effectivePolarity: Polarity = hasNegativePolarityAdverb ? 'negative' : polarity as Polarity;
 
   // 日本語では future は present と同形

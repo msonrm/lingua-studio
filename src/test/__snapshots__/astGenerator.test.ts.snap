@@ -476,6 +476,1368 @@ exports[`'astGen/Logic' > 'Logic: 入れ子 AND(NOT(P), Q)' 1`] = `
 }
 `;
 
+exports[`'astGen/ブロック網羅' > 'TimeChip: aspectual（now）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "progressive",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": "now",
+    "type": "sentence",
+  },
+  "en": "I am eating an apple now.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > 'TimeChip: concrete（yesterday）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "past",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": "yesterday",
+    "type": "sentence",
+  },
+  "en": "I ate an apple yesterday.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > 'TimeChip: unified（past + perfect）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "perfect",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "past",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I had eaten an apple.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '動詞: verb_cognition' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "experiencer",
+          },
+          {
+            "filler": null,
+            "role": "theme",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "think",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I think.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '動詞: verb_communication' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "theme",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "say",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I say.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '動詞: verb_state（location を取る）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "park",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "location",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "live",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I live a park.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '動詞: verb_transfer（3項）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "you",
+                "number": "singular",
+                "person": 2,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "recipient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "give",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I give you an apple.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '名詞: abstract_block（不可算 → 限定詞なし）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "possessor",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": undefined,
+              "head": {
+                "lemma": "music",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "have",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I have music.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '名詞: animal_block' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "possessor",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "dog",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "have",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I have a dog.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '名詞: human_block' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "teacher",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "attribute",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "be",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I am a teacher.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '名詞: possessive_pronoun_block' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "it",
+                "number": "singular",
+                "person": 3,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "mine",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "possessive",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "attribute",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "be",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "It is mine.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '名詞修飾: preposition_noun' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "teacher",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "prepModifier": {
+                "object": {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "park",
+                    "number": "singular",
+                    "type": "noun",
+                  },
+                  "type": "nounPhrase",
+                },
+                "preposition": "in",
+                "type": "prepositionalPhrase",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "attribute",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "be",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I am a teacher in ___ park.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '形容詞: adjective_age' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+          {
+            "filler": {
+              "adjectives": [
+                {
+                  "lemma": "old",
+                },
+              ],
+              "determiner": "a",
+              "head": {
+                "lemma": "teacher",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "attribute",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "be",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I am an old teacher.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '形容詞: adjective_emotion（比較級）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+          {
+            "filler": {
+              "adjectives": [
+                {
+                  "grade": "comparative",
+                  "lemma": "happy",
+                },
+              ],
+              "determiner": "a",
+              "head": {
+                "lemma": "teacher",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "attribute",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "be",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I am a happier teacher.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '形容詞: adjective_physical' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [
+                {
+                  "lemma": "hard",
+                },
+              ],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I eat a hard apple.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '形容詞: adjective_quality（最上級 → DET が th…' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+          {
+            "filler": {
+              "adjectives": [
+                {
+                  "grade": "superlative",
+                  "lemma": "good",
+                },
+              ],
+              "determiner": "the",
+              "head": {
+                "lemma": "teacher",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "attribute",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "be",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I am the best teacher.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '形容詞: adjective_size（原級）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+          {
+            "filler": {
+              "adjectives": [
+                {
+                  "lemma": "big",
+                },
+              ],
+              "determiner": "a",
+              "head": {
+                "lemma": "teacher",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "attribute",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "be",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I am a big teacher.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '文ラッパー: negation_sentence_wrapper（モダリテ…' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": "ability",
+      "modalPolarity": "negative",
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I can't eat an apple.",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '疑問: choice_question_block' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "you",
+                "number": "singular",
+                "person": 2,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "conjunction": "or",
+              "conjuncts": [
+                {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "water",
+                    "number": "singular",
+                    "type": "noun",
+                  },
+                  "type": "nounPhrase",
+                },
+                {
+                  "adjectives": [],
+                  "head": {
+                    "lemma": "milk",
+                    "number": "singular",
+                    "type": "noun",
+                  },
+                  "type": "nounPhrase",
+                },
+              ],
+              "isChoiceQuestion": true,
+              "type": "coordinatedNounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "drink",
+        },
+      },
+    },
+    "sentenceType": "interrogative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "Do you drink water or milk?",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '疑問: wh_adverb_block' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [
+          {
+            "advType": "place",
+            "lemma": "?where",
+            "type": "adverb",
+          },
+        ],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "you",
+                "number": "singular",
+                "person": 2,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "interrogative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "Where do you eat?",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '疑問: wh_placeholder_block（主語）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "?who",
+                "number": "singular",
+                "person": 3,
+                "pronounType": "interrogative",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "interrogative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "Who eats?",
+}
+`;
+
+exports[`'astGen/ブロック網羅' > '等位接続: coordination_noun_or' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "conjunction": "or",
+              "conjuncts": [
+                {
+                  "adjectives": [],
+                  "determiner": "a",
+                  "head": {
+                    "lemma": "apple",
+                    "number": "singular",
+                    "type": "noun",
+                  },
+                  "postDeterminer": undefined,
+                  "preDeterminer": undefined,
+                  "type": "nounPhrase",
+                },
+                {
+                  "adjectives": [],
+                  "determiner": "a",
+                  "head": {
+                    "lemma": "orange",
+                    "number": "singular",
+                    "type": "noun",
+                  },
+                  "postDeterminer": undefined,
+                  "preDeterminer": undefined,
+                  "type": "nounPhrase",
+                },
+              ],
+              "type": "coordinatedNounPhrase",
+            },
+            "role": "patient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "eat",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I eat an apple or an orange.",
+}
+`;
+
 exports[`'astGen/動詞ラッパー' > 'ラッパー: frequency' 1`] = `
 {
   "ast": {

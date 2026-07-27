@@ -1,0 +1,10 @@
+{
+  "total": 18,
+  "failed": 0,
+  "flagged": 18,
+  "byCause": {
+    "pp+neg": "6/6",
+    "neg": "6/6",
+    "pp": "6/6"
+  }
+}

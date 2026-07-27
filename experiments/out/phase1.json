@@ -1,0 +1,248 @@
+[
+ {
+  "surface": "I can not eat apples in the park.",
+  "cause": "pp+neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(head:'apple)))))))",
+   "not(modal(ability:can, sentence(present+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(head:'apple)))))))",
+   "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:noun(head:'apple, post:pp('in, noun(det:'the, head:'park))))))))",
+   "not(modal(ability:can, sentence(present+simple(eat(agent:'I, patient:noun(head:'apple, post:pp('in, noun(det:'the, head:'park))))))))"
+  ],
+  "reportedCount": 4,
+  "reportedReadings": "公園で食べるという行為が不可能（「in the park」が VP 修飾、否定が can を広く取る） | 公園にあるリンゴを食べることが不可能（「in the park」が apples を修飾、否定が can を広く取る） | 公園ではリンゴを食べないでいることができる（「in the park」が VP 修飾、can > not で否定が狭い） | 公園にあるリンゴを食べないでいることができる（「in the park」が apples を修飾、can > not で否定が狭い）",
+  "detected": true,
+  "raw": "COUNT: 4\nREADINGS: 公園で食べるという行為が不可能（「in the park」が VP 修飾、否定が can を広く取る） | 公園にあるリンゴを食べることが不可能（「in the park」が apples を修飾、否定が can を広く取る） | 公園ではリンゴを食べないでいることができる（「in the park」が VP 修飾、can > not で否定が狭い） | 公園にあるリンゴを食べないでいることができる（「in the park」が apples を修飾、can > not で否定が狭い）",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat an apple in the park.",
+  "cause": "pp+neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(det:'an, head:'apple)))))))",
+   "not(modal(ability:can, sentence(present+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(det:'an, head:'apple)))))))",
+   "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:noun(det:'an, head:'apple, post:pp('in, noun(det:'the, head:'park))))))))",
+   "not(modal(ability:can, sentence(present+simple(eat(agent:'I, patient:noun(det:'an, head:'apple, post:pp('in, noun(det:'the, head:'park))))))))"
+  ],
+  "reportedCount": 4,
+  "reportedReadings": "否定 > 可能 ×「公園で食べる」: 私は公園でリンゴを食べることができない | 否定 > 可能 ×「公園にあるリンゴ」: 私は公園にあるリンゴを食べることができない | 可能 > 否定 ×「公園で食べる」: 私は公園でリンゴを食べずにいることができる | 可能 > 否定 ×「公園にあるリンゴ」: 私は公園にあるリンゴを食べずにいることができる",
+  "detected": true,
+  "raw": "COUNT: 4\nREADINGS: 否定 > 可能 ×「公園で食べる」: 私は公園でリンゴを食べることができない | 否定 > 可能 ×「公園にあるリンゴ」: 私は公園にあるリンゴを食べることができない | 可能 > 否定 ×「公園で食べる」: 私は公園でリンゴを食べずにいることができる | 可能 > 否定 ×「公園にあるリンゴ」: 私は公園にあるリンゴを食べずにいることができる",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat no apple in the park.",
+  "cause": "pp+neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(det:'no, head:'apple)))))))",
+   "not(modal(ability:can, sentence(present+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(det:'no, head:'apple)))))))",
+   "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:noun(det:'no, head:'apple, post:pp('in, noun(det:'the, head:'park))))))))",
+   "not(modal(ability:can, sentence(present+simple(eat(agent:'I, patient:noun(det:'no, head:'apple, post:pp('in, noun(det:'the, head:'park))))))))"
+  ],
+  "reportedCount": 8,
+  "reportedReadings": "公園で私はどのリンゴも食べられない（否定呼応・not>can・「公園で」は食べる場所） | 公園にあるリンゴはどれも食べられない（否定呼応・not>can・「公園の」はリンゴを修飾） | 公園でリンゴを1つも食べずにいることはできない＝必ず何か食べてしまう（二重否定・not>can・場所修飾） | 公園にあるリンゴを1つも食べずにいることはできない（二重否定・not>can・名詞修飾） | 公園ではリンゴを1つも食べないでいることができる（否定呼応・can>not・場所修飾） | 公園にあるリンゴは1つも食べないでいることができる（否定呼応・can>not・名詞修飾） | 公園で「リンゴを1つも食べない」を否定できる＝そこで何かリンゴを食べることができる（二重否定・can>not・場所修飾） | 公園にあるリンゴのどれかを食べることができる（二重否定・can>not・名詞修飾）",
+  "detected": true,
+  "raw": "COUNT: 8\nREADINGS: 公園で私はどのリンゴも食べられない（否定呼応・not>can・「公園で」は食べる場所） | 公園にあるリンゴはどれも食べられない（否定呼応・not>can・「公園の」はリンゴを修飾） | 公園でリンゴを1つも食べずにいることはできない＝必ず何か食べてしまう（二重否定・not>can・場所修飾） | 公園にあるリンゴを1つも食べずにいることはできない（二重否定・not>can・名詞修飾） | 公園ではリンゴを1つも食べないでいることができる（否定呼応・can>not・場所修飾） | 公園にあるリンゴは1つも食べないでいることができる（否定呼応・can>not・名詞修飾） | 公園で「リンゴを1つも食べない」を否定できる＝そこで何かリンゴを食べることができる（二重否定・can>not・場所修飾） | 公園にあるリンゴのどれかを食べることができる（二重否定・can>not・名詞修飾）",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat the apple in the park.",
+  "cause": "pp+neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(det:'the, head:'apple)))))))",
+   "not(modal(ability:can, sentence(present+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(det:'the, head:'apple)))))))",
+   "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:noun(det:'the, head:'apple, post:pp('in, noun(det:'the, head:'park))))))))",
+   "not(modal(ability:can, sentence(present+simple(eat(agent:'I, patient:noun(det:'the, head:'apple, post:pp('in, noun(det:'the, head:'park))))))))"
+  ],
+  "reportedCount": 4,
+  "reportedReadings": "「公園でリンゴを食べる」ことができない（否定 > can、in the park は動詞句修飾） | 「公園にあるリンゴを食べる」ことができない（否定 > can、in the park は名詞修飾） | 公園で「リンゴを食べない」でいることができる（can > 否定、in the park は動詞句修飾） | 「公園にあるリンゴを食べない」でいることができる（can > 否定、in the park は名詞修飾）",
+  "detected": true,
+  "raw": "COUNT: 4\nREADINGS: 「公園でリンゴを食べる」ことができない（否定 > can、in the park は動詞句修飾） | 「公園にあるリンゴを食べる」ことができない（否定 > can、in the park は名詞修飾） | 公園で「リンゴを食べない」でいることができる（can > 否定、in the park は動詞句修飾） | 「公園にあるリンゴを食べない」でいることができる（can > 否定、in the park は名詞修飾）",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat all the apples in the park.",
+  "cause": "pp+neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(pre:'all, det:'the, head:'apple)))))))",
+   "not(modal(ability:can, sentence(present+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(pre:'all, det:'the, head:'apple)))))))",
+   "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:noun(pre:'all, det:'the, head:'apple, post:pp('in, noun(det:'the, head:'park))))))))",
+   "not(modal(ability:can, sentence(present+simple(eat(agent:'I, patient:noun(pre:'all, det:'the, head:'apple, post:pp('in, noun(det:'the, head:'park))))))))"
+  ],
+  "reportedCount": 6,
+  "reportedReadings": "公園にあるリンゴを全部は食べられない（一部なら食べられる）| 公園にあるリンゴは、どれ一つとして食べられない | 公園にあるリンゴを全部食べずにおくことができる（食べない選択が可能）| 公園でリンゴを全部食べることはできない（一部なら食べられる）| 公園では、どのリンゴも食べられない | 公園でリンゴを全部食べないでおくことができる",
+  "detected": true,
+  "raw": "COUNT: 6\nREADINGS: 公園にあるリンゴを全部は食べられない（一部なら食べられる）| 公園にあるリンゴは、どれ一つとして食べられない | 公園にあるリンゴを全部食べずにおくことができる（食べない選択が可能）| 公園でリンゴを全部食べることはできない（一部なら食べられる）| 公園では、どのリンゴも食べられない | 公園でリンゴを全部食べないでおくことができる",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat apples in the park or can not drink water.",
+  "cause": "pp+neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(or(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(head:'apple))), drink(agent:'I, patient:noun(head:'water)))))))",
+   "not(modal(ability:can, sentence(present+simple(or(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(head:'apple))), drink(agent:'I, patient:noun(head:'water)))))))",
+   "modal(ability:can, sentence(present+simple(not(or(eat(agent:'I, patient:noun(head:'apple, post:pp('in, noun(det:'the, head:'park)))), drink(agent:'I, patient:noun(head:'water)))))))",
+   "not(modal(ability:can, sentence(present+simple(or(eat(agent:'I, patient:noun(head:'apple, post:pp('in, noun(det:'the, head:'park)))), drink(agent:'I, patient:noun(head:'water)))))))"
+  ],
+  "reportedCount": 4,
+  "reportedReadings": "公園で（という場所で）リンゴを食べることができない、または水を飲むことができない | 公園にあるリンゴを食べることができない、または水を飲むことができない | 公園でリンゴを食べないでいることが可能だ、または水を飲まないでいることが可能だ | 公園にあるリンゴを食べないでいることが可能だ、または水を飲まないでいることが可能だ",
+  "detected": true,
+  "raw": "COUNT: 4\nREADINGS: 公園で（という場所で）リンゴを食べることができない、または水を飲むことができない | 公園にあるリンゴを食べることができない、または水を飲むことができない | 公園でリンゴを食べないでいることが可能だ、または水を飲まないでいることが可能だ | 公園にあるリンゴを食べないでいることが可能だ、または水を飲まないでいることが可能だ",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat apples.",
+  "cause": "neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:noun(head:'apple))))))",
+   "not(modal(ability:can, sentence(present+simple(eat(agent:'I, patient:noun(head:'apple))))))"
+  ],
+  "reportedCount": 2,
+  "reportedReadings": "否定が can を取る（¬◇）: 「リンゴを食べることが私にはできない」 | can が否定を取る（◇¬）: 「リンゴを食べないでいることが私にはできる／食べない選択が可能」",
+  "detected": true,
+  "raw": "COUNT: 2\nREADINGS: 否定が can を取る（¬◇）: 「リンゴを食べることが私にはできない」 | can が否定を取る（◇¬）: 「リンゴを食べないでいることが私にはできる／食べない選択が可能」",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat an apple.",
+  "cause": "neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:noun(det:'an, head:'apple))))))",
+   "not(modal(ability:can, sentence(present+simple(eat(agent:'I, patient:noun(det:'an, head:'apple))))))"
+  ],
+  "reportedCount": 2,
+  "reportedReadings": "否定が助動詞にかかる（=cannot）：私はリンゴを食べることができない | 否定が動詞句にかかる（can [not eat]）：私はリンゴを食べないでいることができる",
+  "detected": true,
+  "raw": "COUNT: 2\nREADINGS: 否定が助動詞にかかる（=cannot）：私はリンゴを食べることができない | 否定が動詞句にかかる（can [not eat]）：私はリンゴを食べないでいることができる",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat no apple.",
+  "cause": "neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:noun(det:'no, head:'apple))))))",
+   "not(modal(ability:can, sentence(present+simple(eat(agent:'I, patient:noun(det:'no, head:'apple))))))"
+  ],
+  "reportedCount": 3,
+  "reportedReadings": "否定呼応（単一否定）＝「リンゴを一つも食べられない」 | not > can > no ＝「リンゴを一つも食べずにいることは不可能だ（＝必ず何かしらリンゴを食べることになる）」 | can > not > no ＝「『リンゴを一つも食べない』でいない状態が可能だ（＝リンゴを食べることが可能だ）」",
+  "detected": true,
+  "raw": "COUNT: 3\nREADINGS: 否定呼応（単一否定）＝「リンゴを一つも食べられない」 | not > can > no ＝「リンゴを一つも食べずにいることは不可能だ（＝必ず何かしらリンゴを食べることになる）」 | can > not > no ＝「『リンゴを一つも食べない』でいない状態が可能だ（＝リンゴを食べることが可能だ）」",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat the apple.",
+  "cause": "neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:noun(det:'the, head:'apple))))))",
+   "not(modal(ability:can, sentence(present+simple(eat(agent:'I, patient:noun(det:'the, head:'apple))))))"
+  ],
+  "reportedCount": 2,
+  "reportedReadings": "私はそのリンゴを食べることができない（否定が can より広いスコープ） | 私はそのリンゴを食べないでいることができる＝食べない選択が可能（否定が can より狭いスコープ、can > not）",
+  "detected": true,
+  "raw": "COUNT: 2\nREADINGS: 私はそのリンゴを食べることができない（否定が can より広いスコープ） | 私はそのリンゴを食べないでいることができる＝食べない選択が可能（否定が can より狭いスコープ、can > not）",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat all the apples.",
+  "cause": "neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:noun(pre:'all, det:'the, head:'apple))))))",
+   "not(modal(ability:can, sentence(present+simple(eat(agent:'I, patient:noun(pre:'all, det:'the, head:'apple))))))"
+  ],
+  "reportedCount": 4,
+  "reportedReadings": "「全部食べる」ことは不可能（一部なら食べられる）= ¬(can > all) | どのリンゴについても食べることが不可能（一つも食べられない）= all > ¬can | 「全部は食べない」でいることが可能（一部残すことができる）= can > ¬all | 「一つも食べない」でいることが可能（全部食べずに済ませられる）= can > all > ¬",
+  "detected": true,
+  "raw": "COUNT: 4\nREADINGS: 「全部食べる」ことは不可能（一部なら食べられる）= ¬(can > all) | どのリンゴについても食べることが不可能（一つも食べられない）= all > ¬can | 「全部は食べない」でいることが可能（一部残すことができる）= can > ¬all | 「一つも食べない」でいることが可能（全部食べずに済ませられる）= can > all > ¬",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat apples or oranges.",
+  "cause": "neg",
+  "intendedReadings": [
+   "modal(ability:can, sentence(present+simple(not(eat(agent:'I, patient:or(noun(head:'apple), noun(head:'orange)))))))",
+   "not(modal(ability:can, sentence(present+simple(eat(agent:'I, patient:or(noun(head:'apple), noun(head:'orange)))))))"
+  ],
+  "reportedCount": 3,
+  "reportedReadings": "否定 > or：リンゴもオレンジも食べられない（どちらも不可） | or > 否定：どちらか一方は食べられない（どちらかは不明） | can > not：リンゴやオレンジを食べないでいることができる（食べない選択が可能）",
+  "detected": true,
+  "raw": "COUNT: 3\nREADINGS: 否定 > or：リンゴもオレンジも食べられない（どちらも不可） | or > 否定：どちらか一方は食べられない（どちらかは不明） | can > not：リンゴやオレンジを食べないでいることができる（食べない選択が可能）",
+  "failed": false
+ },
+ {
+  "surface": "I eat apples in the park.",
+  "cause": "pp",
+  "intendedReadings": [
+   "sentence(present+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(head:'apple)))))",
+   "sentence(present+simple(eat(agent:'I, patient:noun(head:'apple, post:pp('in, noun(det:'the, head:'park))))))"
+  ],
+  "reportedCount": 2,
+  "reportedReadings": "「公園で」が動詞句に係る = 私は公園でリンゴを食べる | 「公園にある」が名詞句 apples に係る = 私は公園にあるリンゴを食べる",
+  "detected": true,
+  "raw": "COUNT: 2\nREADINGS: 「公園で」が動詞句に係る = 私は公園でリンゴを食べる | 「公園にある」が名詞句 apples に係る = 私は公園にあるリンゴを食べる",
+  "failed": false
+ },
+ {
+  "surface": "I ate apples in the park.",
+  "cause": "pp",
+  "intendedReadings": [
+   "sentence(past+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(head:'apple)))))",
+   "sentence(past+simple(eat(agent:'I, patient:noun(head:'apple, post:pp('in, noun(det:'the, head:'park))))))"
+  ],
+  "reportedCount": 2,
+  "reportedReadings": "「in the park」が動詞句を修飾し、食べるという行為が公園で行われた | 「in the park」が名詞 apples を修飾し、公園にあったリンゴを（場所は問わず）食べた",
+  "detected": true,
+  "raw": "COUNT: 2\nREADINGS: 「in the park」が動詞句を修飾し、食べるという行為が公園で行われた | 「in the park」が名詞 apples を修飾し、公園にあったリンゴを（場所は問わず）食べた",
+  "failed": false
+ },
+ {
+  "surface": "I eat an apple in the park.",
+  "cause": "pp",
+  "intendedReadings": [
+   "sentence(present+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(det:'an, head:'apple)))))",
+   "sentence(present+simple(eat(agent:'I, patient:noun(det:'an, head:'apple, post:pp('in, noun(det:'the, head:'park))))))"
+  ],
+  "reportedCount": 2,
+  "reportedReadings": "「in the park」が動詞句を修飾 — 私は公園でリンゴを食べる | 「in the park」が名詞句 \"an apple\" を修飾 — 私は公園にあるリンゴを（場所は問わず）食べる",
+  "detected": true,
+  "raw": "COUNT: 2\nREADINGS: 「in the park」が動詞句を修飾 — 私は公園でリンゴを食べる | 「in the park」が名詞句 \"an apple\" を修飾 — 私は公園にあるリンゴを（場所は問わず）食べる",
+  "failed": false
+ },
+ {
+  "surface": "I ate an apple in the park.",
+  "cause": "pp",
+  "intendedReadings": [
+   "sentence(past+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(det:'an, head:'apple)))))",
+   "sentence(past+simple(eat(agent:'I, patient:noun(det:'an, head:'apple, post:pp('in, noun(det:'the, head:'park))))))"
+  ],
+  "reportedCount": 2,
+  "reportedReadings": "「公園で」が動詞に係る — 私は公園でリンゴを食べた | 「公園にある」が名詞句に係る — 私は公園にあったリンゴを食べた（食べた場所は不定）",
+  "detected": true,
+  "raw": "COUNT: 2\nREADINGS: 「公園で」が動詞に係る — 私は公園でリンゴを食べた | 「公園にある」が名詞句に係る — 私は公園にあったリンゴを食べた（食べた場所は不定）",
+  "failed": false
+ },
+ {
+  "surface": "I eat no apple in the park.",
+  "cause": "pp",
+  "intendedReadings": [
+   "sentence(present+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(det:'no, head:'apple)))))",
+   "sentence(present+simple(eat(agent:'I, patient:noun(det:'no, head:'apple, post:pp('in, noun(det:'the, head:'park))))))"
+  ],
+  "reportedCount": 2,
+  "reportedReadings": "公園で私はリンゴを食べない（\"in the park\" が動詞句に係る） | 公園にあるリンゴを私は食べない（\"in the park\" が名詞句 \"no apple\" に係る）",
+  "detected": true,
+  "raw": "COUNT: 2\nREADINGS: 公園で私はリンゴを食べない（\"in the park\" が動詞句に係る） | 公園にあるリンゴを私は食べない（\"in the park\" が名詞句 \"no apple\" に係る）",
+  "failed": false
+ },
+ {
+  "surface": "I ate no apple in the park.",
+  "cause": "pp",
+  "intendedReadings": [
+   "sentence(past+simple(pp('in, noun(det:'the, head:'park), eat(agent:'I, patient:noun(det:'no, head:'apple)))))",
+   "sentence(past+simple(eat(agent:'I, patient:noun(det:'no, head:'apple, post:pp('in, noun(det:'the, head:'park))))))"
+  ],
+  "reportedCount": 2,
+  "reportedReadings": "公園で私はリンゴを一つも食べなかった（in the park が動詞句に係る） | 公園にあったリンゴは一つも食べなかった（in the park が apple に係る／別の場所のリンゴは食べたかもしれない）",
+  "detected": true,
+  "raw": "COUNT: 2\nREADINGS: 公園で私はリンゴを一つも食べなかった（in the park が動詞句に係る） | 公園にあったリンゴは一つも食べなかった（in the park が apple に係る／別の場所のリンゴは食べたかもしれない）",
+  "failed": false
+ }
+]

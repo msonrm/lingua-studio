@@ -1,0 +1,146 @@
+[
+ {
+  "surface": "I can not eat apples in the park.",
+  "cause": "pp+neg",
+  "regexFlagged": true,
+  "surfacedAlternative": true,
+  "judgeRaw": "YES",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat an apple in the park.",
+  "cause": "pp+neg",
+  "regexFlagged": false,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat no apple in the park.",
+  "cause": "pp+neg",
+  "regexFlagged": true,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat the apple in the park.",
+  "cause": "pp+neg",
+  "regexFlagged": true,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat all the apples in the park.",
+  "cause": "pp+neg",
+  "regexFlagged": true,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat apples in the park or can not drink water.",
+  "cause": "pp+neg",
+  "regexFlagged": true,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat apples.",
+  "cause": "neg",
+  "regexFlagged": true,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat an apple.",
+  "cause": "neg",
+  "regexFlagged": true,
+  "surfacedAlternative": true,
+  "judgeRaw": "YES",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat no apple.",
+  "cause": "neg",
+  "regexFlagged": true,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat the apple.",
+  "cause": "neg",
+  "regexFlagged": false,
+  "surfacedAlternative": true,
+  "judgeRaw": "YES",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat all the apples.",
+  "cause": "neg",
+  "regexFlagged": true,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I can not eat apples or oranges.",
+  "cause": "neg",
+  "regexFlagged": true,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I eat apples in the park.",
+  "cause": "pp",
+  "regexFlagged": false,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I ate apples in the park.",
+  "cause": "pp",
+  "regexFlagged": false,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I eat an apple in the park.",
+  "cause": "pp",
+  "regexFlagged": false,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I ate an apple in the park.",
+  "cause": "pp",
+  "regexFlagged": false,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I eat no apple in the park.",
+  "cause": "pp",
+  "regexFlagged": true,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ },
+ {
+  "surface": "I ate no apple in the park.",
+  "cause": "pp",
+  "regexFlagged": false,
+  "surfacedAlternative": false,
+  "judgeRaw": "NO",
+  "failed": false
+ }
+]

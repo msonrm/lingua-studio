@@ -236,6 +236,7 @@ function getNounPhraseDeps(): NounPhraseDependencies {
         lemma: entry.lemma,
         plural: entry.plural,
         countable: entry.countable,
+        proper: entry.proper,
         zeroArticle: entry.zeroArticle,
       };
     },

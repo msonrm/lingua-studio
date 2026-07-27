@@ -1204,6 +1204,24 @@ exports[`'等位接続' > '等位接続: VP + 個別の否定' 1`] = `
 }
 `;
 
+exports[`'等位接続' > '等位接続: VP 3項（各項が目的語を持つ）' 1`] = `
+{
+  "en": "I eat an apple, drink water, and run.",
+  "ja": "私はりんごを食べて水を飲んで走る。",
+  "logs": [],
+  "ls": "sentence(present+simple(and(eat(agent:'I, patient:noun(det:'an, head:'apple)), drink(agent:'I, patient:noun(head:'water)), run(agent:'I))))",
+}
+`;
+
+exports[`'等位接続' > '等位接続: VP and（各項が目的語を持つ）' 1`] = `
+{
+  "en": "I eat an apple and drink water.",
+  "ja": "私はりんごを食べて水を飲む。",
+  "logs": [],
+  "ls": "sentence(present+simple(and(eat(agent:'I, patient:noun(det:'an, head:'apple)), drink(agent:'I, patient:noun(head:'water)))))",
+}
+`;
+
 exports[`'等位接続' > '等位接続: VP and（同一主語 → 主語省略）' 1`] = `
 {
   "en": "I eat and drink.",
@@ -1213,12 +1231,39 @@ exports[`'等位接続' > '等位接続: VP and（同一主語 → 主語省略�
 }
 `;
 
+exports[`'等位接続' > '等位接続: VP and（同一動詞 → 主語を繰り返す）' 1`] = `
+{
+  "en": "I have a pen, and I have an apple.",
+  "ja": "私はペンを持ってりんごを持つ。",
+  "logs": [],
+  "ls": "sentence(present+simple(and(have(possessor:'I, theme:noun(det:'a, head:'pen)), have(possessor:'I, theme:noun(det:'an, head:'apple)))))",
+}
+`;
+
 exports[`'等位接続' > '等位接続: VP or' 1`] = `
 {
   "en": "I eat or drink.",
   "ja": "私は食べるか飲む。",
   "logs": [],
   "ls": "sentence(present+simple(or(eat(agent:'I), drink(agent:'I))))",
+}
+`;
+
+exports[`'等位接続' > '等位接続: VP or（各項が目的語を持つ）' 1`] = `
+{
+  "en": "I eat an apple or drink water.",
+  "ja": "私はりんごを食べるか水を飲む。",
+  "logs": [],
+  "ls": "sentence(present+simple(or(eat(agent:'I, patient:noun(det:'an, head:'apple)), drink(agent:'I, patient:noun(head:'water)))))",
+}
+`;
+
+exports[`'等位接続' > '等位接続: VP（異なる主語・各項が目的語を持つ）' 1`] = `
+{
+  "en": "I have a pen, and you have an apple.",
+  "ja": "私はペンを持って、あなたがりんごを持つ。",
+  "logs": [],
+  "ls": "sentence(present+simple(and(have(possessor:'I, theme:noun(det:'a, head:'pen)), have(possessor:'you, theme:noun(det:'an, head:'apple)))))",
 }
 `;
 

@@ -595,6 +595,88 @@ const blockCoverage: WorkspaceCase[] = [
   },
 ];
 
+// ============================================
+// 前置詞動詞
+//
+// 「動詞+前置詞」が1語として意味を持つもの（belong to / wait for）と、
+// 前置詞を利用者が選ぶもの（live in / put on）を区別する。
+// ============================================
+
+const prepositionalVerbs: WorkspaceCase[] = [
+  {
+    name: '前置詞動詞: go to（固定）',
+    spec: timeFrame('current', {
+      type: 'verb_motion',
+      fields: { VERB: 'go' },
+      inputs: { ARG_0: pronoun('I'), ARG_1: aPlace('school') },
+    }),
+    note:
+      '前置詞 to は語彙的に固定で選択の余地がないため、AST には出さない。\n' +
+      'LinguaScript は go(agent, goal) となり、to は英語の綴りの一部として扱う。',
+  },
+  {
+    name: '前置詞動詞: arrive at（固定）',
+    spec: timeFrame('current', {
+      type: 'verb_motion',
+      fields: { VERB: 'arrive' },
+      inputs: { ARG_0: pronoun('I'), ARG_1: aPlace('park') },
+    }),
+  },
+  {
+    name: '前置詞動詞: wait for（固定）',
+    spec: timeFrame('current', {
+      type: 'verb_action',
+      fields: { VERB: 'wait' },
+      inputs: { ARG_0: pronoun('I'), ARG_1: pronoun('you') },
+    }),
+  },
+  {
+    name: '前置詞動詞: belong to（固定）',
+    spec: timeFrame('current', {
+      type: 'verb_state',
+      fields: { VERB: 'belong' },
+      inputs: { ARG_0: pronoun('it'), ARG_1: pronoun('me') },
+    }),
+  },
+  {
+    name: '前置詞動詞: go（項なし → 前置詞も出ない）',
+    spec: timeFrame('current', {
+      type: 'verb_motion',
+      fields: { VERB: 'go' },
+      inputs: { ARG_0: pronoun('I') },
+    }),
+  },
+  {
+    name: '前置詞なし: leave（他動詞）',
+    spec: timeFrame('current', {
+      type: 'verb_motion',
+      fields: { VERB: 'leave' },
+      inputs: { ARG_0: pronoun('I'), ARG_1: aPlace('park') },
+    }),
+    note: 'source を取るが前置詞は要らない。役割名では決まらないので動詞ごとに持つ',
+  },
+  {
+    name: '前置詞が選択: live（欠けを ___ で示す）',
+    spec: timeFrame('current', {
+      type: 'verb_state',
+      fields: { VERB: 'live' },
+      inputs: { ARG_0: pronoun('I'), ARG_1: aPlace('park') },
+    }),
+    note:
+      'in / at / on で意味が変わるので利用者が選ぶ。勝手に補うと WYSIWYG が崩れるため、\n' +
+      '限定詞欠損と同じ ___ で欠けを示す。日本語は「に」を取る（「で」は動作の場所）。',
+  },
+  {
+    name: '前置詞が選択: put（欠けを ___ で示す）',
+    spec: timeFrame('current', {
+      type: 'verb_action',
+      fields: { VERB: 'put' },
+      inputs: { ARG_0: pronoun('I'), ARG_1: anObject('apple'), ARG_2: aPlace('park') },
+    }),
+    note: 'on / in / under で意味が変わる。前置詞句スロットにするのは今後の課題',
+  },
+];
+
 export const allGroups: { group: string; cases: WorkspaceCase[] }[] = [
   { group: 'astGen/基本', cases: basics },
   { group: 'astGen/動詞ラッパー', cases: verbWrappers },
@@ -603,6 +685,7 @@ export const allGroups: { group: string; cases: WorkspaceCase[] }[] = [
   { group: 'astGen/Logic', cases: logic },
   { group: 'astGen/限定詞', cases: determiners },
   { group: 'astGen/ブロック網羅', cases: blockCoverage },
+  { group: 'astGen/前置詞動詞', cases: prepositionalVerbs },
 ];
 
 /**

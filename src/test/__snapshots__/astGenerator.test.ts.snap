@@ -810,7 +810,7 @@ exports[`'astGen/ブロック網羅' > '動詞: verb_state（location を取る�
     "timeAdverbial": undefined,
     "type": "sentence",
   },
-  "en": "I live a park.",
+  "en": "I live ___ a park.",
 }
 `;
 
@@ -1838,6 +1838,490 @@ exports[`'astGen/ブロック網羅' > '等位接続: coordination_noun_or' 1`] 
 }
 `;
 
+exports[`'astGen/前置詞動詞' > '前置詞が選択: live（欠けを ___ で示す）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "park",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "location",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "live",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I live ___ a park.",
+}
+`;
+
+exports[`'astGen/前置詞動詞' > '前置詞が選択: put（欠けを ___ で示す）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "apple",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "park",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "goal",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "put",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I put an apple ___ a park.",
+}
+`;
+
+exports[`'astGen/前置詞動詞' > '前置詞なし: leave（他動詞）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "park",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "source",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "leave",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I leave a park.",
+}
+`;
+
+exports[`'astGen/前置詞動詞' > '前置詞動詞: arrive at（固定）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": "a",
+              "head": {
+                "lemma": "park",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "goal",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "arrive",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I arrive at a park.",
+}
+`;
+
+exports[`'astGen/前置詞動詞' > '前置詞動詞: belong to（固定）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "it",
+                "number": "singular",
+                "person": 3,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "recipient",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "belong",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "It belongs to me.",
+}
+`;
+
+exports[`'astGen/前置詞動詞' > '前置詞動詞: go to（固定）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "determiner": undefined,
+              "head": {
+                "lemma": "school",
+                "number": "singular",
+                "type": "noun",
+              },
+              "postDeterminer": undefined,
+              "preDeterminer": undefined,
+              "type": "nounPhrase",
+            },
+            "role": "goal",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "go",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I go to school.",
+}
+`;
+
+exports[`'astGen/前置詞動詞' > '前置詞動詞: go（項なし → 前置詞も出ない）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "goal",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "go",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I go.",
+}
+`;
+
+exports[`'astGen/前置詞動詞' > '前置詞動詞: wait for（固定）' 1`] = `
+{
+  "ast": {
+    "clause": {
+      "aspect": "simple",
+      "modal": undefined,
+      "modalPolarity": undefined,
+      "polarity": "affirmative",
+      "tense": "present",
+      "type": "clause",
+      "verbPhrase": {
+        "adverbs": [],
+        "arguments": [
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "I",
+                "number": "singular",
+                "person": 1,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "agent",
+          },
+          {
+            "filler": {
+              "adjectives": [],
+              "head": {
+                "lemma": "you",
+                "number": "singular",
+                "person": 2,
+                "polaritySensitive": undefined,
+                "pronounType": "personal",
+                "type": "pronoun",
+              },
+              "type": "nounPhrase",
+            },
+            "role": "theme",
+          },
+        ],
+        "logicOp": undefined,
+        "prepositionalPhrases": [],
+        "type": "verbPhrase",
+        "verb": {
+          "lemma": "wait",
+        },
+      },
+    },
+    "sentenceType": "declarative",
+    "timeAdverbial": undefined,
+    "type": "sentence",
+  },
+  "en": "I wait for you.",
+}
+`;
+
 exports[`'astGen/動詞ラッパー' > 'ラッパー: frequency' 1`] = `
 {
   "ast": {
@@ -2130,6 +2614,10 @@ exports[`'astGen/動詞ラッパー' > 'ラッパー: preposition_verb' 1`] = `
             },
             "role": "agent",
           },
+          {
+            "filler": null,
+            "role": "goal",
+          },
         ],
         "logicOp": undefined,
         "prepositionalPhrases": [
@@ -2191,6 +2679,10 @@ exports[`'astGen/動詞ラッパー' > 'ラッパー: preposition_verb（目的�
               "type": "nounPhrase",
             },
             "role": "agent",
+          },
+          {
+            "filler": null,
+            "role": "goal",
           },
         ],
         "logicOp": undefined,

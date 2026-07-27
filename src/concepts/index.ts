@@ -15,13 +15,13 @@ export const verbCores: VerbCore[] = [
   // Motion（移動）
   { lemma: "run", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }] },
   { lemma: "walk", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }] },
-  { lemma: "go", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }] },
-  { lemma: "come", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }] },
+  { lemma: "go", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }, { role: "goal", required: false, label: "destination" }] },
+  { lemma: "come", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }, { role: "goal", required: false, label: "destination" }] },
   { lemma: "fly", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }] },
   { lemma: "swim", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }] },
   { lemma: "jump", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }] },
   { lemma: "fall", type: "action", category: "motion", valency: [{ role: "theme", required: true, label: "theme" }] },
-  { lemma: "arrive", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }] },
+  { lemma: "arrive", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }, { role: "goal", required: false, label: "destination" }] },
   { lemma: "leave", type: "action", category: "motion", valency: [{ role: "agent", required: true, label: "agent" }, { role: "source", required: false, label: "place" }] },
 
   // Action（動作・創造）
@@ -65,7 +65,7 @@ export const verbCores: VerbCore[] = [
   { lemma: "use", type: "action", category: "action", valency: [{ role: "agent", required: true, label: "agent" }, { role: "patient", required: true, label: "patient" }] },
   { lemma: "find", type: "action", category: "action", valency: [{ role: "agent", required: true, label: "agent" }, { role: "theme", required: true, label: "theme" }] },
   { lemma: "lose", type: "action", category: "action", valency: [{ role: "agent", required: true, label: "agent" }, { role: "theme", required: true, label: "theme" }] },
-  { lemma: "wait", type: "action", category: "action", valency: [{ role: "agent", required: true, label: "agent" }] },
+  { lemma: "wait", type: "action", category: "action", valency: [{ role: "agent", required: true, label: "agent" }, { role: "theme", required: false, label: "awaited" }] },
   { lemma: "help", type: "action", category: "action", valency: [{ role: "agent", required: true, label: "agent" }, { role: "beneficiary", required: true, label: "beneficiary" }] },
   { lemma: "meet", type: "action", category: "action", valency: [{ role: "agent", required: true, label: "agent" }, { role: "theme", required: true, label: "theme" }] },
   { lemma: "visit", type: "action", category: "action", valency: [{ role: "agent", required: true, label: "agent" }, { role: "goal", required: true, label: "goal" }] },
@@ -120,7 +120,7 @@ export const verbCores: VerbCore[] = [
   { lemma: "live", type: "stative", category: "state", valency: [{ role: "agent", required: true, label: "agent" }, { role: "location", required: true, label: "location" }] },
   { lemma: "reside", type: "stative", category: "state", valency: [{ role: "agent", required: true, label: "agent" }, { role: "location", required: true, label: "location" }] },
   { lemma: "stay", type: "stative", category: "state", valency: [{ role: "agent", required: true, label: "agent" }, { role: "location", required: true, label: "location" }] },
-  { lemma: "belong", type: "stative", category: "state", valency: [{ role: "theme", required: true, label: "theme" }] },
+  { lemma: "belong", type: "stative", category: "state", valency: [{ role: "theme", required: true, label: "theme" }, { role: "recipient", required: false, label: "owner" }] },
   { lemma: "seem", type: "stative", category: "state", valency: [{ role: "theme", required: true, label: "subject" }, { role: "attribute", required: false, label: "attribute" }] },
 ];
 

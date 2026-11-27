@@ -106,6 +106,8 @@ export const BlocklyWorkspace = forwardRef<BlocklyWorkspaceHandle, BlocklyWorksp
       // ワークスペースを作成
       const workspace = Blockly.inject(blocklyDiv.current, {
         toolbox: toolbox,
+        // 既定の blockly-demo.appspot.com は sprites.png が 404 になるため自前配信する（vite.config.ts）
+        media: `${import.meta.env.BASE_URL}blockly-media/`,
         grid: {
           spacing: 20,
           length: 3,

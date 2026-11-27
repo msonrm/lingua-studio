@@ -2,6 +2,17 @@
 
 > **Note**: このファイルは [TODO.md](./TODO.md) と連動しています。機能実装完了時は両方を更新してください。
 
+## 2026-11-28
+
+### 修正: ワークスペース右下のズーム・ゴミ箱ボタンが表示されない
+
+Blockly は `media` 未指定だと `https://blockly-demo.appspot.com/static/media/` からスプライトを読むが、
+そこの `sprites.png` が 404 になっていた（音声やカーソルは取得できる）。
+
+- `vite.config.ts` に小さなプラグインを追加し、`node_modules/blockly/media/` を `/blockly-media/` で配信
+  （dev はミドルウェア、build は `dist/blockly-media/` に出力）
+- `Blockly.inject` に `media` を指定。外部サーバーに依存せず、インストール済みの Blockly と常に一致する
+
 ## 2026-07-27
 
 ### 実験: LinguaScript に曖昧さ解消の実用性はあるか → 示せなかった
